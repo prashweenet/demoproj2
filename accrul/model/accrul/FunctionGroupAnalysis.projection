@@ -1,0 +1,85 @@
+projection FunctionGroupAnalysis;
+component ACCRUL;
+layer Core;
+description "Function Group Analysis";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset FunctionGroupSet for FunctionGroup;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity FunctionGroup {
+   crud = Read;
+
+   attribute StoreOriginalMandatoryDb Boolean("TRUE", "FALSE") {
+      label = "Store Original Mandatory";
+   }
+   attribute AutomaticAllotmentReqDb Boolean("TRUE", "FALSE") {
+      label = "Automatic Allotment Required";
+   }
+   attribute SimulationVoucherAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Simulation Voucher Allowed";
+   }
+   attribute SingleFunctionRequiredDb Boolean("TRUE", "FALSE") {
+      label = "Single Function Required";
+   }
+   attribute VouRowGrpValAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Voucher Row Group Validation Allowed";
+   }
+   attribute RefMandatoryAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Reference Mandatory Allowed";
+   }
+   attribute SepUserApprovalAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Separate User Approval Allowed";
+   }
+   attribute InternalLedgerAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Allowed to use in Internal Ledger";
+   }
+   attribute AutomaticVoucherBalanceDb Boolean("TRUE", "FALSE") {
+      label = "Automatic Voucher Balance";
+   }
+   attribute ConnFuncGroupAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Connect Function Group Allowed";
+   }
+   attribute ParAmountBalancedInSrcDb Boolean("TRUE", "FALSE") {
+      label = "Parallel Amount Balanced In Source";
+   }
+   attribute ProjectConnSupportedDb Boolean("TRUE", "FALSE") {
+      label = "Project Connection Supported";
+   }
+   attribute StoreOriginalAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Allow set Store Original";
+   }
+
+   reference FunctionGroupRef(FunctionGroup) to FunctionGroup(FunctionGroup) {
+      label = "Function Group";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

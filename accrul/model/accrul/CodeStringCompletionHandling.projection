@@ -1,0 +1,110 @@
+projection CodeStringCompletionHandling;
+component ACCRUL;
+layer Core;
+description "Code String Completion Handling";
+category Users;
+include fragment CodePartValAndProcessCodeSelector;
+include fragment AccountingCodePartValueLovSelector;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountingCodePartValueSet for AccountingCodePartValue {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountingCodePartValue {
+   crud = Read;
+
+   attribute CodePartName Text {
+      fetch = "Enterp_Comp_Connect_V170_API.Get_Company_Translation(COMPANY, 'ACCRUL', 'AccountingCodeParts', CODE_PART, NULL, 'NO')";
+      maxlength = 10;
+      editable = [ETag = null];
+   }
+   attribute CodeStringCompletionExists Text {
+      fetch = "Accounting_Codestr_Compl_API.Exist_Any_For_Code_Part_Val__(COMPANY, CODE_PART, CODE_PART_VALUE)";
+   }
+
+   reference CodePartValueRef(Company, CodePart, CodePartValue) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Code Part Value";
+   }
+
+   array AccountingCodestrComplArray(CodePart, Company, CodePartValue) to AccountingCodestrCompl(CodePart, Company, CodePartValue);
+}
+
+
+@Override
+entity AccountingCodestrCompl {
+   crud = Read, Update;
+   ludependencies = AccountingCodestrCompl;
+
+   attribute CodefillCodePart Text {
+      label = "Code Part Fill";
+   }
+   attribute CodeFillName Text {
+      fetch = "Accounting_Codestr_Compl_API.Get_Translated_Code_Fill_Name(COMPANY, 'ACCRUL', 'AccountingCodeParts', CODEFILL_CODE_PART)";
+      editable = [false];
+   }
+   attribute CodefillValue Text {
+      label = "Code String Value";
+      format = uppercase;
+   }
+   attribute CodefillValueName Text {
+      label = "Description";
+   }
+   attribute CodefillCodePartBlocked Text {
+      fetch = "Accounting_Codestr_Compl_API.Get_Code_Part_Block_Info(company, code_part, code_part_value, codefill_code_part)";
+   }
+
+   reference CodefillCodePartRef(Company, CodefillCodePart) to AccountingCodeParts(Company, CodePart) {
+      label = "Code Fill Name";
+   }
+   reference CodefillValueRef(Company, CodefillCodePart, CodefillValue) to CodePartValAndProcessCode(Company, CodePart, CodePartValue) {
+      label = "String Value";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+action CreateCodeStrCompDet {
+   initialcheck implementation;
+   ludependencies = AccountingCodePartValue, AccountingCodestrCompl;
+
+   parameter Company  Text;
+   parameter CodePart  Text;
+   parameter CodePartValue  Text;
+}
+
+action DeleteCodeStrCompDet {
+   initialcheck implementation;
+   ludependencies = AccountingCodePartValue, AccountingCodestrCompl;
+
+   parameter Company  Text;
+   parameter CodePart  Text;
+   parameter CodePartValue  Text;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

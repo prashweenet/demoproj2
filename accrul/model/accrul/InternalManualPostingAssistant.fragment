@@ -1,0 +1,577 @@
+fragment InternalManualPostingAssistant;
+component ACCRUL;
+layer Core;
+description "Manage Internal Manual Posting functionality.";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+assistant ManualIntPostingAssistant using IntManPostingVirtuals {
+   label = "${DialogTitle}Internal Manual Posting";
+   savemode = OnLostFocus;
+   input(Company, InternalSeqNumber, Account, RowNo, VoucherType, VoucherDate, VoucherNo, CurrencyAmount, Amount, CurrencyRate, CurrencyCode, ConversionFactor, AccountingYear, Correction, Editable, DialogTitle);
+
+   steps {
+      step {
+         group ManualIntPostingGroup;
+         list IntPostingLedgerList(InternalPostingLedgerVirtualArray);
+         list IntPostingsList(InternalPostingsAccrulVirtualArray) bind IntPostingLedgerList {
+            copyoncruddefault(AccountingYear, VoucherNo, RowNo, CurrencyRate) to(AccountingYear, VoucherNo, RowNo, CurrencyRate);
+         }
+      }
+      final step {
+
+      }
+      cancelled step {
+
+      }
+   }
+   finish command {
+      execute {
+         call ValidatePostingsBalance(Company, VoucherType, VoucherDate, InternalSeqNumber, Account, Amount, CurrencyAmount);
+         exit OK;
+      }
+   }
+   cancel command {
+      visible = [false];
+   }
+   restart command {
+      visible = [false];
+   }
+}
+
+group ManualIntPostingGroup for ManualIntPostingVirtual {
+   label = "";
+   lov AccountRef with ReferenceAccountSelector {
+      search = Account, Description;
+      description = AccountRef.Description;
+   }
+   field CurrencyAmount;
+   field Amount;
+
+
+   radiogroup EntryBasedOn {
+      editable = [true];
+   }
+}
+
+
+list IntPostingLedgerList for InternalPostingLedgerVirtual {
+   label = "Summary per Internal Ledger";
+   multiselect = [false];
+   field Objkey {
+      columnexclude = [true];
+      searchable = false;
+   }
+   field LedgerId;
+
+   computedfield SumPercentage {
+      value = "#{parent.Amount == 0 ? 0 : 100 - InternalPostingsAccrulVirtualArray.sum(Percentage)}";
+      type = Number;
+      preserveprecision = [true];
+      format = decimal;
+   }
+
+   computedfield CurrencyBalance {
+      value = "#{parent.Correction == true ? parent.CurrencyAmount - InternalPostingsAccrulVirtualArray.sum(CurrencyAmount) : InternalPostingsAccrulVirtualArray.sum(CurrencyAmount) - parent.CurrencyAmount}";
+      type = Number;
+      format = ifscurrency;
+   }
+
+   computedfield Balance {
+      value = "#{parent.Correction == true ? parent.Amount - InternalPostingsAccrulVirtualArray.sum(Amount) : InternalPostingsAccrulVirtualArray.sum(Amount) - parent.Amount}";
+      type = Number;
+      format = ifscurrency;
+   }
+}
+
+list IntPostingsList for InternalPostingsAccrul {
+   label = "Manual Postings";
+   savemode = Buffer;
+   crudactions {
+      new {
+         enabled = [parent.parent.Editable = "Y"];
+      }
+      edit {
+         enabled = [parent.parent.Editable = "Y"];
+      }
+      delete {
+         enabled = [parent.parent.Editable = "Y"];
+      }
+   }
+   lov CodeBRef with ReferenceCodeBSelector {
+      search = CodeB, Description;
+      description = CodeBRef.Description;
+      columnvisible = [substring(parent.ManualCodeParts, 0, 1) = "M"];
+      required = [substring(parent.ManualCodeParts, 0, 1) = "M"];
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      search = CodeC, Description;
+      description = CodeCRef.Description;
+      columnvisible = [substring(parent.ManualCodeParts, 1, 1) = "M"];
+      required = [substring(parent.ManualCodeParts, 1, 1) = "M"];
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      search = CodeD, Description;
+      description = CodeDRef.Description;
+      columnvisible = [substring(parent.ManualCodeParts, 2, 1) = "M"];
+      required = [substring(parent.ManualCodeParts, 2, 1) = "M"];
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      search = CodeE, Description;
+      description = CodeERef.Description;
+      columnvisible = [substring(parent.ManualCodeParts, 3, 1) = "M"];
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      search = CodeF, Description;
+      description = CodeFRef.Description;
+      columnvisible = [substring(parent.ManualCodeParts, 4, 1) = "M"];
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      search = CodeG, Description;
+      description = CodeGRef.Description;
+      columnvisible = [substring(parent.ManualCodeParts, 5, 1) = "M"];
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      search = CodeH, Description;
+      description = CodeHRef.Description;
+      columnvisible = [substring(parent.ManualCodeParts, 6, 1) = "M"];
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      search = CodeI, Description;
+      description = CodeIRef.Description;
+      columnvisible = [substring(parent.ManualCodeParts, 7, 1) = "M"];
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      search = CodeJ, Description;
+      description = CodeJRef.Description;
+      columnvisible = [substring(parent.ManualCodeParts, 8, 1) = "M"];
+   }
+   field Percentage {
+      format = decimal;
+      preserveprecision = [true];
+      editable = [parent.EntryBasedOn = "PERCENTAGE" or parent.parent.EntryBasedOn = "PERCENTAGE"];
+      validate command {
+         variable AmountStructure Structure(AmountFromPercentageStructure);
+         execute {
+            call ValidatePercentage(parent.parent.CurrencyAmount, parent.parent.Amount, parent.parent.Correction, Percentage) into AmountStructure;
+            copy AmountStructure into this;
+         }
+      }
+   }
+   field CurrencyDebitAmount {
+      format = ifscurrency;
+      editable = [(parent.EntryBasedOn = "AMOUNT" or parent.parent.EntryBasedOn = "AMOUNT") and CurrencyCreditAmount = null];
+      validate command {
+         variable AmountStructure Structure(AmountFromPercentageStructure);
+         execute {
+            if [CurrencyDebitAmount != null and CurrencyDebitAmount > 0 and parent.parent.Correction] {
+               set CurrencyDebitAmount = "#{-1 * CurrencyDebitAmount}";
+            }
+            else {
+               if [CurrencyDebitAmount != null and CurrencyDebitAmount < 0 and not(parent.parent.Correction)] {
+                  set CurrencyDebitAmount = "#{-1 * CurrencyDebitAmount}";
+               }
+            }
+
+            if [CurrencyDebitAmount = null] {
+               set Percentage = 0;
+               copy AmountStructure into this;
+            }
+            else {
+               set CurrencyAmount = "#{CurrencyDebitAmount - CurrencyCreditAmount}";
+            }
+            if [CurrencyAmount != null] {
+               copy this into AmountStructure;
+               call ValidateCurrAmounts(Company, parent.parent.CurrencyAmount, AmountStructure, CurrencyRate, parent.parent.CurrencyCode, parent.parent.ConversionFactor) into AmountStructure;
+               copy AmountStructure into this;
+            }
+         }
+      }
+   }
+   field CurrencyCreditAmount {
+      format = ifscurrency;
+      editable = [(parent.EntryBasedOn = "AMOUNT" or parent.parent.EntryBasedOn = "AMOUNT") and CurrencyDebitAmount = null];
+
+      validate command {
+         variable AmountStructure Structure(AmountFromPercentageStructure);
+         execute {
+            if [CurrencyCreditAmount != null and CurrencyCreditAmount > 0 and parent.parent.Correction] {
+               set CurrencyCreditAmount = "#{-1 * CurrencyCreditAmount}";
+            }
+            else {
+               if [CurrencyCreditAmount != null and CurrencyCreditAmount < 0 and not(parent.parent.Correction)] {
+                  set CurrencyCreditAmount = "#{-1 * CurrencyCreditAmount}";
+               }
+            }
+
+            if [CurrencyCreditAmount = null] {
+               set Percentage = 0;
+               copy AmountStructure into this;
+            }
+            else {
+               set CurrencyAmount = "#{CurrencyDebitAmount - CurrencyCreditAmount}";
+            }
+            if [CurrencyAmount != null] {
+               copy this into AmountStructure;
+               call ValidateCurrAmounts(Company, parent.parent.CurrencyAmount, AmountStructure, CurrencyRate, parent.parent.CurrencyCode, parent.parent.ConversionFactor) into AmountStructure;
+               copy AmountStructure into this;
+            }
+         }
+      }
+   }
+   field CurrencyAmount {
+      format = ifscurrency;
+      editable = [parent.EntryBasedOn = "AMOUNT" or parent.parent.EntryBasedOn = "AMOUNT"];
+      validate command {
+         variable AmountStructure Structure(AmountFromPercentageStructure);
+         execute {
+            if [parent.parent.Correction] {
+               if [CurrencyAmount != null and CurrencyAmount > 0] {
+                  set CurrencyCreditAmount = "#{-1 * CurrencyAmount}";
+                  set CurrencyDebitAmount = null;
+               }
+               else {
+                  if [CurrencyAmount != null and CurrencyAmount <= 0] {
+                     set CurrencyDebitAmount = CurrencyAmount;
+                     set CurrencyCreditAmount = null;
+                  }
+               }
+            }
+            else {
+               if [CurrencyAmount != null and CurrencyAmount >= 0] {
+                  set CurrencyDebitAmount = CurrencyAmount;
+                  set CurrencyCreditAmount = null;
+               }
+               else {
+                  if [CurrencyAmount != null and CurrencyAmount < 0] {
+                     set CurrencyCreditAmount = "#{-1 * CurrencyAmount}";
+                     set CurrencyDebitAmount = null;
+                  }
+               }
+            }
+            if [CurrencyAmount != null] {
+               copy this into AmountStructure;
+               call ValidateCurrAmounts(Company, parent.parent.CurrencyAmount, AmountStructure, CurrencyRate, parent.parent.CurrencyCode, parent.parent.ConversionFactor) into AmountStructure;
+               copy AmountStructure into this;
+            }
+            else {
+               set Percentage = 0;
+               copy AmountStructure into this;
+            }
+         }
+      }
+   }
+   field DebitAmount {
+      format = ifscurrency;
+      editable = [(parent.EntryBasedOn = "AMOUNT" or parent.parent.EntryBasedOn = "AMOUNT") and CreditAmount = null];
+
+      validate command {
+         variable AmountStructure Structure(AmountFromPercentageStructure);
+         execute {
+            if [DebitAmount != null and DebitAmount > 0 and parent.parent.Correction] {
+               set DebitAmount = "#{-1 * DebitAmount}";
+            }
+            else {
+               if [DebitAmount != null and DebitAmount < 0 and not(parent.parent.Correction)] {
+                  set DebitAmount = "#{-1 * DebitAmount}";
+               }
+            }
+            if [DebitAmount = null] {
+               set Amount = null;
+               set Percentage = 0;
+               if [parent.parent.CurrencyCode = parent.parent.BaseCurrencyCode] {
+                  copy AmountStructure into this;
+               }
+            }
+            else {
+               set Amount = "#{DebitAmount - CreditAmount}";
+            }
+            if [Amount != null] {
+               copy this into AmountStructure;
+               call ValidateAmounts(Company, parent.parent.Amount, parent.parent.CurrencyCode, AmountStructure) into AmountStructure;
+               copy AmountStructure into this;
+            }
+         }
+      }
+   }
+   field CreditAmount {
+      format = ifscurrency;
+      editable = [(parent.EntryBasedOn = "AMOUNT" or parent.parent.EntryBasedOn = "AMOUNT") and DebitAmount = null];
+
+      validate command {
+         variable AmountStructure Structure(AmountFromPercentageStructure);
+         execute {
+            if [CreditAmount != null and CreditAmount > 0 and parent.parent.Correction] {
+               set CreditAmount = "#{-1 * CreditAmount}";
+            }
+            else {
+               if [CreditAmount != null and CreditAmount < 0 and not(parent.parent.Correction)] {
+                  set CreditAmount = "#{-1 * CreditAmount}";
+               }
+            }
+            if [CreditAmount = null] {
+               set Amount = null;
+               set Percentage = 0;
+               if [parent.parent.CurrencyCode = parent.parent.BaseCurrencyCode] {
+                  copy AmountStructure into this;
+               }
+            }
+            else {
+               set Amount = "#{DebitAmount - CreditAmount}";
+            }
+            if [Amount != null] {
+               copy this into AmountStructure;
+               call ValidateAmounts(Company, parent.parent.Amount, parent.parent.CurrencyCode, AmountStructure) into AmountStructure;
+               copy AmountStructure into this;
+            }
+         }
+      }
+   }
+   field Amount {
+      format = ifscurrency;
+      editable = [parent.EntryBasedOn = "AMOUNT" or parent.parent.EntryBasedOn = "AMOUNT"];
+      validate command {
+         variable AmountStructure Structure(AmountFromPercentageStructure);
+         execute {
+            if [parent.parent.Correction] {
+               if [Amount != null and Amount > 0] {
+                  set CreditAmount = "#{-1 * CreditAmount}";
+                  set DebitAmount = null;
+               }
+               else {
+                  if [Amount != null and Amount <= 0] {
+                     set DebitAmount = Amount;
+                     set CreditAmount = null;
+                  }
+               }
+            }
+            else {
+               if [Amount != null and Amount >= 0] {
+                  set DebitAmount = Amount;
+                  set CreditAmount = null;
+               }
+               else {
+                  if [Amount != null and Amount < 0] {
+                     set CreditAmount = "#{-1 * Amount}";
+                     set DebitAmount = null;
+                  }
+               }
+            }
+            if [Amount != null] {
+               copy this into AmountStructure;
+               call ValidateAmounts(Company, parent.parent.Amount, parent.parent.CurrencyCode, AmountStructure) into AmountStructure;
+               copy AmountStructure into this;
+            }
+            else {
+               set Percentage = 0;
+               set DebitAmount = null;
+               set CreditAmount = null;
+               if [parent.parent.CurrencyCode = parent.parent.BaseCurrencyCode] {
+                  copy AmountStructure into this;
+               }
+            }
+         }
+      }
+   }
+   // Column 'CurrencyRate' (tblIntPostings_colnCurrencyRate) is in EE designed having the attribute 'Visible = false', for why it is excluded from being added to the .client file.
+   field Text {
+      size = Small;
+   }
+}
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+entityset IntManPostingVirtuals for ManualIntPostingVirtual;
+
+virtual ManualIntPostingVirtual {
+   crud = Create, Update;
+   attribute Company Text;
+   attribute Account Text {
+      editable = [false];
+      updatable = [false];
+   }
+   attribute DialogTitle Text {
+      insertable = [true];
+      updatable = [true];
+   }
+
+
+
+
+   reference AccountRef(Company, Account) to  Account(Company, Account) {
+      label = "Account";
+   }
+
+   attribute RowNo Number;
+   attribute VoucherType Text;
+   attribute VoucherNo Number;
+   attribute CurrencyAmount Number {
+      format = ifscurrency;
+      editable = [false];
+      updatable = [false];
+   }
+   attribute Amount Number {
+      format = ifscurrency;
+      editable = [false];
+      updatable = [false];
+   }
+   attribute LedgerIds Text;
+   attribute VoucherDate Date;
+   attribute AccountingYear Number;
+   attribute CurrencyRate Number;
+   attribute CurrencyCode Text;
+   attribute BaseCurrencyCode Text {
+      fetch = "Company_Finance_API.Get_Currency_Code(COMPANY)";
+   }
+   attribute ConversionFactor Number;
+   attribute InternalSeqNumber Number;
+   attribute UseCorrectionRows Text;
+   attribute Correction Boolean("Y", "N");
+   attribute Editable Text;
+   attribute EntryBasedOn Enumeration(EntryBasedOn) {
+      editable = [true];
+      insertable = [true];
+      updatable = [true];
+   }
+   array InternalPostingLedgerVirtualArray() to InternalPostingLedgerVirtual();
+}
+
+virtual InternalPostingLedgerVirtual {
+   crud = Read;
+   ludependencies = ManualIntPostingVirtual;
+   attribute Company Text;
+   attribute Account Text;
+   attribute RowNo Number;
+   attribute AccountingYear Number;
+   attribute VoucherNo Number;
+   attribute CurrencyRate Number;
+   attribute InternalSeqNumber Number;
+   attribute LedgerId Text {
+      label = "Ledger ID";
+   }
+   attribute EntryBasedOn Enumeration(EntryBasedOn);
+//   attribute IntManualAdded Boolean("TRUE", "FALSE") {
+//      label = "Added";
+//   }
+   attribute ManualCodeParts Text;
+   array InternalPostingsAccrulVirtualArray(Company, LedgerId, Account, InternalSeqNumber) to InternalPostingsAccrul(Company, LedgerId, Account, InternalSeqNumber);
+}
+
+@Override
+entity InternalPostingsAccrul {
+   //ludependencies = ManualIntPostingVirtual;
+   attribute RowNo Number {
+      required = [false];
+   }
+
+   attribute Amount Number {
+      insertable = [true];
+      updatable = [true];
+      required = [true];
+   }
+
+   attribute CurrencyAmount Number {
+      insertable = [true];
+      updatable = [true];
+      required = [true];
+   }
+   attribute Percentage Number {
+      insertable = [true];
+      updatable = [true];
+   }
+   reference AccountRef(Company, Account) to Account(Company, Account) {
+      label = "Account";
+   }
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB) {
+      label = "${context.Company.CodeBName}";
+   }
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC) {
+      label = "${context.Company.CodeCName}";
+   }
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD) {
+      label = "${context.Company.CodeDName}";
+   }
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE) {
+      label = "${context.Company.CodeEName}";
+   }
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF) {
+      label = "${context.Company.CodeFName}";
+   }
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG) {
+      label = "${context.Company.CodeGName}";
+   }
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH) {
+      label = "${context.Company.CodeHName}";
+   }
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI) {
+      label = "${context.Company.CodeIName}";
+   }
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ) {
+      label = "${context.Company.CodeJName}";
+   }
+
+   validate action CheckPostingBalance;
+    ------------------------- TO DO
+
+}
+
+action CheckPostingBalance {
+   initialcheck none;
+   parameter Init Boolean;
+}
+
+function ValidatePercentage Structure(AmountFromPercentageStructure) {
+   parameter CurrencyAmount Number;
+   parameter Amount Number;
+   parameter Correction Boolean;
+   parameter Percentage Number;
+}
+
+function ValidateAmounts Structure(AmountFromPercentageStructure) {
+   parameter Company Text;
+   parameter Total Number;
+   parameter CurrencyCode Text;
+   parameter Amounts Structure(AmountFromPercentageStructure);
+}
+
+function ValidateCurrAmounts Structure(AmountFromPercentageStructure) {
+   parameter Company Text;
+   parameter Total Number;
+   parameter Amounts Structure(AmountFromPercentageStructure);
+   parameter Rate Number;
+   parameter CurrencyCode Text;
+   parameter ConversionFactor Number;
+}
+
+function ValidatePostingsBalance Boolean {
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter VoucherDate Date;
+   parameter InternalSeqNumber Number;
+   parameter Account Text;
+   parameter Amount Number;
+   parameter CurrAmount Number;
+}
+
+structure AmountFromPercentageStructure {
+   attribute CurrencyDebitAmount Number;
+   attribute CurrencyCreditAmount Number;
+   attribute CurrencyAmount Number;
+   attribute DebitAmount Number;
+   attribute CreditAmount Number;
+   attribute Amount Number;
+   attribute Percentage Number;
+
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+enumeration EntryBasedOn {
+   value = "AMOUNT" {
+      identifier = "AMOUNT";
+      label = "Amount";
+   }
+   value = "PERCENTAGE" {
+      identifier = "PERCENTAGE";
+      label = "Percentage";
+   }
+}

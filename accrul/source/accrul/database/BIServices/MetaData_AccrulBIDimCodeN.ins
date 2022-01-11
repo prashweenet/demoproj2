@@ -1,0 +1,317 @@
+----------------------------------------------------------------------------
+--
+--  Dimension:  CodeN
+--  Component:  ACCRUL
+--  LU:         DimCodeN
+--
+--  Filename   : MetaData_AccrulBIDimCodeN.ins
+--
+--  Purpose    : Installs Business Intelligence specific Meta Data for dimension
+--               DIM_CODE_N in component ACCRUL.
+--
+--               The following is installed:
+--               * Dimension (header) data
+--               * Data access type information
+--               * Dimension Item data including add-on item definitions
+--               * Parent data
+--               * LOV information
+--               * Performance indicator information
+--               * Index definitions
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+DEFINE DIMENSION      = DIM_CODE_N
+DEFINE MODULE         = ACCRUL
+DEFINE VIEW_STD_DM    = DIM_CODE_N_DM
+DEFINE VIEW_STD_OL    = DIM_CODE_N_OL
+DEFINE DIM_ADD_ON     = ""
+DEFINE LOG_MESSAGE    = "****** &DIMENSION ******"
+DEFINE LOG_SOURCE_ID  = "Dimension &DIMENSION"
+
+PROMPT ================================================================
+PROMPT   Start installing Meta Data for &DIMENSION in component &MODULE
+PROMPT ================================================================
+
+BEGIN
+   Xlr_Import_Log_Util_API.Log_Message_Source(dbms_session.unique_session_id,
+                                              '&LOG_MESSAGE',
+                                              Xlr_Import_Log_Util_API.log_type_start,
+                                              '&LOG_SOURCE_ID');
+END;
+/
+
+
+PROMPT Backup dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Public_Rec;
+BEGIN
+   rec_.Dimension_Id  := '&DIMENSION';
+   XLR_META_UTIL_API.Backup_Dimension(rec_);
+END;
+/
+
+PROMPT Installing master data for dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Public_Rec;
+BEGIN
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Code N Dimension';
+   rec_.Installation_Name           := 'Code N';
+   rec_.Key_Column                  := 'ID';
+   rec_.Lov_Distinct_Search         := TRUE;
+   rec_.Lov_Max_Limit               := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Dimension_Type              := Xlr_Meta_Util_API.DIM_STANDARD_TYPE_;
+   XLR_META_UTIL_API.Install_Dimension(rec_);
+END;
+/
+
+PROMPT Installing data access information for dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Source_Public_Rec;
+BEGIN
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Source_Type                 := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Default_Source_Type         := TRUE;
+   rec_.View_Name                   := '&VIEW_STD_OL';
+   XLR_META_UTIL_API.Install_Dimension_Source(rec_);
+
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Source_Type                 := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Default_Source_Type         := FALSE;
+   rec_.View_Name                   := '&VIEW_STD_DM';
+   XLR_META_UTIL_API.Install_Dimension_Source(rec_);
+END;
+/
+
+PROMPT Installing item data for dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Item_Public_Rec;
+BEGIN
+   rec_.Dimension_Item_Id           := '&DIMENSION..ID';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Code N Unique Identity';
+   rec_.Column_Name                 := 'ID';
+   rec_.Installation_Name           := 'Code N Unique Identity';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := FALSE;
+   rec_.Display_Order               := NULL;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..COMPANY';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Company';
+   rec_.Column_Name                 := 'COMPANY';
+   rec_.Installation_Name           := 'Company';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := FALSE;
+   rec_.Display_Order               := NULL;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..CODE';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Code N code';
+   rec_.Column_Name                 := 'CODE';
+   rec_.Installation_Name           := 'Code N';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 1;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := '&DIMENSION';
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := TRUE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..DESCRIPTION';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Code N Description';
+   rec_.Column_Name                 := 'DESCRIPTION';
+   rec_.Installation_Name           := 'Code N Description';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 2;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+END;
+/
+
+PROMPT Installing parent item data for dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Parent_Public_Rec;
+BEGIN
+   rec_.Dimension_Id             := '&DIMENSION';
+   rec_.Item_No                  := 1;
+   rec_.Parent_Dimension_Item_Id := 'DIM_COMPANY.CODE';
+   rec_.Own_Item_Id              := '&DIMENSION..COMPANY';
+   rec_.Hierarchical_Order       := 1;
+   XLR_META_UTIL_API.Install_Dimension_Parent(rec_);
+END;
+/
+
+PROMPT Installing LOV item data for dimension items associated with &DIMENSION
+-- Note that the dimension item itself is not part of the list
+-- Will be added by LOV logic and given the Display_Order=0
+-- Also possible to add LOV info for add on items in this section
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Item_Lov_Public_Rec;
+BEGIN
+   rec_.Dimension_Item_Id     := '&DIMENSION..CODE';
+   rec_.Item_No               := 1;
+   rec_.Lov_Dimension_Item_Id := '&DIMENSION..DESCRIPTION';
+   rec_.Display_Order         := 1;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov(rec_);
+
+END;
+/
+
+PROMPT Installing LOV sort item data for dimension items associated with &DIMENSION
+-- Also possible to add LOV info for add on items in this section
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Item_Lov_Sort_Public_Rec;
+BEGIN
+   rec_.Dimension_Item_Id      := '&DIMENSION..CODE';
+   rec_.Item_No                := 1;
+   rec_.Sort_Dimension_Item_Id := '&DIMENSION..CODE';
+   rec_.Ascending_Sort         := TRUE;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov_Sort(rec_);
+
+
+END;
+/
+
+PROMPT Installing hint items associated with dimension &DIMENSION
+-- derived columns in the data mart or on line view should be defined
+-- all indexed columns, regardless of order in a concatenated index, should be defined
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Src_Hint_Item_Public_Rec;
+BEGIN
+   -- OnLine
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.DERIVED_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..COMPANY';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..CODE';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..DESCRIPTION';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.DERIVED_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   -- DataMart
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..COMPANY';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..CODE';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..DESCRIPTION';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.DERIVED_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+END;
+/
+
+PROMPT Installing BA Parameter Functions for dimension items in dimension - &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Item_Functions_Public_Rec;
+BEGIN
+   NULL;
+END;
+/
+
+PROMPT Post validate dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Public_Rec;
+BEGIN
+   rec_.Dimension_Id  := '&DIMENSION';
+   XLR_META_UTIL_API.Post_Validate_Dimension(rec_);
+END;
+/
+
+BEGIN
+   Trace_SYS.Set_Trace_Output(1);
+   Xlr_Import_Log_Util_API.Output_Stats_And_Finish(dbms_session.unique_session_id,
+                                                   '&LOG_MESSAGE',
+                                                   '&LOG_SOURCE_ID');
+   Trace_SYS.Set_Trace_Output(0);
+END;
+/
+
+COMMIT;
+
+
+PROMPT ================================================================
+PROMPT    End installing Meta Data for &DIMENSION in component &MODULE
+PROMPT ================================================================
+
+-----------------------------------------------------------------------
+
+UNDEFINE DIMENSION
+UNDEFINE MODULE
+UNDEFINE VIEW_STD_DM
+UNDEFINE VIEW_STD_OL
+UNDEFINE DIM_ADD_ON
+UNDEFINE LOG_MESSAGE
+UNDEFINE LOG_SOURCE_ID
+
+-----------------------------------------------------------------------

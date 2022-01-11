@@ -1,0 +1,243 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     AddPseudoCodeAssistant
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Add_Pseudo_Codes___(
+   objkey_ IN VARCHAR2) RETURN VARCHAR2
+IS
+   head_key_         Pseudo_Codes_Head_Virtual_Key;
+   status_           VARCHAR2(5);
+   insert_rec_       pseudo_codes_tab%ROWTYPE;
+BEGIN
+   head_key_.objkey := objkey_;
+   
+   FOR rec_ IN Get_Pseudo_Codes_Array___(head_key_) LOOP
+      status_ := 'FALSE';
+      insert_rec_.company                 := rec_.company;
+      insert_rec_.user_name               := rec_.user_name;
+      insert_rec_.pseudo_code             := rec_.pseudo_code;
+      insert_rec_.description             := rec_.description;
+      insert_rec_.account                 := rec_.account;
+      insert_rec_.code_b                  := rec_.code_b;
+      insert_rec_.code_c                  := rec_.code_c;
+      insert_rec_.code_d                  := rec_.code_d;
+      insert_rec_.code_e                  := rec_.code_e;
+      insert_rec_.code_f                  := rec_.code_f;
+      insert_rec_.code_g                  := rec_.code_g;
+      insert_rec_.code_h                  := rec_.code_h;
+      insert_rec_.code_i                  := rec_.code_i;
+      insert_rec_.code_j                  := rec_.code_j;
+      insert_rec_.process_code            := rec_.process_code;
+      insert_rec_.quantity                := rec_.quantity;
+      insert_rec_.project_activity_id     := rec_.project_activity_id;
+      insert_rec_.text                    := rec_.text;
+      insert_rec_.pseudo_code_ownership   := rec_.pseudo_code_ownership; 
+      
+      Pseudo_Codes_API.New(insert_rec_); 
+      
+      status_ := 'TRUE';
+   END LOOP;
+   RETURN  status_;
+END Add_Pseudo_Codes___;
+
+@Override
+PROCEDURE CRUD_Create___ (
+   rec_ IN Pseudo_Codes_Head_Virtual_Rec )
+IS
+BEGIN
+   super(rec_);
+   Populate_Pseudo_Default_Data___( rec_.company,
+                                    rec_.account,
+                                    rec_.code_b,
+                                    rec_.code_c,
+                                    rec_.code_d,
+                                    rec_.code_e,
+                                    rec_.code_f,
+                                    rec_.code_g,
+                                    rec_.code_h,
+                                    rec_.code_i,
+                                    rec_.code_j,
+                                    rec_.process_code,
+                                    rec_.quantity,
+                                    rec_.project_id,
+                                    rec_.project_activity_id,
+                                    rec_.objkey);
+END CRUD_Create___;
+
+PROCEDURE Populate_Pseudo_Default_Data___(
+   company_              IN VARCHAR2,
+   account_              IN VARCHAR2,
+   code_b_               IN VARCHAR2,
+   code_c_               IN VARCHAR2,
+   code_d_               IN VARCHAR2,
+   code_e_               IN VARCHAR2,
+   code_f_               IN VARCHAR2,
+   code_g_               IN VARCHAR2,
+   code_h_               IN VARCHAR2,
+   code_i_               IN VARCHAR2,
+   code_j_               IN VARCHAR2,
+   process_code_         IN VARCHAR2,
+   quantity_             IN NUMBER,
+   project_id_           IN VARCHAR2,
+   project_activity_id_  IN NUMBER,
+   parent_objkey_        IN VARCHAR2)
+IS
+   pseudo_code_rec_     Pseudo_Codes_Virtual_Rec;
+   enable_activity_id_  BOOLEAN;
+   required_string_     VARCHAR2(2000);
+BEGIN
+   required_string_    := Account_API.Get_Required_Code_Part_List(company_, account_);
+   enable_activity_id_ := CASE Pseudo_Codes_API.Is_Proj_Activity_Id_Enable(company_, NULL, NULL, project_id_) 
+                          WHEN 'TRUE' THEN TRUE
+                          ELSE FALSE
+                          END;
+   pseudo_code_rec_.company               := company_;
+   pseudo_code_rec_.user_name             := Fnd_Session_API.Get_Fnd_User;
+   pseudo_code_rec_.account               := account_;
+   pseudo_code_rec_.code_b                := code_b_;
+   pseudo_code_rec_.code_c                := code_c_;
+   pseudo_code_rec_.code_d                := code_d_;
+   pseudo_code_rec_.code_e                := code_e_;
+   pseudo_code_rec_.code_f                := code_f_;
+   pseudo_code_rec_.code_g                := code_g_;
+   pseudo_code_rec_.code_h                := code_h_;
+   pseudo_code_rec_.code_i                := code_i_;
+   pseudo_code_rec_.code_j                := code_j_;
+   pseudo_code_rec_.process_code          := process_code_;
+   pseudo_code_rec_.quantity              := quantity_;
+   pseudo_code_rec_.project_id            := project_id_;
+   pseudo_code_rec_.activity_id_enabled   := enable_activity_id_;
+   pseudo_code_rec_.project_activity_id   := project_activity_id_;
+   pseudo_code_rec_.pseudo_code_ownership := Fin_Ownership_API.Get_Db_Value(1);
+   pseudo_code_rec_.required_string       := required_string_;
+   pseudo_code_rec_.objkey                := sys_guid();   
+   pseudo_code_rec_.parent_objkey         := parent_objkey_;
+   
+   CRUD_Create___(pseudo_code_rec_);
+   
+END Populate_Pseudo_Default_Data___;
+
+@Override
+PROCEDURE CRUD_Default___ (
+   rec_ IN OUT Pseudo_Codes_Virtual_Rec)
+IS
+   head_key_            Pseudo_Codes_Head_Virtual_Key;
+   head_rec_            Pseudo_Codes_Head_Virtual_Rec;
+   enable_activity_id_  BOOLEAN;
+   required_string_     VARCHAR2(2000);
+BEGIN
+   head_key_.objkey := rec_.parent_objkey;
+   head_rec_ := Get_Record___(head_key_);
+   
+   required_string_    := Account_API.Get_Required_Code_Part_List(head_rec_.company, head_rec_.account);
+   enable_activity_id_ := CASE Pseudo_Codes_API.Is_Proj_Activity_Id_Enable(head_rec_.company, NULL, NULL, head_rec_.project_id) 
+                          WHEN 'TRUE' THEN TRUE
+                          ELSE FALSE
+                          END;
+  
+   rec_.company               := head_rec_.company;
+   rec_.user_name             := Fnd_Session_API.Get_Fnd_User;
+   rec_.account               := head_rec_.account;
+   rec_.code_b                := head_rec_.code_b;
+   rec_.code_c                := head_rec_.code_c;
+   rec_.code_d                := head_rec_.code_d;
+   rec_.code_e                := head_rec_.code_e;
+   rec_.code_f                := head_rec_.code_f;
+   rec_.code_g                := head_rec_.code_g;
+   rec_.code_h                := head_rec_.code_h;
+   rec_.code_i                := head_rec_.code_i;
+   rec_.code_j                := head_rec_.code_j;
+   rec_.process_code          := head_rec_.process_code;
+   rec_.quantity              := head_rec_.quantity;
+   rec_.project_id            := head_rec_.project_id;
+   rec_.activity_id_enabled   := enable_activity_id_;
+   rec_.project_activity_id   := head_rec_.project_activity_id;
+   rec_.pseudo_code_ownership := Fin_Ownership_API.Get_Db_Value(1);
+   rec_.required_string       := required_string_;
+   rec_.objkey                := sys_guid();
+   rec_.parent_objkey         := head_rec_.objkey;
+   
+   super(rec_);
+END CRUD_Default___;
+
+@Override
+PROCEDURE CRUD_Create___ (
+   rec_ IN OUT Pseudo_Codes_Virtual_Rec )
+IS
+BEGIN   
+   Check_Psuedo_Code_Exists___(rec_.parent_objkey,rec_.company,rec_.pseudo_code,'CREATE');  
+   super(rec_);
+END CRUD_Create___;
+
+@Override
+PROCEDURE CRUD_Update___ (
+   oldrec_ IN Pseudo_Codes_Virtual_Rec ,
+   newrec_ IN Pseudo_Codes_Virtual_Rec  )
+IS   
+BEGIN  
+   Check_Psuedo_Code_Exists___(newrec_.parent_objkey,newrec_.company,newrec_.pseudo_code,'UPDATE');   
+   super(oldrec_,newrec_);
+END CRUD_Update___;
+
+PROCEDURE Check_Psuedo_Code_Exists___(
+   parent_key_  IN VARCHAR2,
+   company_     IN VARCHAR2,
+   pseudo_code_ IN VARCHAR2,
+   operation_   IN VARCHAR2)
+IS
+   head_key_         Pseudo_Codes_Head_Virtual_Key;
+BEGIN   
+   head_key_.objkey := parent_key_;
+   
+   IF(Pseudo_Codes_API.Exist_Pseudo_Code(company_,pseudo_code_) = 'TRUE') THEN      
+      Error_SYS.Appl_General(lu_name_, 'PSEUDOEXISTS: Psuedo code :P1 already exists.', pseudo_code_);         
+   END IF;
+   IF (operation_ = 'CREATE') THEN
+      FOR temp_rec_ IN Get_Pseudo_Codes_Array___(head_key_) LOOP
+         IF(temp_rec_.pseudo_code = pseudo_code_)THEN
+            Error_SYS.Appl_General(lu_name_, 'PSEUDOEXISTS: Psuedo code :P1 already exists.', pseudo_code_);
+         END IF;      
+      END LOOP;
+   END IF;
+END Check_Psuedo_Code_Exists___;
+
+FUNCTION Validate_Project_Origin___(
+   company_    IN VARCHAR2,
+   project_id_ IN VARCHAR2 )  RETURN Project_Origin_Structure_Rec
+IS
+   project_origin_rec_   Project_Origin_Structure_Rec;
+   project_origin_       VARCHAR2(30);
+BEGIN
+   $IF (Component_Genled_SYS.INSTALLED) $THEN
+      project_origin_:= Accounting_Project_API.Get_Project_Origin_Db(company_, project_id_);
+   $ELSE
+      project_origin_ := NULL;
+   $END
+   IF (project_origin_ = 'JOB') THEN
+      project_origin_rec_.valid_origin := 'FALSE';
+      project_origin_rec_.activity_id  := 0;
+   ELSIF (project_origin_ = 'FINPROJECT') THEN
+      project_origin_rec_.valid_origin := 'FALSE';
+      project_origin_rec_.activity_id  :=  null;
+   ELSE
+      project_origin_rec_.valid_origin := 'TRUE';
+   END IF;
+   RETURN project_origin_rec_;
+END Validate_Project_Origin___;
+
+FUNCTION Get_Project_Code_Part___ (
+   company_   IN VARCHAR2) RETURN VARCHAR2
+IS
+BEGIN
+	RETURN Accounting_Code_Parts_API.Get_Codepart_Function(company_, 'PRACC');
+END Get_Project_Code_Part___;

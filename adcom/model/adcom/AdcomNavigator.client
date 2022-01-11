@@ -1,0 +1,84 @@
+--  Date        Sign    History
+--  ----------  ------  -----------------------------------------------------
+--  08-08-2020  DILDLK  LMM2020R1-516, Modified navigation.
+--  02-07-2020  DILDLK  LMM2020R1-260, Modified navigation.
+--  23-06-2020  DILDLK  LMM2020R1-80, UI Changes.
+--  16-06-2020  SURBLK  LMM2020R1-70, Created.
+-----------------------------------------------------------------------------
+
+client AdcomNavigator;
+component ADCOM;
+layer Core;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AviationMaintenance toplevel at index 2000 {
+      label = "Aviation Maintenance";
+   }
+}
+
+navigator {
+   entry BasicData parent AdcomNavigator.AviationMaintenance at index 100 {
+      label = "Basic Data";
+   }
+}
+
+navigator {
+   entry AircraftBasicData parent AdcomNavigator.BasicData at index 300 {
+      label = "Aircraft Basic Data";
+   }
+}
+navigator {
+   entry FaultDeferralBasicData parent AdcomNavigator.BasicData at index 850 {
+      label = "Fault Deferral Basic Data";
+   }
+}
+
+navigator {
+   entry MeasurementBasicData parent AdcomNavigator.BasicData at index 1100 {
+      label = "Measurement Basic Data";
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

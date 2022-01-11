@@ -1,0 +1,53 @@
+fragment AccCodePartsGroconLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view acc_code_parts_grocon_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccCodePartsGroconLovSelector for AccCodePartsGroconLov {
+   orderby = CodePart;
+   static CodeName;
+   static Description;
+}
+
+@Override
+list AccCodePartsGroconLovLovList for AccCodePartsGroconLov {
+   orderby = CodePart;
+}
+
+card AccCodePartsGroconLovCard for AccCodePartsGroconLov {
+   label = "";
+   fieldranking CodeName;
+   field CodeName;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccCodePartsGroconLov {
+   from = "acc_code_parts_grocon_lov";
+   lu = AccountingCodeParts;
+   keys = RepEntCompany, CodeName;
+   ludependencies = AccountingCodeParts;
+   attribute RepEntCompany Text {
+      label = "Reporting Entity Company";
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CodePart Text {
+      label = "Code part";
+      lovcolumn = [false];
+   }
+   attribute CodeName Text {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------
+

@@ -1,0 +1,52 @@
+projection VoucherTemplatesHandling;
+component ACCRUL;
+layer Core;
+description "Voucher Templates";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherTemplates for VoucherTemplate {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity VoucherTemplate {
+   attribute Description Text {
+      label = "Template Description";
+   }
+   attribute MultiCompany Boolean("TRUE", "FALSE") {
+      required = [true];
+      label = "Multi-Company";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function ValidateMultiCompany Text {
+   parameter Company Text;
+   parameter Template Text;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

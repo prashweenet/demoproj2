@@ -1,0 +1,167 @@
+client CompaniesPerReportingPeriodDefinition;
+
+component ACCRUL;
+layer Core;
+projection CompaniesPerReportingPeriodDefinitionHandling;
+include fragment AccountingYearSelector;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CompPerBIRepPeriodDefNavEntry parent AccrulNavigator.BIReportingPeriodsMenu at index 300 {
+      label = "Companies per Reporting Period Definition";
+      page Form home RpdCompany;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using RpdIdentitySet {
+   label = "Companies per Reporting Period Definition";
+
+   selector ReportingDefinitionSelector;
+   group ReportingDefinitionGroup;
+   list RpdCompanyList(CompanyArray);
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command AccPerConnectionsCommand for RpdCompany {
+   label = "Accounting Period Connection";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/ReportingAccountingPeriodConnection/Form?$contexts=Company:$[Company]&$filter=RpdId eq $[RpdId]";
+   }
+}
+
+command MapAccPeriodsCommand for RpdCompany {
+   label = "Map Accounting Periods";
+   enabled = [RepPeriodsDefined = true];
+
+
+   execute {
+      dialog MapAccPeriodsDlg(RpdId, Company) {
+         when CANCEL {
+            exit CANCEL;
+         }
+      }
+   }
+}
+
+command Ok for RpdGenOnAccCalendarStructure {
+   variable NumCount {
+      type = Number;
+   }
+   execute {
+      call GetMapAccPeriodCount(RpdId, Company, AccYearFrom, AccYearTo, IncludeYearEndPeriod) into NumCount;
+      if [NumCount > 0] {
+         info("Accounting Period mapping completed partly.");
+      }
+      else {
+         success("Accounting Period mapping completed successfully.");
+      }
+      exit OK;
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ReportingDefinitionSelector for RpdIdentity {
+   orderby = RpdId;
+   label = "${RpdId} -${Description}";
+
+   field RpdId {
+      label = "Definition ID";
+   }
+   field Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ReportingDefinitionGroup for RpdIdentity {
+   label = "";
+
+   field RpdId {
+      label = "Definition ID";
+   }
+   field Description;
+}
+
+group AccYearInfoGroup for RpdGenOnAccCalendarStructure {
+   label = "Accounting Year Information";
+
+   lov CompanyRef with ReferenceCompanyFinanceSelector {
+      editable = [false];
+   }
+   lov AccFromYearRef with ReferenceAccountingYearSelector {
+      editable = [Company != "" and Company != null];
+      required = [true];
+   }
+   lov AccToYearRef with ReferenceAccountingYearSelector {
+      editable = [Company != "" and Company != null];
+      required = [true];
+   }
+   field IncludeYearEndPeriod {
+      required = [true];
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list RpdCompanyList for RpdCompany {
+   label = "Companies per Reporting Period Definition";
+
+   lov CompanyRef with ReferenceCompanyFinanceSelector {
+      size = Small;
+   }
+   field CompanyRef.Description;
+   commandgroup AccPerConnCmdGroup {
+      command AccPerConnectionsCommand;
+   }
+   commandgroup MapAccPerCmdGroup {
+      command MapAccPeriodsCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+dialog MapAccPeriodsDlg for RpdGenOnAccCalendarStructure {
+   label = "Map Accounting Periods";
+   input(RpdId, Company);
+   output(RpdId, Company, AccYearFrom, AccYearTo, IncludeYearEndPeriod);
+   group AccYearInfoGroup;
+
+   command Ok {
+      enabled = [Company != "" and AccYearFrom != null and  AccYearTo != null];
+   }
+   command Cancel;
+}
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

@@ -1,0 +1,14 @@
+SET SERVEROUTPUT ON
+PROMPT Inserting In-Memory Acceleration Packages for ACCRUL
+DECLARE
+   package_id_ NUMBER;   
+BEGIN   
+   package_id_ := In_Memory_Package_API.Create_In_Memory_Package_('Accrul Voucher Analysis'); 
+   In_Memory_Package_API.Add_Table_To_IMAP_(package_id_, 'VOUCHER_TAB'); 
+   In_Memory_Package_API.Add_Table_To_IMAP_(package_id_, 'VOUCHER_ROW_TAB'); 
+   In_Memory_Package_API.Add_Table_To_IMAP_(package_id_, 'CODESTRING_COMB_TAB'); 
+END;
+/
+
+COMMIT;
+

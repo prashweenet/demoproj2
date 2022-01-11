@@ -1,0 +1,51 @@
+projection AuditFileTaxInfoHandling;
+component ACCRUL;
+layer Core;
+description "Audit File Tax Info Handling";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CompanyFinanceSet for CompanyFinance {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CompanyFinance {
+   array StandardTaxCodeArray(Company) to StandardTaxCode(Company);
+   array TaxExemptionReasonInfoArray(Company) to TaxExemptionReasonInfo(Company);
+   array TaxAccountingBasisInfoArray(Company) to TaxAccountingBasisInfo(Company);
+}
+
+@Override
+entity StandardTaxCode {
+   crud = Create, Read, Update, Delete;
+}
+
+@Override
+entity TaxExemptionReasonInfo {
+   crud = Create, Read, Update, Delete;
+}
+
+@Override
+entity TaxAccountingBasisInfo {
+   crud = Create, Read, Update, Delete;
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+-------------------------------- STRUCTURES ---------------------------------
+
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------

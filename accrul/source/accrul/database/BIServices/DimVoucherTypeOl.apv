@@ -1,0 +1,94 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  VoucherType
+--  Component:  ACCRUL
+--  LU:         DimVoucherType
+--
+--  File     :  DimVoucherTypeOl.api
+--  Purpose  :  Create ON LINE dimension view DIM_VOUCHER_TYPE_OL
+--  Note     :  NOTE that NULL identity handling is not required for OL views
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   -------------------------------------------------
+--  090715  RORALK Created for 75 core version of IFS BA
+--------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_VOUCHER_TYPE
+DEFINE VIEW       = DIM_VOUCHER_TYPE_OL
+DEFINE TAB        = VOUCHER_TYPE_TAB
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimVoucherType
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.company||'^'||a.voucher_type                                id,
+       a.company                                                     company,
+       a.voucher_type                                                code,
+       SUBSTR(NVL( (SELECT SUBSTR(b.current_translation,1,100)
+      FROM KEY_LU_TRANSLATION_TAB b
+      WHERE b.key_value     = a.company
+      AND   b.attribute_key = a.voucher_type
+      AND   b.lu            = 'VoucherType'
+      AND module            = 'ACCRUL'
+      AND key_name          = 'CompanyKeyLu'
+      AND rowtype           = 'CompanyKeyLuTranslation'
+      AND   b.language_code =
+      (SELECT language
+      FROM FND_SESSION)), a.description),1,100)                      description,
+       a.ledger_id                                                   ledger_id,
+       a.automatic_allot                                             automatic_allot,
+       SUBSTR(Finance_Yes_No_API.Decode(automatic_allot),1,100)      automatic_allot_desc,
+       a.use_manual                                                  use_manual,
+       SUBSTR(Fnd_Boolean_API.Decode(use_manual),1,100)              use_manual_desc,
+       a.single_function_group                                       single_function_group,
+       DECODE(a.single_function_group,'Y', 'TRUE',
+      'N', 'FALSE','FALSE')                                          single_function_group_desc,
+       a.simulation_voucher                                          simulation_voucher,
+       SUBSTR(Fnd_Boolean_API.Decode(simulation_voucher),1,100)      simulation_voucher_desc
+FROM &TAB a
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Voucher Type^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Voucher Type^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Voucher Type Description^';
+   COMMENT ON COLUMN &VIEW..LEDGER_ID
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(10)^PROMPT=Ledger Id^';
+   COMMENT ON COLUMN &VIEW..AUTOMATIC_ALLOT
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Automatic Allotment^';
+COMMENT ON COLUMN &VIEW..AUTOMATIC_ALLOT_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Automatic Allotment Description^';
+COMMENT ON COLUMN &VIEW..USE_MANUAL
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Use Manual Internal Methods^';
+COMMENT ON COLUMN &VIEW..USE_MANUAL_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Use Manual Internal Methods Description^';
+COMMENT ON COLUMN &VIEW..SINGLE_FUNCTION_GROUP
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Single Function Group^';
+   COMMENT ON COLUMN &VIEW..SINGLE_FUNCTION_GROUP_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(5)^PROMPT=Single Function Group Description^';
+   COMMENT ON COLUMN &VIEW..SIMULATION_VOUCHER
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Simulation Voucher^';
+COMMENT ON COLUMN &VIEW..SIMULATION_VOUCHER_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Simulation Voucher Description^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE TAB
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

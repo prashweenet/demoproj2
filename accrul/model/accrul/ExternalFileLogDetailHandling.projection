@@ -1,0 +1,81 @@
+projection ExternalFileLogDetailHandling;
+component ACCRUL;
+layer Core;
+description "External File Log Detail";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtFileLogs for ExtFileLog;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileLog {
+   crud = Read;
+
+   attribute State Enumeration(ExtFileState) {
+      label = "Log Status";
+   }
+   attribute LogDate Timestamp {
+      label = "Log Date";
+   }
+   attribute FileType Text {
+      fetch = "Ext_File_Load_API.Get_File_Type(load_file_id)";
+   }
+   attribute FileTemplateId Text {
+      fetch = "Ext_File_Load_API.Get_File_Template_Id(load_file_id)";
+      label = "File Template";
+   }
+
+   reference LoadFileIdRef(LoadFileId) to ExtFileLoad(LoadFileId);
+   reference FileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+   reference FileTemplateIdRef(FileTemplateId) to ExtFileTemplate(FileTemplateId) {
+      label = "File Template";
+   }
+
+   array ExtFileLogDetailArray(LoadFileId, SeqNo) to ExtFileLogDetail(LoadFileId, SeqNo);
+}
+
+@Override
+entity ExtFileLogDetail {
+   crud = Read;
+
+   attribute RowState Enumeration(ExtFileRowState) {
+      label = "Row Status";
+   }
+   attribute NoOfRecords Number {
+      label = "No of Records";
+   }
+}
+
+@Override
+entity ExtFileTemplate {
+   -- Note: Where clause was added to support solution sets. Inactive component data should not be shown.
+   where = "exists (select 1
+                    from ext_file_type
+                    where ext_file_type.file_type = ext_file_template.file_type)";
+}
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

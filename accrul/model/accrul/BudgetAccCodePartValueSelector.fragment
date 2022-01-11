@@ -1,0 +1,73 @@
+fragment BudgetAccCodePartValueSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view budget_acc_code_part_value";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceBudgetAccCodePartValueSelector for BudgetAccCodePartValue {
+   orderby = SortValue;
+   static CodePart;
+   static CodePartValue;
+   static Description;
+}
+
+@Override
+list BudgetAccCodePartValueLovList for BudgetAccCodePartValue {
+   orderby = SortValue;
+}
+
+card BudgetAccCodePartValueCard for BudgetAccCodePartValue {
+   label = "";
+   fieldranking CodePart;
+   field CodePart;
+   field CodePartValue;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query BudgetAccCodePartValue {
+   from = "budget_acc_code_part_value";
+   lu = AccountingCodePartValue;
+   keys = Company, CodePart, CodePartValue;
+   ludependencies = AccountingCodePartValue;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CodePart Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute CodePartValue Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute AccntType Text {
+      lovcolumn = [false];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [false];
+   }
+   attribute ValidUntil Date {
+      lovcolumn = [false];
+   }
+   attribute AccountingTextId Number {
+      lovcolumn = [false];
+   }
+   attribute Text Text {
+      lovcolumn = [false];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

@@ -1,0 +1,373 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingCodePartA
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200904  Jadulk  FISPRING20-6695, Removed CONACC related obsolete component logic.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Accounting_Code_Part_A IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'SORT_VALUE'
+   Table = 'ACCOUNTING_CODE_PART_VALUE_TAB'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Company.Ref = 'CompanyFinance'
+   Code_Part.Flags = 'PMI--'
+   Code_Part.Datatype = 'STRING(1)'
+   Code_Part.Prompt = 'Code Part'
+   Code_Part.Ref = 'AccountingCodeParts(company)'
+   Code_Part_Value.Flags = 'PMI-L'
+   Code_Part_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Code_Part_Value.Prompt = 'Code Part Value'
+   Description.Flags = 'AMIUL'
+   Description.Datatype = 'STRING(100)'
+   Description.Prompt = 'Description'
+   Valid_From.Flags = 'AMIU-'
+   Valid_From.Datatype = 'DATE/DATE'
+   Valid_From.Prompt = 'Valid From'
+   Valid_Until.Flags = 'AMIU-'
+   Valid_Until.Datatype = 'DATE/DATE'
+   Valid_Until.Prompt = 'Valid Until'
+   Accounting_Text_Id.Flags = 'A-IU-'
+   Accounting_Text_Id.Datatype = 'STRING(200)'
+   Accounting_Text_Id.Prompt = 'Accounting Text Id'
+   Accnt_Group.Flags = 'AMIU-'
+   Accnt_Group.Datatype = 'STRING(20)/UPPERCASE'
+   Accnt_Group.Prompt = 'Accnt Group'
+   Accnt_Group.Ref = 'AccountGroup(company)'
+   Accnt_Type.Flags = 'AMIU-'
+   Accnt_Type.Datatype = 'STRING(20)/UPPERCASE'
+   Accnt_Type.Prompt = 'Accnt Type'
+   Accnt_Type.Ref = 'AccountType(company)'
+   Logical_Account_Type.Flags = 'A-IU-'
+   Logical_Account_Type.Datatype = 'STRING(200)'
+   Logical_Account_Type.Enumeration = 'AccountTypeValue'
+   Logical_Account_Type.Prompt = 'Logical Account Type'
+   Logical_Account_Type.Ref = 'AccountTypeValue'
+   Process_Code.Flags = 'A-IU-'
+   Process_Code.Datatype = 'STRING(10)/UPPERCASE'
+   Process_Code.Prompt = 'Process Code'
+   Process_Code.Ref = 'AccountProcessCode(company)'
+   Ledg_Flag.Flags = 'AMIU-'
+   Ledg_Flag.Datatype = 'STRING(200)'
+   Ledg_Flag.Enumeration = 'AccountingLedgFlag'
+   Ledg_Flag.Prompt = 'Ledg Flag'
+   Ledg_Flag.Ref = 'AccountingLedgFlag'
+   Ledg_Flag_Db.Flags = 'A----'
+   Ledg_Flag_Db.Datatype = 'STRING(20)'
+   Ledg_Flag_Db.Prompt = 'Ledg Flag'
+   Req_Code_B.Flags = 'AMIU-'
+   Req_Code_B.Datatype = 'STRING(200)'
+   Req_Code_B.Enumeration = 'AccountRequest'
+   Req_Code_B.Prompt = 'Req Code B'
+   Req_Code_B.Ref = 'AccountRequest'
+   Req_Code_B_Db.Flags = 'A----'
+   Req_Code_B_Db.Datatype = 'STRING(20)'
+   Req_Code_B_Db.Prompt = 'Req Code B'
+   Req_Code_C.Flags = 'AMIU-'
+   Req_Code_C.Datatype = 'STRING(200)'
+   Req_Code_C.Enumeration = 'AccountRequest'
+   Req_Code_C.Prompt = 'Req Code C'
+   Req_Code_C.Ref = 'AccountRequest'
+   Req_Code_C_Db.Flags = 'A----'
+   Req_Code_C_Db.Datatype = 'STRING(20)'
+   Req_Code_C_Db.Prompt = 'Req Code C'
+   Req_Code_D.Flags = 'AMIU-'
+   Req_Code_D.Datatype = 'STRING(200)'
+   Req_Code_D.Enumeration = 'AccountRequest'
+   Req_Code_D.Prompt = 'Req Code D'
+   Req_Code_D.Ref = 'AccountRequest'
+   Req_Code_D_Db.Flags = 'A----'
+   Req_Code_D_Db.Datatype = 'STRING(20)'
+   Req_Code_D_Db.Prompt = 'Req Code D'
+   Req_Code_E.Flags = 'AMIU-'
+   Req_Code_E.Datatype = 'STRING(200)'
+   Req_Code_E.Enumeration = 'AccountRequest'
+   Req_Code_E.Prompt = 'Req Code E'
+   Req_Code_E.Ref = 'AccountRequest'
+   Req_Code_E_Db.Flags = 'A----'
+   Req_Code_E_Db.Datatype = 'STRING(20)'
+   Req_Code_E_Db.Prompt = 'Req Code E'
+   Req_Code_F.Flags = 'AMIU-'
+   Req_Code_F.Datatype = 'STRING(200)'
+   Req_Code_F.Enumeration = 'AccountRequest'
+   Req_Code_F.Prompt = 'Req Code F'
+   Req_Code_F.Ref = 'AccountRequest'
+   Req_Code_F_Db.Flags = 'A----'
+   Req_Code_F_Db.Datatype = 'STRING(20)'
+   Req_Code_F_Db.Prompt = 'Req Code F'
+   Req_Code_G.Flags = 'AMIU-'
+   Req_Code_G.Datatype = 'STRING(200)'
+   Req_Code_G.Enumeration = 'AccountRequest'
+   Req_Code_G.Prompt = 'Req Code G'
+   Req_Code_G.Ref = 'AccountRequest'
+   Req_Code_G_Db.Flags = 'A----'
+   Req_Code_G_Db.Datatype = 'STRING(20)'
+   Req_Code_G_Db.Prompt = 'Req Code G'
+   Req_Code_H.Flags = 'AMIU-'
+   Req_Code_H.Datatype = 'STRING(200)'
+   Req_Code_H.Enumeration = 'AccountRequest'
+   Req_Code_H.Prompt = 'Req Code H'
+   Req_Code_H.Ref = 'AccountRequest'
+   Req_Code_H_Db.Flags = 'A----'
+   Req_Code_H_Db.Datatype = 'STRING(20)'
+   Req_Code_H_Db.Prompt = 'Req Code H'
+   Req_Code_I.Flags = 'AMIU-'
+   Req_Code_I.Datatype = 'STRING(200)'
+   Req_Code_I.Enumeration = 'AccountRequest'
+   Req_Code_I.Prompt = 'Req Code I'
+   Req_Code_I.Ref = 'AccountRequest'
+   Req_Code_I_Db.Flags = 'A----'
+   Req_Code_I_Db.Datatype = 'STRING(20)'
+   Req_Code_I_Db.Prompt = 'Req Code I'
+   Req_Code_J.Flags = 'AMIU-'
+   Req_Code_J.Datatype = 'STRING(200)'
+   Req_Code_J.Enumeration = 'AccountRequest'
+   Req_Code_J.Prompt = 'Req Code J'
+   Req_Code_J.Ref = 'AccountRequest'
+   Req_Code_J_Db.Flags = 'A----'
+   Req_Code_J_Db.Datatype = 'STRING(20)'
+   Req_Code_J_Db.Prompt = 'Req Code J'
+   Req_Quantity.Flags = 'AMIUL'
+   Req_Quantity.Datatype = 'STRING(200)'
+   Req_Quantity.Enumeration = 'AccountRequest'
+   Req_Quantity.Prompt = 'Req Quantity'
+   Req_Quantity.Ref = 'AccountRequest'
+   Req_Quantity_Db.Flags = 'A----'
+   Req_Quantity_Db.Datatype = 'STRING(20)'
+   Req_Quantity_Db.Prompt = 'Req Quantity'
+   Req_Text.Flags = 'AMIU-'
+   Req_Text.Datatype = 'STRING(200)'
+   Req_Text.Enumeration = 'AccountRequestText'
+   Req_Text.Prompt = 'Req Text'
+   Req_Text.Ref = 'AccountRequestText'
+   Req_Text_Db.Flags = 'A----'
+   Req_Text_Db.Datatype = 'STRING(20)'
+   Req_Text_Db.Prompt = 'Req Text'
+   Req_Process_Code.Flags = 'AMIU-'
+   Req_Process_Code.Datatype = 'STRING(200)'
+   Req_Process_Code.Enumeration = 'AccountRequest'
+   Req_Process_Code.Prompt = 'Req Process Code'
+   Req_Process_Code.Ref = 'AccountRequest'
+   Req_Process_Code_Db.Flags = 'A----'
+   Req_Process_Code_Db.Datatype = 'STRING(20)'
+   Req_Process_Code_Db.Prompt = 'Req Process Code'
+   Curr_Balance.Flags = 'A-IU-'
+   Curr_Balance.Datatype = 'STRING(200)'
+   Curr_Balance.Enumeration = 'AccCurrencyBalanceFlag'
+   Curr_Balance.Prompt = 'Curr Balance'
+   Curr_Balance.Ref = 'AccCurrencyBalanceFlag'
+   Curr_Balance_Db.Flags = 'A----'
+   Curr_Balance_Db.Datatype = 'STRING(20)'
+   Curr_Balance_Db.Prompt = 'Curr Balance'
+   Text.Flags = 'A-IU-'
+   Text.Datatype = 'STRING(2000)'
+   Text.Prompt = 'Text'
+   Sort_Value.Flags = 'A-I--'
+   Sort_Value.Datatype = 'STRING(30)'
+   Sort_Value.Prompt = 'Sort Value'
+SELECT company                                                             company,
+       code_part                                                           code_part,
+       code_part_value                                                     code_part_value,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'Account',
+                  code_part_value), description)                           description,
+       valid_from                                                          valid_from,
+       valid_until                                                         valid_until,
+       accounting_text_id                                                  accounting_text_id,
+       accnt_group                                                         accnt_group,
+       accnt_type                                                          accnt_type,
+       Account_Type_Value_API.Decode(logical_account_type)                 logical_account_type,
+       logical_account_type                                                logical_account_type_db,
+       process_code                                                        process_code,
+       Accounting_Ledg_Flag_API.Decode(ledg_flag)                          ledg_flag,
+       ledg_flag                                                           ledg_flag_db,
+       Account_Request_API.Decode(req_code_b)                              req_code_b,
+       req_code_b                                                          req_code_b_db,
+       Account_Request_API.Decode(req_code_c)                              req_code_c,
+       req_code_c                                                          req_code_c_db,
+       Account_Request_API.Decode(req_code_d)                              req_code_d,
+       req_code_d                                                          req_code_d_db,
+       Account_Request_API.Decode(req_code_e)                              req_code_e,
+       req_code_e                                                          req_code_e_db,
+       Account_Request_API.Decode(req_code_f)                              req_code_f,
+       req_code_f                                                          req_code_f_db,
+       Account_Request_API.Decode(req_code_g)                              req_code_g,
+       req_code_g                                                          req_code_g_db,
+       Account_Request_API.Decode(req_code_h)                              req_code_h,
+       req_code_h                                                          req_code_h_db,
+       Account_Request_API.Decode(req_code_i)                              req_code_i,
+       req_code_i                                                          req_code_i_db,
+       Account_Request_API.Decode(req_code_j)                              req_code_j,
+       req_code_j                                                          req_code_j_db,
+       Account_Request_API.Decode(req_quantity)                            req_quantity,
+       req_quantity                                                        req_quantity_db,
+       Account_Request_Text_API.Decode(req_text)                           req_text,
+       req_text                                                            req_text_db,
+       Account_Request_API.Decode(req_process_code)                        req_process_code,
+       req_process_code                                                    req_process_code_db,
+       Acc_Currency_Balance_Flag_API.Decode(curr_balance)                  curr_balance,
+       curr_balance                                                        curr_balance_db,
+       rtrim(rpad(text,2000))                                              text,
+       sort_value                                                          sort_value,
+       rowid                                                              objid,
+       rtrim(rpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                                       objversion,
+       rowkey                                                             objkey
+FROM   accounting_code_part_value_tab
+WHERE  code_part = 'A'
+AND    NVL(bud_account,'N') = 'N';
+
+VIEW Accounting_Code_Part_A1 IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'SORT_VALUE'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Company.Ref = 'CompanyFinance/NOCHECK'
+   Code_Part_Value.Flags = 'KMI-L'
+   Code_Part_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Code_Part_Value.Prompt = 'Account'
+   Description.Flags = 'AMIUL'
+   Description.Datatype = 'STRING(35)'
+   Description.Prompt = 'Description'
+   Sort_Value.Flags = 'A-I--'
+   Sort_Value.Datatype = 'STRING(20)'
+   Sort_Value.Prompt = 'Sort Value'
+SELECT company                                                          company,
+       code_part_value                                                  code_part_value,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'Account',
+                  code_part_value), description)                        description,
+       sort_value                                                       sort_value,
+       rowid                                                           objid,
+       rtrim(rpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                                    objversion,
+       rowkey                                                          objkey
+FROM   accounting_code_part_value_tab
+WHERE  code_part = 'A'
+AND    NVL(bud_account,'N') = 'N';
+
+VIEW Ps_Code_Accounting_Code_Part_A IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'DISPLAY_ORDER,SORT_VALUE'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Company.Ref = 'CompanyFinance/NOCHECK'
+   Value.Flags = 'KM--L'
+   Value.Datatype = 'STRING(20)/UPPERCASE'
+   Value.Prompt = 'Value'
+   Type.Flags = 'AM--L'
+   Type.Datatype = 'STRING(20)'
+   Type.Prompt = 'Type'
+   Type.Ref = 'PseudoCodeValue/NOCHECK'
+   Description.Flags = 'AM--L'
+   Description.Datatype = 'STRING(200)'
+   Description.Prompt = 'Description'
+   Sort_Value.Flags = 'A-I--'
+   Sort_Value.Datatype = 'STRING(20)'
+   Sort_Value.Prompt = 'Sort Value'
+   Display_Order.Flags = 'A----'
+   Display_Order.Datatype = 'STRING(1)'
+   Display_Order.Prompt = 'Display Order'
+SELECT company                            company,
+       pseudo_code                        value,
+       Pseudo_Code_Value_API.Decode('1')  type,
+       description                        description,
+       To_Date('18000101','YYYYMMDD', 'NLS_CALENDAR=GREGORIAN')     valid_from,
+       To_Date(Accrul_Attribute_API.Get_Attribute_Value('DEFAULT_VALID_TO'),'YYYYMMDD')   valid_until,
+       pseudo_code                        sort_value,
+       '1'                                display_order
+FROM   pseudo_codes_tab
+WHERE  user_name IN (Fnd_Session_API.Get_App_Owner, Fnd_Session_API.Get_Fnd_User)
+UNION ALL
+SELECT company                            company,
+       pseudo_code                        value,
+       Pseudo_Code_Value_API.Decode('1')  type,
+       description                        description,
+       To_Date('18000101','YYYYMMDD', 'NLS_CALENDAR=GREGORIAN')     valid_from,
+       To_Date(Accrul_Attribute_API.Get_Attribute_Value('DEFAULT_VALID_TO'),'YYYYMMDD')   valid_until,
+       pseudo_code                        sort_value,
+       '1'                                display_order
+FROM   pseudo_codes_tab
+WHERE  pseudo_code_ownership = 'PUBLIC'
+AND    user_name NOT IN (Fnd_Session_API.Get_Fnd_User)
+UNION ALL
+SELECT company                        company,
+       code_part_value                value,
+       accnt_type                     type,
+       description                    description,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       sort_value                     sort_value,
+       '2'                            display_order
+FROM   accounting_code_part_a;
+
+VIEW Ps_Code_Acc_Code_Part_A2 IS
+   Prompt = 'Accounting Code Part A2'
+   Sort = 'DISPLAY_ORDER,SORT_VALUE'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Company.Ref = 'CompanyFinance/NOCHECK'
+   Value.Flags = 'KM--L'
+   Value.Datatype = 'STRING(20)/UPPERCASE'
+   Value.Prompt = 'Value'
+   Type.Flags = 'AM--L'
+   Type.Datatype = 'STRING(20)'
+   Type.Prompt = 'Type'
+   Type.Ref = 'PseudoCodeValue/NOCHECK'
+   Description.Flags = 'AM--L'
+   Description.Datatype = 'STRING(200)'
+   Description.Prompt = 'Description'
+   Sort_Value.Flags = 'A-I--'
+   Sort_Value.Datatype = 'STRING(20)'
+   Sort_Value.Prompt = 'Sort Value'
+   Display_Order.Flags = 'A----'
+   Display_Order.Datatype = 'STRING(1)'
+   Display_Order.Prompt = 'Display Order'
+SELECT company                            company,
+       pseudo_code                        value,
+       Pseudo_Code_Value_API.Decode('1')  type,
+       description                        description,
+       To_Date('18000101','YYYYMMDD', 'NLS_CALENDAR=GREGORIAN')     valid_from,
+       To_Date(Accrul_Attribute_API.Get_Attribute_Value('DEFAULT_VALID_TO'),'YYYYMMDD')   valid_until,
+       pseudo_code                        sort_value,
+       '1'                                display_order
+FROM   pseudo_codes_tab
+WHERE  user_name IN (Fnd_Session_API.Get_App_Owner, Fnd_Session_API.Get_Fnd_User)
+UNION ALL
+SELECT company                            company,
+       pseudo_code                        value,
+       Pseudo_Code_Value_API.Decode('1')  type,
+       description                        description,
+       To_Date('18000101','YYYYMMDD', 'NLS_CALENDAR=GREGORIAN')     valid_from,
+       To_Date(Accrul_Attribute_API.Get_Attribute_Value('DEFAULT_VALID_TO'),'YYYYMMDD')   valid_until,
+       pseudo_code                        sort_value,
+       '1'                                display_order
+FROM   pseudo_codes_tab
+WHERE  pseudo_code_ownership = 'PUBLIC'
+AND    user_name NOT IN (Fnd_Session_API.Get_Fnd_User)
+UNION ALL
+SELECT company                       company,
+       code_part_value                value,
+       accnt_type                     type,
+       description                    description,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       sort_value                     sort_value,
+       '2'                            display_order
+FROM   accounting_code_part_a
+WHERE logical_account_type_db IN ('A','L','O');

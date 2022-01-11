@@ -1,0 +1,69 @@
+projection PaymentVacationDaysHandling;
+component ACCRUL;
+layer Core;
+description "Payment Vacation Days";
+category Users;
+@DynamicComponentDependency PAYLED
+include fragment PaymentWayLov2Selector;
+include fragment CustomerInfoCustcategoryPubSelector;
+@DynamicComponentDependency INVOIC
+include fragment IdentityInvoiceInfoCustSelector;
+include fragment CopyToCompaniesAssistant;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PaymentVacationPeriodSet for PaymentVacationPeriod {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity PaymentVacationPeriod {
+   attribute EndDate Date {
+      required = [true];
+   }
+   attribute InvoicActive Number {
+      fetch = "Dictionary_SYS.Component_Is_Active_Num('INVOIC')";
+   }
+   attribute PartyType Enumeration(PartyType) {
+      fetch = "'CUSTOMER'";
+      default = "'CUSTOMER'";
+   }
+   @DynamicComponentDependency PAYLED
+   reference PaymentMethodRef(Company, PartyType, PaymentMethod) to PaymentWayLov2(Company, PartyType, WayId) {
+      label = "Payment Method";
+   }
+   @DynamicComponentDependency INVOIC
+   reference CustomerIdInvoiceRef(Company, CustomerId) to IdentityInvoiceInfoCust(Company, Identity) {
+      label = "Customer";
+   }
+   reference CustomerIdRef(CustomerId) to CustomerInfoCustcategoryPub(CustomerId) {
+      label = "Customer";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

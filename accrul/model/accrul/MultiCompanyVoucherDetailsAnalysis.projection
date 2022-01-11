@@ -1,0 +1,208 @@
+projection MultiCompanyVoucherDetailsAnalysis;
+component ACCRUL;
+layer Core;
+description "Multi Company Voucher Details Analysis";
+category Users;
+
+include fragment PsCodeAccountSelector;
+include fragment FinNotesDialog;
+include fragment CodeStringAllBasic;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset MultiCompanyVoucher1QuerySet for MultiCompanyVoucher1Query {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query MultiCompanyVoucher1Query {
+   from = "multi_company_voucher1";
+   lu = Voucher;
+   keys = Company, VoucherType, VoucherNo, AccountingYear;
+   ludependencies = FinNotesVirtual;
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute VoucherNo Number;
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute AccountingPeriod Number {
+      label = "Period";
+   }
+   attribute VoucherDate Date;
+   attribute Userid Text {
+      label = "User ID";
+   }
+   attribute UserGroup Text;
+   attribute DateReg Date {
+      label = "Entry Date";
+      fetch = "Trunc(date_reg)";
+
+   }
+   attribute Notes Boolean("TRUE", "FALSE") {
+      fetch = "Voucher_Note_API.Check_Note_Exist(COMPANY,ACCOUNTING_YEAR,VOUCHER_TYPE,VOUCHER_NO)";
+      required = [true];
+   }
+   attribute UpdateError Text;
+   attribute FunctionGroup Text {
+      format = uppercase;
+   }
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+
+   array VoucherRowArray(Company, VoucherType, VoucherNo, AccountingYear) to MultiCompanyVoucherRow1Query(Company, VoucherType, VoucherNo, AccountingYear);
+}
+
+query MultiCompanyVoucherRow1Query {
+   from = "multi_company_voucher_row1";
+   lu = VoucherRow;
+   keys = Company, VoucherType, VoucherNo, AccountingYear, RowNo, Objid;
+   where = "NOT (voucher_no_ref <0 AND multi_company_id IS NOT NULL AND function_group = 'D' )";
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute VoucherNo Number;
+   attribute AccountingYear Number;
+   attribute RowNo Number;
+   attribute Objid Text;
+   attribute VoucherCompany Text;
+   attribute VoucherUpdated Boolean("TRUE", "FALSE");
+   attribute ConversionFactor Text;
+   attribute PeriodAllocation Boolean("TRUE", "FALSE");
+   attribute RowGroupId Text {
+      label = "Row Group ID";
+   }
+   attribute Account Text;
+   attribute CodeB Text;
+   attribute CodeC Text;
+   attribute CodeD Text;
+   attribute CodeE Text;
+   attribute CodeF Text;
+   attribute CodeG Text;
+   attribute CodeH Text;
+   attribute CodeI Text;
+   attribute CodeJ Text;
+   attribute CurrencyType Text;
+   attribute CurrencyCode Text;
+   attribute CurrencyRate Number;
+   attribute DebitAmount Number {
+      format = ifscurrency;
+   }
+   attribute CreditAmount Number {
+      format = ifscurrency;
+   }
+   attribute Amount Number {
+      format = ifscurrency;
+   }
+   attribute AccCurrency Text {
+      label = "Company Accounting Currency";
+   }
+   attribute CurrencyDebitAmount Number {
+      label = "Currency Debit Amount";
+   }
+   attribute CurrencyCreditAmount Number {
+      format = ifscurrency;
+   }
+   attribute CurrencyAmount Number {
+      format = ifscurrency;
+   }
+   attribute ParallelCurrencyRate Number;
+   attribute ParallelConversionFactor Number {
+      label = "Parallel Currency Conversion Factor";
+   }
+   attribute ParallelAccCurrency Text {
+      label = "Parallel Currency";
+      format = uppercase;
+   }
+   attribute ThirdCurrencyDebitAmount Number {
+      label = "Debit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyCreditAmount Number {
+      label = "Credit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyAmount Number {
+      label = "Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute Quantity Number;
+   attribute Text Text;
+   attribute DelivTypeId Text {
+      label = "Delivery Type ID";
+   }
+   attribute DeliveryTypeDescription Text {
+      fetch = "Voucher_Row_API.Get_Delivery_Type_Description(VOUCHER_COMPANY,DELIV_TYPE_ID)";
+   }
+   attribute OptionalCode Text {
+      label = "Tax Code";
+      format = uppercase;
+   }
+   attribute ProjectActivityId Number {
+      label = "Proj Activity Seq No";
+   }
+   attribute UpdateError Text;
+   attribute TransCode Text;
+   attribute CodePart Text {
+      label = "(Untitled)";
+   }
+   attribute TransferId Text;
+   attribute ReferenceSerie Text {
+      label = "Reference Series";
+   }
+   attribute ReferenceNumber Text;
+   attribute VoucherTypeRef Text {
+      label = "Voucher Type Reference";
+   }
+   attribute VoucherNoRef Number;
+   attribute AccountingYearRef Number {
+      label = "Accounting Year Reference";
+   }
+
+   reference CompanyFinanceRef(VoucherCompany) to CompanyFinance(Company) {
+      label = "Voucher Company";
+   }
+   reference AccountRef(Company, Account) to Account(Company, Account);
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+   reference CurrencyRef(Company) to CompanyFinance(Company);
+   @DynamicComponentDependency INVOIC
+   reference DelivTypeIdRef(VoucherCompany, DelivTypeId) to DeliveryType(Company, DelivTypeId) {
+      label = "Delivery Type ID";
+   }
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

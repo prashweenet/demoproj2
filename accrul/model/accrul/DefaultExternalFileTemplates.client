@@ -1,0 +1,94 @@
+client DefaultExternalFileTemplates;
+component ACCRUL;
+layer Core;
+projection DefaultExternalFileTemplatesHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry DefaultExtFileTemplateNavEntry parent AccrulNavigator.ExternalFileBasicDataMenu at index 500 {
+      label = "Default External File Templates";
+      page List home ExtFileCompanyDefault;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using ExtFileCompanyDefaultSet {
+   label = "Default External File Templates";
+
+   list ExtFileCompanyDefaultList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileCompanyDefaultList for ExtFileCompanyDefault {
+   lov FileTypeRef with ReferenceExtFileTypeSelector {
+      search = FileType, Description;
+      size = Large;
+      description = FileTypeRef.Description;
+   }
+   lov UserIdRef with ReferenceUserFinanceSelector {
+      search = Userid, Description;
+      size = Large;
+      format = uppercase;
+      description = UserIdRef.Description;
+   }
+   lov FileTemplateIdRef with ReferenceExtFileTemplateLov2QuerySelector {
+      search = FileTemplateId, Description;
+      size = Large;
+      description = FileTemplateIdRef.Description;
+   }
+   lov SetIdRef with ReferenceExtTypeParamSetSelector {
+      search = SetId, Description;
+      size = Large;
+      description = SetIdRef.Description;
+   }
+}
+
+@Override
+list ExtFileTemplateLov2QueryLovList for ExtFileTemplateLov2Query {
+   static FileType {
+      columnexclude = [true];
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

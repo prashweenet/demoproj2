@@ -1,0 +1,53 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TaxCodesPerAccountHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+PROCEDURE Do_Set_Default___ (
+   key_         IN Account_Tax_Code_Key ) 
+IS
+   info_       VARCHAR2(50); 
+   attr_       VARCHAR2(50);
+   objid_      VARCHAR2(100);
+   objversion_ VARCHAR2(50);
+   CURSOR Get_Other_Default_Tax_Records_ IS
+      SELECT a.objid, a.objversion
+      FROM   Account_Tax_Code a
+      WHERE  company = key_.company
+      AND    account = key_.account
+      AND    fee_code   != key_.fee_code
+      AND    default_tax_code = 'Y';
+BEGIN
+   FOR newrec_ IN Get_Other_Default_Tax_Records_ LOOP
+      attr_ := NULL;
+      objid_      := newrec_.objid;
+      objversion_ := newrec_.objversion;
+      Client_SYS.Add_To_Attr('DEFAULT_TAX_CODE', 'N', attr_);
+      Account_Tax_Code_API.Modify__(info_, objid_, objversion_, attr_, 'DO'); 
+   END LOOP;
+   Get_Objid_Objversion___(objid_,objversion_,key_);
+   attr_ := NULL;
+   Client_SYS.Add_To_Attr('DEFAULT_TAX_CODE', 'Y', attr_);
+   Account_Tax_Code_API.Modify__(info_, objid_, objversion_, attr_, 'DO');
+END Do_Set_Default___;
+
+PROCEDURE Do_Reset_Default___ (
+   key_         IN Account_Tax_Code_Key ) 
+IS
+   info_       VARCHAR2(50); 
+   attr_       VARCHAR2(50);
+   objid_      VARCHAR2(100);
+   objversion_ VARCHAR2(50);
+BEGIN
+   Get_Objid_Objversion___(objid_, objversion_, key_);
+   Client_SYS.Add_To_Attr('DEFAULT_TAX_CODE', 'N', attr_);
+   Account_Tax_Code_API.Modify__(info_, objid_, objversion_, attr_, 'DO');
+END Do_Reset_Default___;

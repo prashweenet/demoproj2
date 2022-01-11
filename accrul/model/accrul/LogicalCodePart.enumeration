@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>LogicalCodePart</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>CostCenter</DB_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>CostCenter</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>Project</DB_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>Project</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>Object</DB_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>Object</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>NotUsed</DB_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>NotUsed</NAME>
+      </VALUE>
+   </VALUES>
+</ENUMERATION>

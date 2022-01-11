@@ -1,0 +1,244 @@
+--  Date      Sign    History
+--  --------  ------  -----------------------------------------------------
+--  201123    SatGlk  LMM2020R1-1214 - In AvExeTask status badge, added badge colour to removed state.
+--  200808    DILDLK  LMM2020R1-516, Modified navigation.
+--  200720    ROSDLK  LMM2020R1-419, Removed Assigned Tasks and Unassigned tasks tabs.
+--  200630    ROSDLK  LMM2020R1-77, Created.
+-----------------------------------------------------------------------------
+
+client WorkPackageDetails;
+component ADCOM;
+layer Core;
+projection WorkPackageDetailsHandling;
+include fragment AircraftLovSelector;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+entry WorkPackageDetailsNavEntry parent AdcomNavigator.AviationMaintenance at index 300 {
+   label = "Work Package Details";
+   page WorkPackageDetails home AvAircraftWorkPackage;
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+page WorkPackageDetails using WorkPackageSet {
+   label = "Work Package Details";
+   selector WorkPackageSelector;
+   group WorkPackageDetails bind WorkPackageSelector;
+   tabs {
+      tab {
+         label = "Workscope";
+         list Workscope(TaskArray) bind WorkPackageSelector;
+      }
+      tab {
+         label = "Unassigned Faults";
+         list UnassignedFaults(FaultsArray);
+      }
+   }
+
+   command CommitWorkPackage;
+   command StartWorkPackage;
+   command UncommitWorkPackage;
+   command CompleteWorkPackage;
+   command CancelWorkPackage;
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector WorkPackageSelector for AvAircraftWorkPackage {
+   label = "${WoNumber} - ${WorkPackageName}";
+   static WoNumber {
+      label = "Work Package No";
+   }
+   static WorkPackageName;
+}
+
+selector AircraftDetailSelector for Aircraft {
+   label = "${AircraftId} - ${AircraftDesc}";
+   static AircraftId;
+   static AircraftDesc;
+}
+
+selector MaintenanceLocationSelector for AvMaintenanceLocation {
+   label = "${LocationCode} - ${LocationName}";
+   static LocationCode;
+   static LocationName;
+}
+
+selector AircraftSubsystemSelector for AvAircraftSubSystem {
+   label = "${SubSystemCode} - ${SubSystemCode}";
+   static SubSystemCode;
+   static SubSystemCode;
+}
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+
+group WorkPackageDetails for AvAircraftWorkPackage {
+   label = "Work Package Details";
+
+   field WoNumber {
+      label = "Work Package No";
+   }
+   field WorkPackageName;
+   lov AircraftRef with ReferenceAircraftLovSelector {
+      label = "Aircraft";
+      description = AircraftRef.Aircraft;
+      hidekey = [true];
+   }
+   lov MaintenanceLocationRef with MaintenanceLocationSelector {
+      label = "Work Location";
+      description = MaintenanceLocationRef.LocationName;
+      hidekey = [true];
+   }
+   badge Objstate {
+      style = TextOnly;
+      label = "Status";
+      emphasis StateCreated = [Objstate = "Active"];
+      emphasis StatePlanned = [Objstate = "Committed"];
+      emphasis StateInProgress = [Objstate = "InWork"];
+      emphasis StateCompleted = [Objstate = "Completed"];
+      emphasis StateClosed = [Objstate = "Canceled"];
+   }
+   field SchedStartDateTime {
+      label = "Scheduled Start";
+   }
+   field SchedEndDateTime {
+      label = "Scheduled End";
+   }
+   field ActualStartDateTime {
+      label = "Actual Start";
+   }
+   field ActualEndDateTime {
+      label = "Actual End";
+   }
+   field IsReleaseToService {
+      label = "Release to Service";
+      size = Small;
+   }
+   field IsHistoric {
+      label = "Historic";
+      size = Small;
+   }
+
+}
+
+list Workscope for AvExeTask {
+   label = "Workscope";
+
+   crudactions {
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+
+   field TaskCode;
+   field  TaskName;
+   field Barcode;
+
+   lov AircraftRef with ReferenceAircraftLovSelector {
+      label = "Aircraft";
+      description = AircraftRef.Aircraft;
+      hidekey = [true];
+   }
+
+   badge Objstate {
+      style = TextOnly;
+      label = "Task Status";
+      emphasis StateCreated = [Objstate = "Active"];
+      emphasis StateInProgress = [Objstate = "InWork"];
+      emphasis StateCompleted = [Objstate = "Completed"];
+      emphasis Alert = [Objstate = "Removed"];
+   }
+
+   field Priority {
+      label = "Task Priority";
+   }
+   field TaskType;
+   field SchedStartDateTime {
+      label = "Scheduled Start";
+   }
+   field SchedEndDateTime {
+      label = "Scheduled End";
+   }
+
+   field MaterialAvailability;
+}
+
+
+list UnassignedFaults for AvFault {
+   label = "Unassigned Faults";
+
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+
+   field Barcode;
+   field Description;
+   lov AircraftRef with ReferenceAircraftLovSelector {
+      label = "Aircraft";
+      description = AircraftRef.Aircraft;
+      hidekey = [true];
+   }
+
+   lov AircraftSubSystemRef with AircraftSubsystemSelector {
+      label = "Failed System";
+      description = AircraftSubSystemRef.SubSystemCode;
+      hidekey = [true];
+   }
+
+   badge Objstate {
+      label = "Status";
+      style = TextOnly;
+      emphasis Alert = [Objstate = "Open"];
+      emphasis Neutral = [Objstate = "Deferred"];
+   }
+   field FoundOnDate {
+      label = "Raised On";
+   }
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

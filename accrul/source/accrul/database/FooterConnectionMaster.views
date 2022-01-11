@@ -1,0 +1,39 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: FooterConnectionMaster
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Footer_Connection_Master_Lov IS
+   Prompt = 'Footer Connection Master Lov'
+   Report_Id.Prompt = 'Report ID'
+   Report_Title.Flags = 'A---L'
+   Report_Title.Datatype = 'STRING(50)'
+   Report_Title.Prompt = 'Report Title'
+   Module.Flags = 'A---L'
+   Module.Datatype = 'STRING(6)/UPPERCASE'
+   Lu_Name.Flags = 'A---L'
+   Lu_Name.Datatype = 'STRING(25)'
+   Lu_Name.Prompt = 'Logical Unit'
+SELECT f.report_id                                         report_id,
+       Report_Definition_API.Get_Report_Title(f.report_id) report_title,
+       r.module                                            module,
+       r.lu_name                                           lu_name
+FROM   FOOTER_CONNECTION_MASTER_TAB f, Report_Sys_Tab r
+WHERE f.report_id = r.report_id
+AND (r.module IS NULL OR EXISTS (SELECT 1 FROM module_tab m WHERE r.module  = m.module AND m.active = 'TRUE'));
+

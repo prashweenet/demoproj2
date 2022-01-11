@@ -1,0 +1,238 @@
+client ProjectVoucherRowsAnalysis;
+component ACCRUL;
+layer Core;
+
+include fragment CodeStringAllBasic;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using VoucherRowQuerySet {
+   label = "Project Voucher Rows Analysis";
+   list ProjectVoucherRowList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command VoucherDetailsCommand for VoucherRowQuery {
+   label = "Voucher Details";
+   enabled = [true];
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/VoucherDetailsAnalysis/Form?contexts=Company:$[Company]&$filter=VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+   }
+}
+
+command ViewMultiCompanyVoucherCommand for VoucherRowQuery {
+   label = "View Multi Company Voucher";
+   enabled = [IsMultiCompanyRow = true and  MultiCompanyId != null and VoucherTypeRef.VoucherType != "R"];
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/MultiCompanyVoucherDetailsAnalysis/Form?contexts=Company:$[Company]&$filter=VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list ProjectVoucherRowList for VoucherRowQuery {
+   orderby = VoucherType, VoucherNo;
+
+   field VoucherTypeRef {
+      size = Small;
+      searchable = false;
+   }
+   field FunctionGroup {
+      size = Small;
+      searchable = false;
+   }
+   field VoucherNo {
+      searchable = false;
+   }
+   field VoucherDate {
+      searchable = false;
+   }
+   field AccountingYear {
+      size = Small;
+      searchable = false;
+   }
+   field AccountingPeriod {
+      size = Small;
+      searchable = false;
+   }
+   field YearPeriodKey {
+      size = Small;
+      searchable = false;
+   }
+   field Correction {
+      size = Small;
+      searchable = false;
+   }
+   field IsMultiCompanyRow {
+      size = Small;
+      searchable = false;
+   }
+   fieldset CodeStringAllBasicLovFieldSet;
+   field DebetAmount {
+      searchable = false;
+   }
+   field CreditAmount {
+      searchable = false;
+   }
+   field Amount {
+      searchable = false;
+   }
+   field CurrencyCode {
+      size = Small;
+      searchable = false;
+   }
+   field CurrencyDebetAmount {
+      searchable = false;
+   }
+   field CurrencyCreditAmount {
+      searchable = false;
+   }
+   field CurrencyAmount {
+      searchable = false;
+   }
+   field CurrencyRate {
+      size = Small;
+      searchable = false;
+   }
+   field ThirdCurrencyDebitAmount {
+      searchable = false;
+   }
+   field ThirdCurrencyCreditAmount {
+      searchable = false;
+   }
+   field ThirdCurrencyAmount {
+      searchable = false;
+   }
+   field Text {
+      size = Small;
+      multiline = true;
+      searchable = false;
+   }
+   field Quantity {
+      size = Small;
+      searchable = false;
+   }
+   field ProcessCode {
+      size = Small;
+      searchable = false;
+   }
+   field OptionalCode {
+      size = Small;
+      searchable = false;
+   }
+   field ProjectActivityId {
+      searchable = false;
+   }
+   field PartyTypeId {
+      size = Small;
+      searchable = false;
+   }
+   field TransCode {
+      size = Small;
+      searchable = false;
+   }
+   field UpdateError {
+      size = Small;
+      multiline = true;
+      searchable = false;
+   }
+   field Corrected {
+      size = Small;
+      searchable = false;
+   }
+   field PeriodAllocation {
+      size = Small;
+      searchable = false;
+   }
+   field ReferenceSerie {
+      size = Small;
+      searchable = false;
+   }
+   field ReferenceNumber {
+      size = Small;
+      searchable = false;
+   }
+   field AutoTaxVouEntry {
+      size = Small;
+      searchable = false;
+   }
+
+   command VoucherDetailsCommand;
+   command ViewMultiCompanyVoucherCommand;
+}
+
+@Override
+fieldset CodeStringAllBasicLovFieldSet {
+   lov AccountRef with ReferenceAccountSelector {
+      searchable = false;
+   }
+   lov CodeBRef with ReferenceCodeBSelector {
+      searchable = false;
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      searchable = false;
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      searchable = false;
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      searchable = false;
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      searchable = false;
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      searchable = false;
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      searchable = false;
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      searchable = false;
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      searchable = false;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

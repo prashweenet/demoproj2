@@ -1,0 +1,90 @@
+--  Date    Sign    History
+--  ------  ------  --------------------------------------------------------
+--  201231  ROSDLK  LMM2020R1-1474, Filter 'ACTV' deferral references.
+--  200808  DILDLK  LMM2020R1-516, Modified navigation.
+--  200702  DILDLK  LMM2020R1-260, Modified navigation.
+--  200702  TAJALK  LMM2020R1-270, Bug fixes
+--  200629  ARUFLK  Changed page name to List.
+--  200625  ARUFLK  LMM2020R1-99, Created.
+----------------------------------------------------------------------------
+
+client FaultDeferral;
+component ADCOM;
+layer Core;
+projection FaultDeferralHandling;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry FaultDeferralEntry parent AdcomNavigator.AviationMaintenance at index 800 {
+      label = "Fault Deferrals";
+      page List home AvFaultDeferral;
+   }
+}
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AvFaultDeferralSet {
+   label = "Fault Deferrals";
+   list FaultDeferralList;
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list FaultDeferralList for AvFaultDeferral {
+
+   lov FaultIdRef with ReferenceAvFaultSelector {
+      label = "Fault";
+      description = FaultIdRef.Description;
+      hidekey = [true];
+
+   }
+   lov DeferralReferenceRef with ReferenceAvDeferralReferenceSelector using GetActvDeferralReference {
+      label = "Deferral Reference";
+      description = DeferralReferenceRef.DeferralReferenceName;
+      hidekey = [true];
+   }
+   field DeferralDt {
+      label = "Deferral Date";
+   }
+   lov FaultSeverityRef with ReferenceAvFaultSeveritySelector {
+      label = "Fault Severity";
+      description = FaultSeverityRef.FaultSeverityDesc;
+   }
+   field DeferralAuthorization;
+}
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

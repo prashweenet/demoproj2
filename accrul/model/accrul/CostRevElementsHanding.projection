@@ -1,0 +1,80 @@
+projection CostRevElementsHanding;
+component ACCRUL;
+layer Core;
+description "Manage Cost/Revenue Elements.";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ProjectCostElementSet for ProjectCostElement {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ProjectCostElement {
+   attribute ProjectCostElement Text {
+      label = "Cost/Revenue Element";
+   }
+   attribute Description Text {
+      label = "Cost/Revenue Element Description";
+   }
+   attribute ElementType Enumeration(PrjFollowupElementType);
+   attribute DefaultCostElement Boolean("TRUE", "FALSE") {
+      label = "Default";
+   }
+   attribute DefaultNoBase Boolean("TRUE", "FALSE") {
+      label = "Default No Base Value";
+      required = [true];
+   }
+
+   function GetResult Structure(BaseCodePartAndResultStructure) {
+      ludependencies = ProjectCostElement;
+   }
+   action DoSetDefaultNoBase {
+      ludependencies = ProjectCostElement;
+   }
+   action GetDefaultNoBase Text {
+      ludependencies = ProjectCostElement;
+   }
+   action DoResetDefaultNoBase {
+      ludependencies = ProjectCostElement;
+   }
+   action DoSetDefaultCostElement {
+      ludependencies = ProjectCostElement;
+   }
+   action DoResetDefaultCostElement {
+      ludependencies = ProjectCostElement;
+   }
+}
+
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure BaseCodePartAndResultStructure {
+   attribute BaseCodePart Text;
+   attribute Result Text;
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

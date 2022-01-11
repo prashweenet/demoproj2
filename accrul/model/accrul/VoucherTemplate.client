@@ -1,0 +1,231 @@
+client VoucherTemplate;
+component ACCRUL;
+layer Core;
+projection VoucherTemplateHandling;
+
+include fragment TaxCodeRestrictedSelector;
+include fragment CodeStringExtended;
+include fragment CodeStringPsCodeAccountExtended;
+@DynamicComponentDependency PROJ
+include fragment ProjectActivityPostableSelector;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry VoucherTemplatesMenuNavEntry parent AccrulNavigator.ManualVoucherMenu at index 300 {
+      label = "Voucher Template";
+      page Form home VoucherTemplate;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using VoucherTemplateSet {
+   label = "Voucher Template";
+   selector VoucherTemplateRecordSelector;
+   group VoucherTemplateGroup;
+   list VoucherTemplateRowList(VouTemplateRowArray) {
+      copyoncruddefault(Correction) to(CorrectionCurr);
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+@Override
+command ValidateCodeStringPsCodeAccountExtendedAccountRef {
+   execute {
+      super;
+      if[Account != null] {
+         call GetDefaultTaxCode(VoucherCompany, Account) into OptionalCode;
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector VoucherTemplateRecordSelector for VoucherTemplate {
+   label = "${Template} - ${Description}";
+   static Template;
+   static Description;
+}
+
+---------------------------------- GROUPS -----------------------------------
+group VoucherTemplateGroup for VoucherTemplate {
+   label = "";
+
+   field Template {
+      size = Small;
+   }
+   field Description;
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid Period";
+   }
+   field Correction {
+      size = Small;
+   }
+   field MultiCompany {
+      size = Small;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list VoucherTemplateRowList for VoucherTemplateRow {
+   label = "Voucher Postings";
+
+   orderby = RowNo;
+   field RowNo {
+      size = Small;
+   }
+   lov VoucherCompanyRef with ReferenceCompanyFinanceSelector {
+      search = Company, Description;
+      size = Large;
+      description = VoucherCompanyRef.Description;
+      editable = [parent.MultiCompany = true];
+      columnvisible = [parent.MultiCompany = true];
+      validate command {
+         execute {
+            if [VoucherCompany != null] {
+               call GetAccountingCurrency(VoucherCompany) into AccountingCurrency;
+               set  CurrencyCode = AccountingCurrency;
+            }
+         }
+      }
+   }
+   fieldset CodeStringPsCodeAccountExtendedMultiCompanyLovFieldSet;
+   fieldset CodeStringExtendedMultiCompanyLovFieldSet;
+   field ProcessCodeRef {
+      format = uppercase;
+   }
+   @DynamicComponentDependency INVOIC
+   lov DelivTypeIdRef with ReferenceDeliveryTypeSelector {
+      search = DelivTypeId, Description;
+      size = Large;
+      description = DelivTypeIdRef.Description;
+   }
+   lov FeeCodeRef with ReferenceTaxCodeRestrictedSelector using TaxCodeRestrictedFetchValidTaxCodes(CurrentDate) {
+      size = Small;
+      editable = [TransCode = "MANUAL" and Account != null];
+      validate command {
+         variable DummyVar {
+
+            type = Text;
+         }
+         execute {
+            call ValidateTaxCodeOnAcc(Company, OptionalCode, Account) into DummyVar;
+         }
+      }
+   }
+   field CurrencyCodeRef {
+      validate command {
+         variable NoOfDecimalsVar {
+            type = Number;
+         }
+
+         execute {
+            if[Original.CurrencyCode != CurrencyCode] {
+               call GetCurrencyRounding(Company, CurrencyCode) into NoOfDecimalsVar;
+               if[DebitCurrencyAmount != null or DebitCurrencyAmount != 0] {
+                  call DoRound(DebitCurrencyAmount, NoOfDecimalsVar) into DebitCurrencyAmount;
+               }
+               if[CreditCurrencyAmount != null or CreditCurrencyAmount != 0] {
+                  call DoRound(CreditCurrencyAmount, NoOfDecimalsVar) into CreditCurrencyAmount;
+               }
+               if[CurrencyAmount != null or CurrencyAmount != 0] {
+                  call DoRound(CurrencyAmount, NoOfDecimalsVar) into CurrencyAmount;
+               }
+            }
+         }
+      }
+   }
+   field CorrectionCurr {
+      editable = [isNew];
+
+   }
+   field DebitCurrencyAmount {
+      editable = [CreditCurrencyAmount = null and TransCode = "MANUAL" and CurrencyCode != null];
+      validate command {
+         variable CurrencyAmountVar {
+            type = Structure(AccountingCurrencyAmountsStructure);
+         }
+         execute {
+            call CalculateCurrencyAmountFields(Company, CurrencyCode, CorrectionCurr, "CURRENCY_DEBIT_AMOUNT", DebitCurrencyAmount) into CurrencyAmountVar;
+            set DebitCurrencyAmount = CurrencyAmountVar.CurrencyDebitAmount;
+            set CreditCurrencyAmount = CurrencyAmountVar.CurrencyCreditAmount;
+            set CurrencyAmount = CurrencyAmountVar.CurrencyAmount;
+         }
+      }
+   }
+   field CreditCurrencyAmount {
+      editable = [DebitCurrencyAmount = null and TransCode = "MANUAL" and CurrencyCode != null];
+      validate command {
+         variable CurrencyAmountVar {
+            type = Structure(AccountingCurrencyAmountsStructure);
+         }
+         execute {
+            call CalculateCurrencyAmountFields(Company, CurrencyCode, CorrectionCurr, "CURRENCY_CREDIT_AMOUNT", CreditCurrencyAmount) into CurrencyAmountVar;
+            set DebitCurrencyAmount = CurrencyAmountVar.CurrencyDebitAmount;
+            set CreditCurrencyAmount = CurrencyAmountVar.CurrencyCreditAmount;
+            set CurrencyAmount = CurrencyAmountVar.CurrencyAmount;
+         }
+      }
+   }
+   field CurrencyAmount {
+      editable = [TransCode = "MANUAL" and CurrencyCode != null];
+      validate command {
+         variable CurrencyAmountVar {
+            type = Structure(AccountingCurrencyAmountsStructure);
+         }
+         execute {
+            call CalculateCurrencyAmountFields(Company, CurrencyCode, CorrectionCurr, "CURRENCY_AMOUNT", CurrencyAmount) into CurrencyAmountVar;
+            set DebitCurrencyAmount = CurrencyAmountVar.CurrencyDebitAmount;
+            set CreditCurrencyAmount = CurrencyAmountVar.CurrencyCreditAmount;
+            set CurrencyAmount = CurrencyAmountVar.CurrencyAmount;
+         }
+      }
+   }
+   field Quantity;
+   field Text {
+      size = Large;
+   }
+   @DynamicComponentDependency PROJ
+   lov ProjectActivityIdRef with ReferenceProjectActivityPostableSelector {
+      editable = [substring(RequiredString, 24, 1) = "Y"];
+   }
+
+   fieldranking CurrencyCodeRef, CurrencyAmount;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

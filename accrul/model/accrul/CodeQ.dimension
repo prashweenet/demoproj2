@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DIMENSION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:dimension_dimension">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+         <DB_TABLE_NAME>ACCOUNTING_CODE_PART_VALUE_TAB</DB_TABLE_NAME>
+         <MATERIALIZED_VIEW_SOURCE_ALIAS>a</MATERIALIZED_VIEW_SOURCE_ALIAS>
+         <ONLINE_VIEW_SOURCE_ALIAS>a</ONLINE_VIEW_SOURCE_ALIAS>
+         <DATAMART_VIEW_SOURCE_ALIAS>a</DATAMART_VIEW_SOURCE_ALIAS>
+         <MATERIALIZED_VIEW_SOURCE_WHERE_CLAUSE>a.code_part      = &apos;Q&apos;</MATERIALIZED_VIEW_SOURCE_WHERE_CLAUSE>
+         <ONLINE_VIEW_SOURCE_WHERE_CLAUSE>a.code_part      = &apos;Q&apos;</ONLINE_VIEW_SOURCE_WHERE_CLAUSE>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>CodeQ</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <DIMENSION_DISPLAY_NAME>Code Q</DIMENSION_DISPLAY_NAME>
+   <DESCRIPTION>Code Q Dimension</DESCRIPTION>
+   <DIMENSION_TYPE>STANDARD</DIMENSION_TYPE>
+   <DEFAULT_SOURCE_TYPE>ON_LINE</DEFAULT_SOURCE_TYPE>
+   <OPTIONAL_SOURCE_TYPE>DATA_MART</OPTIONAL_SOURCE_TYPE>
+   <ATTRIBUTES>
+      <ATTRIBUTE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DISPLAY_NAME>Company</DISPLAY_NAME>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>Company</NAME>
+         <ATTRIBUTE_TYPE>PARENT</ATTRIBUTE_TYPE>
+         <DATATYPE>TEXT</DATATYPE>
+         <LENGTH>20</LENGTH>
+         <DESCRIPTION>Company</DESCRIPTION>
+         <CONNECTOR>Company.Code</CONNECTOR>
+         <IS_MANDATORY>1</IS_MANDATORY>
+         <IS_DISPLAYED_IN_CLIENT>0</IS_DISPLAYED_IN_CLIENT>
+         <IS_DATA_MART_INDEXED>1</IS_DATA_MART_INDEXED>
+         <IS_DATA_MART_DERIVED>0</IS_DATA_MART_DERIVED>
+         <IS_ON_LINE_INDEXED>1</IS_ON_LINE_INDEXED>
+         <IS_ON_LINE_DERIVED>0</IS_ON_LINE_DERIVED>
+      </ATTRIBUTE>
+      <ATTRIBUTE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <MATERIALIZED_VIEW_SOURCE_COLUMN>a.code_part_value</MATERIALIZED_VIEW_SOURCE_COLUMN>
+               <ONLINE_VIEW_SOURCE_COLUMN>a.code_part_value</ONLINE_VIEW_SOURCE_COLUMN>
+               <DISPLAY_NAME>Code Q</DISPLAY_NAME>
+               <DISPLAY_ORDER>1</DISPLAY_ORDER>
+               <PUBLISHED_LOV_DIMENSION>DIM_CODE_Q</PUBLISHED_LOV_DIMENSION>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>Code</NAME>
+         <ATTRIBUTE_TYPE>KEY</ATTRIBUTE_TYPE>
+         <DATATYPE>TEXT</DATATYPE>
+         <LENGTH>20</LENGTH>
+         <DESCRIPTION>Code Q code</DESCRIPTION>
+         <CODEKEY_OPTION>IS_CODEKEY</CODEKEY_OPTION>
+         <IS_MANDATORY>1</IS_MANDATORY>
+         <IS_DISPLAYED_IN_CLIENT>1</IS_DISPLAYED_IN_CLIENT>
+         <IS_DATA_MART_INDEXED>1</IS_DATA_MART_INDEXED>
+         <IS_DATA_MART_DERIVED>0</IS_DATA_MART_DERIVED>
+         <IS_ON_LINE_INDEXED>1</IS_ON_LINE_INDEXED>
+         <IS_ON_LINE_DERIVED>0</IS_ON_LINE_DERIVED>
+      </ATTRIBUTE>
+      <ATTRIBUTE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DATAMART_VIEW_SOURCE_COLUMN>SUBSTR(NVL( (SELECT description
+      FROM CODE_Q_TRANSLATION_MV b
+      WHERE b.company  = a.company
+      AND   b.translation_key = a.code
+      AND   b.lu              = &apos;CodeQ&apos;
+      AND   b.language_code   =
+      (SELECT language
+      FROM FND_SESSION)), a.description),1,100)</DATAMART_VIEW_SOURCE_COLUMN>
+               <ONLINE_VIEW_SOURCE_COLUMN>SUBSTR(NVL( (SELECT SUBSTR(c.current_translation,1,100)
+      FROM KEY_LU_TRANSLATION_TAB c
+      WHERE c.key_value       = a.company
+      AND   c.attribute_key   = a.code_part_value
+      AND   c.lu              = &apos;CodeQ&apos;
+      AND   c.module          = &apos;ACCRUL&apos;
+      AND   c.key_name        = &apos;CompanyKeyLu&apos;
+      AND   c.rowtype         = &apos;CompanyKeyLuTranslation&apos;
+      AND   c.language_code   =
+      (SELECT language
+      FROM FND_SESSION)), a.description),1,100)</ONLINE_VIEW_SOURCE_COLUMN>
+               <DISPLAY_NAME>Code Q Description</DISPLAY_NAME>
+               <DISPLAY_ORDER>2</DISPLAY_ORDER>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>Description</NAME>
+         <ATTRIBUTE_TYPE>ATTRIBUTE</ATTRIBUTE_TYPE>
+         <DATATYPE>TEXT</DATATYPE>
+         <LENGTH>100</LENGTH>
+         <DESCRIPTION>Code Q Description</DESCRIPTION>
+         <IS_MANDATORY>0</IS_MANDATORY>
+         <IS_DISPLAYED_IN_CLIENT>1</IS_DISPLAYED_IN_CLIENT>
+         <IS_DATA_MART_INDEXED>0</IS_DATA_MART_INDEXED>
+         <IS_DATA_MART_DERIVED>1</IS_DATA_MART_DERIVED>
+         <IS_ON_LINE_INDEXED>0</IS_ON_LINE_INDEXED>
+         <IS_ON_LINE_DERIVED>1</IS_ON_LINE_DERIVED>
+      </ATTRIBUTE>
+   </ATTRIBUTES>
+   <LOVS>
+      <LOV>
+         <LOV_TYPE>LOV</LOV_TYPE>
+         <NAME>Code</NAME>
+         <LOV_ATTRIBUTES>
+            <LOV_ATTRIBUTE>
+               <NAME>Description</NAME>
+            </LOV_ATTRIBUTE>
+         </LOV_ATTRIBUTES>
+         <ORDER_ATTRIBUTES>
+            <ORDER_ATTRIBUTE>
+               <ORDER_ATTRIBUTE_NAME>Code</ORDER_ATTRIBUTE_NAME>
+               <ORDERTYPE>ASCENDING</ORDERTYPE>
+            </ORDER_ATTRIBUTE>
+         </ORDER_ATTRIBUTES>
+      </LOV>
+   </LOVS>
+</DIMENSION>

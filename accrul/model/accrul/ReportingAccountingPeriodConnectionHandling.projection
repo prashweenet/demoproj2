@@ -1,0 +1,121 @@
+projection ReportingAccountingPeriodConnectionHandling;
+component ACCRUL;
+layer Core;
+description "Reporting / Accounting Period Connection";
+category Users;
+include fragment AccountingYearPeriodSelector;
+include fragment AccountingYearSelector;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset RpdCompanySet for RpdCompany;
+entityset RpdCompanyPeriodSet for RpdCompanyPeriod;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity RpdCompany {
+   crud = Read, Create, Delete;
+
+   attribute RpdId Text {
+      label = "Definition ID";
+   }
+   attribute RepPeriodsDefined Boolean("TRUE", "FALSE") {
+      fetch = "Rpd_Identity_API.Is_Rpd_Periods_Defined(rpd_id)";
+   }
+   attribute Description Text {
+      fetch = "Company_Finance_API.Get_Description(company)";
+   }
+
+   reference RpdIdRef(RpdId) to RpdIdentity(RpdId) {
+      label = "Definition";
+   }
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+
+   array RpdCompanyPeriodArray(Company, RpdId) to RpdCompanyPeriod(Company, RpdId);
+}
+
+@Override
+entity RpdCompanyPeriod {
+   crud = Create, Delete, Read;
+
+   attribute SplitAccountingPeriod Boolean {
+      fetch = "decode(split_accounting_period, 1 , 'TRUE', 'FALSE')";
+      implementationtype = "VARCHAR2";
+   }
+
+   reference RpdYearRef(RpdId, RpdYear) to RpdYear(RpdId, RpdYear) {
+      label = "Reporting Year";
+   }
+   reference RpdPeriodRef(RpdId, RpdYear, RpdPeriod) to RpdPeriod(RpdId, RpdYear, RpdPeriod) {
+      label = "Reporting Period";
+   }
+   reference AccountingYearRef(Company, AccountingYear) to AccountingYear(Company, AccountingYear) {
+      label = "Accounting Year";
+   }
+   reference AccountingPeriodRef(Company, AccountingYear, AccountingPeriod) to AccountingPeriod(Company, AccountingYear, AccountingPeriod) {
+      label = "Accounting Period";
+   }
+}
+
+@Override
+entity RpdYear {
+   attribute RpdId Text {
+      label = "Definition ID";
+   }
+   attribute RpdYear Number {
+      label = "Reporting Year";
+      format = uppercase;
+   }
+
+   reference RpdIdRef(RpdId) to RpdIdentity(RpdId) {
+      label = "Definition ID";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query AccountingYearQuery {
+   from = "accounting_year";
+   lu = AccountingPeriod;
+   keys = Company, AccountingYear;
+
+   attribute Company Text;
+   attribute AccountingYear Number;
+}
+
+query AccountingYearPeriodQuery {
+   from = "accounting_year_period";
+   lu = AccountingPeriod;
+   keys = Company, AccountingYear, AccountingPeriod;
+
+   attribute Company Text;
+   attribute AccountingYear Number;
+   attribute AccountingPeriod Number;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetPageSearchContextDefaults Structure(PageSearchContextStructure);
+
+-------------------------------- STRUCTURES ---------------------------------
+structure PageSearchContextStructure {
+   attribute RpdYear Number;
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

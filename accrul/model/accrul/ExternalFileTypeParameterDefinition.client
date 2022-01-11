@@ -1,0 +1,197 @@
+client ExternalFileTypeParameterDefinition;
+component ACCRUL;
+layer Core;
+projection ExternalFileTypeParameterDefinitionHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ExtFileTypeSet {
+   label = "External File Type Parameter Definition";
+   crudactions {
+      edit {
+         enabled = [not SystemDefined];
+      }
+   }
+   selector ExtFileTypeSelector;
+   group ExternalFileParamGroup bind ExtFileTypeSelector;
+   list ExtFileTypeParamList(ExtFileTypeParams) bind ExtFileTypeSelector;
+   list ExtTypeParamSetList(ExtTypeParamSets) bind ExtFileTypeSelector;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command SetDefaultCommand for ExtTypeParamSet {
+   label = "Set Default";
+   enabled = [not SetIdDefault];
+
+   execute {
+      call SetDefault();
+   }
+}
+
+
+command ExternalFileParametersPerSetCommand for ExtTypeParamSet {
+   label = "External File Parameters Per Set";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/ExternalFileTypeParameterSetDefinition/Form?$filter=FileType eq $[FileType] and SetId eq $[SetId]";
+   }
+}
+
+
+command CreateParametersPerSetFromCommand for ExtTypeParamSet {
+   label = "Create Parameters Per Set From Available Parameters";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulkcall CopyParamSet();
+      bulknavigate "page/ExternalFileTypeParameterSetDefinition/Form?$filter=FileType eq $[FileType] and SetId eq $[SetId]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ExtFileTypeSelector for ExtFileType {
+   label = "${FileType} - ${Description}";
+   orderby = FileType;
+   static FileType;
+   static Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ExternalFileParamGroup for ExtFileType {
+   label = "";
+   field FileType {
+      size = Small;
+   }
+   field Description {
+      label = "File Type Description";
+      size = Large;
+      editable = [not SystemDefined];
+   }
+   field SystemDefined;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileTypeParamList for ExtFileTypeParam {
+   label = "Available Parameters";
+   crudactions {
+      new {
+         enabled = [not parent.SystemDefined];
+      }
+      edit {
+         enabled = [not parent.SystemDefined];
+      }
+      delete {
+         enabled = [not parent.SystemDefined];
+      }
+   }
+   field ParamNo {
+      label = "Parameter Number";
+   }
+   field ParamId {
+      label = "Parameter ID";
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+   field BrowsableField;
+   field HelpText {
+      size = Large;
+   }
+   field ValidateMethod {
+      size = Large;
+      validate command {
+         execute {
+            if [ValidateMethod != null] {
+               call IsMethodAvailable(ValidateMethod);
+            }
+         }
+      }
+   }
+   field LovView {
+      size = Large;
+      validate command {
+         execute {
+            if [LovView != null] {
+               call IsViewAvailable(LovView);
+            }
+         }
+      }
+   }
+   field EnumerateMethod {
+      size = Large;
+      validate command {
+         execute {
+            if [EnumerateMethod != null] {
+               call IsMethodAvailable(EnumerateMethod);
+            }
+         }
+      }
+   }
+   field DataType {
+      size = Large;
+   }
+}
+
+
+list ExtTypeParamSetList for ExtTypeParamSet {
+   label = "Parameter Sets";
+   crudactions {
+      delete {
+         enabled = [not SystemDefined];
+      }
+   }
+   field SetId {
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+   field SetIdDefault;
+   field SystemDefined;
+
+   command SetDefaultCommand;
+   commandgroup ExternalFileParamCmdGroup {
+      label = "External File Parameters";
+      command ExternalFileParametersPerSetCommand;
+      command CreateParametersPerSetFromCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

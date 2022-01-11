@@ -1,0 +1,762 @@
+projection VoucherEntryAssistantHandling;
+component ACCRUL;
+layer Core;
+description "Voucher Entry Assistant Handling";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+@DynamicComponentDependency PROJ
+include fragment ProjectActivityPostableSelector;
+include fragment CurrencyRate2Selector;
+include fragment CurrencyType3Selector;
+include fragment TaxCodeRestrictedSelector;
+include fragment AccountLovSelector;
+include fragment CurrencyRate1Selector;
+include fragment AccountingYearPeriodSelector;
+include fragment AccountingYearSelector;
+include fragment VoucherTypeUserGroup3Selector;
+include fragment UserGroupMemberFinance4Selector;
+include fragment Voucher;
+include fragment InterimVoucherDialog;
+include fragment CodeStringAllBasic;
+@DynamicComponentDependency INTLED
+include fragment InternalManualPostingAssistant;
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+-- gelr:saft_poland, begin
+@DynamicComponentDependency INVOIC
+include fragment VouchersInvoiceLovSelector;
+-- gelr:saft_poland, end
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherSet for VoucherEntry {
+   context Company(Company);
+   where = "Company in (select company from user_finance_auth_pub)";
+}
+
+entityset CopyGlHeaderVirtualSet for CopyGlHeaderVirtual {
+   context Company(Company);
+}
+
+entityset UseTemplateVirtualSet for UseVoucherTemplateVirtual {
+   context Company(Company);
+}
+
+@DynamicComponentDependency GENLED
+entityset CopyGlVoucherDetailsHeaderVirtualSet for CopyGlVoucherDetailsHeaderVirtual {
+   context Company(Company);
+}
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity VoucherRow {
+   attribute Correction Boolean("Y", "N");
+   attribute AutoTaxVouEntry Boolean("TRUE", "FALSE");
+}
+
+@Override
+@DynamicComponentDependency GENLED
+entity GenLedVoucher {
+   crud = Read;
+
+   attribute IsMultiCompanyVoucher Boolean("TRUE", "FALSE") {
+      required = [true];
+      label = "Multi-Company";
+   }
+   attribute Notes Boolean("TRUE", "FALSE") {
+      fetch = "Voucher_Note_API.Check_Note_Exist(company, accounting_year, voucher_type, voucher_no)";
+      label = "Notes";
+      required = [true];
+   }
+   attribute DateReg Date {
+      label = "Entry Date";
+      fetch = "Trunc(date_reg)";
+
+   }
+   attribute JouNo Number {
+      label = "Journal Number";
+   }
+   attribute InterimVoucherDb Boolean("Y", "N") {
+      label = "Interim Voucher";
+      required = [true];
+   }
+
+}
+
+
+@Override
+entity VoucherTemplate {
+   crud = Read;
+
+   where = "multi_company_db = 'FALSE'";
+
+   reference TemplateRef(Company, Template) to VoucherTemplate(Company, Template) {
+      label = "Template";
+   }
+}
+
+@Override
+@DynamicComponentDependency GENLED
+entity GenLedVoucherRow {
+   crud = Read;
+   from = "gen_led_voucher_row2";
+   keys = Company, VoucherNo, VoucherType, AccountingYear, RowNo;
+   where = "TRANS_CODE IN ( 'MANUAL', 'INTERIM', 'EXTERNAL', 'External' )";
+
+   use attributes = Correction, Account, CodeB, CodeC, CodeD, CodeE, CodeF, CodeG, CodeH, CodeI, CodeJ, DebetAmount, CreditAmount, Amount, CurrencyCode, CurrencyRate, ConversionFactor, CurrencyDebetAmount, CurrencyCreditAmount, CurrencyAmount, ParallelCurrencyRate, ParallelConversionFactor, ThirdCurrencyDebitAmount, ThirdCurrencyCreditAmount, ThirdCurrencyAmount, Text, Quantity, ProcessCode, DelivTypeId, OptionalCode, PartyTypeId, TransCode, TransferId, Corrected, ReferenceSerie, ReferenceNumber;
+
+   attribute VoucherNo Number {
+      label = "Vou.No";
+      maxlength = 10;
+   }
+   attribute VoucherType Text {
+      label = "Vou.Type";
+   }
+   attribute AccountingYear Number {
+      label = "Year";
+      maxlength = 4;
+   }
+   attribute Correction Boolean("Y", "N") {
+      fetch = "DECODE(correction, 'Y', 'TRUE', 'FALSE')";
+      required = [true];
+   }
+   attribute DebetAmount Number {
+      label = "Debit Amount";
+      maxlength = 15;
+      editable = [false];
+      format = ifscurrency;
+   }
+   attribute CreditAmount Number {
+      maxlength = 15;
+      editable = [false];
+      format = ifscurrency;
+   }
+   attribute Amount Number {
+      maxlength = 15;
+      format = ifscurrency;
+   }
+   attribute CurrencyDebetAmount Number {
+      label = "Currency Debit Amount";
+      maxlength = 15;
+      format = ifscurrency;
+   }
+   attribute CurrencyCreditAmount Number {
+      maxlength = 15;
+      format = ifscurrency;
+   }
+   attribute CurrencyAmount Number {
+      format = ifscurrency;
+   }
+   attribute ParallelCurrencyRate Number {
+      editable = [false];
+   }
+   attribute ThirdCurrencyDebitAmount Number {
+      label = "Debit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyCreditAmount Number {
+      label = "Credit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyAmount Number {
+      label = "Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute Text Text {
+      maxlength = 100;
+   }
+   attribute ProcessCode Text {
+      maxlength = 100;
+   }
+   attribute DelivTypeId Text {
+      label = "Delivery Type ID";
+      format = uppercase;
+   }
+   attribute DeliveryTypeDescription Text {
+      fetch = "Voucher_Row_API.Get_Delivery_Type_Description(company,deliv_type_id)";
+      label = "Delivery Type Description";
+      maxlength = 2000;
+   }
+   attribute OptionalCode Text {
+      maxlength = 100;
+   }
+   attribute PartyTypeId Text {
+      label = "Identity";
+	  }
+   attribute TransCode Text {
+      label = "Transaction Code";
+   }
+   attribute TransferId Text {
+      label = "Transfer ID";
+      maxlength = 100;
+   }
+   attribute Corrected Boolean("Y", "N") {
+      required = [true];
+   }
+   attribute ReferenceSerie Text {
+      label = "Reference Series";
+   }
+   attribute ReferenceNumber Text {
+      label = "Reference Number";
+   }
+   @DynamicComponentDependency INVOIC
+   reference DelivTypeIdRef(Company, DelivTypeId) to DeliveryType(Company, DelivTypeId) {
+      label = "Delivery Type";
+   }
+
+   reference AccountRef(Company, Account) to Account(Company, Account);
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+action ValidateVoucherPosting {
+   initialcheck none;
+   parameter Init Boolean;
+}
+
+action CopyGenledVoucher {
+   initialcheck none;
+   supportwarnings = [true];
+
+   ludependencies = VoucherPosting;
+
+   parameter VoucherObjkey Text;
+   parameter Objkey Text;
+   parameter Selection Text;
+   parameter PostingMethod Enumeration(CorrectionType);
+
+}
+action CopyTemplateRows {
+   initialcheck none;
+   ludependencies = VoucherPosting;
+
+   parameter VoucherObjkey Text;
+   parameter VoucherDate Date;
+   parameter FullSelection Text;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+virtual VoucherEntry using Voucher {
+   attribute UserGroup Text {
+      format = uppercase;
+   }
+   attribute VoucherType Text {
+      editable = [true];
+   }
+   attribute VoucherNo Number {
+      maxlength = 10;
+   }
+   attribute VoucherStatus Enumeration(VoucherStatus.NewVouStatus) {
+      editable = [true];
+      required = [true];
+   }
+   attribute AccountingYear Number {
+      required = [true];
+      editable = [false];
+      updatable = [true];
+   }
+   attribute AccountingPeriod Number {
+      required = [true];
+      editable = [false];
+      updatable = [true];
+   }
+   attribute AmountMethod Enumeration(DefAmountMethod) {
+      required = [true];
+   }
+   attribute Notes Boolean("TRUE", "FALSE") {
+      label = "Notes";
+      fetch = "Voucher_Note_API.Check_Note_Exist(COMPANY,ACCOUNTING_YEAR,VOUCHER_TYPE,VOUCHER_NO)";
+
+      editable = [false];
+   }
+   attribute UseCorrectionRows Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute TextId Text {
+      label = "Text ID";
+      format = uppercase;
+   }
+   attribute VoucherText2 Text {
+      label = "Text for Voucher and Row";
+   }
+   attribute VoucherNoReference Number {
+      label = "Voucher No Ref";
+   }
+   attribute UpdateError Text {
+      editable = [ETag != null];
+   }
+   attribute VoucherTypeReference Text {
+      label = "Vou Type Ref";
+   }
+   attribute InterimVoucher Text {
+      editable = [false];
+   }
+   attribute SimulationVoucher Text {
+      editable = [false];
+   }
+   attribute FunctionGroup Text;
+   attribute CurrencyType Text {
+      format = uppercase;
+   }
+   attribute CurrencyCode Text {
+      format = uppercase;
+   }
+   attribute MultiCompanyMode Boolean("TRUE", "FALSE") {
+      fetch = "'FALSE'";
+      required = [true];
+
+   }
+   attribute CurrencyRate Number;
+   attribute RevenueCostClearVoucher Text {
+      editable = [false];
+   }
+   attribute RowGroupValidation Text {
+      fetch = "Voucher_Type_API.Is_Row_Group_Validated(Company, Voucher_Type)";
+   }
+   attribute AccountingPeriodDescription Text {
+      editable = [false];
+      fetch = "ACCOUNTING_PERIOD_API.Get_Period_Description(COMPANY,ACCOUNTING_YEAR,ACCOUNTING_PERIOD)";
+   }
+   attribute ParallelCurrencyCode Text {
+      fetch = "Company_Finance_API.Get_Parallel_Acc_Currency( company)";
+   }
+   attribute UseApporvalWorkflow Text {
+      fetch = "Voucher_Type_API.Get_Use_Approval_Workflow(Company,Voucher_type)";
+   }
+   attribute SeparateUserApproval Text {
+      fetch = "Voucher_Type_API.Get_Separate_User_Approval_Db(Company,Voucher_type)";
+   }
+   attribute AuthorizeLevel Text {
+      fetch = "Voucher_Type_User_Group_API.Get_Authorize_Level_Db(company, accounting_year, user_group, voucher_type)";
+      editable = [false];
+   }
+   attribute IsCancellation Text {
+      fetch = "Voucher_API.Is_Cancellation_Voucher__(company, voucher_type, accounting_year, voucher_no)";
+      editable = [false];
+   }
+
+   -- used in copy voucher in hold table
+   attribute OpennedFrom Text;
+   attribute CompanyFrom Text;
+   attribute AccountingYearFrom Number;
+   attribute VoucherTypeFrom Text;
+   attribute VoucherNoFrom Number;
+   attribute PostingMethod Enumeration(CorrectionType);
+   -- attribute RowGroupId Number;
+   -- gelr:saft_poland, begin
+   attribute SaftPolandEnabled Boolean("TRUE", "FALSE");
+   -- gelr:saft_poland, end
+
+   reference UserGroupRef(Company, Userid, UserGroup) to UserGroupMemberFinance4(Company, Userid, UserGroup) {
+      label = "User Group";
+   }
+   reference VoucherTypeRef(Company, AccountingYear, UserGroup, VoucherType) to VoucherTypeUserGroup3(Company, AccountingYear, UserGroup, VoucherType) {
+      label = "Voucher Type";
+   }
+   reference TextIdRef(Company, TextId) to VoucherText(Company, TextId) {
+      label = "Text ID";
+      copy Description to VoucherText2;
+   }
+
+   array VoucherPostingArray(Company, VoucherType, VoucherNo, AccountingYear) to VoucherPosting(Company, VoucherType, VoucherNo, AccountingYear);
+
+   action CreateVoucher Number {
+      supportwarnings = [true];
+   }
+
+   action RemoveTempVoucher {
+      ludependencies = Voucher;
+   }
+}
+
+
+virtual VoucherPosting using VoucherRow {
+   validate action ValidateVoucherPosting;
+   ludependencies = VoucherPosting;
+
+
+   --where = "AUTO_TAX_VOU_ENTRY = 'FALSE' AND MULTI_COMPANY_ID IS NULL";
+   attribute RowNo Number {
+      // searchable = false;
+      editable = [ETag != null];
+   }
+
+
+
+   attribute BaseCurrencyCode Text {
+      fetch = "Company_Finance_API.Get_Currency_Code(COMPANY)";
+   }
+   attribute RowGroupId Number {
+      maxlength = 4;
+   }
+   attribute Account Text {
+      label = "@A";
+   }
+   attribute CodeB Text {
+      label = "@B";
+   }
+   attribute CodeC Text {
+      label = "@C";
+   }
+   attribute CodeD Text {
+      label = "@D";
+   }
+   attribute CodeE Text {
+      label = "@E";
+   }
+   attribute CodeF Text {
+      label = "@F";
+   }
+   attribute CodeG Text {
+      label = "@G";
+   }
+   attribute CodeH Text {
+      label = "@H";
+   }
+   attribute CodeI Text {
+      label = "@I";
+   }
+   attribute CodeJ Text {
+      label = "@J";
+   }
+   attribute DelivTypeId Text {
+      label = "Delivery Type";
+      editable = [ETag = null];
+      format = uppercase;
+   }
+   attribute OptionalCode Text {
+      format = uppercase;
+   }
+
+   attribute TaxDirection Enumeration(TaxDirection) {
+      label = "Tax Direction";
+   }
+   attribute CurrencyType Text {
+      format = uppercase;
+   }
+   attribute CurrencyDebetAmount Number {
+      label = "Currency Debit Amount";
+      --fetch = "Voucher_API.Fetch_Currency_Gross
+      maxlength = 15;
+      format = ifscurrency;
+   }
+   attribute CurrencyCreditAmount Number {
+      label = "Currency Credit Amount";
+      maxlength = 15;
+      format = ifscurrency;
+   }
+   attribute CurrencyAmount Number {
+      label = "Currency Amount";
+      fetch = "NVL(currency_debet_amount,0) - NVL(currency_credit_amount,0)";
+      format = ifscurrency;
+      editable = [true];
+   }
+   attribute CurrencyTaxAmount Number {
+      maxlength = 15;
+      format = ifscurrency;
+   }
+   attribute CurrencyGrossAmount Number {
+      maxlength = 15;
+      // searchable = false;
+      format = ifscurrency;
+   }
+   attribute ConversionFactor Number {
+      editable = [false];
+   }
+   attribute DebetAmount Number {
+      label = "Debit Amount";
+      maxlength = 15;
+      format = ifscurrency;
+   }
+   attribute CreditAmount Number {
+      label = "Credit Amount";
+      maxlength = 15;
+      format = ifscurrency;
+   }
+   attribute Amount Number {
+      label = "Amount";
+      fetch = "NVL(debet_amount,0) - NVL(credit_amount,0)";
+      format = ifscurrency;
+      editable = [true];
+   }
+   attribute TaxAmount Number {
+      maxlength = 15;
+      format = ifscurrency;
+   }
+   attribute GrossAmount Number {
+      maxlength = 15;
+      // searchable = false;
+      format = ifscurrency;
+   }
+   attribute ParallelCurrRateType Text {
+      label = "Parallel Currency Rate Type";
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute ParallelConversionFactor Number {
+      label = "Parallel Currency Conversion Factor";
+      editable = [false];
+   }
+   attribute ParallelCurrency Text {
+//      fetch = "Company_Finance_API.Get_Parallel_Acc_Currency(COMPANY)";
+      label = "Parallel Currency";
+      maxlength = 2000;
+      editable = [false];
+   }
+   attribute ThirdCurrencyDebitAmount Number {
+      label = "Debit Amount in Parallel Currency";
+      maxlength = 15;
+      // searchable = false;
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyCreditAmount Number {
+      label = "Credit Amount in Parallel Currency";
+      maxlength = 15;
+      // searchable = false;
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyAmount Number {
+      fetch = "NVL(THIRD_CURRENCY_DEBIT_AMOUNT,0) - NVL(THIRD_CURRENCY_CREDIT_AMOUNT,0)";
+      label = "Amount in Parallel Currency";
+      format = ifscurrency;
+      editable = [true];
+   }
+   attribute ParallelCurrTaxAmount Number {
+      label = "Tax Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute TextId Text {
+//      fetch = "TEXT_ID";
+      label = "Text ID";
+      maxlength = 100;
+   }
+   attribute ProjectActivityId Number {
+      label = "Proj Activity Seq No";
+   }
+   attribute UpdateError Text {
+      editable = [ETag = null];
+   }
+   attribute TransCode Text {
+      maxlength = 10;
+      editable = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   attribute AddInternal Boolean("TRUE", "FALSE") {
+//      fetch = "VOUCHER_ROW_API.Is_Manual_Added(COMPANY,INTERNAL_SEQ_NUMBER,ACCOUNT)";
+      label = "Add Internal";
+      // searchable = false;
+      required = [true];
+      editable = [false];
+   }
+   attribute IntManualAdded Boolean("TRUE", "FALSE") {
+//      fetch = "VOUCHER_ROW_API.Is_Manual_Added(COMPANY,INTERNAL_SEQ_NUMBER,ACCOUNT)";
+      // searchable = false;
+      required = [true];
+      editable = [false];
+   }
+   attribute IsStatAccount Text {
+//      fetch = "ACCOUNTING_CODE_PART_A_API.Is_Stat_Account(COMPANY, ACCOUNT)";
+      label = "IsStatAccount";
+      maxlength = 100;
+      // searchable = false;
+      editable = [false];
+   }
+   attribute CodeDemand Text {
+//      fetch = "Accounting_Code_Part_A_API.Get_Required_Code_Part(COMPANY, ACCOUNT)";
+      // searchable = false;
+      format = uppercase;
+   }
+   attribute LedgerIds Text {
+//      fetch = "LEDGER_IDS";
+      label = "LedgerIds";
+      maxlength = 100;
+      // searchable = false;
+      editable = [false];
+   }
+   attribute AutoTaxVouEntry Boolean("TRUE", "FALSE") {
+      label = "Manual Voucher Posting";
+   }
+   attribute ProjectId Text {
+      maxlength = 20;
+      fetch = "Accounting_Codestr_API.Get_Value_For_Code_Part_Func(COMPANY, ACCOUNT, CODE_B, CODE_C, CODE_D, CODE_E, CODE_F, CODE_G, CODE_H, CODE_I, CODE_J, 'PRACC')";
+      editable = [false];
+   }
+   attribute InternalSeqNumber Number {
+      // searchable = false;
+      editable = [ETag = null];
+   }
+   attribute CCheckBoxColumn Boolean("TRUE", "FALSE") {
+//      fetch = "VOUCHER_ROW_API.Is_Manual_Added(COMPANY,INTERNAL_SEQ_NUMBER,ACCOUNT)";
+      label = "cCheckBoxColumn";
+      // searchable = false;
+      editable = [false];
+   }
+   attribute FunctionGroup Text {
+      label = "(Untitled)";
+      maxlength = 20;
+      // searchable = false;
+      format = uppercase;
+   }
+   attribute TransferId Text {
+      label = "Invoice Number";
+      // searchable = false;
+      editable = [ETag = null];
+   }
+   attribute AccountingYear Number {
+      maxlength = 4;
+      // searchable = false;
+   }
+   attribute VoucherNo Number {
+      maxlength = 10;
+      // searchable = false;
+   }
+   attribute CurrTaxBaseAmtTmp Number {
+//      fetch = "Source_Tax_Item_Accrul_API.Get_Tax_Base_Curr_Amount(COMPANY, :i_hWndFrame.frmMultiCompanyVoucherPosting.i_hWndParent.frmMultiCompanyEntryVoucher.sSourceRefType, TO_CHAR(ACCOUNTING_YEAR), VOUCHER_TYPE, TO_CHAR(VOUCHER_NO), TO_CHAR(ROW_NO), '*',1)";
+      label = "Curr Tax Base Amt Tmp";
+      // searchable = false;
+      editable = [false];
+      format = ifscurrency;
+   }
+   attribute TaxBaseAmtTmp Number {
+//      fetch = "Source_Tax_Item_Accrul_API.Get_Tax_Base_Dom_Amount(COMPANY,  :i_hWndFrame.frmMultiCompanyVoucherPosting.i_hWndParent.frmMultiCompanyEntryVoucher.sSourceRefType, TO_CHAR(ACCOUNTING_YEAR), VOUCHER_TYPE, TO_CHAR(VOUCHER_NO), TO_CHAR(ROW_NO), '*',1)";
+      label = "Tax Base Amt Tmp";
+      // searchable = false;
+      editable = [false];
+      format = ifscurrency;
+   }
+
+
+   attribute ParaCurrTaxBaseAmountTmp Number {
+//      fetch = "Source_Tax_Item_Accrul_API.Get_Tax_Base_Parallel_Amount(COMPANY,  :i_hWndFrame.frmMultiCompanyVoucherPosting.i_hWndParent.frmMultiCompanyEntryVoucher.sSourceRefType, TO_CHAR(ACCOUNTING_YEAR), VOUCHER_TYPE, TO_CHAR(VOUCHER_NO), TO_CHAR(ROW_NO), '*',1)";
+      label = "Para Curr Tax Base Amount Tmp";
+      // searchable = false;
+      editable = [false];
+      format = ifscurrency;
+   }
+   attribute Correction Boolean("Y", "N");
+   attribute RequiredString Text {
+      fetch = "Accounting_Codestr_API.Get_Required_Code_Part_List(Company, Account, Accounting_Codestr_API.Get_Value_For_Code_Part_Func(COMPANY, ACCOUNT, CODE_B, CODE_C, CODE_D, CODE_E, CODE_F, CODE_G, CODE_H, CODE_I, CODE_J, 'PRACC'))";
+      editable = [true];
+   }
+
+   reference StatutoryFeeRef(Company, OptionalCode) to StatutoryFee(Company, FeeCode);
+   reference CompanyFinanceRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference AccountRef(Company, Account) to AccountLov(Company, Value);
+   -- THPELK: TODO LOV User Where
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+
+   reference ProcessCodeRef(Company, ProcessCode) to AccountProcessCode(Company, ProcessCode) {
+      label = "Process Code";
+   }
+   @DynamicComponentDependency INVOIC
+   reference DelivTypeIdRef(Company, DelivTypeId) to DeliveryType(Company, DelivTypeId) {
+      label = "Delivery Type";
+   }
+   reference OptionalCodeRef(Company, OptionalCode) to TaxCodeRestricted(Company, FeeCode) {
+      label = "Tax Code";
+      // where = "<Define static Where statement for LOV, typically defined within a PM_DataItemLovUserWhere message>";
+   }
+   reference CurrencyCodeRef(Company, CurrencyCode) to CurrencyCode(Company, CurrencyCode) {
+      label = "Currency Code";
+   }
+   reference CurrencyTypeRef(Company, CurrencyType) to CurrencyRate2(Company, CurrencyType) {
+      label = "Currency Type";
+      // where = "<Define static Where statement for LOV, typically defined within a PM_DataItemLovUserWhere message>";
+   }
+   reference ParallelCurrRateTypeRef(Company, ParallelCurrRateType) to CurrencyType3(Company, CurrencyType) {
+      label = "Parallel Currency Rate Type";
+      // where = "<Define static Where statement for LOV, typically defined within a PM_DataItemLovUserWhere message>";
+   }
+   reference TextIdRef(Company, TextId) to VoucherText(Company, TextId) {
+      label = "Text ID";
+   }
+   @DynamicComponentDependency PROJ
+   reference ProjectActivityIdRef(ProjectId, ProjectActivityId) to ProjectActivityPostable(ProjectId, ActivitySeq) {
+      label = "Proj Activity Seq No";
+   }
+   -- gelr:saft_poland, begin
+   @DynamicComponentDependency INVOIC
+   reference ReferenceNumberRef(Company, ReferenceSerie, ReferenceNumber) to VouchersInvoiceLov(Company, ReferenceSerie, ReferenceNumber) {
+      label = "Reference Number";
+   }
+   -- gelr:saft_poland, end
+}
+
+
+virtual CopyGlHeaderVirtual {
+   attribute VoucherObjkey Text;
+   attribute Company Text;
+   attribute PostingMethod Enumeration(CorrectionType) {
+      label = "Reversal Posting Options";
+   }
+
+   @DynamicComponentDependency GENLED
+   array  GenLedVoucherVirtualArray() to GenLedVoucher() {
+      where = "((:parent.Company = :child.Company) AND
+      (Voucher_Type_API.Get_Voucher_Group(:child.Company, :child.VoucherType) IN('M', 'Q')))";
+   }
+}
+
+virtual UseVoucherTemplateVirtual {
+   attribute VoucherObjkey Text;
+   attribute Company Text;
+   attribute VoucherDate Date;
+
+   array TemplateArray(Company) to VoucherTemplate(Company);
+}
+
+@DynamicComponentDependency GENLED
+virtual CopyGlVoucherDetailsHeaderVirtual {
+   crud = Create;
+
+   attribute Company Text;
+   attribute VoucherNo Number;
+   attribute VoucherType Text;
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+
+   array GlVoucherRowsArray(Company, VoucherNo, VoucherType, AccountingYear) to GenLedVoucherRow(Company, VoucherNo, VoucherType, AccountingYear);
+}
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

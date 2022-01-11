@@ -1,0 +1,93 @@
+client ApproverGroup;
+component ACCRUL;
+layer Core;
+projection ApproverGroupHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ApproverGroupNavEntry parent AccrulNavigator.ApprovalWorkflowBasicDataMenu at index 300 {
+      label = "Approver Group";
+      page Form home ApproverGroup;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ApproverGroupSet {
+   label = "Approver Group";
+   selector ApproverGroupRecordSelector;
+   group ApproverGroupGroup bind ApproverGroupRecordSelector;
+   list ApproverGroupDetailList(ApproverGroupDetailArray) bind ApproverGroupRecordSelector;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector ApproverGroupRecordSelector for ApproverGroup {
+   label = "${ApproverGroupId} - ${Description}";
+   static ApproverGroupId;
+   static Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ApproverGroupGroup for ApproverGroup {
+   label = "";
+   field ApproverGroupId {
+      label = "Approver Group";
+//      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ApproverGroupDetailList for ApproverGroupDetail {
+   label = "Approver Group Members";
+   lov UserIdRef with ReferenceUserFinanceSelector {
+      search = Userid, Description;
+      size = Large;
+      description = UserIdRef.Description;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

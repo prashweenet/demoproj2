@@ -1,0 +1,115 @@
+projection ExternalFileTypeParameterSetDefinitionHandling;
+component ACCRUL;
+layer Core;
+description "External File Type Parameter Set Definitions";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtTypeParamSets for ExtTypeParamSet;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtTypeParamSet {
+   crud = Read, Update;
+
+   attribute FileType Text {
+      editable = [false];
+   }
+   attribute SetId Text {
+      label = "Parameter Set ID";
+      editable = [false];
+   }
+   attribute SetIdDefault Boolean("TRUE", "FALSE") {
+      label = "Default Set ID";
+      editable = [false];
+      updatable = [false];
+   }
+   attribute SystemDefined Boolean("TRUE", "FALSE") {
+      editable = [false];
+      updatable = [false];
+   }
+
+   reference ExtFileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+
+   array DetailExtFileParamPerSet(FileType, SetId) to ExtTypeParamPerSet(FileType, SetId);
+}
+
+
+@Override
+entity ExtTypeParamPerSet {
+   attribute SetId Text {
+      label = "Default Set ID";
+   }
+   attribute MandatoryParam Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute ShowAtLoad Boolean("TRUE", "FALSE") {
+      label = "Show at Load";
+      required = [true];
+   }
+   attribute InputableAtLoad Boolean("TRUE", "FALSE") {
+      label = "Editable at Load";
+   }
+   attribute EnumerateMethod Text {
+      fetch = "Ext_File_Type_Param_API.Get_Enumerate_Method(file_type, param_no)";
+   }
+   attribute DefaultValue Text {
+      fetch = "CASE WHEN (Ext_File_Type_Param_API.Get_Enumerate_Method(file_type, param_no) = 'Fnd_Boolean_API.Enumerate') THEN Fnd_Boolean_API.Decode(default_value)
+                    WHEN (Ext_File_Type_Param_API.Get_Enumerate_Method(file_type, param_no) = 'Finance_Yes_No_API.Enumerate') THEN Finance_Yes_No_API.Decode(default_value)
+                    ELSE default_value END";
+   }
+   reference ExtFileTypeParamRef(FileType, ParamNo) to ExtFileTypeParam(FileType, ParamNo) {
+      label = "Param No";
+   }
+   reference SetIdRef(FileType, SetId) to ExtTypeParamSet(FileType, SetId) {
+      label = "Default Set ID";
+   }
+   reference DefaultValueBooleanRef(DefaultValue) to ExternalFileBooleanQuery(BoolValue);
+   reference DefaultValueYesNoRef(DefaultValue) to ExternalFileYesNoQuery(YesNoValue);
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query ExternalFileBooleanQuery {
+   from = "external_file_boolean";
+   lu = ExtFileTypeParam;
+   keys = BoolValue;
+
+   attribute BoolValue Text {
+      lovcolumn = [true];
+   }
+}
+
+query ExternalFileYesNoQuery {
+   from = "external_file_yes_no";
+   lu = ExtFileTypeParam;
+   keys = YesNoValue;
+
+   attribute YesNoValue Text {
+      lovcolumn = [true];
+   }
+}
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

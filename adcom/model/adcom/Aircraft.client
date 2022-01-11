@@ -1,0 +1,415 @@
+---------------------------------------------------------------------------------
+--  Date          Sign    History
+--  ----------    ------  -------------------------------------------------------
+--  201123        Satglk  LMM2020R1-1214 - In AvExeTask status badge, added badge colour to removed state. Removed Error, Forecasted objstates
+--  201013        majslk  LMM2020R1-1285 - Improvements in Aircraft Details page
+--  200703        SURBLK  LMM2020R1-269 - Created
+---------------------------------------------------------------------------------
+
+client Aircraft;
+component ADCOM;
+layer Core;
+projection AircraftHandling2;
+include fragment AircraftLovSelector;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+
+   entry AircraftsNavEntry parent AdcomNavigator.BasicData at index 300 {
+      label = "Aircraft Details";
+      page Form home Aircraft;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AircraftSet {
+   label = "Aircraft Details";
+   selector AircraftSelector;
+
+   group AircraftGroup;
+
+   tabs {
+      tab {
+         label = "General";
+         group AircraftInformationGroup;
+         group AircraftInventoryGroup;
+      }
+      tab {
+         label = "Faults";
+         list AvFaultList(FaultArray);
+      }
+      tab {
+         label = "Tasks";
+         list TaskList(TaskArray);
+      }
+      tab {
+         label = "Work Packages";
+         list WorkPackageList(WorkPackageArray);
+      }
+      tab {
+         label = "Flights";
+         list FlightList(FlightArray);
+      }
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector AircraftSelector for Aircraft {
+   label = "${AircraftId} - ${AircraftDesc}-${RegCode}";
+   static AircraftId;
+   static AircraftDesc {
+      label = "Aircraft";
+   }
+}
+
+selector CountryCodeSelector for IsoCountry {
+   label = "$ {CountryCode}";
+   static CountryCode;
+}
+
+selector RegulatoryBodyRef for AvRegulatoryBody {
+   label = "$ {RegulatoryBodyCode}";
+   static RegulatoryBodyCode;
+}
+selector MaintenanceLocationSelector for AvMaintenanceLocation {
+   label = "${LocationCode} - ${LocationName}";
+   static LocationCode;
+   static LocationName;
+}
+
+selector AirportSelector for AvAirport {
+   label = "${AirportId} - ${AirportName}";
+   static AirportId;
+   static IataCode;
+   static IcaoCode;
+   static AirportName;
+}
+---------------------------------- GROUPS -----------------------------------
+
+group AircraftGroup for Aircraft {
+   label = "";
+
+   field DummyAircraft {
+      label = "Aircraft";
+   }
+   field AircraftDesc {
+      label = "Aircraft Type Name";
+   }
+
+   field Manufacturer;
+   field PartNumber {
+      label = "OEM Part Number";
+   }
+   field SerialNumber {
+      label = "OEM Serial No";
+   }
+   field Condition;
+   field RegCode {
+      label = "Registration Code";
+   }
+}
+
+group AircraftInformationGroup for Aircraft {
+   label = "";
+
+   field FinNoCode {
+      label = "FIN Number";
+   }
+   field LineNoOem {
+      label = "OEM Line No";
+   }
+   field VarNoOem {
+      label = "OEM Variable No ";
+   }
+   lov RegulatoryBodyRef with AvRegulatoryBodySelector {
+      label = "Regulatory Body";
+   }
+   lov CountryCodeRef with CountryCodeSelector {
+      label = "Country";
+   }
+   field CapabilityCode {
+      label = "Capability";
+   }
+}
+
+group AircraftInventoryGroup for Aircraft {
+   label = "Inventory Information";
+
+   field InventoryId {
+      label = "Inventory ID";
+   }
+   field ReceivedDate;
+   field ManufacturedDate;
+   field AuthorityCode {
+      label = "Authority";
+   }
+   field OwnerCode {
+      label = "Owner";
+   }
+   field Barcode;
+
+   field ReleaseRemarks;
+   field ReleaseNumber;
+   field ReleaseDate;
+   field OperatorCode;
+
+   field IpcEffectivityCode {
+      label = "IPC Effectivity Code";
+   }
+
+   field AirworthCode {
+      label = "Airworthiness Code";
+   }
+   field AltId {
+      label = "ALT ID";
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+
+list AvFaultList for AvFault {
+   field Barcode;
+   lov AircraftSubSystemRef with ReferenceAvAircraftSubSystemSelector {
+      label = "Failed System";
+      description = AircraftSubSystemRef.SubSystemCode;
+      hidekey = [true];
+   }
+   field Description {
+      label = "Fault Description";
+   }
+   badge Objstate {
+      label = "Fault Status ";
+      style = TextOnly;
+      emphasis Alert = [Objstate = "OPEN"];
+      emphasis Neutral = [Objstate = "DEFER"];
+      emphasis Ok = [Objstate = "CLOSED"];
+   }
+   field AvFaultDeferralRef.FaultSeverityCd {
+      label = "Fault Severity";
+   }
+   field Priority {
+      label = "Fault Priority";
+   }
+   field FoundOnType;
+   field FoundOnId {
+      label = "Found On ID";
+   }
+   field FoundOnDesc {
+      label = "Found On Description";
+   }
+   field FoundOnDate;
+   field FoundByUserRef {
+      label = "Found By";
+   }
+   field PhaseOfFlightCodeRef {
+      label = "Phase of Flight";
+   }
+   field LogbookTypeCodeRef {
+      label = "Logbook Type";
+   }
+   field FaultSourceCodeRef {
+      label = "Fault Source";
+   }
+   field FailureTypeCodeRef {
+      label = "Failure Type";
+   }
+   field FaultCode;
+   field ClosedDate;
+}
+
+list TaskList for AvExeTask {
+   static TaskId {
+      label = "Task ID";
+      columnexclude = [true];
+   }
+   field Barcode;
+   lov FaultIdRef with ReferenceAvFaultSelector {
+      label = "Fault ID";
+      description = FaultIdRef.Description;
+      hidekey = [true];
+
+   }
+   field TaskCode;
+   field TaskName;
+   field TaskType {
+      label = "Class-Subclass";
+   }
+   badge Objstate {
+      label = "Status";
+      style = TextOnly;
+      emphasis StatePreliminary = [Objstate = "Active"];
+      emphasis StateInProgress = [Objstate = "InWork"];
+      emphasis StateCompleted = [Objstate = "Completed"];
+      emphasis Alert = [Objstate = "Removed"];
+   }
+   field SchedStartDateTime {
+      label = "Scheduled Start";
+   }
+   field SchedEndDateTime {
+      label = "Scheduled End";
+   }
+   field ActualStartDateTime {
+      label = "Actual Start";
+   }
+   field ActualEndDateTime {
+      label = "Estimated End";
+   }
+   field EstimatedDuration;
+   lov AircraftIdRef with ReferenceAircraftLovSelector {
+      label = "Aircraft";
+      description = AircraftIdRef.Aircraft;
+      hidekey = [true];
+   }
+   lov AircraftWpIdRef with ReferenceAvAircraftWorkPackageSelector {
+      label = "Work Package No";
+      description = AircraftWpIdRef.WorkPackageName;
+      hidekey = [true];
+   }
+   badge IsHistoric {
+      label = "Historic";
+      style = TextOnly;
+      size = Medium;
+      emphasis Info = [IsHistoric = true];
+      emphasis Neutral = [IsHistoric = false];
+   }
+}
+
+list WorkPackageList for AvAircraftWorkPackage {
+   field WoNumber {
+      label = "Work Package No";
+   }
+   field WorkPackageName;
+   lov MaintenanceLocationRef with MaintenanceLocationSelector {
+      label = "Work Location";
+      description = MaintenanceLocationRef.LocationName;
+   }
+   badge Objstate {
+      style = TextOnly;
+      label = "Status";
+      emphasis StateCreated = [Objstate = "Actv"];
+      emphasis StatePlanned = [Objstate = "Commit"];
+      emphasis StateInProgress = [Objstate = "InWork"];
+      emphasis StateCompleted = [Objstate = "Complete"];
+      emphasis StateClosed = [Objstate = "Cancel"];
+   }
+   field SchedStartDateTime {
+      label = "Scheduled Start";
+   }
+   field SchedEndDateTime {
+      label = "Scheduled End";
+   }
+   field ActualStartDateTime {
+      label = "Actual Start";
+   }
+   field ActualEndDateTime {
+      label = "Estimated End ";
+   }
+   field IsReleaseToService {
+      label = "Release to Service";
+      size = Small;
+   }
+   field IsHistoric {
+      label = "Historic";
+      size = Small;
+   }
+}
+
+list FlightList for AvFlight {
+   field LegNo {
+      label = "Flight Name";
+   }
+   field MasterFlightNo {
+      label = "Master Flight";
+   }
+   badge Objstate {
+      style = TextOnly;
+      label = "Status";
+      size = Small;
+      emphasis StatePreliminary = [Objstate = "Planned"];
+      emphasis Neutral = [Objstate = "Cancel"];
+      emphasis StatePlanned = [Objstate = "Out"];
+      emphasis StatePosted = [Objstate = "Off"];
+      emphasis Complementary10 = [Objstate = "On"];
+      emphasis True = [Objstate = "In"];
+      emphasis True = [Objstate = "Completed"];
+   }
+   lov DepartureAirportRef with AirportSelector {
+      label = "Departure Airport";
+      description = DepartureAirportRef.IataCode;
+      hidekey = [true];
+   }
+   field DepartureGate;
+   field ShedDepartureDateTime {
+      label = "Scheduled Departure Date";
+   }
+   field ActualDepartureDateTime {
+      label = "Actual Departure Date";
+   }
+   field OffDateTime {
+      label = "Up Date";
+   }
+   lov ArrivalAirportRef with AirportSelector {
+      label = "Arrival Airport";
+      description = ArrivalAirportRef.IataCode;
+      hidekey = [true];
+   }
+   field ArrivalGate;
+   field ShedArrivalDateTime {
+      label = "Scheduled Arrival Date";
+   }
+   field ActualArrivalDateTime {
+      label = "Actual Arrival Date";
+   }
+   field OnDateTime {
+      label = "Down Date";
+   }
+   badge TurnStatus {
+      label = "Turn Status";
+      style = TextOnly;
+      emphasis Success = [TurnStatus = "Released"];
+      emphasis Progress5 = [TurnStatus = "Arrived"];
+      emphasis Warning = [TurnStatus = "InBound"];
+      emphasis Danger = [TurnStatus = "InMaintenance"];
+      emphasis Success = [TurnStatus = "Departed"];
+   }
+   badge IsHistoric {
+      label = "Historic";
+      style = TextOnly;
+      size = Medium;
+      emphasis Info = [IsHistoric = true];
+      emphasis Neutral = [IsHistoric = false];
+   }
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

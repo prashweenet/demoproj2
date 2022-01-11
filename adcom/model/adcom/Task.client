@@ -1,0 +1,138 @@
+--  Date    Sign    History
+--  ------  ------  -----------------------------------------------------
+--  201123  Satglk  LMM2020R1-1214, Used entity states default enum AvExeTaskState, removed Error, Forecasted objstates
+--  201013  majslk  LMM2020R1-1285, Improvements in Task page
+--  200824  majslk  LMM2020R1-455, UI Improvements.
+--  200808  DILDLK  LMM2020R1-516, Modified navigation.
+--  200702  TAJALK  LMM2020R1-270, Bug fixes
+--  200701  SatGlk  LMM2020R1-187, UI Improvements done.
+--  200629  ARUFLK  Changed page name to List.
+--  200625  KAWJLK  LMM2020R1-186, Arranging the order of attributes.
+--  200623  dildlk  LMM2020R1-80, UI Changes.
+--  200618  ARUFLK  LMM2020R1-75, Created.
+-----------------------------------------------------------------------------
+
+client Task;
+component ADCOM;
+layer Core;
+projection TaskHandling;
+include fragment AircraftLovSelector;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TasksNavEntry parent AdcomNavigator.AviationMaintenance at index 400 {
+      label = "Tasks";
+      page List home AvExeTask;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AvExeTaskSet {
+   label = "Tasks";
+   list TaskList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list TaskList for AvExeTask {
+   static TaskId {
+      label = "Task ID";
+      columnexclude = [true];
+   }
+   field Barcode;
+   lov FaultIdRef with ReferenceAvFaultSelector {
+      label = "Fault Description";
+      description = FaultIdRef.Description;
+      hidekey = [true];
+   }
+   field TaskCode;
+   field TaskName;
+   field ConfigPosition {
+      label = "Config Slot";
+   }
+   lov AircraftIdRef with ReferenceAircraftLovSelector {
+      label = "Aircraft";
+      description = AircraftIdRef.Aircraft;
+      hidekey = [true];
+   }
+   lov AircraftWpIdRef with ReferenceAvAircraftWorkPackageSelector {
+      label = "Work Package Name";
+      description = AircraftWpIdRef.WorkPackageName;
+      hidekey = [true];
+   }
+   field TaskType {
+      label = "Class-Subclass";
+   }
+   badge Objstate {
+      label = "Status";
+      style = TextOnly;
+      emphasis StatePreliminary = [Objstate = "Active"];
+      emphasis StateInProgress = [Objstate = "InWork"];
+      emphasis StateCompleted = [Objstate = "Completed"];
+      emphasis Alert = [Objstate = "Removed"];
+   }
+   field Priority;
+   field SchedStartDateTime {
+      label = "Scheduled Start";
+   }
+   field SchedEndDateTime {
+      label = "Scheduled End";
+   }
+   field ActualStartDateTime {
+      label = "Actual Start";
+   }
+   field ActualEndDateTime {
+      label = "Estimated End";
+   }
+   field EstimatedDuration;
+   badge IsHistoric {
+      label = "Historic";
+      style = TextOnly;
+      size = Medium;
+      emphasis Info = [IsHistoric = true];
+      emphasis Neutral = [IsHistoric = false];
+   }
+
+   command Start;
+   command ToComplete {
+      label = "Complete";
+   }
+
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

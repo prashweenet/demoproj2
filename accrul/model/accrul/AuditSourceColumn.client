@@ -1,0 +1,92 @@
+client AuditSourceColumn;
+component ACCRUL;
+layer Core;
+projection AuditSourceColumnHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AuditSourceSet {
+   label = "Audit Source Column";
+
+   selector AuditSourceSelector;
+   list AuditSourceColumnList(AuditSourceColumnsArray);
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand {
+   label = "Translation";
+   mode = SelectedRecords;
+   enabled = [SelectionDateDb = true];
+   variable StrModuleVar;
+   variable StrLuVar;
+   execute {
+      set StrModuleVar = "ACCRUL";
+      set StrLuVar = "AuditSourceColumn";
+      navigate "page/BasicDataTranslation/Form;$filter=Module eq $[StrModuleVar] and Lu eq $[StrLuVar]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector AuditSourceSelector for AuditSource {
+   orderby = AuditSource;
+   label = "${AuditSource} - ${Description}";
+   field AuditSource;
+   field Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AuditSourceColumnList for AuditSourceColumn {
+   field SourceColumn;
+   field Datatype;
+   field Precision {
+      size = Small;
+   }
+   field SelectionDateDb {
+      size = Small;
+   }
+   field SelectionDateTitle;
+
+   command TranslationCommand;
+}
+
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

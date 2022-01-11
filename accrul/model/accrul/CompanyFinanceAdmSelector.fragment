@@ -1,0 +1,71 @@
+fragment CompanyFinanceAdmSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view company_finance_adm";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCompanyFinanceAdmSelector for CompanyFinanceAdm {
+   static Company;
+   static Description;
+}
+
+card CompanyFinanceAdmCard for CompanyFinanceAdm {
+   label = "";
+   fieldranking Company;
+   field Company;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CompanyFinanceAdm {
+   from = "company_finance_adm";
+   lu = CompanyFinance;
+   keys = Company;
+   ludependencies = CompanyFinance;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      label = "Company Name";
+      lovcolumn = [true];
+   }
+   attribute CurrencyCode Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [false];
+   }
+   attribute CorrectionType Enumeration(CorrectionType) {
+      lovcolumn = [true];
+      fetch = "correction_type_db";
+   }
+   attribute ParallelAccCurrency Text {
+      label = "Parallel Currency";
+      lovcolumn = [true];
+   }
+   attribute TimeStamp Date {
+      lovcolumn = [false];
+   }
+   attribute RecalculationDate Date {
+      lovcolumn = [false];
+   }
+   attribute DefAmountMethod Enumeration(DefAmountMethod) {
+      label = "Default Amount Method";
+      lovcolumn = [true];
+      fetch = "def_amount_method_db";
+   }
+   attribute CreationFinished Text {
+      lovcolumn = [true];
+   }
+   attribute UseVouNoPeriod Text {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

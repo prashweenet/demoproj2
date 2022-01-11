@@ -1,0 +1,58 @@
+fragment CodeStringAccountBasic;
+component ACCRUL;
+layer Core;
+description "Fragment with a fieldset, CodeStringAccountBasicLovFieldSet, for Account using the ReferenceSelector of the entity Account";
+// The page using this fieldset must be Company Context dependent
+// The reference in the projection must be named AccountRef and the attribute needs to be called Account.
+// The fragment has basic support for codepart handling which means that it will display the correct label for the Account field.
+// For other support, typically codestring completion etc. use the fragment with the word "Extended" in it.
+// If there is a need for specific Validate Command handling then override the command
+// namned ValidateCodeStringAccountBasicAccountRef.
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+--------------------------------- SELECTOR ----------------------------------
+@Override
+selector ReferenceAccountSelector for Account {
+   static AccntGroup {
+      columnvisible = [false];
+      visible = [false];
+   }
+   static AccntType {
+      columnvisible = [false];
+      visible = [false];
+   }
+}
+
+
+-------------------------------- FIELD SETS ---------------------------------
+fieldset CodeStringAccountBasicLovFieldSet {
+   lov AccountRef with ReferenceAccountSelector {
+      label = "${context.Company.CodeAName}";
+      description = AccountRef.Description;
+      search = Account, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAccountBasicAccountRef;
+   }
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ValidateCodeStringAccountBasicAccountRef {
+   variable Dummy;
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+@Override
+entity Account {
+   attribute Account Text {
+      label = "${context.Company.CodeAName}";
+   }
+   attribute AccntGroup Text {
+      lovcolumn = [true];
+   }
+   attribute AccntType Text {
+      lovcolumn = [true];
+   }
+}

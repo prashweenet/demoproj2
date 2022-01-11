@@ -1,0 +1,28 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TaxCalcStructure
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+VIEW Tax_Calc_Structure_Active IS
+   Prompt     = 'Tax Calc Structure'
+SELECT 
+       company                        company,
+       tax_calc_structure_id          tax_calc_structure_id,
+       substr(nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'TaxCalcStructure', tax_calc_structure_id), description), 1, 100) description
+FROM   tax_calc_structure_tab
+WHERE  rowstate = 'Active';
+   
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

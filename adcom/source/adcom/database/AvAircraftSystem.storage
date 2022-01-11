@@ -1,0 +1,20 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvAircraftSystem
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210112  KAWJLK  LMM2020R1-1477, Added av_system_seq.
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+SEQUENCE av_system_seq IS MAXVALUE 999999999999999 INCREMENT BY 1 START WITH 1 NOCACHE;

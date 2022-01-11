@@ -1,0 +1,57 @@
+fragment CodeEAllSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view code_e_all";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCodeEAllSelector for CodeEAll {
+   static CodeE;
+   static Description;
+}
+
+card CodeEAllCard for CodeEAll {
+   label = "";
+   fieldranking CodeE;
+   field CodeE;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CodeEAll {
+   from = "code_e_all";
+   lu = CodeE;
+   keys = Company, CodeE;
+   ludependencies = CodeE;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CodeE Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [false];
+   }
+   attribute ValidUntil Date {
+      lovcolumn = [false];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute BudgetValue Enumeration(BudgetAccountFlag) {
+      label = "Budget/Planning Only";
+      lovcolumn = [true];
+      fetch = "budget_value_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

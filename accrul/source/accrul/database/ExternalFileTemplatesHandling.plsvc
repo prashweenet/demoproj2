@@ -1,0 +1,41 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalFileTemplatesHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Copy_Def_From_File_Def___ (
+   file_template_ IN VARCHAR2,
+   description_   IN VARCHAR2,
+   file_id_       IN VARCHAR2) RETURN VARCHAR2
+IS
+BEGIN
+   External_File_Utility_API.Copy_Def_From_File_Def(file_template_, description_, file_id_);
+   RETURN Client_SYS.Get_Key_Reference('ExtFileTemplate', 'FILE_TEMPLATE_ID', file_template_); 
+END Copy_Def_From_File_Def___;
+
+
+FUNCTION Copy_Def_From_File_Type___ (
+   file_template_ IN VARCHAR2,
+   description_   IN VARCHAR2,
+   file_type_     IN VARCHAR2,
+   mandatory_     IN BOOLEAN ) RETURN VARCHAR2
+IS
+   mandatory_val_ VARCHAR2(5);
+BEGIN
+   Ext_File_Template_API.Already_Exist(file_template_);
+   IF (mandatory_) THEN
+      mandatory_val_ := 'TRUE';
+   ELSE
+      mandatory_val_ := 'FALSE';
+   END IF;
+   External_File_Utility_API.Copy_Def_From_File_Type(file_template_, description_, file_type_, mandatory_val_);
+   RETURN Client_SYS.Get_Key_Reference('ExtFileTemplate', 'FILE_TEMPLATE_ID', file_template_); 
+END Copy_Def_From_File_Type___;

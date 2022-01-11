@@ -1,0 +1,49 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalFileTypeParameterDefinitionHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+PROCEDURE Set_Default___ (
+   key_ IN Ext_Type_Param_Set_Key ) 
+IS
+   info_       VARCHAR2(50); 
+   attr_       VARCHAR2(50);
+   objid_      VARCHAR2(2000);
+   objversion_ VARCHAR2(2000);
+BEGIN   
+   Get_Objid_Objversion___(objid_, objversion_, key_);    
+   Client_SYS.Add_To_Attr('SET_ID_DEFAULT', 'TRUE', attr_);
+   Ext_Type_Param_Set_API.Modify__(info_, objid_, objversion_, attr_, 'DO'); 
+END Set_Default___;
+
+PROCEDURE Copy_Param_Set___ (
+   key_ IN Ext_Type_Param_Set_Key ) 
+IS
+   
+BEGIN
+   Ext_Type_Param_Per_Set_API.Copy_Param_Set(key_.file_type, key_.set_id);
+END Copy_Param_Set___;
+
+FUNCTION Is_Method_Available___ (
+   method_name_ IN VARCHAR2 ) RETURN BOOLEAN
+IS
+BEGIN
+   Finance_Lib_API.Is_Method_Available(method_name_);
+   RETURN TRUE;
+END Is_Method_Available___;
+
+FUNCTION Is_View_Available___ (
+   view_name_   IN VARCHAR2) RETURN BOOLEAN
+IS
+BEGIN
+	Finance_Lib_API.Is_View_Available(view_name_);
+   RETURN TRUE;
+END Is_View_Available___;

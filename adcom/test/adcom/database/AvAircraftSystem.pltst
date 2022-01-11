@@ -1,0 +1,88 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvAircraftSystem
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210112  KAWJLK  LMM2020R1-1477, Added  pltst for overridden Check_Insert___, Check_Common_Data.
+--  201017  rosdlk  LMM2020R1-794, Test method added for presync action
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+UNITTEST "Check_Insert___ should assign sequence value for System_Id when inserting new record" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT Av_Aircraft_System_Tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      |dummy |
+      |1     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_  Av_Aircraft_System_Tab%ROWTYPE;
+   output4_  Av_Aircraft_System_Tab%ROWTYPE;
+   output2_  Indicator_Rec;
+
+BEGIN
+   FOR
+      | newrec_ | indrec_ | attr_ |
+      | output1_| output2_| 'A'   |
+      | output4_| output2_| 'A'   |
+   LOOP
+      --Insert your test code here
+      IF newrec_.System_Id IS NULL THEN
+         newrec_.System_Id := av_system_seq.nextval;
+         ASSERT newrec_.System_Id IS NOT NULL MESSAGE 'Returned '||newrec_.System_Id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+
+UNITTEST "Check_Common_Data should return TRUE when there is no common system exists" FOR
+   FUNCTION Check_Common_Data (rec_ IN     Av_Aircraft_System_Tab%ROWTYPE)RETURN BOOLEAN;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_aircraft_system_tab
+   VALUES
+      | system_id | aircraft_type_code | system_code |
+      | 1         | 'A'                | 'A'         |
+      | 2         | 'A'                | 'B'         |
+   END VALUES;IS
+   --Insert your test variables here
+   return_ BOOLEAN;
+   expected_ BOOLEAN;
+   rec1_ Av_Aircraft_System_Tab%ROWTYPE;
+   rec2_ Av_Aircraft_System_Tab%ROWTYPE;
+BEGIN
+   rec1_.aircraft_type_code:='A';
+   rec1_.system_code:='A'; rec2_.aircraft_type_code:='C';
+   rec2_.system_code:='C';
+   FOR
+      | expected_ | rec_ |
+      | FALSE     | rec1_|
+      | TRUE      | rec2_|
+   LOOP
+      --Insert your test code here
+      return_ := Check_Common_Data(rec_);
+      --Insert your assertions here
+      IF return_ = TRUE THEN
+         ASSERT return_ = expected_ MESSAGE 'Expected '||'FALSE'||' but returned '||'TRUE';
+      ELSE
+         ASSERT return_ = expected_ MESSAGE 'Expected '||'TRUE'||' but returned '||'FALSE';
+      END IF;
+   END LOOP;
+END UNITTEST;
+

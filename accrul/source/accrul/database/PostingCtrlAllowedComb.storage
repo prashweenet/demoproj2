@@ -1,0 +1,20 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingCtrlAllowedComb
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  141205  DipeLK   PRFI-3818,Dropping obsolete COLUMNS from CCT_COMPANY.
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+@Overtake Base
+PRIMARY KEY posting_ctrl_allowed_comb_pk IS posting_ctrl_allowed_comb_tab (posting_type, control_type, code_part, module);
+-------------------- OTHER DEFINITIONS --------------------------------------

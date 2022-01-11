@@ -1,0 +1,54 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistTaskLabour
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201012  themlk  DISO2020R1-425,Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   @MockTable av_hist_execution_task_tab
+   VALUES
+      | task_code | et_barcode |
+      | 'TC01'    | 'ETB01'    |
+   END VALUES;
+
+IS
+   output1_  VARCHAR2(2000);
+   expected1_   VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      |'ET_BARCODE'||chr(31)||'ETB01'||chr(30)||'WITH_ET_BARCODE'|
+   LOOP
+
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'ET_BARCODE'||chr(31)||'ETB01'||chr(30)||'WITH_ET_BARCODE';
+
+      IF attr_ LIKE '%WITH_ET_BARCODE%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+
+

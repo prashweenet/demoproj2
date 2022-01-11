@@ -1,0 +1,122 @@
+projection CostRevBrkdownStrcItmHandling;
+component ACCRUL;
+layer Core;
+description "Manage Cost/Revenue Breakdown Structure Items";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CostStructureItemSet for CostStructureItem {
+   context Company(Company);
+}
+
+entityset ProjectCostElementSet for ProjectCostElement {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CostStructureItem {
+   attribute Description Text;
+   attribute CostStructItemType Enumeration(CostStructItemType) {
+      label = "Cost Structure Item Type";
+   }
+   attribute NameValue Text {
+      label = "Node ID/Cost/Revenue Element";
+   }
+
+   reference CostStructureIdRef(Company, CostStructureId) to CostStructure(Company, CostStructureId) {
+      label = "Structure";
+   }
+   reference NameValueRef(Company, NameValue) to ProjectCostElementLovQuery(Company, ProjectCostElement) {
+      label = "Node ID/Cost/Revenue Element";
+      copy Description to Description;
+   }
+   reference ItemAboveRef(Company, CostStructureId, ItemAbove) to CostStructureItem2Query(Company, CostStructureId, NameValue) {
+      label = "Parent Node ID";
+   }
+   reference LevelIdRef(Company, CostStructureId, LevelId) to CostStructureLevelChQuery(Company, CostStructureId, LevelId) {
+      label = "Level";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query ProjectCostElementLovQuery {
+   from = "project_cost_element_lov";
+   lu = ProjectCostElement;
+   keys = Company, ProjectCostElement;
+
+   attribute Company Text;
+   attribute ProjectCostElement Text {
+      label = "Cost Element";
+   }
+   attribute Description Text;
+   attribute ElementType Text;
+   attribute ElementTypeDb Text {
+      label = "Element Type";
+   }
+   attribute DefaultCostElement Text;
+   attribute Objstate Enumeration(ProjectCostElementState) {
+      label = "Validity";
+   }
+}
+
+query CostStructureItem2Query {
+   from = "cost_structure_item2";
+   lu = CostStructureItem;
+   keys = Company, CostStructureId, NameValue;
+
+   attribute Company Text;
+   attribute CostStructureId Text;
+   attribute NameValue Text {
+      label = "Node ID";
+   }
+   attribute Description Text;
+   attribute LevelNo Number {
+      label = "Level";
+   }
+}
+
+query CostStructureLevelChQuery {
+   from = "cost_structure_level_ch";
+   lu = CostStructureLevel;
+   keys = Company, CostStructureId, LevelId;
+
+   attribute Company Text;
+   attribute CostStructureId Text;
+   attribute LevelId Text {
+      label = "Level ID";
+   }
+   attribute Description Text {
+      label = "Level Description";
+   }
+   attribute LevelAbove Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetProjectCostElement List<Entity(ProjectCostElementLovQuery)> {
+   parameter CostStructItemType Enumeration(CostStructItemType);
+   where = ":CostStructItemType != 'NODE'";
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

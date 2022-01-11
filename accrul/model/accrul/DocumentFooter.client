@@ -1,0 +1,474 @@
+client DocumentFooter;
+component ACCRUL;
+layer Core;
+projection DocumentFooterHandling;
+
+include fragment FooterConnectionMasterLovSelector;
+include fragment FooterWithoutSiteLovSelector;
+@DynamicComponentDependency MPCCOM
+include fragment FooterWithSiteLovSelector;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry BranchesNavEntry parent EnterpNavigator.CompanyBasicDataMenu at index 300 {
+      label = "Document Footer";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using CompanySet {
+   label = "Document Footer";
+   editmode = MultiField;
+
+   selector CompanyMainSelector;
+   tabs {
+      tab {
+         label = "Define Field";
+         selector FooterFieldSelector(FooterFieldArray) bind CompanyMainSelector;
+         arrange {
+            group FooterFieldGroup bind FooterFieldSelector;
+            group FooterTextGroup bind FooterFieldSelector;
+         }
+      }
+      tab {
+         label = "Define Footer";
+         selector FooterDefinitionSelector(FooterDefinitionArray) bind CompanyMainSelector;
+
+         group FooterDefinitionGroup bind FooterDefinitionSelector;
+         group FooterDefinitionFieldsGroups bind FooterDefinitionSelector;
+         group ColumnWidthGroup bind FooterDefinitionSelector;
+         group FooterFreeTextFieldGroup bind FooterDefinitionSelector;
+
+         markdowntext {
+            text = "For previewing ;
+
+            1) Have an already created report (Eg: Customer Invoice ID, Instant Invoice ID, etc).
+            2) The footer needs to be connect to the above report through CONNECT REPORT tab.
+            3) Print/Reprint the report through specific page or Order Report dialog.
+
+            The command button Order Report leads to order report dialog.";
+         }
+      }
+      tab {
+         label = "Connect Report";
+         list FooterConnectionList(FooterConnectionArray) bind CompanyMainSelector;
+      }
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand for FooterField {
+   label = "Translation";
+   enabled = [true];
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'FooterField' and AttributeKey eq $[FooterFieldId]";
+   }
+}
+
+
+command ImportSystemFooterCommand for FooterField {
+   label = "Import System Footer Fields";
+   enabled = [true];
+   execute {
+      call ImportSystemFooterField(Company);
+   }
+}
+
+
+command PreviewCommand for FooterDefinition {
+   label = "Order Reports";
+
+   enabled = [true];
+   execute {
+      navigate "page/OperationalReports/OperationalReports?$";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector CompanyMainSelector for Company {
+   label = "${Company} - ${Name}";
+   crudactions {
+      edit {
+         enabled = [false];
+      }
+   }
+
+   field CompanyRef {
+      columnexclude = [true];
+   }
+   field Name {
+      columnexclude = [true];
+   }
+}
+
+
+@Override
+selector FooterFieldSelector for FooterField {
+   label = "${FooterFieldId} - ${FooterFieldDesc}";
+   crudactions {
+
+   }
+
+   static Company {
+      visible = [false];
+   }
+   static FooterFieldDesc;
+   static  FooterText {
+      visible = [false];
+   }
+   static SystemDefined {
+      visible = [false];
+   }
+   static FreeText {
+      visible = [false];
+   }
+
+   command TranslationCommand;
+   command ImportSystemFooterCommand;
+}
+
+
+@Override
+@DynamicComponentDependency MPCCOM
+selector ReferenceFooterWithSiteLovSelector for FooterWithSiteLov {
+   static Contract;
+   static Description;
+}
+
+
+@Override
+selector FooterDefinitionSelector for FooterDefinition {
+   label = "${FooterId} - ${FooterDescription}";
+   crudactions {
+   }
+
+   static Company {
+      visible = [false];
+   }
+   static FooterId;
+   static FooterDescription;
+   static NoOfColumns {
+      visible = [false];
+   }
+   static Column1Field {
+      visible = [false];
+   }
+
+   static Column2Field {
+      visible = [false];
+   }
+   static Column3Field {
+      visible = [false];
+   }
+   static Column4Field {
+      visible = [false];
+   }
+   static Column5Field {
+      visible = [false];
+   }
+   static Column6Field {
+      visible = [false];
+   }
+   static Column7Field {
+      visible = [false];
+   }
+   static Column8Field {
+      visible = [false];
+   }
+   static Column1FieldFooterText {
+      visible = [false];
+   }
+   static Column2FieldFooterText {
+      visible = [false];
+   }
+   static Column3FieldFooterText {
+      visible = [false];
+   }
+   static Column4FieldFooterText {
+      visible = [false];
+   }
+   static Column5FieldFooterText {
+      visible = [false];
+   }
+   static Column6FieldFooterText {
+      visible = [false];
+   }
+   static Column7FieldFooterText {
+      visible = [false];
+   }
+   static Column8FieldFooterText {
+      visible = [false];
+   }
+   static Column1Width {
+      visible = [false];
+   }
+   static Column2Width {
+      visible = [false];
+   }
+   static Column3Width {
+      visible = [false];
+   }
+   static Column4Width {
+      visible = [false];
+   }
+   static Column5Width {
+      visible = [false];
+   }
+   static Column6Width {
+      visible = [false];
+   }
+   static Column7Width {
+      visible = [false];
+   }
+   static Column8Width {
+      visible = [false];
+   }
+   static FreeText {
+      visible = [false];
+   }
+
+   command PreviewCommand;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group FooterFieldGroup for FooterField {
+   label = " ";
+
+   field FooterFieldId;
+   field FooterFieldDesc {
+      size = Large;
+   }
+   field SystemDefined {
+      editable = [false];
+   }
+   field FreeText {
+      editable = [SystemDefined = false];
+   }
+}
+
+
+group FooterTextGroup for FooterField {
+   label = "Footer Text";
+
+   field FooterText {
+      showlabel = false;
+      multiline = true;
+      editable = [SystemDefined = false];
+   }
+}
+
+
+group FooterDefinitionGroup for FooterDefinition {
+   label = " ";
+
+   field FooterId {
+      size = Small;
+   }
+   field FooterDescription;
+   field NoOfColumns {
+      size = Small;
+      validate command {
+         variable DefaultColWidthStructVar {
+            type = Structure(AutoCalcColWidthsStructure);
+         }
+         execute {
+            call AutoInsertColWidth(NoOfColumns) into DefaultColWidthStructVar;
+            copy DefaultColWidthStructVar into this;
+         }
+      }
+   }
+}
+
+
+group FooterDefinitionFieldsGroups for FooterDefinition {
+   label = "Assign Fields";
+
+   multilov Column1FieldRef with FooterFieldLovList using GetFooterFieldLovSupp(Company) {
+      size = Small;
+      visible = [NoOfColumns >= 1];
+      editable = [Column1Width > 0];
+   }
+   multilov Column2FieldRef with FooterFieldLovList using GetFooterFieldLovSupp(Company) {
+      size = Small;
+      visible = [NoOfColumns >= 2];
+      editable = [Column2Width > 0];
+   }
+   multilov Column3FieldRef with FooterFieldLovList using GetFooterFieldLovSupp(Company) {
+      size = Small;
+      visible = [NoOfColumns >= 3];
+      editable = [Column3Width > 0];
+   }
+   multilov Column4FieldRef with FooterFieldLovList using GetFooterFieldLovSupp(Company) {
+      size = Small;
+      visible = [NoOfColumns >= 4];
+      editable = [Column4Width > 0];
+   }
+   multilov Column5FieldRef with FooterFieldLovList using GetFooterFieldLovSupp(Company) {
+      size = Small;
+      visible = [NoOfColumns >= 5];
+      editable = [Column5Width > 0];
+   }
+   multilov Column6FieldRef with FooterFieldLovList using GetFooterFieldLovSupp(Company) {
+      size = Small;
+      visible = [NoOfColumns >= 6];
+      editable = [Column6Width > 0];
+   }
+   multilov Column7FieldRef with FooterFieldLovList using GetFooterFieldLovSupp(Company) {
+      size = Small;
+      visible = [NoOfColumns >= 7];
+      editable = [Column7Width > 0];
+   }
+   multilov Column8FieldRef with FooterFieldLovList using GetFooterFieldLovSupp(Company) {
+      size = Small;
+      visible = [NoOfColumns >= 8];
+      editable = [Column8Width > 0];
+   }
+}
+
+
+group ColumnWidthGroup for FooterDefinition {
+   label = "Column Widths - as a % of total width";
+
+   field Column1Width {
+      label = "1st Column";
+      size = Small;
+      visible = [NoOfColumns >= 1];
+      required = [NoOfColumns >= 1];
+   }
+   field Column2Width {
+      label = "2nd Column";
+      size = Small;
+      visible = [NoOfColumns >= 2];
+      required = [NoOfColumns >= 2];
+   }
+   field Column3Width {
+      label = "3rd Column";
+      size = Small;
+      visible = [NoOfColumns >= 3];
+      required = [NoOfColumns >= 3];
+   }
+   field Column4Width {
+      label = "4th Column";
+      size = Small;
+      visible = [NoOfColumns >= 4];
+      required = [NoOfColumns >= 4];
+   }
+   field Column5Width {
+      label = "5th Column";
+      size = Small;
+      visible = [NoOfColumns >= 5];
+      required = [NoOfColumns >= 5];
+   }
+   field Column6Width {
+      label = "6th Column";
+      size = Small;
+      visible = [NoOfColumns >= 6];
+      required = [NoOfColumns >= 6];
+   }
+   field Column7Width {
+      label = "7th Column";
+      size = Small;
+      visible = [NoOfColumns >= 7];
+      required = [NoOfColumns >= 7];
+   }
+   field Column8Width {
+      label = "8th Column";
+      size = Small;
+      visible = [NoOfColumns >= 8];
+      required = [NoOfColumns >= 8];
+   }
+}
+
+
+group FooterFreeTextFieldGroup for FooterDefinition {
+   label = "Assign Free Text";
+
+   lov FreeTextRef with ReferenceFooterFieldSelector using FreeTextOnly {
+      size = Large;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list FooterConnectionList for FooterConnection {
+   orderby = ReportId;
+
+   lov ReportIdRef with ReferenceFooterConnectionMasterLovSelector;
+   field ReportDefinitionRef.ReportTitle;
+   field FooterConnectionMasterRef.Module {
+      size = Small;
+   }
+   field Contract {
+      size = Small;
+      lovswitch {
+         when [FooterConnectionMasterRef.ContractDependent] {
+            @DynamicComponentDependency MPCCOM
+            lov ContractWithSiteRef with ReferenceFooterWithSiteLovSelector using GetFooterCompany(Company);
+         }
+         when [not FooterConnectionMasterRef.ContractDependent] {
+            lov ContractWithoutSiteRef with ReferenceFooterWithoutSiteLovSelector;
+         }
+      }
+   }
+   lov FooterIdRef with ReferenceFooterDefinitionSelector {
+      search = FooterId, FooterDescription;
+      description = FooterIdRef.FooterDescription;
+      size = Large;
+   }
+}
+
+
+@Override
+list FooterFieldLovList for FooterField {
+   static FooterFieldId;
+   static FooterFieldDesc;
+
+   fieldorder = FooterFieldId, FooterFieldDesc, SystemDefined, FreeText;
+}
+
+//   @Override
+//list FooterFieldLovList for FooterField {
+//   label = "";
+////   static SystemDefined {
+//      required = [true];
+//      }
+//   static FreeText;
+//}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+

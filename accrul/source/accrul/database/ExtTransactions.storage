@@ -1,0 +1,40 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtTransactions
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+--  141205  DipeLK  PRFI-3818, Remove the default values of CORRECTION column in EXT_TRANSACTIONS_TAB
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+
+
+INDEX ext_transactions_ix1 IS ext_transactions_tab (voucher_no);
+
+
+INDEX ext_transactions_ix2 IS ext_transactions_tab (load_group_item, load_id, company);
+
+
+DECLARE
+   columns_        Database_SYS.ColumnTabType;
+   table_name_     VARCHAR2(30) := 'EXT_TRANSACTIONS_TAB';
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'AMOUNT', 'NUMBER');
+   Database_SYS.Set_Table_Column(columns_, 'CURRENCY_AMOUNT', 'NUMBER');
+   Database_SYS.Set_Table_Column(columns_, 'THIRD_CURRENCY_AMOUNT', 'NUMBER');
+   Database_SYS.Alter_Table(table_name_,columns_,TRUE);
+END;
+
+-------------------- OTHER DEFINITIONS --------------------------------------

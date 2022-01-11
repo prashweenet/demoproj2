@@ -1,0 +1,92 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     ExtFileActionsAccrul
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+PROCEDURE Load_Ext_Currency___ (
+   load_file_id_     IN NUMBER,
+   parameter_string_ IN VARCHAR2)
+IS
+   info_   VARCHAR2(32000);
+BEGIN
+	Ext_Currency_API.Start_Ext_Currency(info_, load_file_id_, parameter_string_);
+END Load_Ext_Currency___;
+
+PROCEDURE Load_Ext_Voucher___ (
+   load_file_id_     IN NUMBER,
+   parameter_string_ IN VARCHAR2)
+IS
+   info_   VARCHAR2(32000);
+BEGIN
+	Ext_Load_API.Start_Ext_Vouchers(info_, load_file_id_, parameter_string_);
+END Load_Ext_Voucher___;
+
+PROCEDURE Remove_External_File_Transactions___ (
+   load_file_id_ IN NUMBER,
+   state_        IN VARCHAR2)
+IS
+BEGIN
+	Ext_File_Trans_API.Remove_File_Trans(load_file_id_, state_);
+END Remove_External_File_Transactions___;
+
+PROCEDURE Ext_File_Import___ (
+   load_file_id_ IN NUMBER)
+IS
+BEGIN
+	NULL;
+END Ext_File_Import___;
+
+PROCEDURE Ext_File_Export___ (
+   load_file_id_ IN NUMBER)
+IS
+BEGIN
+	NULL;
+END Ext_File_Export___;
+
+PROCEDURE Describe_Input_File___ (
+   load_file_id_ IN NUMBER)
+IS
+   info_   VARCHAR2(32000);
+BEGIN
+	External_File_Utility_API.Describe_Input_File(info_, load_file_id_);
+END Describe_Input_File___;
+
+PROCEDURE Create_Ext_File_Insert_Script___ (
+   load_file_id_ IN NUMBER)
+IS
+   info_   VARCHAR2(32000);
+BEGIN
+	External_File_Utility_API.File_Type_Create_Export(info_, load_file_id_);
+END Create_Ext_File_Insert_Script___;
+
+PROCEDURE Import_Ext_File_Function_List___ (
+   load_file_id_ IN NUMBER)
+IS
+BEGIN
+	NULL;
+END Import_Ext_File_Function_List___;
+
+PROCEDURE Export_Ext_File_Function_List___ (
+   load_file_id_ IN NUMBER)
+IS
+BEGIN
+	NULL;
+END Export_Ext_File_Function_List___;
+
+PROCEDURE Load_Payroll___ (
+   load_file_id_     IN NUMBER,
+   parameter_string_ IN VARCHAR2)
+IS
+   info_   VARCHAR2(32000);
+BEGIN
+	Ext_Load_API.Start_Ext_Vouchers(info_, load_file_id_, parameter_string_);
+END Load_Payroll___;

@@ -1,0 +1,69 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PseudoCodesHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-- 200602   SACNLK   GESPRING20-4612, Added accounting_xml_data functionality.
+-- 200623   SACNLK   GESPRING20-4642, Modified accounting_xml_data functionality.
+-- 201112   SACNLK   GESPRING20-5995, Modified Validate_Account___.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override
+PROCEDURE CRUD_Default___ (
+   key_  IN  Pseudo_Codes_Key,
+   attr_ IN OUT VARCHAR2,
+   info_ OUT VARCHAR2 )
+IS
+BEGIN
+   super(key_, attr_, info_);
+   Client_SYS.Set_Item_Value('ACTIVITY_ID_ENABLED', 'FALSE', attr_);
+END CRUD_Default___;
+
+FUNCTION Validate_Project_Origin___(
+   company_    IN VARCHAR2,
+   project_id_ IN VARCHAR2 )  RETURN Project_Origin_Structure_Rec
+IS
+   project_origin_rec_   Project_Origin_Structure_Rec;
+   project_origin_       VARCHAR2(30);
+BEGIN
+   $IF (Component_Genled_SYS.INSTALLED) $THEN
+      project_origin_:= Accounting_Project_API.Get_Project_Origin_Db(company_, project_id_);
+   $ELSE
+      project_origin_ := NULL;
+   $END
+   IF (project_origin_ = 'JOB') THEN
+      project_origin_rec_.valid_origin := 'FALSE';
+      project_origin_rec_.activity_id  := 0;
+   ELSIF (project_origin_ = 'FINPROJECT') THEN
+      project_origin_rec_.valid_origin := 'FALSE';
+      project_origin_rec_.activity_id  :=  null;
+   ELSE
+      project_origin_rec_.valid_origin := 'TRUE';
+   END IF;
+   RETURN project_origin_rec_;
+END Validate_Project_Origin___;
+
+-- gelr:accounting_xml_data, begin
+FUNCTION Validate_Account___ (
+   company_ IN VARCHAR2,
+   account_ IN VARCHAR2 ) RETURN Sat_Values_Rec
+IS 
+   acc_rec_          Account_API.Public_Rec;
+   sat_values_rec_   Sat_Values_Rec;
+BEGIN
+   IF (Company_Localization_Info_API.Get_Parameter_Value_Db(company_, 'ACCOUNTING_XML_DATA') = Fnd_Boolean_API.DB_TRUE) THEN
+      acc_rec_ := Account_API.Get(company_, account_);
+      sat_values_rec_.sat_account_group  := acc_rec_.sat_account_group;
+      sat_values_rec_.sat_level          := acc_rec_.sat_level;
+      sat_values_rec_.sat_account_type   := acc_rec_.sat_account_type;
+      sat_values_rec_.sat_parent_account := acc_rec_.sat_parent_account;
+   END IF;
+   RETURN sat_values_rec_;
+END Validate_Account___;
+-- gelr:accounting_xml_data, end

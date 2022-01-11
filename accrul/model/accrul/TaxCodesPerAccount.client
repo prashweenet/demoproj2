@@ -1,0 +1,113 @@
+client TaxCodesPerAccount;
+component ACCRUL;
+layer Core;
+
+projection TaxCodesPerAccountHandling;
+
+include fragment TaxCodeCommonSelector;
+include fragment AccountsConsolidationSelector;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TaxCodePerAccountNavEntry parent AccrulNavigator.CodeStringMenu at index 300 {
+      label = "Tax Code per Account";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AccountSet {
+   label = "Tax Codes per Account";
+   selector AccountNewSelector;
+   group AccountGroup;
+   list AccountTaxCodeList(AccountTaxCodeArray);
+
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command SetDefaultCommand for AccountTaxCode {
+   label = "Set Default";
+   enabled = [DefaultTaxCode != true];
+   execute {
+      call DoSetDefault();
+   }
+}
+
+command ResetDefaultCommand for AccountTaxCode {
+   label = "Reset Default";
+   enabled = [DefaultTaxCode = true];
+   execute {
+      call DoResetDefault();
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AccountNewSelector for Account {
+   label = "${Account} - ${Description}";
+   field Account;
+   field Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group  AccountGroup for Account {
+   label = "";
+
+   lov AccountRef with ReferenceAccountsConsolidationSelector using OptionalCodeUserWhere {
+      search = Account, Description;
+      size = Large;
+      description = AccountRef.Description;
+   }
+   field TaxHandlingValue;
+
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountTaxCodeList for AccountTaxCode {
+   label = "Tax Codes";
+
+   lov FeeCodeRef with ReferenceTaxCodeCommonSelector {
+      search = FeeCode, Description;
+      size = Large;
+      description = FeeCodeRef.Description;
+   }
+   field DefaultTaxCode;
+   command SetDefaultCommand;
+   command ResetDefaultCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

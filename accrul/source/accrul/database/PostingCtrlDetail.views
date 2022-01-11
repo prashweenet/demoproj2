@@ -1,0 +1,110 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingCtrlDetail
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+@Override
+COLUMN Code_Name IS
+   Column     = 'Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, ''ACCRUL'', ''AccountingCodeParts'', code_part)';
+
+COLUMN Component IS
+   Flags      = 'PMI--'
+   Datatype   = 'STRING(6)/UPPERCASE'
+   Prompt     = 'Component';
+
+COLUMN Posting_Type_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Posting Type Description';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+VIEW Posting_Ctrl_Detail_Pub IS
+   Prompt = 'Posting Ctrl'
+   Code_Part_Value.Flags = 'P-IU-'
+   Code_Part_Value.Ref = 'AccountingCodePartValue(company,code_part)'
+   Control_Type_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Spec_Control_Type.Prompt = 'Specification Control Type'
+   Spec_Default_Value.Datatype = 'STRING(20)/UPPERCASE'
+   No_Code_Part_Value_Db.Flags = 'AMIU-'
+   No_Code_Part_Value_Db.Datatype = 'STRING(5)'
+   Allow_Prepost_Det_Db.Flags = 'A----'
+   Allow_Prepost_Det_Db.Datatype = 'STRING(20)'
+   Allow_Prepost_Det_Db.Prompt = 'Allow Pre-Posting on Detail level'   
+SELECT p.company                        company,
+       pt.module                        component,
+       p.code_part                      code_part,
+       p.posting_type                   posting_type,
+       p.code_part_value                code_part_value,
+       p.control_type_value             control_type_value,
+       p.valid_from                     valid_from,
+       p.control_type                   control_type,
+       p.module                         module,
+       p.spec_control_type              spec_control_type,
+       p.spec_module                    spec_module,
+       p.spec_default_value             spec_default_value,
+       p.spec_default_value_no_ct       spec_default_value_no_ct,
+       p.pc_valid_from                  pc_valid_from,
+       p.no_code_part_value             no_code_part_value_db,
+       pt.allow_prepost_det             allow_prepost_det_db,
+       p.rowkey                        objkey
+FROM   posting_ctrl_detail_tab p, posting_ctrl_posting_type_tab pt
+WHERE  p.posting_type = pt.posting_type;
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Posting_Ctrl_Detail_Av IS
+   Prompt = 'Posting ctrl detail Tax Audit'
+SELECT company                        company,
+       valid_from                     valid_from,
+       posting_type                   posting_type,
+       Posting_Ctrl_Posting_Type_API.Get_Description(posting_type)
+                                      posting_type_desc,
+       control_type                   control_type,
+       Posting_Ctrl_Control_Type_API.Get_Description(control_type,module)
+                                      control_type_desc,
+       control_type_value             control_type_value,
+       code_part                      code_part,
+       Accounting_Code_Parts_API.Get_Name(company, code_part)
+                                      code_name,
+       code_part_value                code_part_value
+FROM   posting_ctrl_detail_tab;
+
+--This view is used Aurena
+VIEW Temp_Posting_Cntrl_Type_Value IS
+SELECT DISTINCT control_type_value control_type_value,
+                control_type control_type,
+                Posting_Ctrl_Control_Type_API.Get_Control_Type_Value_Desc(company, control_type, control_type_value, module) control_type_value_desc,
+                company  company,
+                posting_type posting_type,
+                code_part code_part,
+                pc_valid_from pc_valid_from,
+                spec_ctrl_type_category_db spec_ctrl_type_category_db
+FROM posting_ctrl_detail
+WHERE  spec_control_type IS NOT NULL 
+AND spec_ctrl_type_category_db NOT IN ('FIXED') AND (spec_ctrl_type_category_db NOT IN ('PREPOSTING') OR allow_prepost_det_db = 'TRUE');
+
+--This view is used Aurena
+VIEW Temp_Posting_Valid_From IS
+SELECT DISTINCT valid_from valid_from,
+                spec_control_type spec_control_type, 
+                spec_ctrl_type_category_db spec_ctrl_type_category_db,
+                control_type control_type,
+                company  company,
+                posting_type posting_type,
+                code_part code_part,
+                pc_valid_from pc_valid_from,
+                control_type_value control_type_value
+FROM posting_ctrl_detail
+WHERE  spec_control_type IS NOT NULL 
+AND spec_ctrl_type_category_db NOT IN ('FIXED') AND (spec_ctrl_type_category_db NOT IN ('PREPOSTING') OR allow_prepost_det_db = 'TRUE');

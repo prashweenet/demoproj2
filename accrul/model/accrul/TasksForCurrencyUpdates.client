@@ -1,0 +1,109 @@
+client TasksForCurrencyUpdates;
+component ACCRUL;
+layer Core;
+projection TasksForCurrencyUpdatesHandling;
+warningsenabled = ExtCurrencyTaskDetail;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CurrencyTasksNavEntry parent AccrulNavigator.CurrencyMenu at index 500 {
+      label = "Tasks for Currency Updates";
+      page Form home ExtCurrencyCompany;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ExtCurrencyTaskSet {
+   label = "Tasks for Currency Updates";
+
+   selector ExtCurrencyTaskSelector;
+   group ExtCurrencyTaskGroup;
+   list ExtCurrencyTaskDetailList(ExtCurrencyTaskDetailsArray);
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ExtCurrencyTaskSelector for ExtCurrencyTask {
+   orderby = TaskId;
+   label = "${TaskId} - ${Description}";
+   field TaskId;
+   field Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ExtCurrencyTaskGroup for ExtCurrencyTask {
+   label = "";
+
+   field TaskId {
+      editable = [isNew];
+   }
+   field Description {
+      required = [true];
+   }
+
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtCurrencyTaskDetailList for ExtCurrencyTaskDetail {
+   label = "Company for Task ID";
+   multiselect = [false];
+
+   lov CompanyRef with ReferenceCompanyFinanceSelector;
+   lov CurrencyTypeRef with ReferenceCurrencyType3QuerySelector {
+      label = "Currency Type";
+      advancedview CurrencyType3QueryLovList;
+   }
+}
+
+@Override
+list CurrencyType3QueryLovList for CurrencyType3Query {
+   field Company {
+      columnexclude = [true];
+   }
+}
+
+@Override
+list CompanyFinanceLovList for CompanyFinance {
+   static Description {
+      label = "Company Name";
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

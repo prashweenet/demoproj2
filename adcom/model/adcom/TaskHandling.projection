@@ -1,0 +1,68 @@
+--  Date        Sign    History
+--  ----------  ------  -----------------------------------------------------
+--  07-04-2021  SUPKLK  AD-1065, Changed Priority from enum to Text
+--  23-11-2020  Satglk  LMM2020R1-1214, Removed projection defined TaskStatus enum and used AvExeTaskState
+--  24-08-2020  majslk  LMM2020R1-455, UI Improvements.
+--  01-07-2020  SatGlk  LMM2020R1-187, UI Improvements done.
+--  18-06-2020  ARUFLK  LMM2020R1-75, Created.
+-----------------------------------------------------------------------------
+
+projection TaskHandling;
+component ADCOM;
+layer Core;
+description "Task Handling";
+category Users;
+include fragment AircraftLovSelector;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AvExeTaskSet for AvExeTask;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvExeTask {
+   attribute TaskId Number {
+      required = [false];
+   }
+   attribute IsHistoric Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute Objstate Enumeration(AvExeTaskState) {
+      fetch = "objstate";
+      label = "State";
+      maxlength = 50;
+      editable = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   attribute Priority Text {
+      fetch = "priority";
+   }
+   reference AircraftIdRef(AircraftId) to AircraftLov(AircraftId);
+   reference FaultIdRef(FaultId) to AvFault(FaultId);
+   reference AircraftWpIdRef(AircraftWpId) to AvAircraftWorkPackage(AircraftWorkPackageId);
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

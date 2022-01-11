@@ -1,0 +1,47 @@
+fragment FooterConnectionMasterLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view footer_connection_master_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceFooterConnectionMasterLovSelector for FooterConnectionMasterLov {
+   static ReportId;
+   static LuName;
+}
+
+card FooterConnectionMasterLovCard for FooterConnectionMasterLov {
+   label = "";
+   fieldranking ReportId;
+   field ReportId;
+   field LuName;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query FooterConnectionMasterLov {
+   from = "footer_connection_master_lov";
+   lu = FooterConnectionMaster;
+   keys = ReportId;
+   ludependencies = FooterConnectionMaster;
+   attribute ReportId Text {
+      label = "Report ID";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute ReportTitle Text {
+      lovcolumn = [true];
+   }
+   attribute Module Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute LuName Text {
+      label = "Logical Unit";
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

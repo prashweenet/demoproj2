@@ -1,0 +1,75 @@
+client ExternalFileSeparators;
+component ACCRUL;
+layer Core;
+projection ExternalFileSeparatorsHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ExternalFileSeperatorNavEntry parent AccrulNavigator.ExternalFileBasicDataMenu at index 600 {
+      label = "External File Separators";
+      page List home ExtFileSeparator;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using ExtFileSeparatorSet {
+   label = "External File Separators";
+   list ExtFileSeparatorList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileSeparatorList for ExtFileSeparator {
+   field SeparatorId {
+      size = Small;
+   }
+   field Description;
+   field Separator {
+      size = Small;
+   }
+   field SeparatorAscii {
+      size = Small;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

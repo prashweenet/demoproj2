@@ -1,0 +1,91 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  VoucherType
+--  Component:  ACCRUL
+--  LU:         DimVoucherType
+--
+--  File     :  DimVoucherTypeDm.api
+--  Purpose  :  Create DATA MART dimension view DIM_VOUCHER_TYPE_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   -------------------------------------------------
+--  090715  RORALK Created for 75 core version of IFS BA
+--------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_VOUCHER_TYPE
+DEFINE VIEW       = DIM_VOUCHER_TYPE_DM
+DEFINE MV         = VOUCHER_TYPE_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimVoucherType
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT mv.id                                                            id,
+       mv.company                                                       company,
+       mv.code                                                          code,
+       SUBSTR(NVL( (SELECT description
+      FROM VOUCHER_TYPE_TRANSL_MV b
+      WHERE b.company         = mv.company
+      AND   b.translation_key = mv.code
+      AND   b.lu              = 'VoucherType'
+      AND   b.language_code   =
+      (SELECT language
+      FROM FND_SESSION)), mv.description),1,100)                        description,
+       mv.ledger_id                                                     ledger_id,
+       mv.automatic_allot                                               automatic_allot,
+       SUBSTR(Finance_Yes_No_API.Decode(mv.automatic_allot),1,100)      automatic_allot_desc,
+       mv.use_manual                                                    use_manual,
+       SUBSTR(Fnd_Boolean_API.Decode(mv.use_manual),1,100)              use_manual_desc,
+       mv.single_function_group                                         single_function_group,
+       DECODE(mv.single_function_group,'Y', 'TRUE',
+      'N', 'FALSE','FALSE')                                             single_function_group_desc,
+       mv.simulation_voucher                                            simulation_voucher,
+       SUBSTR(Fnd_Boolean_API.Decode(mv.simulation_voucher),1,100)      simulation_voucher_desc
+FROM &MV mv
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Voucher Type^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Voucher Type^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Voucher Type Description^';
+   COMMENT ON COLUMN &VIEW..LEDGER_ID
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(10)^PROMPT=Ledger Id^';
+   COMMENT ON COLUMN &VIEW..AUTOMATIC_ALLOT
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Automatic Allotment^';
+COMMENT ON COLUMN &VIEW..AUTOMATIC_ALLOT_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Automatic Allotment Description^';
+COMMENT ON COLUMN &VIEW..USE_MANUAL
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Use Manual Internal Methods^';
+COMMENT ON COLUMN &VIEW..USE_MANUAL_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Use Manual Internal Methods Description^';
+COMMENT ON COLUMN &VIEW..SINGLE_FUNCTION_GROUP
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Single Function Group^';
+   COMMENT ON COLUMN &VIEW..SINGLE_FUNCTION_GROUP_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(5)^PROMPT=Single Function Group Description^';
+   COMMENT ON COLUMN &VIEW..SIMULATION_VOUCHER
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Simulation Voucher^';
+COMMENT ON COLUMN &VIEW..SIMULATION_VOUCHER_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Simulation Voucher Description^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

@@ -1,0 +1,43 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherNoSerial
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+COLUMN Accounting_Year_Used IS
+   Flags      = 'KMI-L'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Accounting Year Used';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@Override
+VIEW Voucher_No_Serial IS
+ORDER BY accounting_year;
+
+@SecurityCheck Company.UserAuthorized(company)
+VIEW Voucher_No_Serial_Yr IS
+SELECT company                                  company,
+       voucher_type                             voucher_type,
+       accounting_year                          accounting_year,
+       accounting_year                          accounting_year_used,
+       period                                   period,
+       serie_from                               serie_from,
+       serie_until                              serie_until,
+       current_number                           current_number,
+       rowid                                    objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                              objversion,
+       rowkey                                  objkey
+FROM   voucher_no_serial_tab ;
+

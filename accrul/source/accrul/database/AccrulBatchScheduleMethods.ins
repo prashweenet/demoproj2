@@ -1,0 +1,182 @@
+-------------------------------------------------------------------------------------------- 
+--
+--  Filename      : AccrulBatchScheduleMethods.ins
+--
+--  Module        : ACCRUL
+--
+--  Purpose       : Registering Batch Schedule Methods for ACCRUL Module
+--
+--  Localization  : NOT NEEDED
+-- 
+--  Date    Sign    History
+--  ------  ------  -----------------------------------------------------------
+--  040318  Hecolk  Created
+--  040520  anpelk  new registration concept
+--  100514  Jobase  EAFH-2935, Removed Batch Schedule Method connected to DISTRIBUTED_VOU_TRANSFER_API.
+--  100710  MAAMLK  Bug 91834 - Wrong user on converted scheduled tasks added log_user to 
+--                  PROCEDURE Upgrade_Background_Job___
+--  120529  Nudilk  Bug 102370,modified Remove_Server_Process.
+--  190610  Nudilk  Bug 148660, Corrected issue in AUDIT_STORAGE_API.CLEANUP_AUDIT_STORAGE set single execution paramter false.
+-------------------------------------------------------------------------------------------- 
+SET SERVEROUT ON
+
+PROMPT Register Batch Schedule Method "EXTERNAL_FILE_UTILITY_API.EXECUTE_BATCH_PROCESS2"
+DECLARE
+   schedule_method_id_ NUMBER          := NULL;
+   seq_no_             NUMBER          := NULL;
+   info_msg_           VARCHAR2(32000) := NULL;
+BEGIN
+-- Construct Main Message
+   info_msg_    := Message_SYS.Construct('');
+   Message_SYS.Add_Attribute(info_msg_, 'METHOD_NAME', 'EXTERNAL_FILE_UTILITY_API.EXECUTE_BATCH_PROCESS2');
+   Message_SYS.Add_Attribute(info_msg_, 'DESCRIPTION', 'External Files');
+   Message_SYS.Add_Attribute(info_msg_, 'MODULE', 'ACCRUL');
+   Message_SYS.Add_Attribute(info_msg_, 'SINGLE_EXECUTION_DB', 'FALSE');
+   Message_SYS.Add_Attribute(info_msg_, 'ARGUMENT_TYPE_DB', 'ATTRIBUTE');
+-- Register Batch Schedule Method
+   Batch_SYS.Register_Batch_Schedule_Method(schedule_method_id_, info_msg_);
+-- Adding parameters
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'PARAMETER_STRING_', '','TRUE');   
+-- Insert PROG value for Description
+   Basic_Data_Translation_API.Insert_Prog_Translation('ACCRUL', 'ExternalFileUtility', 'EXTERNAL_FILE_UTILITY_API.EXECUTE_BATCH_PROCESS2'||'^'||'DESCRIPTION', 'External Files');
+END;
+/
+PROMPT Register Batch Schedule Method "AUDIT_STORAGE_API.CLEANUP_AUDIT_STORAGE"
+
+DECLARE
+   schedule_method_id_ NUMBER          := NULL;
+   seq_no_             NUMBER          := NULL;
+   info_msg_           VARCHAR2(32000) := NULL;
+BEGIN
+   -- Construct Main Message
+   info_msg_    := Message_SYS.Construct('');
+   
+   Message_SYS.Add_Attribute(info_msg_, 'METHOD_NAME', 'AUDIT_STORAGE_API.CLEANUP_AUDIT_STORAGE');
+   Message_SYS.Add_Attribute(info_msg_, 'DESCRIPTION', 'Cleanup Audit Source Information');
+   Message_SYS.Add_Attribute(info_msg_, 'MODULE', 'ACCRUL');
+   Message_SYS.Add_Attribute(info_msg_, 'SINGLE_EXECUTION_DB', 'FALSE');
+   Message_SYS.Add_Attribute(info_msg_, 'ARGUMENT_TYPE_DB', 'MESSAGE');
+   Message_SYS.Add_Attribute(info_msg_, 'VALIDATION_METHOD', 'AUDIT_STORAGE_API.VALIDATE_CLEANUP_PARAMS');
+   
+   -- Register Batch Schedule Method
+   Batch_SYS.Register_Batch_Schedule_Method(schedule_method_id_, info_msg_);
+   
+   -- Adding parameters
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'DAYS_CHECKED',    'TRUE');
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'NUMBER_OF_DAYS',  30,            'FALSE', NULL);
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'BEFORE_DATE',     TO_DATE(NULL), 'FALSE', NULL);
+END;
+/ 
+
+------------------------------------------------------------------------------------------
+-- Create External Files (Upgraded from background jobs)
+------------------------------------------------------------------------------------------
+DECLARE
+   PROCEDURE Upgrade_Background_Job (
+      method_name_ IN VARCHAR2,
+      schedule_name_  IN VARCHAR2)
+   IS
+      parameters_          VARCHAR2(4000);
+      execution_plan_      VARCHAR2(4000);
+      param_start_         NUMBER;
+      param_stop_          NUMBER;
+      next_execution_date_ DATE;
+      start_date_          DATE := sysdate;
+
+      seq_no_              NUMBER;
+      schedule_id_         NUMBER;
+      ptr_                 NUMBER;      
+      name_                VARCHAR2(30);
+      value_               VARCHAR2(2000);
+      day_                 VARCHAR2(50);
+      time_                VARCHAR2(50);
+
+      CURSOR get_jobs IS
+         SELECT what, interval ,next_date, log_user
+         FROM   user_jobs
+         WHERE  UPPER(what) like '%'||method_name_||'%';
+   BEGIN
+      FOR rec IN get_jobs LOOP
+        execution_plan_ := rec.interval;
+        param_start_ := instr(execution_plan_, '(');
+        param_stop_  := instr(execution_plan_, ')');
+        execution_plan_ := substr(execution_plan_, param_start_ + 2, param_stop_ - param_start_- 3);
+        IF execution_plan_ = 'NULL' THEN
+           day_ := To_char(rec.next_date, 'YYYY-MM-DD');
+           time_ := To_char(rec.next_date, 'HH24:MI');
+           execution_plan_ := 'ON '||day_ ||' AT ' ||time_;
+        END IF;
+        Batch_SYS.New_Batch_Schedule(schedule_id_, next_execution_date_, start_date_, NULL, schedule_name_, method_name_, 'TRUE', execution_plan_);
+        UPDATE batch_schedule_tab SET username = rec.log_user WHERE schedule_id = schedule_id_;
+
+
+        parameters_ := rec.what;
+        param_start_ := instr(parameters_, '(''');
+        param_stop_  := instr(parameters_, ''')');
+        parameters_  := substr(parameters_, param_start_ + 3, param_stop_ - param_start_- 3);
+        ptr_ := NULL;
+        WHILE (Client_SYS.Get_Next_From_Attr(parameters_, ptr_, name_, value_)) LOOP
+           Batch_SYS.New_Batch_Schedule_Param(seq_no_, schedule_id_, name_, value_);
+        END LOOP;
+      END LOOP;
+   END Upgrade_Background_Job;
+   
+   PROCEDURE Remove_Server_Process (
+      method_name_ IN VARCHAR2 )
+   IS
+      CURSOR get_job IS
+         SELECT job
+         FROM   user_jobs
+         WHERE  UPPER(what) like '%'||method_name_||'%';
+   BEGIN
+      FOR rec_ IN get_job LOOP
+         dbms_job.remove(rec_.job);
+      END LOOP;
+   EXCEPTION
+      WHEN OTHERS THEN
+         NULL;
+   END Remove_Server_Process;
+BEGIN
+   ------------------------------------------------------------------------------------------
+   -- Upgrading Background Jobs to Scheduled Tasks
+   ------------------------------------------------------------------------------------------
+   
+   Upgrade_Background_Job('EXTERNAL_FILE_UTILITY_API.EXECUTE_BATCH_PROCESS2', 'External Files');
+   Remove_Server_Process('EXTERNAL_FILE_UTILITY_API.EXECUTE_BATCH_PROCESS2');
+END;
+/
+
+PROMPT Register Batch Schedule Method "SAFT_REPORTING_UTIL_API.GENERATE_REPORT_BATCH__"
+DECLARE
+   schedule_method_id_ NUMBER          := NULL;
+   seq_no_             NUMBER          := NULL;
+   info_msg_           VARCHAR2(32000) := NULL;
+BEGIN
+-- Construct Main Message
+   info_msg_    := Message_SYS.Construct('');
+   Message_SYS.Add_Attribute(info_msg_, 'METHOD_NAME', 'SAFT_REPORTING_UTIL_API.GENERATE_REPORT_BATCH__');
+   Message_SYS.Add_Attribute(info_msg_, 'DESCRIPTION', 'SAF-T File Generation');
+   Message_SYS.Add_Attribute(info_msg_, 'MODULE', 'ACCRUL');
+   Message_SYS.Add_Attribute(info_msg_, 'SINGLE_EXECUTION_DB', 'FALSE');
+   Message_SYS.Add_Attribute(info_msg_, 'ARGUMENT_TYPE_DB', 'ATTRIBUTE');
+-- Register Batch Schedule Method
+   Batch_SYS.Register_Batch_Schedule_Method(schedule_method_id_, info_msg_);
+-- Adding parameters
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'COMPANY', '','TRUE');  
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'COUNTRY', '','TRUE');  
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'REPORT_TYPE', '','TRUE');  
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'FILE_TYPE', '','TRUE');  
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'FILE_TEMPLATE', '','TRUE');  
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'PATH', '','TRUE');  
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'BATCH', '','TRUE');  
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'FROM_DATE', '','TRUE');  
+   Batch_SYS.Register_Schedule_Method_Param(seq_no_, schedule_method_id_, 'TO_DATE', '','TRUE');  
+
+-- Insert PROG value for Description
+   Basic_Data_Translation_API.Insert_Prog_Translation('ACCRUL', 'SaftReportingUtil', 'SAFT_REPORTING_UTIL_API.GENERATE_REPORT_BATCH__'||'^'||'DESCRIPTION', 'External Files');
+END;
+/
+
+COMMIT
+/
+

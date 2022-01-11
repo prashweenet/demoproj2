@@ -1,0 +1,78 @@
+projection CostRevenueElementPerCodePartValueHandling;
+component ACCRUL;
+layer Core;
+description "Cost/Revenue Element per Code Part Value";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+include fragment ProjectCostElementLovSelector;
+include fragment AccountingCodePartValueLovSelector;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CostElementToAccountSet for CostElementToAccount {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CostElementToAccount {
+   attribute ProjectCostElement Text {
+      label = "Cost/Revenue Element";
+      required = [true];
+   }
+   attribute ElementType Enumeration(PrjFollowupElementType) {
+      fetch = "Project_Cost_Element_API.Get_Element_Type_Db(company, project_cost_element)";
+      editable = [false];
+   }
+   attribute CodePartName Text {
+      fetch = "Accounting_Code_Parts_API.Get_Name(company, code_part)";
+      editable = [false];
+   }
+
+   reference AccountRef(Company, CodePart, Account) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Account";
+   }
+   reference ProjectCostElementRef(Company, ProjectCostElement) to ProjectCostElementLov(Company, ProjectCostElement) {
+      label = "Cost/Revenue Element";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+@Override
+query AccountingCodePartValueLov {
+   attribute CodePartName Text {
+      fetch = "Accounting_Code_Parts_API.Get_Name(company, code_part)";
+      editable = [false];
+   }
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetCurrentDate Date;
+
+function SetValue Text {
+   parameter Company Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

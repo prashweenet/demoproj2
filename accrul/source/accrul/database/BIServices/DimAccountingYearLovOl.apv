@@ -1,0 +1,55 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  AccountingYearLov
+--  Component:  ACCRUL
+--  LU:         DimAccountingYearLov
+--
+--  File     :  DimAccountingYearLovOl.api
+--  Purpose  :  Create ON LINE dimension view DIM_ACCOUNTING_YEAR_LOV_OL
+--  Note     :  NOTE that NULL identity handling is not required for OL views
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+----------------------------------------------------------------------------- 
+--  Date    Sign   History
+--  ------  ----   ----------------------------------------------------------
+--  150512  HIFELK BOULDER-1580  Reverse Engineering
+--  111219  SJayLK Created
+----------------------------------------------------------------------------- 
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_ACCOUNTING_YEAR_LOV
+DEFINE VIEW       = DIM_ACCOUNTING_YEAR_LOV_OL
+DEFINE TAB        = DIM_ACCOUNTING_PERIOD_OL
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimAccountingYearLov
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT company||'^'||TO_CHAR(accounting_year) id,
+      company                                 company,
+      accounting_year                         code
+FROM &TAB
+GROUP BY COMPANY, ACCOUNTING_YEAR
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Accounting Year LoV for Info Services^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=NUMBER/UPPERCASE^PROMPT=Accounting Year^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE TAB
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

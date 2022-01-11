@@ -1,0 +1,121 @@
+projection AuditFormatsHandling;
+component ACCRUL;
+layer Core;
+description "Audit Formats";
+category Users;
+
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AuditFormatSet for AuditFormat {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AuditFormat {
+   attribute DecimalPoint Enumeration(AuditDecimal) {
+      label = "Decimal Symbol";
+   }
+   attribute ThousandSeparator Enumeration(AuditThousandFmt) {
+      label = "Thousands Seperator";
+   }
+   attribute DefaultFormat Boolean("TRUE", "FALSE");
+
+   reference CountryRef(Country) to IsoCountry(CountryCode) {
+      label = "Country";
+   }
+   reference FileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+   reference FileTemplateIdRef(FileTemplateId) to ExtFileTemplate(FileTemplateId) {
+      label = "File Template ID";
+   }
+   reference OutputFileDirServerRef(OutputFileDirServer) to OracleDirectories(DirectoryName) {
+      label = "Server Output File Directory";
+   }
+
+   action DoSetDefaultFormat {
+      ludependencies = AuditFormat;
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query ExtFileType {
+   from = "ext_file_type";
+   lu = ExtFileType;
+   keys = FileType;
+
+   attribute FileType Text;
+   attribute Description Text;
+   attribute Component Text;
+   attribute SystemDefined Text;
+   attribute SystemBound Text;
+   attribute ViewName Text;
+   attribute FormName Text;
+   attribute TargetDefaultMethod Text;
+   attribute InputPackage Text;
+   attribute ApiToCallInput Text;
+   attribute ApiToCallOutput Text;
+}
+
+query ExtFileTemplate {
+   from = "ext_file_template";
+   -- Note: Where clause was added to support solution sets. Inactive component data should not be shown.
+   where = "exists (select 1
+                    from ext_file_type
+                    where ext_file_type.file_type = ext_file_template.file_type)";
+   lu = ExtFileTemplate;
+   keys = FileTemplateId;
+
+   attribute FileType Text;
+   attribute FileTemplateId Text;
+   attribute Description Text;
+   attribute ActiveDefinition Text;
+   attribute ValidDefinition Text;
+   attribute Separated Text;
+   attribute FileFormat Text;
+}
+
+query OracleDirectories {
+   from = "oracle_directories";
+   keys = DirectoryName;
+
+   attribute DirectoryName Text;
+   attribute DirectoryPath Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function IsDefFormatExists Text {
+   parameter Company Text;
+}
+
+function GetExtFileTemplate List<Entity(ExtFileTemplate)> {
+   parameter FileType Text;
+   where = "file_type = :FileType";
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

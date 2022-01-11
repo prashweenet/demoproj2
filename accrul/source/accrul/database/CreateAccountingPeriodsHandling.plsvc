@@ -1,0 +1,147 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CreateAccountingPeriodsHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override
+PROCEDURE CRUD_Create___(
+   rec_ IN Create_Acc_Period_Head_Virtual_Rec)
+IS   
+BEGIN
+   super(rec_);   
+   Populate_Data___(rec_.company, rec_.objkey);
+END CRUD_Create___;
+
+PROCEDURE Populate_Data___(
+   company_       IN VARCHAR2,
+   parent_objkey_ IN VARCHAR2)
+IS
+   create_accounting_period_rec_    Create_Accounting_Period_Virtual_Rec;
+   index_         NUMBER:= 0;
+   
+   CURSOR get_data IS
+      SELECT   'TRUE',
+               company,
+               NAME,
+               source_year,
+               from_accounting_year,
+               to_accounting_year,
+               vou_num_create_method_db,
+               acc_period_create_method_db,
+               use_vou_no_period
+      FROM accounting_calendar
+      WHERE company = company_
+   UNION 
+      SELECT   selected,
+               company,
+               NAME,
+               source_year,
+               from_accounting_year,
+               to_accounting_year,
+               vou_num_create_method_db,
+               acc_period_create_method_db,
+               use_vou_no_period
+      FROM accounting_calendar
+      WHERE company != company_
+      ORDER BY 1 DESC;
+   
+BEGIN
+   FOR rec_ IN get_data LOOP
+      index_ := index_+1;
+      
+      IF (index_ = 1 ) THEN         
+         create_accounting_period_rec_.selected := TRUE;
+      ELSE
+         create_accounting_period_rec_.selected := FALSE;
+      END IF;
+      create_accounting_period_rec_.company := rec_.company;
+      create_accounting_period_rec_.name := rec_.name;
+      create_accounting_period_rec_.source_year := rec_.source_year;
+      create_accounting_period_rec_.from_accounting_year := rec_.from_accounting_year;
+      create_accounting_period_rec_.to_accounting_year := rec_.to_accounting_year;
+      create_accounting_period_rec_.vou_num_create_method := rec_.vou_num_create_method_db;
+      create_accounting_period_rec_.acc_period_create_method := rec_.acc_period_create_method_db;
+      create_accounting_period_rec_.use_vou_no_period := rec_.use_vou_no_period;
+      create_accounting_period_rec_.excl_user_group_per_vou_series := FALSE;
+      create_accounting_period_rec_.exclude_user_group_per_period := FALSE;
+      create_accounting_period_rec_.objkey := sys_guid();
+      create_accounting_period_rec_.parent_objkey := parent_objkey_;
+      CRUD_Create___(create_accounting_period_rec_);
+   END LOOP;
+   
+END Populate_Data___;
+
+@Override
+PROCEDURE CRUD_Default___(
+   rec_ IN OUT Create_Acc_Period_Head_Virtual_Rec)
+IS
+BEGIN
+--   rec_.company := User_Finance_API.Get_Default_Company_Func;
+   super(rec_);
+   
+END CRUD_Default___;
+
+FUNCTION  Create_Accounting_Periods___(
+   objkey_  IN VARCHAR2) RETURN VARCHAR2
+IS
+   info_                         VARCHAR2(10);
+   success_                      BOOLEAN := FALSE;
+   failure_                      BOOLEAN := FALSE;
+   partial_                      BOOLEAN := FALSE;
+   
+   CURSOR get_record IS
+      SELECT * 
+      FROM ${PROJECTION}_CREATE_ACCOUNTING_PERIOD_VIRTUAL_VRT 
+      WHERE parent_objkey  = objkey_
+      AND selected         = 'TRUE';
+BEGIN   
+   FOR rec_ IN get_record LOOP      
+      IF ((rec_.to_accounting_year - rec_.source_year)> 99) THEN
+         Error_SYS.Appl_General(lu_name_, 'YEARLIMITERROR: Company :P1 Until Year can not be greater than 99 years from the original Source Year',rec_.company);
+      END IF;
+      IF (rec_.vou_num_create_method='EXCLUDE') THEN
+         rec_.excl_user_group_per_vou_series := 'TRUE';         
+      END IF;
+      
+      IF (rec_.vou_num_create_method = 'PER_YEAR' AND rec_.use_vou_no_period = 'TRUE') THEN
+         Error_SYS.Appl_General(lu_name_, 'VOUPERIODERROR: Use Voucher Number Series per Period is checked in company :P1.',rec_.company);      
+      ELSIF (rec_.vou_num_create_method = 'PER_PERIOD' AND rec_.use_vou_no_period = 'FALSE') THEN
+         Error_SYS.Appl_General(lu_name_, 'NOVOUPERIODERROR: Use Voucher Number Series per Period is not checked in company :P1.',rec_.company);
+      END IF;      
+      
+      Accounting_Year_API.Create_Accounting_Calender( info_,
+                                                      rec_.company,
+                                                      rec_.source_year,
+                                                      rec_.from_accounting_year,
+                                                      rec_.to_accounting_year,
+                                                      rec_.exclude_user_group_per_period,
+                                                      rec_.excl_user_group_per_vou_series,
+                                                      rec_.vou_num_create_method,
+                                                      rec_.acc_period_create_method);
+      IF (info_ = 'SUCCESS') THEN
+         success_ := TRUE;
+      ELSIF (info_ = 'ERROR') THEN
+         failure_ := TRUE;
+      ELSIF (info_ = 'PARTIAL') THEN
+         partial_ := TRUE;
+      END IF;      
+   END LOOP;
+   
+   IF ((success_) AND (NOT failure_)AND (NOT partial_)) THEN
+      RETURN 'SUCCESS';
+   ELSIF ((NOT success_) AND (failure_) AND (NOT partial_)) THEN
+      RETURN 'ERROR';
+   ELSIF ((success_ AND failure_) OR partial_) THEN
+      RETURN 'PARTIAL';
+   END IF;   
+   RETURN NULL;
+END Create_Accounting_Periods___;
+

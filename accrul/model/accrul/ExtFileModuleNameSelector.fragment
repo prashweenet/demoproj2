@@ -1,0 +1,42 @@
+fragment ExtFileModuleNameSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ext_file_module_name";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceExtFileModuleNameSelector for ExtFileModuleName {
+   static Component;
+   static Name;
+   static Version;
+}
+
+card ExtFileModuleNameCard for ExtFileModuleName {
+   label = "";
+   fieldranking Component;
+   field Component;
+   field Name;
+   field Version;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query ExtFileModuleName {
+   from = "ext_file_module_name";
+   lu = ExtFileType;
+   keys = Component, Name, Version;
+   ludependencies = ExtFileType;
+   attribute Component Text {
+      lovcolumn = [true];
+   }
+   attribute Name Text {
+      lovcolumn = [true];
+   }
+   attribute Version Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

@@ -1,0 +1,130 @@
+client TaxClasses;
+component ACCRUL;
+layer Core;
+projection TaxClassesHandling;
+
+include fragment TaxLiabilityLovSelector;
+include fragment TaxCodeRestrictedSelector;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TaxClassNavEntry parent AccrulNavigator.TaxMenu at index 400 {
+      label = "Tax Classes";
+      page Form home TaxClass;
+
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using TaxClassSet {
+   label = "Tax Classes";
+
+   selector TaxClassSelector;
+   group TaxClassGroup;
+   list TaxCodesPerTaxClassList(TaxCodesPerTaxClassArray);
+
+   command TranslationCommand;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand {
+   label = "Translation";
+
+   execute {
+      navigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'TaxClass' and AttributeKey eq $[TaxClassId]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ReferenceIsoCountrySelector for IsoCountry {
+   static Description;
+}
+
+@Override
+selector TaxClassSelector for TaxClass {
+   label = "${TaxClassId} - ${Description}";
+
+   static Company {
+      visible = [false];
+      searchable = false;
+   }
+   static TaxClassId;
+   static Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group TaxClassGroup for TaxClass {
+   label = "";
+
+   field TaxClassId {
+      label = "Tax Class";
+      size = Small;
+      format = uppercase;
+   }
+   field Description {
+      size = Large;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list TaxCodesPerTaxClassList for TaxCodesPerTaxClass {
+   label = "Tax Codes per Tax Class";
+
+   lov CountryCodeRef with ReferenceIsoCountrySelector {
+      search = CountryCode, Description;
+      hidekey = [true];
+      description = CountryCodeRef.Description;
+      size = Small;
+      format = uppercase;
+   }
+   lov TaxLiabilityRef with ReferenceTaxLiabilityLovSelector using FetchTaxLiabilityForCountryExcludeExempt(CountryCode) {
+      size = Small;
+   }
+   lov TaxCodeRef with ReferenceTaxCodeRestrictedSelector using TaxCodeRestrictedFetchValidTaxCodes(CurrentDate) {
+      search = FeeCode, Description;
+      size = Large;
+      description = TaxCodeRef.Description;
+   }
+   field ValidFrom {
+      label = "Valid From";
+      size = Small;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

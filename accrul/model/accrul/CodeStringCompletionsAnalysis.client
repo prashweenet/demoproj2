@@ -1,0 +1,88 @@
+client CodeStringCompletionsAnalysis;
+component ACCRUL;
+layer Core;
+include fragment AccountingCodePartsUsed2Selector;
+include fragment AccountingCodePartValueLovSelector;
+include fragment CodePartValAndProcessCodeSelector;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CodestringCompletionNavEntry parent AccrulNavigator.CodeStringMenu at index 900 {
+      label = "Code String Completions Analysis";
+      page List home AccountCodestrCompl;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AccountingCodestrComplSet {
+   label = "Code String Completions Analysis";
+   list AccountingCodestrComplList using AccountingCodestrComplSet;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountingCodestrComplList for AccountingCodestrCompl {
+   editmode = SingleRowEdit;
+   orderby = CodePart, CodePartValue, CodefillCodePart;
+
+   lov CodePartValueRef with ReferenceAccountingCodePartValueLovSelector {
+      search = CodePartValue, Description;
+      size = Large;
+      description = CodePartValueRef.Description;
+      editable = [false];
+   }
+   lov CodePart2Ref with ReferenceAccountingCodePartsUsed2Selector {
+      size = Small;
+      editable = [false];
+   }
+   field CodefillCodepartName {
+      editable = [false];
+   }
+   lov CodefillValueRef with ReferenceCodePartValAndProcessCodeSelector {
+      search = CodePartValue, Description;
+      editable = [(CodePart != CodefillCodePart and CodefillCodePartBlocked != "S") or CodefillValue != null];
+      description = CodefillValueRef.Description;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

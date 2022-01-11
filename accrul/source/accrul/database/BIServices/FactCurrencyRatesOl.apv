@@ -1,0 +1,87 @@
+------------------------------------------------------------------
+-- Component:  ACCRUL
+-- File     :  FactCurrencyRatesOl.apv
+-- Purpose  :  Creates ON LINE fact view FACT_CURRENCY_RATES_OL
+-- Note     :  Supposed to support ON LINE based star schemas.
+--             Contains single columns to be used for true/natural join
+------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   -----------------------------------------------
+--  110810  Anwese Created
+--  120208  SJayLK SBI-1146, Implement ISTOOL Access Control
+--  150513  Umdolk Reverse Engineering.
+-------------------------------------------------------------------
+
+DEFINE FACT          = FACT_CURRENCY_RATES
+DEFINE VIEW          = FACT_CURRENCY_RATES_OL
+DEFINE VIEW_OPT_OL   = ""
+DEFINE VIEW_ALT_OL   = ""
+DEFINE TAB           = CURRENCY_RATE_TAB     
+DEFINE MODULE        = ACCRUL
+DEFINE LU            = FctCurrencyRates
+
+-------------------------------------------------------------------
+PROMPT ********* Component &MODULE definition begins ***********
+
+
+PROMPT Create fact view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT cr.company||'^'||TO_CHAR(cr.valid_from,'YYYY-MM-DD')||'^'||cr.currency_type||'^'||cr.currency_code id,
+       cr.company                                                                                         company_key,
+       cr.valid_from                                                                                      valid_from_key,
+       cr.currency_type                                                                                   currency_rate_type_key,
+       cr.currency_code                                                                                   currency_code_key,
+       CAST (cr.currency_rate AS NUMBER)                                                                  currency_rate,
+       CAST (cr.direct_currency_rate AS NUMBER)                                                           direct_currency_rate,
+       CAST (cr.direct_currency_rate_round AS NUMBER)                                                     direct_currency_rate_round,
+       cr.valid_from                                                                                      valid_from,
+       (SELECT DECODE(MIN(valid_from)-1,
+      NULL, TO_DATE('2099-12-31','YYYY-MM-DD'),
+      MIN(valid_from)-1)
+      FROM &TAB c3
+      WHERE c3.valid_from > cr.valid_from
+      AND   c3.company       = cr.company
+      AND   c3.currency_type = cr.currency_type
+      AND   c3.currency_code = cr.currency_code)                                                          valid_until,
+   (CASE(SELECT MAX(c2.valid_from) 
+                FROM &TAB c2
+                WHERE c2.company=cr.company
+                AND   c2.currency_type = cr.currency_type
+                AND   c2.currency_code = cr.currency_code)
+                WHEN  cr.valid_from THEN 'TRUE'
+                  ELSE 'FALSE'
+      END)                                                                                                is_max_valid_from,
+       cr.company                                                                                         dim_company_id,
+       cr.company || '^' || cr.currency_code                                                              dim_currency_code_id,
+       cr.company || '^' || cr.currency_type                                                              dim_currency_rate_type_id,
+       cr.currency_code                                                                                   currency_code,
+       cr.currency_type                                                                                   currency_type
+FROM &TAB cr
+WHERE Bi_Utility_API.Bi_Access_Granted = 'TRUE'
+   AND ( ('TRUE' = (SELECT Xlr_Fact_Full_Access_API.Has_Full_Fact_Access('FACT_CURRENCY_RATES') FROM DUAL))
+          OR
+         (EXISTS ( SELECT 1
+                FROM USER_FINANCE_AUTH_PUB C
+   WHERE C.COMPANY = CR.COMPANY))
+       )
+WITH READ ONLY
+;
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Currency Rates^MODULE=&MODULE^';
+
+PROMPT ********* Component &MODULE, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE FACT
+UNDEFINE VIEW
+UNDEFINE VIEW_OPT_OL
+UNDEFINE VIEW_ALT_OL
+UNDEFINE TAB
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------
+
+
+
+
+

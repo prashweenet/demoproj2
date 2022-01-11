@@ -1,0 +1,67 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: StandardAuditTaxCodes
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+VIEW Standard_Audit_Tax_Codes2 IS
+   Prompt = 'Standard Audit Tax Codes 2'
+   company.Flags = 'PMI--'
+   company.Datatype = 'STRING(200)'
+   company.Prompt = 'Company'
+   country.Flags = 'PMI-L'
+   country.LOOKUP = 'IsoCountry'
+   country.Prompt = 'Country'
+   report_type.Flags = 'PMI-L'
+   report_type.ENUMERATION = 'AuditReportTypes'
+   report_type.Prompt = 'Report Type'
+   tax_id.Flags = 'A--U-'
+   tax_id.Datatype = 'STRING(2000)'
+   tax_id.Prompt = 'TaxId'
+   tax_id_description.Flags = 'A--U-'
+   tax_id_description.Datatype = 'STRING(2000)'
+   tax_id_description.Prompt = 'Tax Id Description'
+   standard_tax_id.Flags = 'A--U-'
+   standard_tax_id.Datatype = 'STRING(2000)'
+   standard_tax_id.Prompt = 'Standard Tax Id'
+   tax_exemption_reason_id.Flags = 'A-IUL'
+   tax_exemption_reason_id.Datatype = 'STRING(20)'
+   tax_exemption_reason_id.Prompt = 'Tax Exemption Reason ID'
+SELECT x.company company,
+               x.country  country_db,
+               Iso_Country_API.Decode(x.country) country,
+               x.report_type  report_type_db,
+               Audit_Report_Types_API.Decode(x.report_type) report_type,
+               x.fee_code tax_id,
+               x.description tax_id_description,
+               y.standard_tax_id standard_tax_id,
+               y.tax_exemption_reason_id tax_exemption_reason_id,
+               y.rowid objid,
+               ltrim(lpad(to_char(rowversion, 'YYYYMMDDHH24MISS'), 2000)) objversion,
+               rowkey objkey
+FROM (SELECT p.company     company,
+             p.country     country,
+             p.report_type report_type,
+             s.fee_code    fee_code,
+             s.description description
+        FROM statutory_fee_tab s, AUDIT_BASIC_DATA_MASTER_TAB p
+        where p.company = s.company) x,
+     STANDARD_AUDIT_TAX_CODES_TAB y
+WHERE x.company = y.company(+)
+AND x.fee_code = y.tax_id(+)
+AND x.country = y.country (+)
+AND x.report_type = y.report_type (+);

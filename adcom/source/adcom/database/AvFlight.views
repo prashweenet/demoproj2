@@ -1,0 +1,299 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvFlight
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210416  majslk  AD-1086, Added locked_bool to My_Aircraft_Turns view, updated My_Aircraft_Turns_Status_View with locked_bool and condition fields.
+--  210407  siselk  AD-1026, Modifications to My_Aircraft_Turns, ground_time
+--  210312  siydlk  LMM2020R1-1788, Modified My_Aircraft_Turns_Status_View and changed in parameters for Ground_Time.
+--  210305  siydlk  AD2020R1-1773,  Fixed the installation test issue in My_Aircraft_Turns_Status_View and positioned My_Aircraft_Turns to deploy first. 
+--  210304  siydlk  LMM2020R1-1788, Modified My_Aircraft_Turns_Status_View.
+--  210225  CSarLK  LMM2020R1-1708, created My_Aircraft_Turns view
+--  210225  siydlk  LMM2020R1-1568, Modified My_Aircraft_Turns_Status_View and added Dept_Leg_No.
+--  210223  siselk  LMM2020R1-1744, Changed Get_Departure_Flight to Get_Departure_Flight_Id in My_Aircraft_Turns_Status_View
+--  210218  siydlk  LMM2020R1-1568, Added My_Aircraft_Turns_Status_View.
+--  210209  madglk  LMM2020R1-1709, Fixed pipeline error.
+--  210205  siselk  LMM2020R1-1536, FLIGHTS_FOR_USER added
+--  200902  siselk  LMM2020R1-315, Av_Flight added
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+@Override
+VIEW Av_Flight IS
+SELECT Av_Flight_API.Get_Turn_Status(flight_id) FLIGHT_TURN_STATUS_DB;
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+VIEW FLIGHTS_FOR_USER AS
+SELECT flight_id, aircraft_id FROM av_flight WHERE arrival_airport_id IN 
+   (SELECT airport_id FROM CURRENT_USER_AIRPORT) OR 
+   departure_airport_id IN 
+      (SELECT airport_id FROM CURRENT_USER_AIRPORT);
+
+VIEW My_Aircraft_Turns AS
+      WITH 
+         all_fl AS
+            (-- all flights coming in and out from user's airport. departure flight for
+             -- each incoming flight is calculated. However departure flights 
+             -- details are used in FLMaintApp for other features.
+             SELECT 
+                 av_flight.flight_id                      flight_id,
+                 av_flight.flight_alt_id                  flight_alt_id,
+                 av_flight.aircraft_id                    aircraft_id,
+                 av_flight.departure_airport_id           departure_airport_id,
+                 av_flight.arrival_airport_id             arrival_airport_id,
+                 av_flight.leg_no                         leg_no,
+                 av_flight.master_flight_no               master_flight_no,
+                 av_flight.is_historic                    is_historic,
+                 av_flight.is_historic_db                 is_historic_db,
+                 av_flight.shed_departure_date_time       shed_departure_date_time,
+                 av_flight.actual_departure_date_time     actual_departure_date_time,
+                 av_flight.departure_gate                 departure_gate,
+                 av_flight.off_date_time                  off_date_time,
+                 av_flight.shed_arrival_date_time         shed_arrival_date_time,
+                 av_flight.actual_arrival_date_time       actual_arrival_date_time,
+                 av_flight.on_date_time                   on_date_time,
+                 av_flight.arrival_gate                   arrival_gate,
+                 av_flight.mx_unique_key                  mx_unique_key,
+                 av_flight.objstate                       objstate,
+                 av_flight.state                          state,
+                 av_flight.objversion                     objversion,
+                 av_flight.objkey                         objkey,
+                 av_flight.rowid                          objid,
+
+                 av_flight.flight_turn_status_db          flight_turn_status_db,
+
+                 to_char(av_flight.shed_arrival_date_time, 'HH24:MI')    arrival_time,
+                 to_char(av_flight.shed_departure_date_time, 'HH24:MI')  departure_time,
+                 (SELECT dep.flight_id
+                  FROM av_flight_tab dep
+                  WHERE    dep.aircraft_id              = av_flight.aircraft_id
+                  AND      dep.departure_airport_id     = av_flight.arrival_airport_id
+                  AND      dep.shed_departure_date_time > av_flight.shed_arrival_date_time
+                  ORDER BY dep.shed_departure_date_time ASC
+                  FETCH FIRST ROW ONLY
+                 ) AS                                      dept_flight_id
+            FROM  av_flight av_flight
+            INNER JOIN  av_airport_for_user_tab t ON
+               (av_flight.arrival_airport_id = t.airport_id OR
+                av_flight.departure_airport_id = t.airport_id)
+               AND
+               t.identity = Fnd_Session_Api.Get_Fnd_User
+            ),
+         flights_info AS
+            ( -- infomation for aircraft turns. this contains all flights arriving in to user's
+              -- airport. Those incoming flights are mainly aircraft turns, which has a deparure flight.
+              -- This also includes departure flights list as the infomation is needed 
+              -- within FLMaiintApp. My Aircraft Turns shown as fliterd by arrival airport. rest of the lines used within
+              -- native app for other features
+             SELECT 
+               -- all flights info
+               all_flights.flight_id                      flight_id,
+               all_flights.flight_alt_id                  flight_alt_id,
+               all_flights.aircraft_id                    aircraft_id,
+               all_flights.departure_airport_id           departure_airport_id,
+               all_flights.arrival_airport_id             arrival_airport_id,
+               all_flights.leg_no                         leg_no,
+               all_flights.master_flight_no               master_flight_no,
+               all_flights.is_historic                    is_historic,
+               all_flights.is_historic_db                 is_historic_db,
+               all_flights.shed_departure_date_time       shed_departure_date_time,
+               all_flights.actual_departure_date_time     actual_departure_date_time,
+               all_flights.departure_gate                 departure_gate,
+               all_flights.off_date_time                  off_date_time,
+               all_flights.shed_arrival_date_time         shed_arrival_date_time,
+               all_flights.actual_arrival_date_time       actual_arrival_date_time,
+               all_flights.on_date_time                   on_date_time,
+               all_flights.arrival_gate                   arrival_gate,
+               all_flights.mx_unique_key                  mx_unique_key,
+               all_flights.objstate                       objstate,
+               all_flights.state                          state,
+               all_flights.objversion                     objversion,
+               all_flights.flight_turn_status_db          flight_turn_status_db,
+               all_flights.arrival_time                   arrival_time,
+               all_flights.departure_time                 departure_time,
+               all_flights.objkey                         objkey,
+
+               -- depature flights info
+               all_flights.dept_flight_id                 dept_flight_id,
+               depart_fl.arrival_airport_id               dept_arrival_airport_id,
+               depart_fl.shed_departure_date_time         dept_sched_dep_date_time,
+               depart_fl.actual_departure_date_time       dept_act_dep_date_time,
+               to_char(depart_fl.shed_departure_date_time, 'HH24:MI')                  dept_departure_time,
+               depart_fl.flight_turn_status_db               dept_flight_turn_status,
+
+               -- work pacakage_info
+               Av_Aircraft_Work_Package_API.Get_Work_Package_Id (all_flights.aircraft_id, 
+                                                               all_flights.arrival_airport_id, 
+                                                               all_flights.flight_id,
+                                                               all_flights.shed_arrival_date_time,
+                                                               depart_fl.shed_departure_date_time,
+                                                               all_flights.actual_arrival_date_time,
+                                                               all_flights.flight_turn_status_db)   work_package_id
+            FROM all_fl all_flights
+            LEFT OUTER JOIN  all_fl depart_fl ON
+            depart_fl.flight_id =  all_flights.dept_flight_id 
+            ),
+            aircraft_info AS
+            (
+              SELECT 
+                    aircraft_tab.aircraft_id                                                                         aircraft_id,
+                    aircraft_tab.aircraft_type_code                                                                  aircraft_type_code,
+                    aircraft_tab.inventory_id                                                                        inventory_id,
+                    Av_Aircraft_Work_Package_API.Get_Last_Release_Date (aircraft_tab.aircraft_id)                    last_release_date,
+                    Av_Flight_API.Get_Opened_Faults_Count(aircraft_id)                                               no_of_opened_faults,
+                    Av_Flight_API.Get_Deferred_Faults_Count(aircraft_id)                                             no_of_deferred_faults
+              FROM aircraft_tab 
+              WHERE aircraft_tab.aircraft_id in ( SELECT flights_info.aircraft_id from flights_info)
+            ),
+            inventory_info AS
+            (
+              SELECT
+                    av_inventory_tab.inventory_id          inventory_id,
+                    av_inventory_tab.locked_bool          locked_bool
+              FROM av_inventory_tab
+              WHERE av_inventory_tab.inventory_id IN (SELECT aircraft_info.inventory_id FROM aircraft_info)
+            )  
+        
+       SELECT 
+         -- flight info
+         flights_info.flight_id                       flight_id,
+         flights_info.flight_alt_id                   flight_alt_id,
+         flights_info.aircraft_id                     aircraft_id,
+         flights_info.master_flight_no                master_flight_no,
+         flights_info.leg_no                          leg_no,
+         flights_info.arrival_airport_id              arrival_airport_id,
+         flights_info.departure_airport_id            departure_airport_id,
+         flights_info.shed_arrival_date_time          shed_arrival_date_time,
+         flights_info.actual_arrival_date_time        actual_arrival_date_time,
+         flights_info.shed_departure_date_time        shed_departure_date_time,
+         flights_info.actual_departure_date_time      actual_departure_date_time,
+         flights_info.arrival_gate                    arrival_gate,
+         flights_info.departure_gate                  departure_gate,
+         flights_info.on_date_time                    on_date_time,
+         flights_info.off_date_time                   off_date_time,
+         flights_info.is_historic                     is_historic,
+         flights_info.is_historic                     is_historic_db,
+         flights_info.objstate                        objstate,
+         flights_info.state                           state,
+         flights_info.objversion                      objversion,
+         flights_info.flight_turn_status_db           flight_turn_status_db,
+         flights_info.flight_turn_status_db           flight_turn_status,
+         flights_info.mx_unique_key                   mx_unique_key,
+         flights_info.objkey                          objkey,
+         NULL AS                                      description,
+
+         aircraft_info.last_release_date              last_release_date,
+         flights_info.work_package_id                 work_package_id,
+         Av_Aircraft_Work_Package_API.Get_Duration (flights_info.aircraft_id,
+                                                    flights_info.arrival_airport_id, 
+                                                    flights_info.flight_id,
+                                                    flights_info.flight_turn_status_db,
+                                                    flights_info.work_package_id)            duration,
+         (CASE flights_info.flight_turn_status_db 
+            WHEN  'Inbound' THEN flights_info.shed_arrival_date_time
+            ELSE flights_info.actual_arrival_date_time
+          END) AS                                                                            arrival_timestamp,
+         (CASE flights_info.flight_turn_status_db 
+            WHEN  'Departed' THEN flights_info.dept_act_dep_date_time
+            ELSE flights_info.dept_sched_dep_date_time
+          END) AS                                                                            departure_timestamp,
+         flights_info.dept_flight_id                  dept_flight_id,
+         flights_info.dept_departure_time             shed_dept_time,
+         Av_Flight_API.Get_Ground_Time(flights_info.flight_id,
+                                       flights_info.actual_arrival_date_time,
+                                       flights_info.dept_act_dep_date_time)                ground_time, 
+         Fnd_Session_Api.Get_Fnd_User                 release_signed_by,
+         aircraft_info.aircraft_type_code             aircraft_type_code,
+         flights_info.objkey                          objid,                                    
+         flights_info.arrival_time                    arrival_time, 
+         flights_info.departure_time                  departure_time, 
+         Av_Flight_API.Get_Assigned_Task_Count(flights_info.work_package_id)                no_of_assigned_tasks,
+         aircraft_info.no_of_opened_faults            no_of_opened_faults,
+         aircraft_info.no_of_deferred_faults          no_of_deferred_faults,
+         Av_Flight_API.Get_Closed_Faults_Count(flights_info.aircraft_id,
+                                               flights_info.arrival_airport_id)             no_of_closed_faults,
+         (SELECT ap.iata_code
+            FROM av_airport_tab ap
+            WHERE ap.airport_id = flights_info.dept_arrival_airport_id) AS                  outbound_station,
+         SYSDATE + (airport_info.arrival_offset)/24   arrival_offset_time,
+         SYSDATE - (airport_info.Departure_offset)/24 departure_offset_time,
+         inventory_info.locked_bool          locked_bool,
+         inventory_info.locked_bool          locked_bool_db
+         FROM flights_info
+         INNER JOIN av_airport_tab airport_info ON
+            flights_info.arrival_airport_id = airport_info.airport_id
+         INNER JOIN aircraft_info ON
+            aircraft_info.aircraft_id = flights_info.aircraft_id
+         LEFT OUTER JOIN inventory_info ON
+            inventory_info.inventory_id = aircraft_info.inventory_id;
+
+VIEW My_Aircraft_Turns_Status_View IS
+   SELECT 
+      A.Flight_Id, 
+      A.Arrival_Airport_Id,
+      A.Aircraft_Id,
+      A.Actual_Arrival_Date_Time,
+      A.Shed_Arrival_Date_Time,
+      A.Departure_Timestamp,
+      A.Leg_No,
+      A.Arrival_Gate,
+      A.Flight_Turn_Status,
+      A.Arrival_Offset_Time,
+      A.Departure_Offset_Time,
+      A.Work_Package_Id,
+      A.Actual_Start_Date_Time,
+      A.Actual_End_Date_Time,
+      A.Dept_Flight_Id,
+      A.No_Of_Opened_Faults,
+      A.Ground_Time,
+      A.Aircraft_Type_Code,
+      A.Arrival_Timestamp,
+      A.Locked_Bool,
+      A.Condition 
+   FROM (
+      SELECT
+         v1.Flight_Id,
+         v1.Arrival_Airport_Id, 
+         v1.Aircraft_Id,                                                                                      
+         v1.Actual_Arrival_Date_Time,
+         v1.Shed_Arrival_Date_Time,
+         v1.Departure_Timestamp,
+         v1.Leg_No,
+         v1.Arrival_Gate,
+         v1.Flight_Turn_Status,
+         v1.Arrival_Offset_Time,
+         v1.Departure_Offset_Time,
+         v1.Work_Package_Id,
+         tb1.Actual_Start_Date_Time,
+         tb1.Actual_End_Date_Time,
+         v1.Dept_Flight_Id,
+         v1.No_Of_Opened_Faults,      
+         Av_Flight_API.Get_Ground_Time(v1.Flight_Id,
+                                       v1.Arrival_Timestamp,
+                                       v1.Departure_Timestamp) AS  Ground_Time,        
+         v1.Aircraft_Type_Code,
+         v1.Arrival_Timestamp,
+         v1.Locked_Bool,
+         tb2.Condition
+      FROM My_Aircraft_Turns v1
+      LEFT OUTER JOIN Av_Aircraft_Work_Package_Tab tb1
+      ON v1.work_package_id = tb1.aircraft_work_package_id
+      LEFT OUTER JOIN Aircraft_Tab tb2
+      ON v1.aircraft_id = tb2.aircraft_id
+      ) A  
+   WHERE (((Flight_Turn_Status IN ('Arrived')) AND ((Arrival_Offset_Time > Actual_Arrival_Date_Time) AND (Actual_Arrival_Date_Time > Departure_Offset_Time))) OR
+      (Flight_Turn_Status IN ('InMaintenance') AND ((Arrival_Offset_Time > Actual_Start_Date_Time) AND (Actual_Start_Date_Time > Departure_Offset_Time))) OR
+      (Flight_Turn_Status in('Inbound') AND ((Arrival_Offset_Time > Shed_Arrival_Date_Time) AND (Shed_Arrival_Date_Time > Departure_Offset_Time))) OR
+      (Flight_Turn_Status in('Departed') AND Departure_Offset_Time < Departure_Timestamp) OR
+      (Flight_Turn_Status in('Released') AND Departure_Offset_Time < Actual_End_Date_Time))
+      AND Av_Airport_For_User_API.Get_Airport_Id (Fnd_Session_API.Get_Fnd_User)= A.Arrival_Airport_Id ;

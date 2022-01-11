@@ -1,0 +1,915 @@
+client CostRevenueBreakdownStructure;
+component ACCRUL;
+layer Core;
+projection CostRevenueBreakdownStructureHandling;
+include fragment CostStructureItem2Selector;
+warningsenabled = CostStructureItem, DeleteNode;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CostStructureHeadNavEntry parent AccrulNavigator.CostRevenueElementSetupMenu at index 300 {
+      label = "Cost/Revenue Breakdown Structure";
+      tree Tree;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page CostStructure using CostStructureSet {
+   label = "Cost/Revenue Breakdown Structure";
+   stateindicator CostStructureStateIndicator;
+   selector CostStructureMainSelector;
+   group CostStructureHeadGroup bind CostStructureMainSelector;
+
+   --Cost Element is sent as a dummy value in this situation
+   list UnUsedCostElementList using FetchCostElements(Company, ProjectCostElement, CostStructureId, ProjectCostElement, DefaultItemType);
+
+
+   commandgroup UpdateStructCmbGroup {
+      command CreateStructureCommand;
+      command CopyStructureCommand;
+   }
+   commandgroup PageNavCmdGroup {
+      command CBSItemsCommand;
+      command CBSLevelsCommand;
+      @DynamicComponentDependency PROJ
+      command ViewConnectedProjectsCommand;
+   }
+   commandgroup ChangeStatusCmdGroup {
+      command Activate {
+         label = "Set Status Active";
+      }
+      command ReOpen {
+         label = "Set Status In Progress";
+      }
+      command SetObsolete {
+         label = "Set Status Obselete";
+      }
+   }
+
+}
+
+
+page CostStructureItem using CostStructureItemSet {
+   label = "Cost/Revenue Breakdown Structure";
+
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+
+   selector CostStructureItemSelector;
+
+   group CostStructureItemGroup bind CostStructureItemSelector;
+
+   tabs {
+      tab {
+         label = "Not Used Cost Elements";
+         visible = [CostStructItemType = "Node"];
+         list CostElementList using FetchCostElements(Company, ProjectCostElementRef.ProjectCostElement, CostStructureId, NameValue, CostStructItemType);
+      }
+      tab {
+         label = "Used Cost Elements";
+         visible = [CostStructItemType = "Node"];
+         list CostStructureItemList using FetchUsedCostElements(Company, CostStructureId, NameValue, CostStructItemType);
+      }
+      tab {
+         label = "Used Cost Elements";
+         visible = [CostStructItemType = "CostElement"];
+         list CostStructureItemList using FetchUsedCostElements(Company, CostStructureId, ItemAbove, CostStructItemType);
+      }
+
+   }
+
+   commandgroup UpdateStructItemCmbGroup {
+      command CreateNodeCommand;
+      command RenameNodeCommand;
+      command RenameLevelCommand;
+      command CreateTopNodeCommand;
+      command ChangeParentNodeCommand;
+      command ChangeLevelCommand;
+      command DeleteNodeCommand;
+   }
+
+
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+--------------------------------- COMMANDS ----------------------------------
+command CBSItemsCommand for CostStructure {
+   label = "CBS Items";
+   enabled = [true];
+   execute {
+      navigate "page/CostRevBrkdownStrcItm/CostRevenueBreakdownStructureItems?contexts=Company:$[context.Company]&$filter=CostStructureId eq $[CostStructureId]";
+   }
+}
+
+
+command CBSLevelsCommand for CostStructure {
+   label = "CBS Levels";
+   enabled = [true];
+   execute {
+      navigate "page/CostRevenueBreakdownStructureLevels/List?contexts=Company:$[context.Company]&$filter=CostStructureId eq $[CostStructureId]";
+   }
+}
+
+
+@DynamicComponentDependency PROJ
+command ViewConnectedProjectsCommand for CostStructure {
+   label = "View Connected Projects";
+   enabled = [true];
+   variable IsConnectedStr {
+      type = Text;
+   }
+   execute {
+      call IsConnected(Company, CostStructureId) into IsConnectedStr;
+      if[IsConnectedStr = "FALSE"] {
+         error("No data found");
+      }
+      else {
+         navigate "page/Projects/List?contexts=Company:$[context.Company]&$filter=CostStructureId eq $[CostStructureId]";
+      }
+   }
+}
+
+
+command CopyStructureCommand for CostStructure {
+   label = "Copy Structure";
+   variable NewStructureIdVar Text;
+   variable CompanyVar Text;
+
+   execute {
+      dialog CopyStructureToCompanyDialog(Company, CostStructureId) into(CompanyVar, NewStructureIdVar) {
+         when CANCEL {
+            exit CANCEL;
+         }
+         when OK {
+            navigate "tree/CostRevenueBreakdownStructure/Tree?contexts=Company:$[CompanyVar]&$filter=CostStructureId eq $[NewStructureIdVar]";
+         }
+      }
+   }
+}
+
+
+command CreateStructureCommand for CostStructure {
+   label = "New Structure";
+   mode = Global;
+   variable CostStructureIdVar Text;
+   variable CompanyVar Text;
+
+   execute {
+      dialog CreateCostStructureDialog(context.Company) into(CompanyVar, CostStructureIdVar) {
+         when CANCEL {
+            exit CANCEL;
+         }
+         when OK {
+            navigate "tree/CostRevenueBreakdownStructure/Tree?contexts=Company:$[CompanyVar]&$filter=CostStructureId eq $[CostStructureIdVar]";
+         }
+      }
+   }
+}
+
+
+command CreateTopNodeCommand for CostStructureItem {
+   label = "Create New Top Node";
+
+   enabled = [CostStructItemType = "Node" and LevelNo = 1];
+   execute {
+      dialog TopNodeDialog(Company, CostStructureId, CostStructItemType, LevelNo) {
+         when CANCEL {
+            exit CANCEL;
+         }
+      }
+   }
+}
+
+
+command ChangeParentNodeCommand for CostStructureItem {
+   label = "Change Parent Node";
+   enabled = [LevelNo > 1];
+   execute {
+      dialog ChangeParentNodeDialog(Company, CostStructureId, CostStructItemType, LevelNo, ItemAbove, NameValue) {
+         when CANCEL {
+            exit CANCEL;
+         }
+      }
+   }
+}
+
+
+command CreateNodeCommand for CostStructureItem {
+   label = "New Structure Node";
+
+   enabled = [CostStructItemType = "Node" and LevelNo > 0];
+   execute {
+      dialog CreateNewNode(Company, CostStructureId, NameValue, LevelNo) {
+         when CANCEL {
+            exit CANCEL;
+         }
+      }
+   }
+}
+
+
+command DeleteNodeCommand for CostStructureItem {
+   label = "Delete Node";
+
+   enabled = [CostStructItemType = "Node" and LevelNo > 1];
+   execute {
+      call DeleteNode(Company, CostStructureId, NameValue, CostStructItemType, LevelNo);
+   }
+}
+
+
+command MoveItemsCommand for CostStructureItem {
+   execute {
+      call MoveItems(source.Company, source.CostStructureId, source.CostStructItemType, source.NameValue, source.ItemAbove, destination.NameValue, destination.CostStructItemType);
+   }
+}
+
+
+command RenameLevelCommand for CostStructureItem {
+   label = "Set Level ID and Description";
+
+   enabled = [LevelNo > 0];
+   execute {
+      dialog SetNodeLevelDialog(Company, CostStructureId, LevelNo, LevelId, LevelId, LevelDescription) {
+         when CANCEL {
+            exit CANCEL;
+         }
+      }
+   }
+}
+
+
+command RenameNodeCommand for CostStructureItem {
+   label = "Set Node ID and Description";
+
+   enabled = [CostStructItemType = "Node" and LevelNo > 0];
+   execute {
+      dialog SetNodeDialog(Company, CostStructureId, CostStructItemType, NameValue, NameValue, Description) {
+         when CANCEL {
+            exit CANCEL;
+         }
+      }
+   }
+}
+
+
+command ChangeLevelCommand for CostStructureItem {
+   label = "Change Level ID";
+
+   enabled = [LevelNo > 0];
+   execute {
+      dialog ChangeLevelIdDialog(Company, CostStructureId, NameValue, CostStructItemType, LevelId, LevelDescription) {
+         when CANCEL {
+            exit CANCEL;
+         }
+      }
+   }
+}
+
+
+command ConnectElementsCommand for ProjectCostElement {
+   label = "Connect";
+   mode = SelectedRecords;
+   enabled = [StructItemType = "Node"];
+
+   variable ActionStr;
+   variable CompanyStr;
+
+   bulkexecute {
+      set ActionStr = "CONNECT";
+      set CompanyStr = "${context.Company}";
+      bulkcall ConnectDisconnectElements(CompanyStr, StructId, ItemAbove, ProjectCostElement, ActionStr, StructItemType);
+   }
+}
+
+
+command ConnectAllElementsCommand for ProjectCostElement {
+   label = "Connect All";
+   mode = Global;
+   enabled = [StructItemType = "Node"];
+
+   variable ActionStr;
+   variable CompanyStr;
+
+   execute {
+      set ActionStr = "CONNECT";
+      set CompanyStr = "${context.Company}";
+      call ConnectDisconnectAllElements(CompanyStr, StructId, ItemAbove, ActionStr);
+   }
+}
+
+
+command DisconnectElementsCommand for CostStructureItem {
+   label = "Disconnect";
+   mode = SelectedRecords;
+   enabled = [SelectedItemType = "Node"];
+
+   variable ActionStr;
+   variable CompanyStr;
+   variable StructureIdStr;
+   variable ItemAboveStr;
+
+   bulkexecute {
+      set ActionStr = "DISCONNECT";
+      set CompanyStr = "${context.Company}";
+       //! TODO: jadulk <StructureIdStr, ItemAboveStr can be removed once TEUXX-10801 is fixed>
+      set StructureIdStr = null;
+      set ItemAboveStr = null;
+      call ConnectDisconnectElements(CompanyStr, StructureIdStr, ItemAboveStr, Selection, ActionStr, "Node");
+   }
+}
+
+
+command DisconnectAllElementsCommand for CostStructureItem {
+   label = "Disconnect All";
+   mode = Global;
+   enabled = [SelectedItemType = "Node"];
+
+   variable ActionStr;
+   variable CompanyStr;
+
+   execute {
+      set ActionStr = "DISCONNECT";
+      set CompanyStr = "${context.Company}";
+      call ConnectDisconnectAllElements(CompanyStr, CostStructureId, ItemAbove, ActionStr);
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector CostStructureMainSelector for CostStructure {
+   label = "${CostStructureId} - ${Description} - ${Objstate} - ${Objstate}";
+   static Company {
+      searchable = false;
+      visible = [false];
+   }
+   static CostStructureId;
+   static Description {
+      label = "Description";
+   }
+   field CopiedFrom {
+      visible = [false];
+      searchable = true;
+   }
+   field Template {
+      visible = [false];
+      searchable = true;
+   }
+   field SingleProject {
+      visible = [false];
+      searchable = true;
+   }
+   badge Objstate {
+      label = "Status";
+      showlabel = false;
+      size = Small;
+      style = TextOnly;
+
+      emphasis Progress3 = [Objstate = "InProgress"];
+      emphasis Progress11 = [Objstate = "Active"];
+      emphasis StateClosed = [Objstate = "Obsolete"];
+   }
+}
+
+
+@Override
+selector CostStructureItemSelector for CostStructureItem {
+   static Company;
+   static StructureIdRef.CostStructureId;
+}
+
+
+@Override
+selector CostStructureItem2Selector for CostStructureItem2 {
+   static Company {
+      visible = [false];
+   }
+   static CostStructureId {
+      visible = [false];
+   }
+   static NameValue;
+   static Description;
+   static LevelNo {
+      visible = [false];
+   }
+}
+
+---------------------------------- GROUPS -----------------------------------
+group CostStructureHeadGroup for CostStructure {
+   label = "";
+   field CostStructureId {
+      editable = [false];
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+   lov CopiedFromRef with ReferenceCostStructureSelector {
+      search = CostStructureId, Description;
+      description = CopiedFromRef.Description;
+      size = Small;
+   }
+   field Template {
+      size = Small;
+   }
+   field SingleProject {
+      size = Small;
+   }
+   field Note {
+      multiline = true;
+   }
+}
+
+
+group CostStructureItemGroup for CostStructureItem {
+   label = "";
+
+   lov NodeIdRef with CostStructureItemSelector {
+      description = Description;
+      editable = [false];
+   }
+//   field LevelId;
+//   field LevelDescription;
+   lov LevelRef with ReferenceCostStructureLevelChSelector {
+      search = LevelId, Description;
+      size = Large;
+      description = LevelRef.Description;
+   }
+}
+
+
+group CreateCostStructureGroup for CostBreakdownStructure {
+   label = "";
+
+   field CostStructureId {
+      size = Medium;
+   }
+   field Description {
+      size = Large;
+   }
+   field Template {
+      size = Medium;
+   }
+   field SingleProject {
+      size = Medium;
+   }
+   field Note {
+      multiline = true;
+   }
+}
+
+
+group CopyStructureSourceGroup for CopyStructureToCompanyStructure {
+   label = "Source";
+   lov StructureIdRef with ReferenceCostStructureSelector {
+      search = CostStructureId, Description;
+      size = Large;
+      description = StructureIdRef.Description;
+   }
+}
+
+
+group CopyStructureDestinationGroup for CopyStructureToCompanyStructure {
+   label = "Destination";
+
+   field NewStructureId {
+      size = Small;
+   }
+   field NewDescription {
+      size = Large;
+   }
+}
+
+
+group TopNodeStructureGroup for TopNodeStructure {
+   label = "";
+
+   field NodeId {
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+}
+
+
+group ChangeParentNodeStructureGroup for ChangeParentNodeStructure {
+   label = "";
+   //! TODO: jadulk use ReferenceCostStructureItem2Selector once ,more than 2 items will be fetched to the selector in the fragment>
+   lov NodeAboveRef with CostStructureItem2Selector using FetchCostStructureItems(ItemAbove) {
+      search = NameValue, Description;
+      size = Large;
+      description = NodeAboveRef.Description;
+   }
+}
+
+
+group NewNodeGroup for NodeStructure {
+   label = "";
+   field NodeId {
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+}
+
+
+group RenameLevelGroup for SetLevelStructure {
+   label = "";
+   field LevelId;
+   field Description;
+}
+
+
+group RenameNodeGroup for SetNodeStructure {
+   label = "";
+   field NodeId;
+   field Description;
+}
+
+
+group ChangeNodeLevelGroup for ChangeNodeLevelStructure {
+   label = "";
+
+   lov LevelRef with ReferenceCostStructureLevelChSelector using FetchCostStructureLevels(Company, CostStructureId, NodeId, CostStructItemType) {
+      search = LevelId, Description;
+      size = Large;
+      description = LevelRef.Description;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+@Override
+list CostStructureLovList for CostStructure {
+   label = "";
+   static Company {
+      searchable = false;
+   }
+   static CostStructureId;
+   static Description;
+   field CopiedFrom;
+   field Template;
+   field SingleProject;
+   field ProjectCostElement;
+}
+
+
+@Override
+list CostStructureItem2LovList for CostStructureItem2 {
+   label = "";
+   static NameValue;
+   static Description;
+   static LevelNo {
+      columnexclude = [true];
+   }
+   static LevelId {
+      label = "Level";
+   }
+}
+
+
+list CostElementList for ProjectCostElement {
+   label = "Not Used Cost Elements";
+
+   --orderby = ProjectCostElement;
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+   -- Cost Element is sent as a dummy value
+   lov ProjectCostElementRef with ReferenceProjectCostElementSelector {
+      search = ProjectCostElement, Description;
+      description = ProjectCostElementRef.Description;
+      searchable = true;
+      size = Large;
+      columnexclude = [true];
+   }
+   lov ProjectCostElementRef with ReferenceProjectCostElementSelector using FetchCostElements(Company, ProjectCostElement, parent.CostStructureId, ProjectCostElement, StructItemType) {
+      description = Description;
+      searchable = false;
+      size = Large;
+   }
+
+   command ConnectElementsCommand;
+   --command ConnectAllElementsCommand;
+}
+
+list UnUsedCostElementList for ProjectCostElement {
+   label = "Not Used Cost Elements";
+
+   --orderby = ProjectCostElement;
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+
+   -- Cost Element is sent as a dummy value
+   lov ProjectCostElementRef with ReferenceProjectCostElementSelector {
+      search = ProjectCostElement, Description;
+      description = ProjectCostElementRef.Description;
+      searchable = true;
+      size = Large;
+      columnexclude = [true];
+   }
+   lov ProjectCostElementRef with ReferenceProjectCostElementSelector using FetchCostElements(Company, ProjectCostElement, parent.CostStructureId, ProjectCostElement, StructItemType) {
+      description = Description;
+      searchable = false;
+      size = Large;
+   }
+}
+
+
+list CostStructureItemList for CostStructureItem {
+   --orderby = ProjectCostElement;
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+
+   lov NodeIdRef with CostStructureItemSelector {
+      label = "Cost Element";
+      search = NameValue, Description;
+      description = NodeIdRef.Description;
+      size = Large;
+      searchable = true;
+      columnexclude = [true];
+   }
+   lov NodeIdRef with CostStructureItemSelector using FetchUsedCostElements(Company, CostStructureId, ItemAbove, CostStructItemType) {
+      label = "Cost Element";
+      description = Description;
+      editable = [false];
+      size = Large;
+      searchable = false;
+   }
+
+   command DisconnectElementsCommand;
+   --command DisconnectAllElementsCommand;
+}
+----------------------------------- CARDS -----------------------------------
+
+---------------------------------- DIALOGS ----------------------------------
+dialog CreateCostStructureDialog for CostBreakdownStructure {
+   label = "New Structure";
+   input(Company);
+   output(Company, CostStructureId);
+
+   group CreateCostStructureGroup;
+
+   command Ok {
+      enabled = [CostStructureId != null and Description != null];
+
+      execute {
+         call CreateNewCostStructure(Company, CostStructureId, Description, Template, SingleProject, Note);
+         exit OK;
+      }
+   }
+   command Cancel {
+      execute {
+         exit CANCEL;
+      }
+   }
+}
+
+
+dialog CopyStructureToCompanyDialog for CopyStructureToCompanyStructure {
+   label = "Copy Structure";
+
+   input(Company, CostStructureId);
+   output(Company, NewStructureId);
+
+   group CopyStructureSourceGroup;
+   group CopyStructureDestinationGroup;
+
+   command Ok {
+      enabled = [Company != null and NewStructureId != null and NewDescription != null];
+      execute {
+         call CopyStructure(Company, CostStructureId, NewStructureId, NewDescription);
+         exit OK;
+
+      }
+   }
+   command Cancel;
+}
+
+
+dialog TopNodeDialog for TopNodeStructure {
+   label = "Create New Top Node";
+
+   input(Company, CostStructureId, CostStructItemType, LevelNo);
+
+   group TopNodeStructureGroup;
+
+   command Ok {
+      enabled = [NodeId != null and Description != null];
+      execute {
+         call CreateNewTopNode(Company, CostStructureId, NodeId, Description, CostStructItemType, LevelNo);
+         exit OK;
+      }
+   }
+   command Cancel;
+}
+
+
+dialog ChangeParentNodeDialog for ChangeParentNodeStructure {
+   label = "Change Parent Node";
+
+   input(Company, CostStructureId, CostStructItemType, CurrentLevelNo, ItemAbove, CurrentNode);
+
+   group ChangeParentNodeStructureGroup;
+
+   command Ok {
+      enabled = [NodeAbove != null];
+      execute {
+         call ChangeParentNode(Company, CostStructureId, CurrentNode, CostStructItemType, CurrentLevelNo, NodeAbove);
+         exit OK;
+      }
+   }
+   command Cancel;
+}
+
+dialog CreateNewNode for NodeStructure {
+   label = "New Structure Node";
+   input(Company, CostStructureId, ItemAbove, LevelNo);
+   group NewNodeGroup;
+
+   command Ok {
+      enabled = [NodeId != null and Description != null];
+
+      execute {
+         call CreateNewNode(Company, CostStructureId, NodeId, Description, ItemAbove, LevelNo);
+         exit OK;
+      }
+   }
+   command Cancel;
+}
+
+
+dialog SetNodeLevelDialog for SetLevelStructure {
+   label = "Set Level ID and Description";
+   input(Company, CostStructureId, LevelNo, OldLevelId, LevelId, Description);
+   group RenameLevelGroup;
+
+   command Ok {
+      execute {
+         call RenameLevel(Company, CostStructureId, OldLevelId, LevelId, Description);
+         exit OK;
+      }
+   }
+   command Cancel;
+}
+
+
+dialog SetNodeDialog for SetNodeStructure {
+   label = "Rename Node ID and Description";
+   input(Company, CostStructureId, CostStructItemType, OldNodeId, NodeId, Description);
+   group RenameNodeGroup;
+
+   command Ok {
+      execute {
+         call RenameNode(Company, CostStructureId, OldNodeId, NodeId, Description);
+         exit OK;
+      }
+   }
+   command Cancel;
+}
+
+
+dialog ChangeLevelIdDialog for ChangeNodeLevelStructure {
+   label = "Change Level Id";
+
+   input(Company, CostStructureId, NodeId, CostStructItemType, LevelId, LevelDescription);
+
+   group ChangeNodeLevelGroup;
+
+   command Ok {
+      enabled = [LevelId != null];
+      execute {
+         call ChangeLevelId(Company, CostStructureId, NodeId, CostStructItemType, LevelId);
+         exit OK;
+      }
+   }
+   command Cancel;
+}
+
+
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+@Override
+stateindicator CostStructureStateIndicator for CostStructure {
+   state "In Progress" {
+      completed = 33%;
+      emphasis Progress3 = [Objstate = "InProgress"];
+   }
+   state "Active" {
+      completed = 100%;
+      emphasis Progress11 = [Objstate = "Active"];
+   }
+   state "Obsolete" {
+      completed = 100%;
+      emphasis StateClosed = [Objstate = "Obsolete"];
+   }
+}
+
+
+----------------------------------- TREES -----------------------------------
+tree Tree using CostStructureSet {
+   label = "Cost/Revenue Breakdown Structure";
+
+   selector CostStructureMainSelector;
+
+   command CreateStructureCommand;
+
+   rootnode CostStructure {
+      label = "${CostStructureId}";
+      navigate {
+         page CostStructure {
+            filter(CostStructureId, CostStructureId);
+            filter(Company, Company);
+         }
+      }
+
+      iconset {
+         icon "account-type";
+         emphasis Complementary2 = [CostStructItemType = "Node"];
+      }
+
+      connections {
+         node  CostStructureItem(CostStructureTopNodeArray);
+      }
+   }
+
+   node CostStructureItem for CostStructureItem {
+      label = "${NameValue} - ${Description}";
+      orderby = NameValue;
+
+      navigate {
+         page  CostStructureItem {
+            filter(NameValue, NameValue);
+            filter(Company, Company);
+            filter(CostStructureId, CostStructureId);
+         }
+      }
+
+      iconset {
+         icon "account-type" {
+            expression = [CostStructItemType = "Node"];
+         }
+         icon "document";
+         emphasis Complementary2 = [CostStructItemType = "Node"];
+         emphasis Complementary3 = [CostStructItemType = "CostElement"];
+      }
+
+      connections {
+         node CostStructureItem(CostStructureItemArray);
+      }
+
+      onmove {
+         when CostStructureItem command MoveItemsCommand;
+      }
+
+   }
+}
+---------------------------------- PLUGINS ----------------------------------
+
+------------------------------- IMAGE VIEWERS -------------------------------

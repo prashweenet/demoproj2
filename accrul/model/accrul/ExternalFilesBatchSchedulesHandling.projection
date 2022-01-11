@@ -1,0 +1,69 @@
+projection ExternalFilesBatchSchedulesHandling;
+component ACCRUL;
+layer Core;
+description "External Files Batch Schedules";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtFileBatchJobsSet for ExtFileBatchJobs;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query ExtFileBatchJobs {
+   from = "ext_file_batch_jobs";
+   lu = ExtFileBatchParam;
+   keys = ScheduleId;
+   ludependencies = ExtFileBatchParam;
+
+   attribute ScheduleId Number {
+      label = "Job ID";
+   }
+   attribute FileType Text;
+   attribute FileTemplate Text;
+   attribute ExecutionPlan Text;
+   attribute StartDate Timestamp;
+   attribute StopDate Timestamp;
+   attribute Username Text {
+      label = "User Name";
+   }
+   attribute ModifiedDate Timestamp;
+   attribute NextExecutionDate Timestamp;
+   attribute Status Text;
+   attribute Executions Number;
+   attribute ScheduleMethodId Number {
+      label = "Schedule Method ID";
+   }
+   attribute Value Number;
+   attribute ScheduleName Text;
+   attribute ParamString Text;
+
+   action DoRemoveBatchSchedule {
+      ludependencies = ExtFileBatchParam;
+   }
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

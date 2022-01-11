@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>AccYearClBal</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>N</DB_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>NoClosingBalance</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>P</DB_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>Preliminary</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>FB</DB_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>FinalBalanceTransferred</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>FV</DB_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>FinalVoucherCreated</NAME>
+      </VALUE>
+   </VALUES>
+</ENUMERATION>

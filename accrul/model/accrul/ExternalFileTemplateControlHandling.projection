@@ -1,0 +1,84 @@
+projection ExternalFileTemplateControlHandling;
+component ACCRUL;
+layer Core;
+description "External File Template Control";
+category Users;
+
+include fragment ExtFileTemplateDetailDestSelector;
+include fragment ExtFileTemplateDetailRecSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtFileTemplateDirSet for ExtFileTemplateDir;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileTemplateDir {
+   crud = Read;
+   -- Note: Where clause was added to support solution sets. Inactive component data should not be shown.
+   where = "exists (select 1
+                     from ext_file_template, ext_file_type
+                     where ext_file_template.file_template_id = ext_file_template_dir.file_template_id
+                     and ext_file_template.file_type = ext_file_type.file_type)";
+
+   supportwarnings = [true];
+
+   reference ExtFileTemplateRef(FileTemplateId) to ExtFileTemplate(FileTemplateId) {
+      label = "File Template";
+      prefetch FileType as FileType;
+   }
+   reference ExtFileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+
+   array ExtFileTemplateControlArray(FileTemplateId, FileDirection) to ExtFileTemplateControl(FileTemplateId, FileDirection);
+}
+
+
+@Override
+entity ExtFileTemplateControl {
+   reference RecordTypeIdRef(FileType, FileTemplateId, RecordTypeId) to ExtFileTemplateDetailRec(FileType, FileTemplateId, RecordTypeId) {
+      label = "Record Type ID";
+   }
+   reference DestinationColumnRef(FileType, RecordTypeId, FileTemplateId, DestinationColumn) to ExtFileTemplateDetailDest(FileType, RecordTypeId, FileTemplateId, DestinationColumn) {
+      label = "Destination Column";
+   }
+}
+
+
+@Override
+entity ExtFileTemplate {
+   crud = Read;
+   -- Note: Where clause was added to support solution sets. Inactive component data should not be shown.
+   where = "exists (select 1
+                    from ext_file_type
+                    where ext_file_type.file_type = ext_file_template.file_type)";
+
+   attribute SystemDefined Boolean("TRUE", "FALSE");
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

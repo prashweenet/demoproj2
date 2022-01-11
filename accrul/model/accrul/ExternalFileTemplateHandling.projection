@@ -1,0 +1,290 @@
+projection ExternalFileTemplateHandling;
+component ACCRUL;
+layer Core;
+description "External File Template Handling";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtFileTemplateSet for ExtFileTemplate;
+entityset ExtFileTemplDetFuncVirtualSet for ExtFileTemplDetFuncVirtual;
+entityset OutExtFileTemplateDirSet for OutExtFileTemplateDir;
+entityset ImportStyleSheetVirtualSet for ImportStyleSheetVirtual;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileTemplate {
+   -- Note: Where clause was added to support solution sets. Inactive component data should not be shown.
+   where = "exists (select 1
+                    from ext_file_type
+                    where ext_file_type.file_type = ext_file_template.file_type)";
+
+   attribute FileTemplateId Text {
+      label = "File Template";
+   }
+   attribute FileType Text {
+      editable = [ETag = null];
+   }
+   attribute SystemDefined Boolean("TRUE", "FALSE") {
+      editable = [false];
+      updatable = [false];
+   }
+   attribute ValidDefinition Boolean("TRUE", "FALSE") {
+      editable = [false];
+      updatable = [false];
+   }
+   attribute ActiveDefinition Boolean("TRUE", "FALSE");
+   attribute Separated Boolean("TRUE", "FALSE");
+
+   reference FileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+   reference SeparatorIdRef(SeparatorId) to ExtFileSeparator(SeparatorId) {
+      label = "Separator ID";
+   }
+
+   array InputDirSet(FileTemplateId) to InExtFileTemplateDir(FileTemplateId);
+   array OutPutDirSet(FileTemplateId) to OutExtFileTemplateDir(FileTemplateId);
+   array Details(FileTemplateId) to ExtFileTemplateDetail(FileTemplateId);
+
+
+   action CheckValidDefinition Text {
+      parameter  SystemDefined Boolean;
+      ludependencies = ExtFileTemplate;
+   }
+}
+
+@Override
+entity InExtFileTemplateDir {
+   attribute LogInvalidLines Boolean("TRUE", "FALSE") {
+      label = "Log Invalid";
+      required = [true];
+   }
+   attribute LogSkippedLines Boolean("TRUE", "FALSE") {
+      label = "Log Skipped";
+      required = [true];
+   }
+   attribute AbortImmediatly Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute SkipAllBlanks Boolean("TRUE", "FALSE") {
+      label = "Skip All";
+      required = [true];
+   }
+   attribute SkipInitialBlanks Boolean("TRUE", "FALSE") {
+      label = "Skip Intial";
+      required = [true];
+   }
+   attribute RemoveComplete Boolean("TRUE", "FALSE") {
+      label = "Remove Completely";
+      required = [true];
+   }
+   attribute AllowRecordSetRepeat Boolean("TRUE", "FALSE") {
+      label = "Allow Record Set";
+      required = [true];
+   }
+   attribute AllowOneRecordSetOnly Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute CharacterSet Text {
+      format = uppercase;
+   }
+   attribute LoadFileTypeList Text {
+      label = "Load File Type";
+   }
+   attribute BackupFilePath Text {
+      label = "Backup File Path Client";
+   }
+   attribute ApiToCall Text {
+      editable = [false];
+      updatable = [false];
+   }
+
+   reference FilePathServerRef(FilePathServer) to OracleDirectoryQuery(DirectoryName) {
+      label = "Input File Directory";
+   }
+   reference BackupFilePathServerRef(BackupFilePathServer) to OracleDirectoryQuery(DirectoryName) {
+      label = "Backup File Directory";
+   }
+}
+
+@Override
+entity OutExtFileTemplateDir {
+   attribute OverwriteFile Boolean("TRUE", "FALSE") {
+      label = "Overwrite Server File";
+      required = [true];
+   }
+   attribute CreateHeader Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute RemoveEndSeparator Boolean("TRUE", "FALSE") {
+      label = "Remove Ending Separator";
+      required = [true];
+   }
+   attribute CreateXmlFile Boolean("TRUE", "FALSE") {
+      label = "Create XML";
+      required = [true];
+   }
+   attribute RemoveComplete Boolean("TRUE", "FALSE") {
+      required = [true];
+      label = "Remove Completely";
+
+   }
+   attribute CharacterSet Text {
+      format = uppercase;
+   }
+   attribute MimeType Text {
+      fetch = "'application/xslt+xml'";
+   }
+   attribute XmlStyleSheet Stream {
+      fileinfo {
+         filename XmlStyleSheetName;
+         mimetype MimeType;
+      }
+   }
+   attribute XmlStyleSheetName Text {
+      label = "Style Sheet Name";
+   }
+
+   reference FilePathServerRef(FilePathServer) to OracleDirectoryQuery(DirectoryName) {
+      label = "Output File Directory";
+   }
+   attribute ApiToCall Text {
+      label = "API to Call";
+      editable = [false];
+      updatable = [false];
+   }
+
+   action UpdateFileName {
+      parameter XmlStyleSheetName Text;
+      ludependencies = OutExtFileTemplateDir;
+   }
+
+   action RemoveStyleSheet {
+      ludependencies = OutExtFileTemplateDir;
+   }
+
+}
+
+@Override
+entity ExtFileTemplateDetail {
+   ludependencies = ExtFileTemplDetFunc;
+
+   attribute RowNo Number {
+      required = [false];
+   }
+   attribute DetailFunctions Text {
+      fetch = "Ext_File_Template_Detail_API.Display_Detail_Function(file_template_id, row_no)";
+      editable = [false];
+   }
+   attribute ControlColumn Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute HideColumn Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute OrderByColumnNo Number {
+      fetch = "NVL(column_no, NVL(start_position, 99999))";
+   }
+   attribute OrderByColumnSort Number {
+      fetch = "NVL(column_sort, 99999)";
+   }
+
+   reference ExtFileTypeRecColumnRef(FileType, RecordTypeId, ColumnId) to ExtFileTypeRecColumn(FileType, RecordTypeId, ColumnId);
+   reference RecordTypeIdRef(FileType, RecordTypeId) to ExtFileTypeRec(FileType, RecordTypeId) {
+      label = "Record Type ID";
+   }
+}
+
+@Override
+entity ExtFileTemplDetFunc {
+   reference MainFunctionRef(MainFunction) to ExtFileFunction(FunctionId) {
+      label = "Main Function";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query OracleDirectoryQuery {
+   from = "oracle_directories";
+   keys = DirectoryName;
+
+   attribute DirectoryName Text;
+   attribute DirectoryPath Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetDestinationColumn Text {
+   parameter FileType Text;
+   parameter RecordTypeId Text;
+   parameter ColumnId Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure UploadXMLStructure {
+   attribute FileName Text;
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+virtual ExtFileTemplDetFuncVirtual {
+   crud = Create, Read;
+
+   attribute FileType Text;
+   attribute RecordTypeId Text;
+   attribute ColumnId Text;
+   attribute FileTemplateId Text;
+   attribute RowNo Number;
+
+   reference FileTemplateRef(FileTemplateId) to ExtFileTemplate(FileTemplateId) {
+      label = "File Template";
+   }
+   reference ExtFileTypeRecColumnRef(FileType, RecordTypeId, ColumnId) to ExtFileTypeRecColumn(FileType, RecordTypeId, ColumnId) {
+      label = "Column";
+   }
+
+   array ExtFileTemplDetFuncArray(FileTemplateId, RowNo) to ExtFileTemplDetFunc(FileTemplateId, RowNo);
+}
+
+virtual ImportStyleSheetVirtual {
+   attribute FileName Text {
+      label = "File Name";
+      maxlength = 2000;
+   }
+   attribute FileTemplateId Text {
+      label = "File Template ID";
+      maxlength = 30;
+   }
+   attribute FileDirection Enumeration(FileDirection) {
+      label = "File Direction";
+   }
+   attribute MimeType Text {
+      fetch = "'application/xslt+xml'";
+   }
+   attribute XmlStyleSheetName Text {
+      label = "Style Sheet Name";
+   }
+   attribute XmlStyleSheet Stream {
+      fileinfo {
+         filename XmlStyleSheetName;
+         mimetype MimeType;
+      }
+   }
+
+   action ImportFile {
+      ludependencies = OutExtFileTemplateDir;
+   }
+}
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+

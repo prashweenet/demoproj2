@@ -1,0 +1,125 @@
+projection CombinationRulesHandling;
+component ACCRUL;
+layer Core;
+description "Combination Rule Handling";
+category Users;
+
+include fragment CopyToCompaniesAssistant;
+include fragment CodeStringAllBasic;
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountingCodestrCombSet for AccountingCodestrComb {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountingCodestrComb {
+   from = "accounting_codestr_comb_uiv";
+
+   attribute PostingCombinationId Number {
+      editable = [true];
+      updatable = [true];
+   }
+   attribute CombRuleId Number {
+      label = "Combination Rule ID";
+      editable = [false];
+   }
+   attribute Account Text {
+      editable = [true];
+      insertable = [true];
+      updatable = [true];
+   }
+   attribute CodeB Text {
+      editable = [true];
+      insertable = [true];
+      updatable = [true];
+   }
+   attribute CodeC Text {
+      editable = [true];
+      insertable = [true];
+      updatable = [true];
+   }
+   attribute CodeD Text {
+      editable = [true];
+      insertable = [true];
+      updatable = [true];
+   }
+   attribute CodeE Text {
+      editable = [true];
+      insertable = [true];
+      updatable = [true];
+   }
+   attribute CodeF Text {
+      editable = [true];
+      insertable = [true];
+      updatable = [true];
+   }
+   attribute CodeG Text {
+      editable = [true];
+      insertable = [true];
+      updatable = [true];
+   }
+   attribute CodeH Text {
+      editable = [true];
+      insertable = [true];
+      updatable = [true];
+   }
+   attribute CodeI Text {
+      editable = [true];
+      insertable = [true];
+      updatable = [true];
+   }
+   attribute CodeJ Text {
+      editable = [true];
+      insertable = [true];
+      updatable = [true];
+   }
+   attribute CodePart Text {
+      maxlength = 20;
+   }
+   attribute ProcessCode Text;
+
+   reference UserGroupRef(Company, UserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "User Group";
+   }
+   reference AccountRef(Company, Account) to Account(Company, Account);
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+   reference ProcessCodeRef(Company, ProcessCode) to AccountProcessCode(Company, ProcessCode) {
+      label = "Process Code";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

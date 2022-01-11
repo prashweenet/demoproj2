@@ -1,0 +1,169 @@
+projection ApproveVouchersHandling;
+component ACCRUL;
+layer Core;
+description "Approve Vouchers";
+category Users;
+
+include fragment AccountingYearSelector;
+include fragment FinNotesDialog;
+include fragment InstantUpdateAssistant;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherApprovalSet for VoucherApproval {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query VoucherApproval {
+   from = "voucher_approval";
+   lu = Voucher;
+   keys = Company, VoucherNo, AccountingYear, VoucherType;
+   ludependencies = FinNotesVirtual, Voucher;
+
+   attribute Company Text;
+
+   attribute VoucherType Text;
+   attribute VoucherDate Date;
+   attribute VoucherNo Number;
+   attribute Objstate Enumeration(VoucherState) {
+      label = "Voucher Status";
+   }
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute AccountingPeriod Number {
+      label = "Period";
+   }
+   attribute DateReg Date {
+      label = "Entry Date";
+   }
+   attribute EnteredByUserGroup Text {
+      format = uppercase;
+   }
+   attribute Userid Text {
+      label = "Entered By";
+   }
+   attribute SumDebitAmount Number {
+      label = "Debit Amount in Acc Curr";
+      format = ifscurrency;
+   }
+   attribute SumCreditAmount Number {
+      label = "Credit Amount in Acc Curr";
+      format = ifscurrency;
+   }
+   attribute AmountInAccCurr Number {
+      fetch = "NVL(sum_debit_amount, 0) -  NVL(sum_credit_amount,0)";
+      label = "Amount in Acc Curr";
+      editable = [false];
+      format = ifscurrency;
+   }
+   attribute SumThirdCurrDebitAmount Number {
+      label = "Debit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute SumThirdCurrCreditAmount Number {
+      label = "Credit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute AmountInEU Number {
+      fetch = "NVL(sum_third_curr_debit_amount, 0) -  NVL(sum_third_curr_credit_amount,0)";
+      label = "Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute VoucherText2 Text {
+      label = "Voucher Text";
+   }
+   attribute Notes Boolean("TRUE", "FALSE") {
+      fetch = "Voucher_Note_API.Check_Note_Exist(company,accounting_year,voucher_type,voucher_no)";
+      label = "Notes";
+   }
+   attribute InterimVoucher Boolean("Y", "N");
+   attribute MultiCompanyVoucher Boolean("TRUE", "FALSE") {
+      fetch = "Voucher_API.Is_Multi_Company_Voucher(company,voucher_type, accounting_year,voucher_no)";
+      label = "Multi-Company Voucher";
+   }
+   attribute UserGroup Text;
+
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+   reference AccountingYearRef(Company, AccountingYear) to AccountingYear(Company, AccountingYear) {
+      label = "Year";
+   }
+   reference AccountingPeriodRef(Company, AccountingYear, AccountingPeriod) to AccountingPeriod(Company, AccountingYear, AccountingPeriod) {
+      label = "Period";
+   }
+   reference EnteredByUserGroupRef(Company, EnteredByUserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "Entered By User Group";
+   }
+   reference UseridRef(Company, Userid) to UserFinance(Company, Userid) {
+      label = "Entered By";
+   }
+   reference UserGroupRef(Company, AccountingYear, AccountingPeriod, UserGroup) to UserGroupPeriod(Company, AccountingYear, AccountingPeriod, UserGroup) {
+      label = "User Group";
+   }
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+--Added security annotaion to Voucher_API.Approve_Voucher__.
+action VouchApproval {
+   initialcheck implementation;
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter VoucherType Text;
+   parameter VoucherNo Number;
+   parameter UserGroup Text;
+
+   ludependencies = VoucherApproval;
+}
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetDefaultVals Structure(VouInfoStructure) {
+   parameter Company Text;
+}
+
+function UserGroupWhere List<Entity(UserGroupMemberFinance)> {
+   parameter Userid Text;
+   where = "userid = Fnd_Session_API.Get_Fnd_User";
+}
+
+function IsGenledActive Boolean;
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure VouInfoStructure {
+   attribute Company Text;
+   attribute UserId Text {
+      label = "User ID for Approval";
+      editable = [false];
+   }
+   attribute UserGroup Text;
+   attribute Description Text;
+   attribute VoucherDate Date {
+      label = "Date for Approval";
+      editable = [false];
+   }
+
+   reference UserGroupMemberFinanceRef(Company, UserId, UserGroup) to UserGroupMemberFinance(Company, Userid, UserGroup) {
+      label = "User Group for Approval";
+   }
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

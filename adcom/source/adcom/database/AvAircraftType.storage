@@ -1,0 +1,20 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvAircraftType
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date        Sign    History
+--  ------      ------  ---------------------------------------------------------
+--  200618      SURBLK  LMM2020R1-78, Created.
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+SEQUENCE AIRCRAFT_TYPE_SEQ IS MAXVALUE 999999999999999 INCREMENT BY 1 START WITH 1 NOCACHE;

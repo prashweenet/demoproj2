@@ -1,0 +1,236 @@
+client PostingControl;
+component ACCRUL;
+layer Core;
+projection PostingControlHandling;
+include fragment CtrlTypeAllowedValueSelector;
+include fragment AccountingCodePartValueLovSelector;
+include fragment AccountingCodePartsUsedSelector;
+include fragment CopyDetailsSetup;
+include fragment CopyToCompaniesAssistant;
+include fragment PostingControlDefValueLovExtended;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry PostControlNavEntry parent AccrulNavigator.PostingRulesMenu at index 200 {
+      label = "Posting Control";
+      page List home PostingCtrl;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page PcList using PostingCtrlSet {
+   label = "Posting Control Navigator - Posting Control";
+   list PostControlList;
+}
+
+page List using PostingCtrlSet {
+   label = "Posting Control";
+   list PostControlList;
+   defaultsearchfields = PostingTypeRef, CodeNameRef, ControlType;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command DetailsCommand for PostingCtrl {
+   icon = "popup";
+   style = IconOnly;
+   enabled = [CtrlTypeCategory != "FixedValue" and CtrlTypeCategory != "PrePosting"];
+   execute {
+      if [CtrlTypeCategory = "Combination"] {
+         navigate  "/page/PostingControlCombinationDetails/Form?$filter=Company eq $[Company] and PostingType eq $[PostingType] and CodePart eq $[CodePart] and Module eq $[Module] and PcValidFrom eq $[PcValidFrom] and ControlType eq $[ControlType]";
+      }
+      else {
+         navigate  "/page/PostingControlDetails/Form?$filter=Company eq $[Company] and PostingType eq $[PostingType] and CodePart eq $[CodePart] and Module eq $[Module] and PcValidFrom eq $[PcValidFrom] and ControlType eq $[ControlType]";
+      }
+   }
+}
+
+command CopyDetailsSetupCommand for PostingCtrl {
+   label = "Copy Details Set-up";
+   enabled = [true];
+   variable CompanyStr;
+   variable ReplaceStr;
+   execute {
+      set CompanyStr = "${context.Company}";
+      assistant CopyDetailsSetupAssistant(CompanyStr, PostingType, PostingTypeDesc, CodeName, ControlType, ConstrolTypeDesc, CodePart, Module, PcValidFrom, "PostingControl") {
+         when CANCEL {
+            refresh;
+         }
+         when OK {
+            refresh;
+         }
+      }
+   }
+}
+
+command CopyToCompaniesCommand for PostingCtrl {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PostingCtrl", "MANUAL", Selection, "Posting_Ctrl_API") {
+         when OK {
+            exit;
+
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand for PostingCtrl {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "PostingCtrl") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PostingCtrl", "AUTOMATIC", SelectionVar, "Posting_Ctrl_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ReferencePostingCtrlPostingTypeSelector for PostingCtrlPostingType {
+   orderby = Module, SortOrder;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+----------------------------------- LISTS -----------------------------------
+list PostControlList for PostingCtrl {
+   orderby = PostModule, SortOrder, CodePart, PcValidFrom;
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+
+   lov PostingTypeRef with ReferencePostingCtrlPostingTypeSelector {
+      search = PostingType, Description;
+      description = PostingTypeRef.Description;
+      size = Large;
+   }
+   lov CodeNameRef with ReferenceAccountingCodePartsUsedSelector {
+      search = CodeName, Description;
+      size = Medium;
+      hidekey = [true];
+      editable = [ETag = null];
+      description = CodeNameRef.Description;
+      validate command {
+         variable CodePartVar {
+            type = Text;
+         }
+         execute {
+            call GetCodePart(Company, CodeName) into CodePartVar;
+            set CodePart = CodePartVar;
+         }
+      }
+   }
+   field ControlType {
+      label = "Control Type";
+      size = Medium;
+      editable = [ETag = null];
+      lovswitch {
+         when [CodePart = null] {
+            lov PostingCtrlControlTypeRef with ReferencePostingCtrlControlTypeSelector;
+         }
+         when [true] {
+            lov CtrlTypeAllowedValueRef with ReferenceCtrlTypeAllowedValueSelector {
+               size = Large;
+               description = ControlTypeDesc;
+            }
+         }
+      }
+      validate command {
+         variable CtrlTypeAllowedValueStructVar {
+            type = Structue(CtrlTypeAllowedValueStructure);
+         }
+         execute {
+            if [ControlType = null] {
+               set Module = null;
+               set CtrlTypeCategory = null;
+            }
+            else {
+               call GetCtrlTypeAllowedValue(Company, CodePart, PostingType, ControlType, CtrlTypeCategory) into CtrlTypeAllowedValueStructVar;
+
+               set Module = CtrlTypeAllowedValueStructVar.Module;
+               set CtrlTypeCategory = CtrlTypeAllowedValueStructVar.CtrlTypeCategory;
+
+               if [Module = null] {
+                  warning("Entered Control Type does not exist or is not allowed.");
+               }
+               if [CtrlTypeCategory = "FixedValue" or CtrlTypeCategory = "PrePosting"] {
+                  set  DefaultValueNoCt = null;
+               }
+               if [CtrlTypeCategory = "PrePosting"] {
+                  set  DefaultValue = null;
+               }
+            }
+         }
+      }
+   }
+
+   fieldset PostingControlDefValueLovExtendedFieldSet;
+
+   field Override {
+      size = Small;
+   }
+   field PcValidFrom;
+   field PostingTypeRef.Module {
+      size = Small;
+   }
+
+//   commandgroup CommandGroupCmdGroup {
+//      label = "Command Group";
+   command DetailsCommand;
+   command CopyDetailsSetupCommand;
+   command CopyToCompaniesCommand;
+//   }
+}
+
+@Override
+list PostingCtrlPostingTypeLovList for PostingCtrlPostingType {
+   orderby = Module, SortOrder;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+---------------------------------- DIALOGS ----------------------------------
+
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+
+----------------------------------- TREES -----------------------------------
+
+---------------------------------- PLUGINS ----------------------------------
+
+------------------------------- IMAGE VIEWERS -------------------------------

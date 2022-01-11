@@ -1,0 +1,42 @@
+fragment AccYearPeriodRevRecForSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view acc_year_period_rev_rec_for";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccYearPeriodRevRecForSelector for AccYearPeriodRevRecFor {
+   static YearPeriod;
+   static Description;
+}
+
+card AccYearPeriodRevRecForCard for AccYearPeriodRevRecFor {
+   label = "";
+   fieldranking YearPeriod;
+   field YearPeriod;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccYearPeriodRevRecFor {
+   from = "acc_year_period_rev_rec_for";
+   lu = AccountingPeriod;
+   keys = Company, YearPeriod;
+   ludependencies = AccountingPeriod;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute YearPeriod Text {
+      label = "Period";
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

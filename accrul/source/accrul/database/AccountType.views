@@ -1,0 +1,33 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountType
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Acc_Type_Mc_Lov IS
+   acct_type.Flags = 'KMI-L'
+   acct_type.Datatype = 'STRING(20)'
+   acct_type.Prompt = 'Account Type'
+SELECT DISTINCT 
+   user_defined_account_type  acct_type,
+   Account_Type_Value_API.Decode(logical_account_type) logical_account_type,
+   logical_account_type                                logical_account_type_db,
+   substr(nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'AccountType',
+          user_defined_account_type), description), 1, 100) description
+FROM account_type_tab a;

@@ -1,0 +1,238 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingPeriod
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  151118  chiblk   STRFI-607 replace the enumeration Acc_Per_Status_ with Acc_Year_Per_Status.
+--  190304  Nudilk   Bug 147257, modified view Acc_Period_For_User_Group.
+--  110418  jadulk   Added the new view, Acc_Period_For_User_Group_Multi_Company.
+--  200701  Jadulk  FISPRING20-6694 , Removed conacc related logic.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Budget_Year IS
+   Flags      = 'KMI-L'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Accounting Year';
+
+COLUMN Year_Period IS
+   Flags      = 'KM--L'
+   Datatype   = 'STRING(7)'
+   Prompt     = 'Year Period';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@Override
+VIEW Accounting_Period IS
+ORDER BY accounting_year ;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Accounting_Year_Full_Lov IS
+   Prompt = 'Accounting Period'
+   Company.Flags = 'P----'
+   Description.Flags = 'A---L'
+   Description.Datatype = 'STRING(35)'
+   Period_Status.Flags = 'A---L'
+   Period_Status.Datatype  = 'STRING(100)'   
+   Accounting_Period.Flags = 'A---L'
+   Accounting_Year.Flags = 'K---L'
+SELECT a.company                                company,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company,'ACCRUL', 'AccountingPeriod', accounting_year||'^'||accounting_period),a.description)
+                                                description,
+       Acc_Period_Ledger_Info_API.Get_Period_Status(company, accounting_year, accounting_period, '00')
+                                                period_status,       
+       accounting_period                        accounting_period,
+       accounting_year                          accounting_year,
+       rowkey                                  objkey
+FROM   accounting_period_tab a;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Accounting_Period_Lov IS
+   Prompt = 'Accounting Period'
+   Company.Flags = 'P----'
+   Accounting_Year.Flags = 'P---L'
+   Description.Flags = 'A---L'
+   Description.Datatype = 'STRING(35)'
+   Period_Status.Flags = 'A---L'
+   Period_Status.Datatype  = 'STRING(100)'
+   Accounting_Period.Flags = 'K---L'
+SELECT a.company                                company,
+       accounting_year                          accounting_year,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company,'ACCRUL', 'AccountingPeriod', accounting_year||'^'||accounting_period),a.description)
+                                                description,
+       Acc_Period_Ledger_Info_API.Get_Period_Status(company, accounting_year, accounting_period,'00')
+                                                period_status,       
+       accounting_period                        accounting_period,
+       rowkey           objkey
+FROM   accounting_period_tab a;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Accounting_Year_Lov IS
+   Prompt = 'Accounting Period'
+   Company.Flags = 'P----'
+   Accounting_Period.Flags = 'P---L'
+   Description.Flags = 'A---L'
+   Description.Datatype = 'STRING(35)'
+   Period_Status.Flags = 'A---L'
+   Period_Status.Datatype  = 'STRING(100)'
+   Accounting_Year.Flags = 'K---L'
+SELECT a.company                                company,
+       accounting_period                        accounting_period,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company,'ACCRUL', 'AccountingPeriod', accounting_year||'^'||accounting_period),a.description)
+                                                description,
+       Acc_Period_Ledger_Info_API.Get_Period_Status(company, accounting_year, accounting_period,'00')
+                                                period_status,       
+       accounting_year                          accounting_year,
+       rowkey                                  objkey
+FROM   accounting_period_tab a;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Accounting_Period_Temp IS
+   Prompt = 'Accounting Period'
+   Company.Datatype = 'STRING(2)/UPPERCASE'
+SELECT a.company                                company,
+       accounting_year                          budget_year,
+       accounting_period                        accounting_period,
+       rowkey                                  objkey
+FROM   accounting_period_tab a;
+
+VIEW Accounting_Year IS
+   Prompt = 'Accounting Period'
+   Sort = 'ACCOUNTING_YEAR'
+SELECT company                                  company,
+       accounting_year                          accounting_year
+FROM   accounting_period_tab
+GROUP BY company, accounting_year ;
+
+VIEW Accounting_Year_Period IS
+   Prompt = 'Accounting Period'
+   Sort = 'ACCOUNTING_YEAR, ACCOUNTING_PERIOD'
+SELECT company                                  company,
+       accounting_year                          accounting_year,
+       accounting_period                        accounting_period
+FROM   accounting_period_tab
+GROUP BY company, accounting_year,accounting_period,rowkey ;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Acc_Year_Period_Pub IS
+   Prompt = 'Accounting Period'
+   Company.Flags = 'PM---'
+   Period_Status.Flags = 'A---L'
+   Period_Status.Datatype  = 'STRING(100)'
+SELECT a.company                                                                   company,
+       Accounting_Period_API.Get_Year_Period__(accounting_year, accounting_period) Year_Period,
+       Acc_Period_Ledger_Info_API.Get_Period_Status(company, accounting_year, accounting_period,'00') period_status,
+       year_end_period                                                             year_end_period_db,
+       rowkey                                                                      objkey
+FROM   accounting_period_tab a;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Acc_Year_Period_Summary_Pub IS
+   Prompt = 'Accounting Period'
+   Company.Flags = 'PM---'
+   Year_Period.Prompt = 'Period'
+   Description.Flags = 'AM--L'
+   Description.Datatype = 'STRING(35)'
+SELECT a.company                               company,
+       CONCAT(TO_CHAR(accounting_year),CONCAT('-', LPAD(TO_CHAR(accounting_period),2,0)))
+                                               year_period,
+       a.description                           description
+FROM   accounting_period_tab a;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Acc_Year_Period_Rev_Rec_For IS
+   Prompt = 'Accounting Period'
+   Company.Flags = 'PM---'
+   Year_Period.Prompt = 'Period'
+   Description.Flags = 'AM--L'
+   Description.Datatype = 'STRING(35)'
+SELECT a.company                               company,
+       CONCAT(TO_CHAR(accounting_year),CONCAT('-', LPAD(TO_CHAR(accounting_period),2,0)))
+                                               year_period,
+       a.description                           description
+FROM   accounting_period_tab a
+WHERE YEAR_END_PERIOD NOT IN ('YEAROPEN','YEARCLOSE');
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Acc_Period_Mc_Lov IS
+SELECT DISTINCT 
+   accounting_year,
+   accounting_period
+FROM accounting_period_tab a
+ORDER BY accounting_year;
+
+@SecurityCheck Company.UserAuthorized(p.company)
+VIEW Acc_Period_Ledger IS
+Prompt = 'Accounting Period Ledger'
+SELECT       
+   p.company                        company,
+   p.accounting_year                accounting_year,
+   p.accounting_period              accounting_period,
+   l.ledger_id                      ledger_id,
+   Acc_Year_Per_Status_API.Decode(l.period_status) period_status,
+   l.period_status                  period_status_db,
+   substr(nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(p.company,'ACCRUL', 'AccountingPeriod', 
+      p.accounting_year||'^'||p.accounting_period),p.description), 1, 100) description,
+   Period_Type_API.Decode(p.year_end_period) year_end_period,
+   p.year_end_period                year_end_period_db,
+   p.date_from                      date_from,
+   p.date_until                     date_until,  
+   p.attribute_one                  attribute_one,
+   p.attribute_two                  attribute_two,
+   p.attribute_three                attribute_three,
+   p.attribute_four                 attribute_four,
+   p.attribute_five                 attribute_five,
+   p.report_from_date               report_from_date,
+   p.report_until_date              report_until_date,
+   p.cal_year                       cal_year,
+   p.cal_month                      cal_month,       
+   p.rowkey                         objkey,
+   to_char(p.rowversion,'YYYYMMDDHH24MISS') objversion,
+   p.rowid                          objid
+FROM   acc_period_ledger_info_tab l, accounting_period_tab p
+WHERE l.company = p.company
+AND   l.accounting_year = p.accounting_year
+AND   l.accounting_period = p.accounting_period
+AND   EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE l.company = company)
+ORDER BY p.accounting_year ;
+
+
+@SecurityCheck Company.UserAuthorized(p.company)
+VIEW Acc_Period_For_User_Group IS
+   Prompt = 'Accounting Period'
+SELECT   company             company,
+         accounting_year     accounting_year,
+         accounting_period   accounting_period,
+         substr(nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company,'ACCRUL', 'AccountingPeriod', 
+                    accounting_year||'^'||accounting_period),description), 1, 100) description,
+         1                   objversion,
+         accounting_year||accounting_period              objid
+FROM   accounting_period_tab p
+ORDER BY accounting_year, accounting_period;
+
+
+@SecurityCheck Company.UserAuthorized(p.company)
+VIEW Acc_Period_For_User_Group_Mc IS
+   Prompt = 'Accounting Period'
+SELECT   accounting_year     accounting_year,
+         accounting_period   accounting_period,
+        (SELECT description
+         FROM accounting_period_tab a 
+         WHERE a.accounting_year = p.accounting_year 
+         AND a.accounting_period = p.accounting_period 
+         FETCH FIRST 1 rows only) description,
+         1                   objversion,
+         accounting_year||accounting_period              objid
+FROM   accounting_period_tab p
+GROUP BY accounting_year, accounting_period
+ORDER BY accounting_year, accounting_period;

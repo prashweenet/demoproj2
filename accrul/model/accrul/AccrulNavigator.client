@@ -1,0 +1,105 @@
+client AccrulNavigator;
+component ACCRUL;
+layer Core;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   //Accounting Rules (this is a navigator top node)
+   entry AccountingRulesTopNode toplevel at index 200 {
+      label = "Accounting Rules";
+   }
+   entry VoucherMenu parent AccrulNavigator.AccountingRulesTopNode at index 100 {
+      label = "Voucher";
+   }
+   entry VoucherAnalysisMenu parent AccrulNavigator.VoucherMenu at index 200 {
+      label = "Analysis";
+   }
+   entry ManualVoucherMenu parent AccrulNavigator.VoucherMenu at index 300 {
+      label = "Manual Voucher";
+   }
+   entry ApprovalWorkflowBasicDataMenu parent AccrulNavigator.VoucherMenu at index 400 {
+      label = "Voucher Approval Workflow Basic Data";
+   }
+   /*entry DistributionManufacturingVouTransferMenu parent AccrulNavigator.VoucherMenu at index 500 {
+      label = "Distribution and Manufacturing Voucher Transfer";
+   }
+   entry MaintenanceVoucherTransferMenu parent AccrulNavigator.VoucherMenu at index 600 {
+      label = "Maintenance Voucher Transfer";
+   }
+   entry ProjectCostVoucherTransferMenu parent AccrulNavigator.VoucherMenu at index 700 {
+      label = "Voucher Approval Workflow Basic Data";
+   }
+   entry MultiCompanyProjectVoucherTransferMenu parent AccrulNavigator.VoucherMenu at index 800 {
+      label = "Voucher Approval Workflow Basic Data";
+   }*/
+   entry ExternalVoucherMenu parent AccrulNavigator.VoucherMenu at index 900 {
+      label = "External Voucher";
+   }
+   entry CodeStringMenu parent AccrulNavigator.AccountingRulesTopNode at index 200 {
+      label = "Code String";
+   }
+   entry CostRevenueElementSetupMenu parent AccrulNavigator.CodeStringMenu at index 1600 {
+      label = "Cost / Revenue Element Setup";
+   }
+   entry PostingRulesMenu parent AccrulNavigator.AccountingRulesTopNode at index 300 {
+      label = "Posting Rules";
+   }
+   /*entry BusinessEventMenu parent AccrulNavigator.AccountingRulesMenu at index 400 {
+      label = "Business Event";
+   }*/
+   entry UserRelatedDataMenu parent AccrulNavigator.AccountingRulesTopNode at index 500 {
+      label = "User Related Data";
+   }
+   entry CurrencyMenu parent AccrulNavigator.AccountingRulesTopNode at index 600 {
+      label = "Currency";
+   }
+   entry TaxMenu parent AccrulNavigator.AccountingRulesTopNode at index 700 {
+      label = "Tax";
+   }
+   entry PaymentTermsMenu parent AccrulNavigator.AccountingRulesTopNode at index 800 {
+      label = "Payment Terms";
+   }
+   entry BIReportingPeriodsMenu parent AccrulNavigator.AccountingRulesTopNode at index 900 {
+      label = "Reporting Periods";
+   }
+   entry ExternalFileMenu parent AccrulNavigator.AccountingRulesTopNode at index 1000 {
+      label = "External File";
+   }
+   entry MonitorExternalFilesMenu parent AccrulNavigator.ExternalFileMenu at index 200 {
+      label = "Monitor External Files";
+   }
+   entry ExternalFileBasicDataMenu parent AccrulNavigator.ExternalFileMenu at index 300 {
+      label = "Basic Data";
+   }
+   entry AuditInterfaceMenu parent AccrulNavigator.AccountingRulesTopNode at index 1100 {
+      label = "Audit Interface";
+   }
+   entry AuditInterfaceBasicDataMenu parent AccrulNavigator.AuditInterfaceMenu at index 200 {
+      label = "Basic Data";
+   }
+   entry BasicDataMenu parent AccrulNavigator.AccountingRulesTopNode at index 1200 {
+      label = "Basic Data";
+   }
+
+   //Financials (this is navigator top node)
+   entry FinancialsTopNode toplevel at index 200 {
+      label = "Financials";
+   }
+   //The sub levels for "Financials" are found as below:
+   //General Ledger = index 100        (GenledNavigator.client)
+   //Project Accounting = index 200    (GenledNavigator.client)
+   //Internal Ledger = index 300       (IntledNavigator.client)
+   //Period Routines = index 400       (GenledNavigator.client)
+   //Report Generator = index 500      (not used)
+   //Fixed Assets = index 600          (FixassNavigator.client)
+   //Customer Invoice = index 700      (InvoicNavigator.client)
+   //Supplier Invoice = index 800      (InvoicNavigator.client)
+   //Cash Book = 900                   (PayledNavigator.client)
+   //Accounts Receivable = 1000        (PayledNavigator.client)
+   //Customer Credit Management = 1100 (PayledNavigator.client)
+   //Accounts Payable = 1200           (PayledNavigator.client)
+   //Payment Basic Data = 1300         (PayledNavigator.client)
+   //Tax Ledger = 1400                 (TaxledNavigator.client)
+   //Cash Flow Analysis = 1500         (FincfaNavigator.client)
+}
+

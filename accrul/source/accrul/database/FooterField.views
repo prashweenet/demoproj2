@@ -1,0 +1,36 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: FooterField
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+VIEW Footer_Field_Gen_Pct IS
+   Prompt = 'module'
+   Module.Flags = 'A----'
+   Module.Datatype = 'STRING(6)/UPPERCASE'
+   Module.Prompt = 'Module'   
+   
+   SELECT
+       company                        company,
+       footer_field_id                footer_field_id,
+       footer_field_desc              footer_field_desc,
+       system_defined                 system_defined_db,
+       free_text                      free_text_db,
+       footer_text                    footer_text,
+       NVL(System_Footer_Field_API.Get_Module(footer_field_id),'ACCRUL')
+                                      module
+FROM   footer_field_tab;
+   

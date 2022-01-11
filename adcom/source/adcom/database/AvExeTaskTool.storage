@@ -1,0 +1,21 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvExeTaskTool
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200723  SatGlk  LMM2020R1-445, Added seqeuence to task_tool_id.
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+SEQUENCE TASK_TOOL_ID_SEQ IS INCREMENT BY 1 START WITH 1000 NOCACHE;
+

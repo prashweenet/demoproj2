@@ -1,0 +1,202 @@
+---------------------------------------------------------------------------------
+--  Date          Sign    History
+--  ----------    ------  ---------------------------------------------------------
+--  2021-03-02    HasRlk  LMM2020R1-1746, Adding new items to the state machine.
+--  2020-07-02    TAJALK  LMM2020R1-270, Bug fixes
+--  2020-07-01    SatGlk  LMM2020R1-187, Corrected AircraftRef with AircraftLov
+--  2020-07-01    TAJALK  LMM2020R1-252, Changes
+--  2020-06-29    SatGlk  LMM2020R1-187, Key hidden in Aircraft and Airport LoVs.
+--  2020-06-29    TAJALK  LMM2020R1-208, Changes to Turn Status
+--  2020-06-25    KAWJLK  LMM2020R1-186, Arranging the order of attributes
+--  2020-06-23    TAJALK  LMM2020R1-73 - UI Changes
+--  2020-06-16    TAJALK  LMM2020R1-73 - Created
+-----------------------------------------------------------------------------------
+client Flight;
+component ADCOM;
+layer Core;
+projection FlightHandling;
+include fragment AircraftLovSelector;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry NavChangeSetTypesNavEntry parent AdcomNavigator.BasicData at index 300 {
+      label = "Flights";
+      page List home AvFlight;
+   }
+}
+-------------------------------- MAIN PAGES ---------------------------------
+page List using FlightSet {
+   label = "Flights";
+   list FlightList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AirportSelector for AvAirport {
+   label = "${IataCode} - ${AirportName}";
+   static IataCode;
+   static AirportName;
+}
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list FlightList for AvFlight {
+   field LegNo {
+      label = "Flight Name";
+   }
+   field MasterFlightNo {
+      label = "Master Flight";
+   }
+   lov AircraftRef with ReferenceAircraftLovSelector {
+      label = "Aircraft";
+      description = AircraftRef.Aircraft;
+      hidekey = [true];
+   }
+   badge Objstate {
+      style = TextOnly;
+      label = "Status";
+      size = Small;
+      emphasis StatePreliminary = [Objstate = "Planned"];
+      emphasis Neutral = [Objstate = "Cancel"];
+      emphasis StatePlanned = [Objstate = "Out"];
+      emphasis StatePosted = [Objstate = "Off"];
+      emphasis Complementary10 = [Objstate = "On"];
+      emphasis True = [Objstate = "In"];
+      emphasis True = [Objstate = "Completed"];
+   }
+   lov DepartureAirportRef with AirportSelector {
+      label = "Departure Airport";
+      description = DepartureAirportRef.IataCode;
+      hidekey = [true];
+   }
+   field DepartureGate;
+   field ShedDepartureDateTime {
+      label = "Scheduled Departure Date";
+   }
+   field ActualDepartureDateTime {
+      label = "Actual Departure Date";
+   }
+   field OffDateTime {
+      label = "Up Date";
+   }
+   lov ArrivalAirportRef with AirportSelector {
+      label = "Arrival Airport";
+      description = ArrivalAirportRef.IataCode;
+      hidekey = [true];
+   }
+   field ArrivalGate;
+   field ShedArrivalDateTime {
+      label = "Scheduled Arrival Date";
+   }
+   field ActualArrivalDateTime {
+      label = "Actual Arrival Date";
+   }
+   field OnDateTime {
+      label = "Down Date";
+   }
+   badge TurnStatus {
+      label = "Turn Status";
+      style = TextOnly;
+      emphasis True = [TurnStatus = "Released"];
+      emphasis StatePosted = [TurnStatus = "Arrived"];
+      emphasis StateStarted = [TurnStatus = "Inbound"];
+      emphasis Error = [TurnStatus = "InMaintenance"];
+      emphasis Neutral = [TurnStatus = "Departed"];
+      emphasis Progress3 = [TurnStatus = "NotApplicable"];
+   }
+   badge IsHistoric {
+      label = "Historic";
+      style = TextOnly;
+      size = Medium;
+      emphasis Info = [IsHistoric = true];
+      emphasis Neutral = [IsHistoric = false];
+   }
+
+   command Start;
+   command CancelFlight {
+      label = "Cancel";
+   }
+
+   command TakeOffAircraft {
+      label = "Off";
+   }
+   command ArrivedAtGate {
+      label = "In";
+   }
+   command LandAircraft {
+      label = "On";
+   }
+   command PlannedToOn {
+      label = "On";
+   }
+   command PlannedToOff {
+      label = "Off";
+   }
+   command PlannedToIn {
+      label = "In";
+   }
+   command PlannedToCompleted {
+      label = "Complete";
+   }
+   command OutToCanceled {
+      label = "Cancel";
+   }
+   command OutToOn {
+      label = "On";
+   }
+   command OutToIn {
+      label = "In";
+   }
+   command OutToCompleted {
+      label = "Complete";
+   }
+   command OnToCompleted {
+      label = "Complete";
+   }
+   command OnToCanceled {
+      label = "Cancel";
+   }
+   command OffToIn {
+      label = "In";
+   }
+   command OffToCompleted {
+      label = "Complete";
+   }
+   command OffToCanceled {
+      label = "Cancel";
+   }
+   command InToCanceled {
+      label = "Cancel";
+   }
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

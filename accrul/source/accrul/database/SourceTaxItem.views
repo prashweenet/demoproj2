@@ -1,0 +1,106 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: SourceTaxItem
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Source_Tax_Item_Pub IS
+SELECT a.company                                         company,       
+       Tax_Source_API.Decode(source_ref_type)            source_ref_type,
+       source_ref_type                                   source_ref_type_db,      
+       source_ref1                                       source_ref1,
+       source_ref2                                       source_ref2,
+       source_ref3                                       source_ref3,
+       source_ref4                                       source_ref4,
+       source_ref5                                       source_ref5,       
+       tax_item_id                                       tax_item_id,
+       tax_code                                          tax_code,
+       SUBSTR(NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company, 'ACCRUL', 'StatutoryFee',
+       tax_code), description), 1, 100)                  description,
+       tax_percentage                                    tax_percentage,
+       Fee_Type_API.Decode(fee_type)                     tax_type,
+       fee_type                                          tax_type_db,
+       valid_from                                        valid_from,
+       valid_until                                       valid_until,
+       Vat_Method_API.Decode(vat_received)               tax_received,
+       vat_received                                      tax_received_db,
+       Vat_Method_API.Decode(vat_disbursed)              tax_disbursed,
+       vat_disbursed                                     tax_disbursed_db,
+       deductible                                        deductible,
+       tax_amt_limit                                     tax_amt_limit,
+       Tax_Reporting_Category_API.Decode(tax_reporting_category) tax_reporting_category,
+       tax_reporting_category                            tax_reporting_category_db,
+       tax_curr_amount                                   tax_curr_amount,
+       tax_dom_amount                                    tax_dom_amount,
+       tax_parallel_amount                               tax_parallel_amount,
+       NVL(non_ded_tax_curr_amount, 0)                   non_ded_tax_curr_amount,
+       NVL(non_ded_tax_dom_amount, 0)                    non_ded_tax_dom_amount,
+       NVL(non_ded_tax_parallel_amount, 0)               non_ded_tax_parallel_amount,
+       NVL(non_ded_tax_curr_amount, 0) + tax_curr_amount total_tax_curr_amount,
+       NVL(non_ded_tax_dom_amount, 0) + tax_dom_amount   total_tax_dom_amount,                                                      
+       tax_base_curr_amount                              tax_base_curr_amount,
+       tax_base_dom_amount                               tax_base_dom_amount,
+       tax_base_parallel_amount                          tax_base_parallel_amount,
+       tax_limit_curr_amount                             tax_limit_curr_amount,
+       tax_calc_structure_id                             tax_calc_structure_id,
+       tax_calc_structure_item_id                        tax_calc_structure_item_id,
+       Fnd_Boolean_API.Decode(transferred)               transferred,
+       transferred                                       transferred_db,
+       -- gelr:gross_revenue_accounting, begin
+       Fnd_Boolean_API.Decode(tax_in_tax_base)           tax_in_tax_base,
+       tax_in_tax_base                                   tax_in_tax_base_db,
+       -- gelr:gross_revenue_accounting, end
+       a.ROWID                                           objid,
+       rowtype                                           objtype,
+       LTRIM(LPAD(TO_CHAR(a.rowversion), 2000))          objversion,
+       a.rowkey                                          objkey
+FROM   source_tax_item_tab a, statutory_fee_tab s
+WHERE  s.company   = a.company
+AND    fee_code    = a.tax_code;
+
+@ServerOnlyAccess
+@SecurityCheck Company.UserAuthorized(company)
+VIEW Source_Tax_Item_Base_Pub IS
+SELECT company                                           company,
+       source_ref_type                                   source_ref_type_db,
+       source_ref1                                       source_ref1,
+       source_ref2                                       source_ref2,
+       source_ref3                                       source_ref3,
+       source_ref4                                       source_ref4,
+       source_ref5                                       source_ref5,
+       tax_item_id                                       tax_item_id,
+       tax_code                                          tax_code,
+       tax_percentage                                    tax_percentage,
+       tax_curr_amount                                   tax_curr_amount,
+       tax_dom_amount                                    tax_dom_amount,
+       tax_parallel_amount                               tax_parallel_amount,
+       NVL(non_ded_tax_curr_amount, 0)                   non_ded_tax_curr_amount,
+       NVL(non_ded_tax_dom_amount, 0)                    non_ded_tax_dom_amount,
+       NVL(non_ded_tax_parallel_amount, 0)               non_ded_tax_parallel_amount,
+       NVL(non_ded_tax_curr_amount, 0) + tax_curr_amount total_tax_curr_amount,
+       NVL(non_ded_tax_dom_amount, 0) + tax_dom_amount   total_tax_dom_amount,
+       tax_base_curr_amount                              tax_base_curr_amount,
+       tax_base_dom_amount                               tax_base_dom_amount,
+       tax_base_parallel_amount                          tax_base_parallel_amount,
+       tax_limit_curr_amount                             tax_limit_curr_amount,
+       tax_calc_structure_id                             tax_calc_structure_id,
+       tax_calc_structure_item_id                        tax_calc_structure_item_id,
+       transferred                                       transferred_db,
+       ROWID                                             objid,
+       rowtype                                           objtype,
+       LTRIM(LPAD(TO_CHAR(rowversion), 2000))            objversion,
+       rowkey                                            objkey
+FROM   source_tax_item_tab;
+       
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

@@ -1,0 +1,20 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CodeS
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+@Overtake Base
+PRIMARY KEY accounting_code_part_value_pk IS accounting_code_part_value_tab (company, code_part, code_part_value);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

@@ -1,0 +1,154 @@
+client DefineCodeString;
+component ACCRUL;
+layer Core;
+projection DefineCodeStringHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry DefineCodeStringNavEntry parent AccrulNavigator.PostingRulesMenu at index 600 {
+      label = "Define Code String";
+      page List home AccountingCodeParts;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List {
+   label = "Define Code String";
+   list AccountingCodePartsList using AccountingCodePartsSet;
+   list AdditionalCodePartsList using AdditionalCodePartsSet;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command SetasBaseforProjectCostRevCommand for AccountingCodeParts {
+   label = "Set as Base for Project Cost/Revenue Element";
+   enabled = [BaseForPfe != true];
+
+   variable StrBaseCodePart;
+   execute {
+      call GetBaseCodePart(Company) into StrBaseCodePart;
+      if [StrBaseCodePart = "A"] {
+         confirm("Before removing the existing project cost/revenue element connections, it is recommended to use the Copy Cost/Revenue Elements to Secondary Mapping function in the Secondary Project Cost/Revenue Element window to ensure accuracy of existing project cost/revenue. Do you want to continue?") {
+            when CANCEL {
+               exit;
+            }
+         }
+      }
+      call DoSetBaseForCostRevenueElement();
+   }
+}
+
+command TranslationCommand for AccountingCodeParts {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'AccountingCodeParts' and AttributeKey eq $[CodePart]";
+   }
+}
+
+command TranslationCommand for AdditionalCodeParts {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'AccountingCodeParts' and AttributeKey eq $[CodePart]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountingCodePartsList for AccountingCodeParts {
+   label = "Code Parts";
+   orderby = CodePart;
+   field CodePart {
+      size = Small;
+   }
+   field CodeName {
+      size = Small;
+   }
+   field CodePartUsedDb {
+      size = Small;
+      editable = [CodePart != "A"];
+   }
+   field CodePartFunction {
+      size = Small;
+   }
+   field LogicalCodePart;
+   field MaxNumberOfChar {
+      searchable = false;
+   }
+   field Description {
+      size = Large;
+      searchable = false;
+   }
+   field BaseForPfe {
+      size = Small;
+   }
+   command SetasBaseforProjectCostRevCommand;
+   command TranslationCommand;
+}
+
+list AdditionalCodePartsList for AdditionalCodeParts {
+   label = "Additional Code Parts";
+   field CodePart {
+      size = Small;
+   }
+   field CodeName {
+      size = Small;
+   }
+   field CodePartUsedDb {
+      size = Small;
+      editable = [not((CompanyRef.MasterCompany = false) and(CodePart = "K" or CodePart = "L" or CodePart = "M"))];
+   }
+   field CodePartFunction;
+   field MaxNumberOfChar;
+   field Description {
+      size = Large;
+   }
+   field CodePartMappingExists {
+      size = Small;
+      editable = [CompanyRef.MasterCompany = true];
+   }
+   field SystemDefined {
+      size = Small;
+   }
+   command TranslationCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

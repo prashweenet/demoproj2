@@ -1,0 +1,27 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtFileLoad
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@Override
+VIEW Ext_File_Load IS
+   Prompt = 'Ext File Load'
+WHERE  user_id = (SELECT fnd_user FROM fnd_session)
+OR     Fnd_Session_API.Get_App_Owner = (SELECT fnd_user FROM fnd_session)
+OR    (file_direction = '1');
+

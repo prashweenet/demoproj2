@@ -1,0 +1,59 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvFaultSource
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200810  TAJALK  LMM2020R1-663 - Created
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should return correct attr depending on existance of the record" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @Mock
+   FUNCTION Check_Exist___ (
+      logbook_type_code_ IN     VARCHAR2 ) RETURN BOOLEAN
+   IS
+   BEGIN
+      IF logbook_type_code_ = 'PILOT' THEN
+         RETURN TRUE;
+      ELSE
+         RETURN FALSE;
+      END IF;
+   END Check_Exist___;
+IS
+   --Insert your test variables here
+   expected1_  VARCHAR2(2000);
+   output1_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'FAULT_SOURCE_CODE'||chr(31)||'PILOT'||chr(30)||'FAULT_SOURCE_DESC'||chr(31)||'Pilot'|
+      | 'FAULT_SOURCE_CODE'||chr(31)||'CABIN'||chr(30)||'FAULT_SOURCE_DESC'||chr(31)||'Cabin Crew'|
+   LOOP
+      --Insert your test code here
+      output1_    := attr_;
+      expected1_  := 'FAULT_SOURCE_DESC'||chr(31)||'Pilot';
+
+      Pre_Sync_Action(attr_);
+      --Insert your assertions here
+      IF attr_ LIKE '%Pilot%' THEN
+         ASSERT attr_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||attr_;
+      ELSE
+         ASSERT attr_ = output1_ MESSAGE 'Expected '||output1_||' but  was '||attr_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+
+

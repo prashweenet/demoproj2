@@ -1,0 +1,261 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 200207      HiraLK  GESPRING20-3577, Added Diot_Tax_Classification functionality.
+-- 200611      Kagalk  GESPRING20-4693, Added it_xml_invoice functionality.
+-- 200729      Kabelk  GESPRING20-5230, Added Round_Tax_Customs_Documents functionality.
+----------------------------------------------------------------------------------------------------
+
+client TaxCodes;
+component ACCRUL;
+layer Core;
+projection TaxCodesHandling;
+
+--------------------------------- FRAGMENTS ---------------------------------
+include fragment CopyToCompaniesAssistant;
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+warningsenabled = StatutoryFee;
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TaxCodesNavEntry parent AccrulNavigator.TaxMenu at index 100 {
+      label = "Tax Codes";
+      page List home StatutoryFee;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using TaxCodeSet {
+   label = "Tax Codes";
+   initcontext PageInitContext;
+   list TaxCodeList;
+}
+
+initcontext PageInitContext {
+   parameter EsSiiReportingEnabled Boolean;
+   parameter ExtendTaxCodeAndTaxStructEnabled Boolean;
+   parameter MxXmlDocReportingEnabled Boolean;
+   parameter DiotReportDataEnabled Boolean;
+   parameter ItXmlInvoiceEnabled Boolean;
+   parameter TaxCharOnInvoiceEnabled Boolean;
+   parameter RoundTaxCustomsDocumentsEnabled Boolean;
+   parameter ItTaxReportsEnabled Boolean;
+   init command {
+      execute {
+         -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set EsSiiReportingEnabled = LocalizationFunctionalityStructure.EsSiiReporting;
+         set ExtendTaxCodeAndTaxStructEnabled = LocalizationFunctionalityStructure.ExtendTaxCodeAndTaxStruct;
+         set MxXmlDocReportingEnabled = LocalizationFunctionalityStructure.MxXmlDocReporting;
+         set DiotReportDataEnabled = LocalizationFunctionalityStructure.DiotReportData;
+         set ItXmlInvoiceEnabled = LocalizationFunctionalityStructure.ItXmlInvoice;
+         set TaxCharOnInvoiceEnabled = LocalizationFunctionalityStructure.TaxCharOnInvoice;
+         set RoundTaxCustomsDocumentsEnabled = LocalizationFunctionalityStructure.RoundTaxCustomsDocuments;
+         set ItTaxReportsEnabled = LocalizationFunctionalityStructure.ItTaxReports;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command TaxTextsPerTaxCodeCommand {
+   label = "Tax Texts per Tax Code";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/TaxCodeTexts/List?$contexts=Company:$[Company]&$filter=FeeCode eq $[FeeCode]";
+   }
+}
+
+command TaxWithholdingCommand {
+   label = "Tax Withholding";
+   mode = SelectedRecords;
+   enabled = [FeeType = "TaxWithhold"];
+   bulkexecute {
+      bulknavigate "page/TaxWithholding/List?$contexts=Company:$[Company]&$filter=FeeCode eq $[FeeCode]";
+   }
+}
+
+command CopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "StatutoryFee", "MANUAL", Selection, "Statutory_Fee_API") {
+         when OK {
+            exit;
+
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "StatutoryFee") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "StatutoryFee", "AUTOMATIC", SelectionVar, "Statutory_Fee_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+command TranslationCommand {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'StatutoryFee' and AttributeKey eq $[FeeCode]";
+   }
+}
+
+-- gelr:es_sii_reporting, begin
+command SiiTaxInfoCommand {
+   label = "SII Details";
+   mode = SelectedRecords;
+   enabled = [initcontext.EsSiiReportingEnabled];
+   bulkexecute {
+      bulknavigate "page/SiiTaxInformation/List?$contexts=Company:$[Company]&$filter=FeeCode eq $[FeeCode]";
+   }
+}
+-- gelr:es_sii_reporting, end
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list TaxCodeList for StatutoryFee {
+   orderby = FeeType, FeeCode;
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+
+   field FeeCode {
+      size = Small;
+   }
+   field Description;
+   field FeeType;
+   field FeeRate {
+      size = Small;
+   }
+   field Deductible;
+   field ValidFrom;
+   field ValidUntil;
+   field VatReceived;
+   field VatDisbursed;
+   field TaxAmountAtInvPrint;
+   field TaxAmtLimit {
+      preserveprecision = [true];
+      validate command {
+         execute {
+            call RoundAccCurrencyAmount(Company, TaxAmtLimit) into TaxAmtLimit;
+         }
+      }
+   }
+   field TaxReportingCategory;
+   -- gelr:extend_tax_code_and_tax_struct, begin
+   field TaxTypeCategory {
+      columnexclude = [not((initcontext.ExtendTaxCodeAndTaxStructEnabled)or(initcontext.MxXmlDocReportingEnabled))];
+      when [initcontext.ExtendTaxCodeAndTaxStructEnabled] use subset BrTaxTypeCtgry;
+      -- gelr:mx_xml_doc_reporting, begin
+      when [initcontext.MxXmlDocReportingEnabled] use subset MxTaxTypeCtgry;
+      -- gelr:mx_xml_doc_reporting, end
+   }
+   field TaxInTaxBase {
+      columnexclude = [not initcontext.ExtendTaxCodeAndTaxStructEnabled];
+   }
+   -- gelr:extend_tax_code_and_tax_struct, end
+   -- gelr:mx_xml_doc_reporting, begin
+   field TaxFactor {
+      columnexclude = [not initcontext.MxXmlDocReportingEnabled];
+      when [initcontext.MxXmlDocReportingEnabled] use subset MxTaxFactor;
+   }
+   -- gelr:mx_xml_doc_reporting, end
+   -- gelr:diot_report_data, begin
+   field DiotTaxClassification {
+      columnexclude = [not initcontext.DiotReportDataEnabled];
+   }
+   -- gelr:diot_report_data, end
+   -- gelr:it_xml_invoice, begin
+   field StampDuty {
+      columnexclude = [not initcontext.ItXmlInvoiceEnabled];
+   }
+   -- gelr:it_xml_invoice, end
+   -- gelr:tax_char_on_invoice, begin
+   field TaxCharacter {
+      columnexclude = [not initcontext.TaxCharOnInvoiceEnabled];
+   }
+   -- gelr:tax_char_on_invoice, end
+   -- gelr:round_tax_customs_documents, begin
+   field RoundZeroDecimal {
+      columnexclude = [not initcontext.RoundTaxCustomsDocumentsEnabled];
+   }
+   -- gelr:round_tax_customs_documents, end
+   -- gelr:it_tax_reports, begin
+   field EuOperation {
+      columnexclude = [not initcontext.ItTaxReportsEnabled];
+   }
+   -- gelr:it_tax_reports, end
+   commandgroup TaxCmdGroup {
+      command TaxTextsPerTaxCodeCommand;
+      command TaxWithholdingCommand;
+      -- gelr:es_sii_reporting, begin
+      command SiiTaxInfoCommand;
+      -- gelr:es_sii_reporting, end
+   }
+   command CopyToCompaniesCommand;
+   command TranslationCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+

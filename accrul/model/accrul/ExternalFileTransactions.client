@@ -1,0 +1,1678 @@
+client ExternalFileTransactions;
+component ACCRUL;
+layer Core;
+projection ExternalFileTransactionsHandling;
+
+include fragment ExtFileTemplateLov2Selector;
+include fragment ExtFileTypeUsableTransSelector;
+include fragment ExternalFileParametersAssistant;
+
+warningsenabled = StartApiToCall;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+navigator {
+   entry ExternalFileTransactionsNavEntry parent AccrulNavigator.MonitorExternalFilesMenu at index 200 {
+      label = "External File Transactions";
+      page Form;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+page Form using ExtFileLoadSet {
+   label = "External File Transactions";
+   stateindicator ExtFileLoadStateIndicator;
+   currentdatafilter {
+      description = "Files loaded during last 12 months";
+   }
+   selector ExtFileLoadSelector;
+   group ExternalFileTransactionsGroup;
+   list ExtFileTransList(ExtFileTransArray) {
+      preselect = [false];
+   }
+   list ExtFileTransColumnList(ExtFileTransColumnArray) bind ExtFileTransList {
+      display = Nested;
+   }
+
+   command ExternalFileAssistantCommand;
+   command ExternalVoucherAssistantCommand;
+   command ExternalCustomerInvoiceAssistantCommand;
+   command ExternalSupplierInvoiceAssistantCommand;
+   command DirectDebitingMandateFileAssistantCommand;
+   command ExternalAdjustmentJournalAssistantCommand;
+   command ExternalBalanceTransferAssistantCommand;
+   command ExternalCurrencyUpdateCommand;
+   command LoadParametersCommand;
+   command ExternalFileLogCommand;
+
+   commandgroup InputFileCommandsCmdGroup {
+      commandgroup InputFileCmdGroup {
+         label = "Input File";
+         command InputFileUnpackExternalInputFileCommand;
+         command InputFileCallInputPackageMethodCommand;
+      }
+   }
+
+   command ExternalFileTemplateCommand;
+   command RemoveTransactionsCommand;
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+command ExternalFileAssistantCommand for ExtFileLoad {
+   label = "External File Assistant";
+   enabled = [not FileType in("ExtCustInv", "ExtSuppInv", "ExtVoucher", "MandateToPi", "ExtAdjJournal", "ExtCurrency")];
+   execute {
+      navigate "assistant/ExternalFileAssistant/Assistant?$action=ExtFileAssistantSetup{
+                FileTypeStr:$[FileType],
+                SetIdStr:$[SetId],
+                FileTemplateStr:$[FileTemplateId],
+                FileDirectionStr:$[FileDirection],
+                FileDirectionDbStr:$[FileDirectionDb]}";
+   }
+}
+
+command ExternalVoucherAssistantCommand for ExtFileLoad {
+   label = "External Voucher Assistant";
+   enabled = [FileType = "ExtVoucher"];
+   execute {
+      navigate "assistant/ExternalVoucherAssistant/Assistant?$action=ExtVoucherAssistantSetup{
+                FileTypeStr:$[FileType],
+                SetIdStr:$[SetId],
+                FileTemplateStr:$[FileTemplateId],
+                FileDirectionStr:$[FileDirection],
+                FileDirectionDbStr:$[FileDirectionDb]}";
+   }
+}
+
+command ExternalCustomerInvoiceAssistantCommand for ExtFileLoad {
+   label = "External Customer Invoice Assistant";
+   enabled = [FileType = "ExtCustInv"];
+   execute {
+      navigate "assistant/ExternalCustomerInvoiceAssistant/Assistant?$action=ExtCustomerInvoiceAssistantSetup{
+                FileTypeStr:$[FileType],
+                SetIdStr:$[SetId],
+                FileTemplateStr:$[FileTemplateId],
+                FileDirectionStr:$[FileDirection],
+                FileDirectionDbStr:$[FileDirectionDb]}";
+   }
+}
+
+command ExternalSupplierInvoiceAssistantCommand for ExtFileLoad {
+   label = "External Supplier Invoice Assistant";
+   enabled = [FileType = "ExtSuppInv"];
+   execute {
+      navigate "assistant/ExternalSupplierInvoiceAssistant/Assistant?$action=ExtSupplierInvoiceAssistantSetup{
+                FileTypeStr:$[FileType],
+                SetIdStr:$[SetId],
+                FileTemplateStr:$[FileTemplateId],
+                FileDirectionStr:$[FileDirection],
+                FileDirectionDbStr:$[FileDirectionDb]}";
+   }
+}
+
+command DirectDebitingMandateFileAssistantCommand for ExtFileLoad {
+   label = "Direct Debiting Mandate File Creation Assistant";
+   enabled = [FileType = "MandateToPi"];
+   execute {
+      navigate "assistant/DirectDebitingMandateFileCreationAssistant/Assistant?$action=ExtFileAssistantSetup{
+                FileTypeStr:$[FileType],
+                SetIdStr:$[SetId],
+                FileTemplateStr:$[FileTemplateId],
+                FileDirectionStr:$[FileDirection],
+                FileDirectionDbStr:$[FileDirectionDb]}";
+   }
+}
+
+command ExternalAdjustmentJournalAssistantCommand for ExtFileLoad {
+   label = "External Adjustment Journal Assistant";
+   enabled = [FileType = "ExtAdjJournal"];
+   execute {
+      navigate "assistant/ExternalAdjustmentJournalAssistant/Assistant?$action=ExtFileAssistantSetup{
+                FileTypeStr:$[FileType],
+                SetIdStr:$[SetId],
+                FileTemplateStr:$[FileTemplateId],
+                FileDirectionStr:$[FileDirection],
+                FileDirectionDbStr:$[FileDirectionDb]}";
+   }
+}
+
+command ExternalBalanceTransferAssistantCommand for ExtFileLoad {
+   label = "External Balance Transfer Assistant";
+   enabled = [FileType = "ExtAdjJournal"];
+   execute {
+      navigate "assistant/ExternalBalanceTransferAssistant/Assistant?$action=ExtFileAssistantSetup{
+                FileTypeStr:$[FileType],
+                SetIdStr:$[SetId],
+                FileTemplateStr:$[FileTemplateId],
+                FileDirectionStr:$[FileDirection],
+                FileDirectionDbStr:$[FileDirectionDb]}";
+   }
+}
+
+command ExternalCurrencyUpdateCommand for ExtFileLoad {
+   label = "Currency Update Assistant";
+   enabled = [FileType = "ExtCurrency"];
+   execute {
+      navigate "assistant/CurrencyUpdateAssistant/Assistant?$action=ExtFileAssistantSetup{
+                FileTypeStr:$[FileType],
+                SetIdStr:$[SetId],
+                FileTemplateStr:$[FileTemplateId],
+                FileDirectionStr:$[FileDirection],
+                FileDirectionDbStr:$[FileDirectionDb]}";
+   }
+}
+
+command LoadParametersCommand for ExtFileLoad {
+   label = "External File Parameters";
+   enabled = [ParameterString != null];
+   execute {
+      assistant ExternalFileParamAssistant(LoadFileId, SetId) {
+         when OK {
+            exit OK;
+         }
+      }
+   }
+}
+
+command ExternalFileLogCommand for ExtFileLoad {
+   label = "External File Log";
+   enabled = [true];
+   execute {
+      navigate "page/ExternalFileLog/Form?$filter=LoadFileId eq $[LoadFileId]";
+   }
+}
+
+command InputFileUnpackExternalInputFileCommand for ExtFileLoad {
+   label = "Unpack External Input File";
+   enabled = [FileDirectionDb = "1" and State != "Transferred" and ExtTransLineFound = "TRUE"];
+   execute {
+      call UnpackExtLine(FileType, FileTemplateId, Company);
+   }
+}
+
+command InputFileCallInputPackageMethodCommand for ExtFileLoad {
+   label = "Call Input Package Method";
+   enabled = [FileDirectionDb = "1" and State != "Transferred" and ExtTransLineFound = "TRUE" and ApiToCall > ""];
+   execute {
+      call StartApiToCall();
+   }
+}
+
+command ExternalFileTemplateCommand for ExtFileLoad {
+   label = "External File Template";
+   enabled = [FileTemplateId != null];
+   execute {
+      navigate "page/ExternalFileTemplate/Form?$filter=FileTemplateId eq $[FileTemplateId]";
+   }
+}
+
+command RemoveTransactionsCommand for ExtFileLoad {
+   label = "Remove Transactions";
+   enabled = [State != "Transferred" and State != "FileCreated" and State != "Removed"];
+   execute {
+      confirm("Do you wish to Remove Transactions?") {
+         when OK {
+            call RemoveFileTrans();
+            success("Transactions are removed successfully");
+         }
+      }
+   }
+}
+
+--------------------------------- SELECTORS ---------------------------------
+
+@Override
+selector ExtFileLoadSelector for ExtFileLoad {
+   orderby = LoadFileId desc;
+   label = "${LoadFileId} - ${LoadDate} - ${FileTemplateId}";
+   static LoadFileId;
+   static LoadDate;
+   static FileTemplateId;
+   badge State {
+      style = TextOnly;
+      showlabel = false;
+      emphasis Progress2 = [State = "Empty"];
+      emphasis Progress3 = [State = "Loaded"];
+      emphasis Progress6 = [State = "Unpacked"];
+      emphasis Progress11 = [State = "Transferred"];
+      emphasis StateError = [State = "Aborted"];
+      emphasis Progress6 = [State = "Packed"];
+      emphasis Progress11 = [State = "FileCreated"];
+      emphasis Progress11 = [State = "Removed"];
+      emphasis StateError = [State = "TransferError"];
+      emphasis Progress9 = [State = "PartlyTransferred"];
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+group ExternalFileTransactionsGroup for ExtFileLoad {
+   label = "";
+
+   field LoadFileId;
+   field LoadDate {
+      editable = [not State in("Transferred", "FileCreated")];
+   }
+   field UserId {
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   lov FileTypeRef with ReferenceExtFileTypeUsableSelector {
+      search = FileType, Description;
+      editable = [false];
+      description = ExtFileTypeRef.Description;
+   }
+   lov ExtTypeParamSetRef with ReferenceExtTypeParamSetSelector using ExtTypeParamSetVouTypes(FileType) {
+      search = SetId, Description;
+      editable = [false];
+      description = ExtTypeParamSetRef.Description;
+   }
+   lov FileTemplateRef with ReferenceExtFileTemplateLov2Selector {
+      search = FileTemplateId, Description;
+      editable = [false];
+      description = ExtFileTemplateRef.Description;
+   }
+   field FileDirection;
+   field FileName {
+      editable = [false];
+   }
+}
+
+----------------------------------- LISTS -----------------------------------
+
+list ExtFileTransList for ExtFileTrans {
+   label = "External File Transaction Rows";
+
+   crudactions {
+      edit {
+         enabled = [not parent.State in("Transferred", "FileCreated")];
+      }
+   }
+
+   field RowNo;
+   field FileLine {
+      size = Large;
+   }
+   badge RowState {
+      style = TextOnly;
+      emphasis Progress2 = [RowState = "Loaded"];
+      emphasis Progress6 = [RowState = "Unpacked"];
+      emphasis Progress11 = [RowState = "Transferred"];
+      emphasis StateError = [RowState = "UnpackError"];
+      emphasis StateError = [RowState = "TransferError"];
+      emphasis StateBlocked = [RowState = "UnpackSkipped"];
+      emphasis Progress6 = [RowState = "Packed"];
+      emphasis StateError = [RowState = "PackError"];
+      emphasis StateBlocked = [RowState = "PackSkipped"];
+      emphasis StateBlocked = [RowState = "TransferSkipped"];
+
+   }
+   field RecordSetNo;
+   field RecordTypeId;
+   field ErrorText {
+      multiline = true;
+   }
+   field ControlId {
+      size = Small;
+   }
+}
+
+list ExtFileTransColumnList for ExtFileTransColumn {
+   label = "External File Transaction Row Details";
+   field RecordTypeId;
+   field C0 {
+      label = "${parent.C0}";
+      columnexclude = [parent.C0 = null];
+   }
+   field C1 {
+      label = "${parent.C1}";
+      columnexclude = [parent.C1 = null];
+   }
+   field C2 {
+      label = "${parent.C2}";
+      columnexclude = [parent.C2 = null];
+   }
+   field C3 {
+      label = "${parent.C3}";
+      columnexclude = [parent.C3 = null];
+   }
+   field C4 {
+      label = "${parent.C4}";
+      columnexclude = [parent.C4 = null];
+   }
+   field C5 {
+      label = "${parent.C5}";
+      columnexclude = [parent.C5 = null];
+   }
+   field C6 {
+      label = "${parent.C6}";
+      columnexclude = [parent.C6 = null];
+   }
+   field C7 {
+      label = "${parent.C7}";
+      columnexclude = [parent.C7 = null];
+   }
+   field C8 {
+      label = "${parent.C8}";
+      columnexclude = [parent.C8 = null];
+   }
+   field C9 {
+      label = "${parent.C9}";
+      columnexclude = [parent.C9 = null];
+   }
+   field C10 {
+      label = "${parent.C10}";
+      columnexclude = [parent.C10 = null];
+   }
+   field C11 {
+      label = "${parent.C11}";
+      columnexclude = [parent.C11 = null];
+   }
+   field C12 {
+      label = "${parent.C12}";
+      columnexclude = [parent.C12 = null];
+   }
+   field C13 {
+      label = "${parent.C13}";
+      columnexclude = [parent.C13 = null];
+   }
+   field C14 {
+      label = "${parent.C14}";
+      columnexclude = [parent.C14 = null];
+   }
+   field C15 {
+      label = "${parent.C15}";
+      columnexclude = [parent.C15 = null];
+   }
+   field C16 {
+      label = "${parent.C16}";
+      columnexclude = [parent.C16 = null];
+   }
+   field C17 {
+      label = "${parent.C17}";
+      columnexclude = [parent.C17 = null];
+   }
+   field C18 {
+      label = "${parent.C18}";
+      columnexclude = [parent.C18 = null];
+   }
+   field C19 {
+      label = "${parent.C19}";
+      columnexclude = [parent.C19 = null];
+   }
+   field C20 {
+      label = "${parent.C20}";
+      columnexclude = [parent.C20 = null];
+   }
+   field C21 {
+      label = "${parent.C21}";
+      columnexclude = [parent.C21 = null];
+   }
+   field C22 {
+      label = "${parent.C22}";
+      columnexclude = [parent.C22 = null];
+   }
+   field C23 {
+      label = "${parent.C23}";
+      columnexclude = [parent.C23 = null];
+   }
+   field C24 {
+      label = "${parent.C24}";
+      columnexclude = [parent.C24 = null];
+   }
+   field C25 {
+      label = "${parent.C25}";
+      columnexclude = [parent.C25 = null];
+   }
+   field C26 {
+      label = "${parent.C26}";
+      columnexclude = [parent.C26 = null];
+   }
+   field C27 {
+      label = "${parent.C27}";
+      columnexclude = [parent.C27 = null];
+   }
+   field C28 {
+      label = "${parent.C28}";
+      columnexclude = [parent.C28 = null];
+   }
+   field C29 {
+      label = "${parent.C29}";
+      columnexclude = [parent.C29 = null];
+   }
+   field C30 {
+      label = "${parent.C30}";
+      columnexclude = [parent.C30 = null];
+   }
+   field C31 {
+      label = "${parent.C31}";
+      columnexclude = [parent.C31 = null];
+   }
+   field C32 {
+      label = "${parent.C32}";
+      columnexclude = [parent.C32 = null];
+   }
+   field C33 {
+      label = "${parent.C33}";
+      columnexclude = [parent.C33 = null];
+   }
+   field C34 {
+      label = "${parent.C34}";
+      columnexclude = [parent.C34 = null];
+   }
+   field C35 {
+      label = "${parent.C35}";
+      columnexclude = [parent.C35 = null];
+   }
+   field C36 {
+      label = "${parent.C36}";
+      columnexclude = [parent.C36 = null];
+   }
+   field C37 {
+      label = "${parent.C37}";
+      columnexclude = [parent.C37 = null];
+   }
+   field C38 {
+      label = "${parent.C38}";
+      columnexclude = [parent.C38 = null];
+   }
+   field C39 {
+      label = "${parent.C39}";
+      columnexclude = [parent.C39 = null];
+   }
+   field C40 {
+      label = "${parent.C40}";
+      columnexclude = [parent.C40 = null];
+   }
+   field C41 {
+      label = "${parent.C41}";
+      columnexclude = [parent.C41 = null];
+   }
+   field C42 {
+      label = "${parent.C42}";
+      columnexclude = [parent.C42 = null];
+   }
+   field C43 {
+      label = "${parent.C43}";
+      columnexclude = [parent.C43 = null];
+   }
+   field C44 {
+      label = "${parent.C44}";
+      columnexclude = [parent.C44 = null];
+   }
+   field C45 {
+      label = "${parent.C45}";
+      columnexclude = [parent.C45 = null];
+   }
+   field C46 {
+      label = "${parent.C46}";
+      columnexclude = [parent.C46 = null];
+   }
+   field C47 {
+      label = "${parent.C47}";
+      columnexclude = [parent.C47 = null];
+   }
+   field C48 {
+      label = "${parent.C48}";
+      columnexclude = [parent.C48 = null];
+   }
+   field C49 {
+      label = "${parent.C49}";
+      columnexclude = [parent.C49 = null];
+   }
+   field C50 {
+      label = "${parent.C50}";
+      columnexclude = [parent.C50 = null];
+   }
+   field C51 {
+      label = "${parent.C51}";
+      columnexclude = [parent.C51 = null];
+   }
+   field C52 {
+      label = "${parent.C52}";
+      columnexclude = [parent.C52 = null];
+   }
+   field C53 {
+      label = "${parent.C53}";
+      columnexclude = [parent.C53 = null];
+   }
+   field C54 {
+      label = "${parent.C54}";
+      columnexclude = [parent.C54 = null];
+   }
+   field C55 {
+      label = "${parent.C55}";
+      columnexclude = [parent.C55 = null];
+   }
+   field C56 {
+      label = "${parent.C56}";
+      columnexclude = [parent.C56 = null];
+   }
+   field C57 {
+      label = "${parent.C57}";
+      columnexclude = [parent.C57 = null];
+   }
+   field C58 {
+      label = "${parent.C58}";
+      columnexclude = [parent.C58 = null];
+   }
+   field C59 {
+      label = "${parent.C59}";
+      columnexclude = [parent.C59 = null];
+   }
+   field C60 {
+      label = "${parent.C60}";
+      columnexclude = [parent.C60 = null];
+   }
+   field C61 {
+      label = "${parent.C61}";
+      columnexclude = [parent.C61 = null];
+   }
+   field C62 {
+      label = "${parent.C62}";
+      columnexclude = [parent.C62 = null];
+   }
+   field C63 {
+      label = "${parent.C63}";
+      columnexclude = [parent.C63 = null];
+   }
+   field C64 {
+      label = "${parent.C64}";
+      columnexclude = [parent.C64 = null];
+   }
+   field C65 {
+      label = "${parent.C65}";
+      columnexclude = [parent.C65 = null];
+   }
+   field C66 {
+      label = "${parent.C66}";
+      columnexclude = [parent.C66 = null];
+   }
+   field C67 {
+      label = "${parent.C67}";
+      columnexclude = [parent.C67 = null];
+   }
+   field C68 {
+      label = "${parent.C68}";
+      columnexclude = [parent.C68 = null];
+   }
+   field C69 {
+      label = "${parent.C69}";
+      columnexclude = [parent.C69 = null];
+   }
+   field C70 {
+      label = "${parent.C70}";
+      columnexclude = [parent.C70 = null];
+   }
+   field C71 {
+      label = "${parent.C71}";
+      columnexclude = [parent.C71 = null];
+   }
+   field C72 {
+      label = "${parent.C72}";
+      columnexclude = [parent.C72 = null];
+   }
+   field C73 {
+      label = "${parent.C73}";
+      columnexclude = [parent.C73 = null];
+   }
+   field C74 {
+      label = "${parent.C74}";
+      columnexclude = [parent.C74 = null];
+   }
+   field C75 {
+      label = "${parent.C75}";
+      columnexclude = [parent.C75 = null];
+   }
+   field C76 {
+      label = "${parent.C76}";
+      columnexclude = [parent.C76 = null];
+   }
+   field C77 {
+      label = "${parent.C77}";
+      columnexclude = [parent.C77 = null];
+   }
+   field C78 {
+      label = "${parent.C78}";
+      columnexclude = [parent.C78 = null];
+   }
+   field C79 {
+      label = "${parent.C79}";
+      columnexclude = [parent.C79 = null];
+   }
+   field C80 {
+      label = "${parent.C80}";
+      columnexclude = [parent.C80 = null];
+   }
+   field C81 {
+      label = "${parent.C81}";
+      columnexclude = [parent.C81 = null];
+   }
+   field C82 {
+      label = "${parent.C82}";
+      columnexclude = [parent.C82 = null];
+   }
+   field C83 {
+      label = "${parent.C83}";
+      columnexclude = [parent.C83 = null];
+   }
+   field C84 {
+      label = "${parent.C84}";
+      columnexclude = [parent.C84 = null];
+   }
+   field C85 {
+      label = "${parent.C85}";
+      columnexclude = [parent.C85 = null];
+   }
+   field C86 {
+      label = "${parent.C86}";
+      columnexclude = [parent.C86 = null];
+   }
+   field C87 {
+      label = "${parent.C87}";
+      columnexclude = [parent.C87 = null];
+   }
+   field C88 {
+      label = "${parent.C88}";
+      columnexclude = [parent.C88 = null];
+   }
+   field C89 {
+      label = "${parent.C89}";
+      columnexclude = [parent.C89 = null];
+   }
+   field C90 {
+      label = "${parent.C90}";
+      columnexclude = [parent.C90 = null];
+   }
+   field C91 {
+      label = "${parent.C91}";
+      columnexclude = [parent.C91 = null];
+   }
+   field C92 {
+      label = "${parent.C92}";
+      columnexclude = [parent.C92 = null];
+   }
+   field C93 {
+      label = "${parent.C93}";
+      columnexclude = [parent.C93 = null];
+   }
+   field C94 {
+      label = "${parent.C94}";
+      columnexclude = [parent.C94 = null];
+   }
+   field C95 {
+      label = "${parent.C95}";
+      columnexclude = [parent.C95 = null];
+   }
+   field C96 {
+      label = "${parent.C96}";
+      columnexclude = [parent.C96 = null];
+   }
+   field C97 {
+      label = "${parent.C97}";
+      columnexclude = [parent.C97 = null];
+   }
+   field C98 {
+      label = "${parent.C98}";
+      columnexclude = [parent.C98 = null];
+   }
+   field C99 {
+      label = "${parent.C99}";
+      columnexclude = [parent.C99 = null];
+   }
+   field C100 {
+      label = "${parent.C100}";
+      columnexclude = [parent.C100 = null];
+   }
+   field C101 {
+      label = "${parent.C101}";
+      columnexclude = [parent.C101 = null];
+   }
+   field C102 {
+      label = "${parent.C102}";
+      columnexclude = [parent.C102 = null];
+   }
+   field C103 {
+      label = "${parent.C103}";
+      columnexclude = [parent.C103 = null];
+   }
+   field C104 {
+      label = "${parent.C104}";
+      columnexclude = [parent.C104 = null];
+   }
+   field C105 {
+      label = "${parent.C105}";
+      columnexclude = [parent.C105 = null];
+   }
+   field C106 {
+      label = "${parent.C106}";
+      columnexclude = [parent.C106 = null];
+   }
+   field C107 {
+      label = "${parent.C107}";
+      columnexclude = [parent.C107 = null];
+   }
+   field C108 {
+      label = "${parent.C108}";
+      columnexclude = [parent.C108 = null];
+   }
+   field C109 {
+      label = "${parent.C109}";
+      columnexclude = [parent.C109 = null];
+   }
+   field C110 {
+      label = "${parent.C110}";
+      columnexclude = [parent.C110 = null];
+   }
+   field C111 {
+      label = "${parent.C111}";
+      columnexclude = [parent.C111 = null];
+   }
+   field C112 {
+      label = "${parent.C112}";
+      columnexclude = [parent.C112 = null];
+   }
+   field C113 {
+      label = "${parent.C113}";
+      columnexclude = [parent.C113 = null];
+   }
+   field C114 {
+      label = "${parent.C114}";
+      columnexclude = [parent.C114 = null];
+   }
+   field C115 {
+      label = "${parent.C115}";
+      columnexclude = [parent.C115 = null];
+   }
+   field C116 {
+      label = "${parent.C116}";
+      columnexclude = [parent.C116 = null];
+   }
+   field C117 {
+      label = "${parent.C117}";
+      columnexclude = [parent.C117 = null];
+   }
+   field C118 {
+      label = "${parent.C118}";
+      columnexclude = [parent.C118 = null];
+   }
+   field C119 {
+      label = "${parent.C119}";
+      columnexclude = [parent.C119 = null];
+   }
+   field C120 {
+      label = "${parent.C120}";
+      columnexclude = [parent.C120 = null];
+   }
+   field C121 {
+      label = "${parent.C121}";
+      columnexclude = [parent.C121 = null];
+   }
+   field C122 {
+      label = "${parent.C122}";
+      columnexclude = [parent.C122 = null];
+   }
+   field C123 {
+      label = "${parent.C123}";
+      columnexclude = [parent.C123 = null];
+   }
+   field C124 {
+      label = "${parent.C124}";
+      columnexclude = [parent.C124 = null];
+   }
+   field C125 {
+      label = "${parent.C125}";
+      columnexclude = [parent.C125 = null];
+   }
+   field C126 {
+      label = "${parent.C126}";
+      columnexclude = [parent.C126 = null];
+   }
+   field C127 {
+      label = "${parent.C127}";
+      columnexclude = [parent.C127 = null];
+   }
+   field C128 {
+      label = "${parent.C128}";
+      columnexclude = [parent.C128 = null];
+   }
+   field C129 {
+      label = "${parent.C129}";
+      columnexclude = [parent.C129 = null];
+   }
+   field C130 {
+      label = "${parent.C130}";
+      columnexclude = [parent.C130 = null];
+   }
+   field C131 {
+      label = "${parent.C131}";
+      columnexclude = [parent.C131 = null];
+   }
+   field C132 {
+      label = "${parent.C132}";
+      columnexclude = [parent.C132 = null];
+   }
+   field C133 {
+      label = "${parent.C133}";
+      columnexclude = [parent.C133 = null];
+   }
+   field C134 {
+      label = "${parent.C134}";
+      columnexclude = [parent.C134 = null];
+   }
+   field C135 {
+      label = "${parent.C135}";
+      columnexclude = [parent.C135 = null];
+   }
+   field C136 {
+      label = "${parent.C136}";
+      columnexclude = [parent.C136 = null];
+   }
+   field C137 {
+      label = "${parent.C137}";
+      columnexclude = [parent.C137 = null];
+   }
+   field C138 {
+      label = "${parent.C138}";
+      columnexclude = [parent.C138 = null];
+   }
+   field C139 {
+      label = "${parent.C139}";
+      columnexclude = [parent.C139 = null];
+   }
+   field C140 {
+      label = "${parent.C140}";
+      columnexclude = [parent.C140 = null];
+   }
+   field C141 {
+      label = "${parent.C141}";
+      columnexclude = [parent.C141 = null];
+   }
+   field C142 {
+      label = "${parent.C142}";
+      columnexclude = [parent.C142 = null];
+   }
+   field C143 {
+      label = "${parent.C143}";
+      columnexclude = [parent.C143 = null];
+   }
+   field C144 {
+      label = "${parent.C144}";
+      columnexclude = [parent.C144 = null];
+   }
+   field C145 {
+      label = "${parent.C145}";
+      columnexclude = [parent.C145 = null];
+   }
+   field C146 {
+      label = "${parent.C146}";
+      columnexclude = [parent.C146 = null];
+   }
+   field C147 {
+      label = "${parent.C147}";
+      columnexclude = [parent.C147 = null];
+   }
+   field C148 {
+      label = "${parent.C148}";
+      columnexclude = [parent.C148 = null];
+   }
+   field C149 {
+      label = "${parent.C149}";
+      columnexclude = [parent.C149 = null];
+   }
+   field C150 {
+      label = "${parent.C150}";
+      columnexclude = [parent.C150 = null];
+   }
+   field C151 {
+      label = "${parent.C151}";
+      columnexclude = [parent.C151 = null];
+   }
+   field C152 {
+      label = "${parent.C152}";
+      columnexclude = [parent.C152 = null];
+   }
+   field C153 {
+      label = "${parent.C153}";
+      columnexclude = [parent.C153 = null];
+   }
+   field C154 {
+      label = "${parent.C154}";
+      columnexclude = [parent.C154 = null];
+   }
+   field C155 {
+      label = "${parent.C155}";
+      columnexclude = [parent.C155 = null];
+   }
+   field C156 {
+      label = "${parent.C156}";
+      columnexclude = [parent.C156 = null];
+   }
+   field C157 {
+      label = "${parent.C157}";
+      columnexclude = [parent.C157 = null];
+   }
+   field C158 {
+      label = "${parent.C158}";
+      columnexclude = [parent.C158 = null];
+   }
+   field C159 {
+      label = "${parent.C159}";
+      columnexclude = [parent.C159 = null];
+   }
+   field C160 {
+      label = "${parent.C160}";
+      columnexclude = [parent.C160 = null];
+   }
+   field C161 {
+      label = "${parent.C161}";
+      columnexclude = [parent.C161 = null];
+   }
+   field C162 {
+      label = "${parent.C162}";
+      columnexclude = [parent.C162 = null];
+   }
+   field C163 {
+      label = "${parent.C163}";
+      columnexclude = [parent.C163 = null];
+   }
+   field C164 {
+      label = "${parent.C164}";
+      columnexclude = [parent.C164 = null];
+   }
+   field C165 {
+      label = "${parent.C165}";
+      columnexclude = [parent.C165 = null];
+   }
+   field C166 {
+      label = "${parent.C166}";
+      columnexclude = [parent.C166 = null];
+   }
+   field C167 {
+      label = "${parent.C167}";
+      columnexclude = [parent.C167 = null];
+   }
+   field C168 {
+      label = "${parent.C168}";
+      columnexclude = [parent.C168 = null];
+   }
+   field C169 {
+      label = "${parent.C169}";
+      columnexclude = [parent.C169 = null];
+   }
+   field C170 {
+      label = "${parent.C170}";
+      columnexclude = [parent.C170 = null];
+   }
+   field C171 {
+      label = "${parent.C171}";
+      columnexclude = [parent.C171 = null];
+   }
+   field C172 {
+      label = "${parent.C172}";
+      columnexclude = [parent.C172 = null];
+   }
+   field C173 {
+      label = "${parent.C173}";
+      columnexclude = [parent.C173 = null];
+   }
+   field C174 {
+      label = "${parent.C174}";
+      columnexclude = [parent.C174 = null];
+   }
+   field C175 {
+      label = "${parent.C175}";
+      columnexclude = [parent.C175 = null];
+   }
+   field C176 {
+      label = "${parent.C176}";
+      columnexclude = [parent.C176 = null];
+   }
+   field C177 {
+      label = "${parent.C177}";
+      columnexclude = [parent.C177 = null];
+   }
+   field C178 {
+      label = "${parent.C178}";
+      columnexclude = [parent.C178 = null];
+   }
+   field C179 {
+      label = "${parent.C179}";
+      columnexclude = [parent.C179 = null];
+   }
+   field C180 {
+      label = "${parent.C180}";
+      columnexclude = [parent.C180 = null];
+   }
+   field C181 {
+      label = "${parent.C181}";
+      columnexclude = [parent.C181 = null];
+   }
+   field C182 {
+      label = "${parent.C182}";
+      columnexclude = [parent.C182 = null];
+   }
+   field C183 {
+      label = "${parent.C183}";
+      columnexclude = [parent.C183 = null];
+   }
+   field C184 {
+      label = "${parent.C184}";
+      columnexclude = [parent.C184 = null];
+   }
+   field C185 {
+      label = "${parent.C185}";
+      columnexclude = [parent.C185 = null];
+   }
+   field C186 {
+      label = "${parent.C186}";
+      columnexclude = [parent.C186 = null];
+   }
+   field C187 {
+      label = "${parent.C187}";
+      columnexclude = [parent.C187 = null];
+   }
+   field C188 {
+      label = "${parent.C188}";
+      columnexclude = [parent.C188 = null];
+   }
+   field C189 {
+      label = "${parent.C189}";
+      columnexclude = [parent.C189 = null];
+   }
+   field C190 {
+      label = "${parent.C190}";
+      columnexclude = [parent.C190 = null];
+   }
+   field C191 {
+      label = "${parent.C191}";
+      columnexclude = [parent.C191 = null];
+   }
+   field C192 {
+      label = "${parent.C192}";
+      columnexclude = [parent.C192 = null];
+   }
+   field C193 {
+      label = "${parent.C193}";
+      columnexclude = [parent.C193 = null];
+   }
+   field C194 {
+      label = "${parent.C194}";
+      columnexclude = [parent.C194 = null];
+   }
+   field C195 {
+      label = "${parent.C195}";
+      columnexclude = [parent.C195 = null];
+   }
+   field C196 {
+      label = "${parent.C196}";
+      columnexclude = [parent.C196 = null];
+   }
+   field C197 {
+      label = "${parent.C197}";
+      columnexclude = [parent.C197 = null];
+   }
+   field C198 {
+      label = "${parent.C198}";
+      columnexclude = [parent.C198 = null];
+   }
+   field C199 {
+      label = "${parent.C199}";
+      columnexclude = [parent.C199 = null];
+   }
+   field N0 {
+      label = "${parent.N0}";
+      columnexclude = [parent.N0 = null];
+   }
+   field N1 {
+      label = "${parent.N1}";
+      columnexclude = [parent.N1 = null];
+   }
+   field N2 {
+      label = "${parent.N2}";
+      columnexclude = [parent.N2 = null];
+   }
+   field N3 {
+      label = "${parent.N3}";
+      columnexclude = [parent.N3 = null];
+   }
+   field N4 {
+      label = "${parent.N4}";
+      columnexclude = [parent.N4 = null];
+   }
+   field N5 {
+      label = "${parent.N5}";
+      columnexclude = [parent.N5 = null];
+   }
+   field N6 {
+      label = "${parent.N6}";
+      columnexclude = [parent.N6 = null];
+   }
+   field N7 {
+      label = "${parent.N7}";
+      columnexclude = [parent.N7 = null];
+   }
+   field N8 {
+      label = "${parent.N8}";
+      columnexclude = [parent.N8 = null];
+   }
+   field N9 {
+      label = "${parent.N9}";
+      columnexclude = [parent.N9 = null];
+   }
+   field N10 {
+      label = "${parent.N10}";
+      columnexclude = [parent.N10 = null];
+   }
+   field N11 {
+      label = "${parent.N11}";
+      columnexclude = [parent.N11 = null];
+   }
+   field N12 {
+      label = "${parent.N12}";
+      columnexclude = [parent.N12 = null];
+   }
+   field N13 {
+      label = "${parent.N13}";
+      columnexclude = [parent.N13 = null];
+   }
+   field N14 {
+      label = "${parent.N14}";
+      columnexclude = [parent.N14 = null];
+   }
+   field N15 {
+      label = "${parent.N15}";
+      columnexclude = [parent.N15 = null];
+   }
+   field N16 {
+      label = "${parent.N16}";
+      columnexclude = [parent.N16 = null];
+   }
+   field N17 {
+      label = "${parent.N17}";
+      columnexclude = [parent.N17 = null];
+   }
+   field N18 {
+      label = "${parent.N18}";
+      columnexclude = [parent.N18 = null];
+   }
+   field N19 {
+      label = "${parent.N19}";
+      columnexclude = [parent.N19 = null];
+   }
+   field N20 {
+      label = "${parent.N20}";
+      columnexclude = [parent.N20 = null];
+   }
+   field N21 {
+      label = "${parent.N21}";
+      columnexclude = [parent.N21 = null];
+   }
+   field N22 {
+      label = "${parent.N22}";
+      columnexclude = [parent.N22 = null];
+   }
+   field N23 {
+      label = "${parent.N23}";
+      columnexclude = [parent.N23 = null];
+   }
+   field N24 {
+      label = "${parent.N24}";
+      columnexclude = [parent.N24 = null];
+   }
+   field N25 {
+      label = "${parent.N25}";
+      columnexclude = [parent.N25 = null];
+   }
+   field N26 {
+      label = "${parent.N26}";
+      columnexclude = [parent.N26 = null];
+   }
+   field N27 {
+      label = "${parent.N27}";
+      columnexclude = [parent.N27 = null];
+   }
+   field N28 {
+      label = "${parent.N28}";
+      columnexclude = [parent.N28 = null];
+   }
+   field N29 {
+      label = "${parent.N29}";
+      columnexclude = [parent.N29 = null];
+   }
+   field N30 {
+      label = "${parent.N30}";
+      columnexclude = [parent.N30 = null];
+   }
+   field N31 {
+      label = "${parent.N31}";
+      columnexclude = [parent.N31 = null];
+   }
+   field N32 {
+      label = "${parent.N32}";
+      columnexclude = [parent.N32 = null];
+   }
+   field N33 {
+      label = "${parent.N33}";
+      columnexclude = [parent.N33 = null];
+   }
+   field N34 {
+      label = "${parent.N34}";
+      columnexclude = [parent.N34 = null];
+   }
+   field N35 {
+      label = "${parent.N35}";
+      columnexclude = [parent.N35 = null];
+   }
+   field N36 {
+      label = "${parent.N36}";
+      columnexclude = [parent.N36 = null];
+   }
+   field N37 {
+      label = "${parent.N37}";
+      columnexclude = [parent.N37 = null];
+   }
+   field N38 {
+      label = "${parent.N38}";
+      columnexclude = [parent.N38 = null];
+   }
+   field N39 {
+      label = "${parent.N39}";
+      columnexclude = [parent.N39 = null];
+   }
+   field N40 {
+      label = "${parent.N40}";
+      columnexclude = [parent.N40 = null];
+   }
+   field N41 {
+      label = "${parent.N41}";
+      columnexclude = [parent.N41 = null];
+   }
+   field N42 {
+      label = "${parent.N42}";
+      columnexclude = [parent.N42 = null];
+   }
+   field N43 {
+      label = "${parent.N43}";
+      columnexclude = [parent.N43 = null];
+   }
+   field N44 {
+      label = "${parent.N44}";
+      columnexclude = [parent.N44 = null];
+   }
+   field N45 {
+      label = "${parent.N45}";
+      columnexclude = [parent.N45 = null];
+   }
+   field N46 {
+      label = "${parent.N46}";
+      columnexclude = [parent.N46 = null];
+   }
+   field N47 {
+      label = "${parent.N47}";
+      columnexclude = [parent.N47 = null];
+   }
+   field N48 {
+      label = "${parent.N48}";
+      columnexclude = [parent.N48 = null];
+   }
+   field N49 {
+      label = "${parent.N49}";
+      columnexclude = [parent.N49 = null];
+   }
+   field N50 {
+      label = "${parent.N50}";
+      columnexclude = [parent.N50 = null];
+   }
+   field N51 {
+      label = "${parent.N51}";
+      columnexclude = [parent.N51 = null];
+   }
+   field N52 {
+      label = "${parent.N52}";
+      columnexclude = [parent.N52 = null];
+   }
+   field N53 {
+      label = "${parent.N53}";
+      columnexclude = [parent.N53 = null];
+   }
+   field N54 {
+      label = "${parent.N54}";
+      columnexclude = [parent.N54 = null];
+   }
+   field N55 {
+      label = "${parent.N55}";
+      columnexclude = [parent.N55 = null];
+   }
+   field N56 {
+      label = "${parent.N56}";
+      columnexclude = [parent.N56 = null];
+   }
+   field N57 {
+      label = "${parent.N57}";
+      columnexclude = [parent.N57 = null];
+   }
+   field N58 {
+      label = "${parent.N58}";
+      columnexclude = [parent.N58 = null];
+   }
+   field N59 {
+      label = "${parent.N59}";
+      columnexclude = [parent.N59 = null];
+   }
+   field N60 {
+      label = "${parent.N60}";
+      columnexclude = [parent.N60 = null];
+   }
+   field N61 {
+      label = "${parent.N61}";
+      columnexclude = [parent.N61 = null];
+   }
+   field N62 {
+      label = "${parent.N62}";
+      columnexclude = [parent.N62 = null];
+   }
+   field N63 {
+      label = "${parent.N63}";
+      columnexclude = [parent.N63 = null];
+   }
+   field N64 {
+      label = "${parent.N64}";
+      columnexclude = [parent.N64 = null];
+   }
+   field N65 {
+      label = "${parent.N65}";
+      columnexclude = [parent.N65 = null];
+   }
+   field N66 {
+      label = "${parent.N66}";
+      columnexclude = [parent.N66 = null];
+   }
+   field N67 {
+      label = "${parent.N67}";
+      columnexclude = [parent.N67 = null];
+   }
+   field N68 {
+      label = "${parent.N68}";
+      columnexclude = [parent.N68 = null];
+   }
+   field N69 {
+      label = "${parent.N69}";
+      columnexclude = [parent.N69 = null];
+   }
+   field N70 {
+      label = "${parent.N70}";
+      columnexclude = [parent.N70 = null];
+   }
+   field N71 {
+      label = "${parent.N71}";
+      columnexclude = [parent.N71 = null];
+   }
+   field N72 {
+      label = "${parent.N72}";
+      columnexclude = [parent.N72 = null];
+   }
+   field N73 {
+      label = "${parent.N73}";
+      columnexclude = [parent.N73 = null];
+   }
+   field N74 {
+      label = "${parent.N74}";
+      columnexclude = [parent.N74 = null];
+   }
+   field N75 {
+      label = "${parent.N75}";
+      columnexclude = [parent.N75 = null];
+   }
+   field N76 {
+      label = "${parent.N76}";
+      columnexclude = [parent.N76 = null];
+   }
+   field N77 {
+      label = "${parent.N77}";
+      columnexclude = [parent.N77 = null];
+   }
+   field N78 {
+      label = "${parent.N78}";
+      columnexclude = [parent.N78 = null];
+   }
+   field N79 {
+      label = "${parent.N79}";
+      columnexclude = [parent.N79 = null];
+   }
+   field N80 {
+      label = "${parent.N80}";
+      columnexclude = [parent.N80 = null];
+   }
+   field N81 {
+      label = "${parent.N81}";
+      columnexclude = [parent.N81 = null];
+   }
+   field N82 {
+      label = "${parent.N82}";
+      columnexclude = [parent.N82 = null];
+   }
+   field N83 {
+      label = "${parent.N83}";
+      columnexclude = [parent.N83 = null];
+   }
+   field N84 {
+      label = "${parent.N84}";
+      columnexclude = [parent.N84 = null];
+   }
+   field N85 {
+      label = "${parent.N85}";
+      columnexclude = [parent.N85 = null];
+   }
+   field N86 {
+      label = "${parent.N86}";
+      columnexclude = [parent.N86 = null];
+   }
+   field N87 {
+      label = "${parent.N87}";
+      columnexclude = [parent.N87 = null];
+   }
+   field N88 {
+      label = "${parent.N88}";
+      columnexclude = [parent.N88 = null];
+   }
+   field N89 {
+      label = "${parent.N89}";
+      columnexclude = [parent.N89 = null];
+   }
+   field N90 {
+      label = "${parent.N90}";
+      columnexclude = [parent.N90 = null];
+   }
+   field N91 {
+      label = "${parent.N91}";
+      columnexclude = [parent.N91 = null];
+   }
+   field N92 {
+      label = "${parent.N92}";
+      columnexclude = [parent.N92 = null];
+   }
+   field N93 {
+      label = "${parent.N93}";
+      columnexclude = [parent.N93 = null];
+   }
+   field N94 {
+      label = "${parent.N94}";
+      columnexclude = [parent.N94 = null];
+   }
+   field N95 {
+      label = "${parent.N95}";
+      columnexclude = [parent.N95 = null];
+   }
+   field N96 {
+      label = "${parent.N96}";
+      columnexclude = [parent.N96 = null];
+   }
+   field N97 {
+      label = "${parent.N97}";
+      columnexclude = [parent.N97 = null];
+   }
+   field N98 {
+      label = "${parent.N98}";
+      columnexclude = [parent.N98 = null];
+   }
+   field N99 {
+      label = "${parent.N99}";
+      columnexclude = [parent.N99 = null];
+   }
+   field D1 {
+      label = "${parent.D1}";
+      columnexclude = [parent.D1 = null];
+   }
+   field D2 {
+      label = "${parent.D2}";
+      columnexclude = [parent.D2 = null];
+   }
+   field D3 {
+      label = "${parent.D3}";
+      columnexclude = [parent.D3 = null];
+   }
+   field D4 {
+      label = "${parent.D4}";
+      columnexclude = [parent.D4 = null];
+   }
+   field D5 {
+      label = "${parent.D5}";
+      columnexclude = [parent.D5 = null];
+   }
+   field D6 {
+      label = "${parent.D6}";
+      columnexclude = [parent.D6 = null];
+   }
+   field D7 {
+      label = "${parent.D7}";
+      columnexclude = [parent.D7 = null];
+   }
+   field D8 {
+      label = "${parent.D8}";
+      columnexclude = [parent.D8 = null];
+   }
+   field D9 {
+      label = "${parent.D9}";
+      columnexclude = [parent.D9 = null];
+   }
+   field D10 {
+      label = "${parent.D10}";
+      columnexclude = [parent.D10 = null];
+   }
+   field D11 {
+      label = "${parent.D11}";
+      columnexclude = [parent.D11 = null];
+   }
+   field D12 {
+      label = "${parent.D12}";
+      columnexclude = [parent.D12 = null];
+   }
+   field D13 {
+      label = "${parent.D13}";
+      columnexclude = [parent.D13 = null];
+   }
+   field D14 {
+      label = "${parent.D14}";
+      columnexclude = [parent.D14 = null];
+   }
+   field D15 {
+      label = "${parent.D15}";
+      columnexclude = [parent.D15 = null];
+   }
+   field D16 {
+      label = "${parent.D16}";
+      columnexclude = [parent.D16 = null];
+   }
+   field D17 {
+      label = "${parent.D17}";
+      columnexclude = [parent.D17 = null];
+   }
+   field D18 {
+      label = "${parent.D18}";
+      columnexclude = [parent.D18 = null];
+   }
+   field D19 {
+      label = "${parent.D19}";
+      columnexclude = [parent.D19 = null];
+   }
+   field D20 {
+      label = "${parent.D20}";
+      columnexclude = [parent.D20 = null];
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+
+stateindicator ExtFileLoadStateIndicator for ExtFileLoad {
+   state "Empty" {
+      completed = 20%;
+      emphasis Progress2 = [State = "Empty"];
+   }
+   state "Loaded" {
+      completed = 50%;
+      emphasis Progress3 = [State = "Loaded"];
+   }
+   state "Unpacked" {
+      completed = 75%;
+      emphasis Progress6 = [State = "Unpacked"];
+   }
+   state "Transferred" {
+      completed = 100%;
+      emphasis Progress11 = [State = "Transferred"];
+   }
+   state "Aborted" {
+      completed = 100%;
+      emphasis StateError = [State = "Aborted"];
+   }
+   state "Packed" {
+      completed = 75%;
+      emphasis Progress6 = [State = "Packed"];
+   }
+   state "File Created" {
+      completed = 100%;
+      emphasis Progress11 = [State = "FileCreated"];
+   }
+   state "Removed" {
+      completed = 100%;
+      emphasis Progress11 = [State = "Removed"];
+   }
+   state "Transfer Error" {
+      completed = 100%;
+      emphasis StateError = [State = "TransferError"];
+   }
+   state "Partly Transferred" {
+      completed = 75%;
+      emphasis Progress9 = [State = "PartlyTransferred"];
+   }
+}
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

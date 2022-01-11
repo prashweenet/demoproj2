@@ -1,0 +1,42 @@
+fragment AccruedCostRevenueSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view accrued_cost_revenue";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccruedCostRevenueSelector for AccruedCostRevenue {
+   static Value;
+   static Description;
+}
+
+card AccruedCostRevenueCard for AccruedCostRevenue {
+   label = "";
+   fieldranking Value;
+   field Value;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccruedCostRevenue {
+   from = "accrued_cost_revenue";
+   lu = PostingCtrl;
+   keys = Company, Value;
+   ludependencies = PostingCtrl;
+   attribute Company Text {
+      lovcolumn = [false];
+   }
+   attribute Value Text {
+      label = "Account";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

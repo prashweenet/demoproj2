@@ -1,0 +1,62 @@
+fragment PreAccountCodepartAMpccomSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view pre_account_codepart_a_mpccom";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferencePreAccountCodepartAMpccomSelector for PreAccountCodepartAMpccom {
+   orderby = SortValue;
+   static Account;
+   static Description;
+}
+
+@Override
+list PreAccountCodepartAMpccomLovList for PreAccountCodepartAMpccom {
+   orderby = SortValue;
+}
+
+card PreAccountCodepartAMpccomCard for PreAccountCodepartAMpccom {
+   label = "";
+   fieldranking Account;
+   field Account;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query PreAccountCodepartAMpccom {
+   from = "pre_account_codepart_a_mpccom";
+   lu = Account;
+   keys = Company, Account;
+   ludependencies = Account;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Account Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute Ledaccnt Text {
+      label = "Ledg Flag";
+      lovcolumn = [false];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [false];
+   }
+   attribute ValidUntil Date {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

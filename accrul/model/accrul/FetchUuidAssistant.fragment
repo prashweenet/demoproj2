@@ -1,0 +1,112 @@
+-------------------------------------------------------------------------------------------------------------
+--
+--  Fragment:     FetchUuidAssistant
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  -----------------------------------------------------------------------------------------
+--  200612  Smallk  gelr: Added to support Global Extension Functionalities.
+--  200629  Smallk  GESPRING20-4840, Added UUID Date fectching, restructured code.
+--  200710  Smallk  GESPRING20-4971, Moved UUID Information to new entity.
+-------------------------------------------------------------------------------------------------------------
+
+
+fragment FetchUuidAssistant;
+component ACCRUL;
+layer Core;
+description "Assistant used in Mexican localization functionality for Fetching UUID Number and UUID Date from an XML file.";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+-- gelr:accounting_xml_data, begin
+assistant FetchUuidAssistant using FetchUuidVirtualSet {
+   label = "Fetch UUID Number";
+   savemode = OnLostFocus;
+   input(FetchDate);
+   output(UuidNumber, UuidDate);
+   steps {
+      step {
+         fileselector {
+            multifile = [false];
+            init command {
+               execute {
+                  set component.UploadQueue.AcceptedExtensions = ".XML";
+               }
+            }
+            onfileselect {
+               execute {
+                  set XmlFileName = component.UploadQueue.FileList;
+               }
+            }
+            label = "Browse";
+         }
+      }
+      final step {
+      }
+   }
+   finish command {
+      variable UuidInfoRec Structure(UuidInfo);
+      execute {
+         if[component.UploadQueue.IsEmpty] {
+            warning("You must select a valid XML file to continue.");
+         }
+         else {
+            upload "FetchUuidVirtualSet(Objkey=$[Objkey])/XmlFileData";
+            call FetchUuidInfo(XmlFileName, FetchDate) into UuidInfoRec;
+            set UuidNumber = UuidInfoRec.UuidNumber;
+            if [FetchDate = true] {
+               set UuidDate = UuidInfoRec.UuidDate;
+            }
+            exit OK;
+         }
+      }
+   }
+}
+-- gelr:accounting_xml_data, end
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+-- gelr:accounting_xml_data, begin
+entityset FetchUuidVirtualSet for FetchUuidVirtual {
+   context Company(Company);
+}
+
+structure UuidInfo {
+   attribute UuidNumber Text {
+      maxlength = 36;
+   }
+   attribute UuidDate Date;
+}
+
+virtual FetchUuidVirtual {
+   attribute Company Text;
+   attribute XmlFileName Text;
+   attribute UuidNumber Text;
+   attribute UuidDate Date;
+   attribute XmlFileData Stream {
+      fileinfo {
+         filename XmlFileName;
+      }
+   }
+
+   action FetchUuidInfo Structure(UuidInfo) {
+      parameter XmlFileName Text;
+      parameter FetchDate Boolean;
+      supportwarnings = [true];
+   }
+}
+
+action UpdateUuidInfo {
+   initialcheck none;
+   parameter Company Text;
+   parameter SourceRef1 Text;
+   parameter SourceRef2 Text;
+   parameter SourceRef3 Text;
+   parameter SourceRefTypeDb Text;
+   parameter UuidNumber Text;
+   parameter UuidDate Date;
+   supportwarnings = [true];
+}
+-- gelr:accounting_xml_data, end

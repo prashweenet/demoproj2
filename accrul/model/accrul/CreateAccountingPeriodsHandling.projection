@@ -1,0 +1,109 @@
+projection CreateAccountingPeriodsHandling;
+component ACCRUL;
+layer Core;
+description "Create Accounting Periods Handling";
+category Users;
+include fragment SourceAccountingYearLovSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CreateAccPeriodHeadVirtualSet for CreateAccPeriodHeadVirtual;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CompanyFinance {
+
+   attribute CorrectionType Text {
+      lovcolumn = [false];
+   }
+   attribute ParallelAccCurrency Text {
+      lovcolumn = [false];
+   }
+   attribute DefAmountMethod Text {
+      lovcolumn = [false];
+   }
+   attribute CreationFinished Text {
+      lovcolumn = [false];
+   }
+   attribute MasterCompany Text {
+      lovcolumn = [false];
+   }
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+action CreateAccountingPeriods Text {
+   initialcheck implementation;
+   parameter Objkey Text;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+virtual CreateAccPeriodHeadVirtual {
+   contexttodefault = Company(Company);
+
+   attribute Company Text;
+   array AccountingPeriodsArray(Company) to CreateAccountingPeriodVirtual(Company);
+}
+
+virtual CreateAccountingPeriodVirtual {
+   crud = Update;
+   ludependencies = AccountingYear;
+
+   attribute Selected Boolean("TRUE", "FALSE") {
+      label = "Include";
+      required = [true];
+   }
+   attribute Company Text;
+   attribute Name Text;
+   attribute SourceYear Number;
+   attribute FromAccountingYear Number {
+      label = "From Year";
+   }
+   attribute ToAccountingYear Number {
+      label = "Until Year";
+   }
+   attribute VouNumCreateMethod Enumeration(VouSeriesCreateMethod) {
+      label = "Voucher Number Series Creation Method";
+   }
+   attribute VouNumCreateMethodDb Text {
+      fetch = "Vou_Series_Create_Method_API.Encode(Vou_Num_Create_Method)";
+   }
+   attribute ExclUserGroupPerVouSeries Boolean("TRUE", "FALSE") {
+      label = "Exclude User Groups per Voucher Series";
+      required = [true];
+   }
+   attribute ExcludeUserGroupPerPeriod Boolean("TRUE", "FALSE") {
+      label = "Exclude User Group per Period";
+      required = [true];
+   }
+   attribute UseVouNoPeriod Text;
+   attribute AccPeriodCreateMethod Enumeration(AccPeriodCreateMethod) {
+      label = "Period Status";
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference SourceYearRef(Company, SourceYear) to SourceAccountingYearLov(Company, SourceYear) {
+      label = "Source Year";
+   }
+}
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

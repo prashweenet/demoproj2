@@ -1,0 +1,82 @@
+projection UsersPerUserGroupHandling;
+component ACCRUL;
+layer Core;
+description "Users Per User Group";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset UserGroupFinanceSet for UserGroupFinance {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity UserGroupFinance {
+   supportwarnings = [true];
+
+   attribute UserGroup Text {
+      format = uppercase;
+   }
+   attribute Description Text {
+      label = "User Group Description";
+   }
+   array UserGroupMemberFinanceArray(Company, UserGroup) to UserGroupMemberFinance(Company, UserGroup);
+}
+
+@Override
+entity UserGroupMemberFinance {
+   crud = Create, Read, Delete;
+   supportwarnings = [true];
+
+   attribute Company Text {
+      editable = [false];
+   }
+   attribute Userid Text {
+      format = uppercase;
+   }
+   attribute DefaultGroup Enumeration(FinanceYesNo) {
+      required = [false];
+   }
+
+   attribute DefaultGroupDb Boolean("Y", "N") {
+      label = "Default Group";
+      maxlength = 20;
+      required = [true];
+   }
+
+   reference UseridRef(Company, Userid) to UserFinance(Company, Userid) {
+      label = "User";
+   }
+
+   action DoSetDefault {
+      ludependencies = UserGroupMemberFinance;
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

@@ -1,0 +1,85 @@
+client VoucherApprovers;
+component ACCRUL;
+layer Core;
+projection VoucherApproversHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry VoucherApproverNavEntry parent AccrulNavigator.ApprovalWorkflowBasicDataMenu at index 200 {
+      label = "Voucher Approvers";
+      page List home ApproverDetail;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using ApproverDetailSet {
+   label = "Voucher Approvers";
+
+   list ApproverDetailList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list ApproverDetailList for ApproverDetail {
+   lov ApproverIdRef with ReferenceUserFinanceSelector {
+      search = Userid, Description;
+      size = Large;
+      description = ApproverIdRef.Description;
+      editable = [ApproverGroupId = null and isNew];
+   }
+   lov ApproverGroupIdRef with ReferenceApproverGroupSelector {
+      search = ApproverGroupId, Description;
+      size = Large;
+      description = ApproverGroupIdRef.Description;
+      editable = [ApproverId = null and isNew];
+   }
+   lov CombinationRuleIdRef with ReferenceApproverCombRuleSelector {
+      search = CombinationRuleId, Description;
+      size = Large;
+      description = CombinationRuleIdRef.Description;
+   }
+   field Amount;
+   field ValidFrom;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

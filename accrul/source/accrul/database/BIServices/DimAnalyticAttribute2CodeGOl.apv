@@ -1,0 +1,69 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  AnalyticAttr2CodeG
+--  Component:  ACCRUL
+--  LU:         DimAccountingAttribute
+--
+--  File     :  DimAnalyticAttribute2CodeGOl.api
+--  Purpose  :  Create ON LINE dimension view DIM_ANALYTIC_ATTR2_CODE_G_OL
+--  Note     :  NOTE that NULL identity handling is not required for OL views
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_ANALYTIC_ATTR2_CODE_G
+DEFINE VIEW       = DIM_ANALYTIC_ATTR2_CODE_G_OL
+DEFINE TAB        = ACCOUNTING_ATTRIBUTE_CON_TAB
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimAccountingAttribute
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.company||'^'||a.code_part_value id,
+       a.company                         company,
+       a.code_part_value                 code,
+       a.attribute                       attribute,
+       a2.description                    attribute_description,
+       a.attribute_value                 attribute_value,
+       a3.description                    attribute_value_description
+FROM ACCOUNTING_ATTRIBUTE_CON_TAB a,
+   ACCOUNTING_ATTRIBUTE_TAB a2,
+   ACCOUNTING_ATTRIBUTE_VALUE_TAB a3
+WHERE a.code_part        = 'G'
+   AND    a2.company         = a.company
+   AND    a2.attribute       = a.attribute
+   AND    a3.company         = a.company
+   AND    a3.attribute       = a.attribute
+   AND    a3.attribute_value = a.attribute_value
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Code G Attribute 2^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Code G^';
+COMMENT ON COLUMN &VIEW..ATTRIBUTE
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(20)^PROMPT=Attribute^';
+   COMMENT ON COLUMN &VIEW..ATTRIBUTE_DESCRIPTION
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Attribute Description^';
+   COMMENT ON COLUMN &VIEW..ATTRIBUTE_VALUE
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Attribute Value^';
+   COMMENT ON COLUMN &VIEW..ATTRIBUTE_VALUE_DESCRIPTION
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Attribute Value Description^';
+   
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE TAB
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

@@ -1,0 +1,111 @@
+projection ReportingPeriodDefinitionsHandling;
+component ACCRUL;
+layer Core;
+description "Reporting Period Definitions";
+category Users;
+include fragment AccountingYearSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset RpdIdentitySet for RpdIdentity;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity RpdIdentity {
+   attribute RpdId Text {
+      label = "Reporting Period Definition ID";
+   }
+
+   array CompanyArray(RpdId) to RpdCompany(RpdId);
+}
+
+@Override
+entity RpdCompany {
+   crud = Read, Create, Delete;
+
+   attribute RpdId Text {
+      label = "Definition ID";
+   }
+   attribute RepPeriodsDefined Boolean("TRUE", "FALSE") {
+      fetch = "Rpd_Identity_API.Is_Rpd_Periods_Defined(rpd_id)";
+   }
+
+   reference RpdIdRef(RpdId) to RpdIdentity(RpdId) {
+      label = "Definition ID";
+   }
+   reference CompanyRef(Company) to Company(Company) {
+      label = "Company";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+action DoGenOnSysCalendar {
+   initialcheck none;
+   ludependencies = RpdIdentity;
+   parameter RpdId  Text;
+   parameter StartYear Number;
+   parameter NumberOfYears Number;
+   parameter FromCalMonth Number;
+   parameter StartRpdYearId Number;
+}
+
+action DoGenOnAccCalendar {
+   initialcheck implementation;
+   ludependencies = RpdIdentity;
+   parameter RpdId  Text;
+   parameter Company Text;
+   parameter AccYearFrom Number;
+   parameter AccYearTo Number;
+   parameter IncludeYearEnd Boolean;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure RpdGenOnSysCalendarStructure {
+   attribute RpdId Text;
+   attribute StartYear Number;
+   attribute StartMonth Number;
+   attribute NumberOfYears Number;
+   attribute FirstYear Number;
+}
+
+structure RpdGenOnAccCalendarStructure {
+   attribute RpdId Text;
+   attribute Company Text;
+   attribute AccYearFrom Number;
+   attribute AccYearTo Number;
+   attribute IncludeYearEndPeriod Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference AccFromYearRef(Company, AccYearFrom)to AccountingYear(Company, AccountingYear) {
+      label = "From Year";
+   }
+   reference AccToYearRef(Company, AccYearTo)to AccountingYear(Company, AccountingYear) {
+      label = "To Year";
+   }
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

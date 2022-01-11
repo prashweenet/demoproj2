@@ -1,0 +1,363 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherType
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  151118  Bhhilk  STRFI-39, Modified LablePrint, StoreOriginalYesNo, AutomaticAllotment enumerations to FinanceYesNo.
+--  161121  Chwtlk  STRFI-4086, Added new view Voucher_Type_For_Ard.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Function_Group IS
+   Flags      = 'PMI--'
+   Datatype   = 'STRING(10)/UPPERCASE'
+   Prompt     = 'Function Group'
+   Ref        = 'FunctionGroup';
+
+COLUMN Function_Group_Desc IS
+   Flags      = 'AMIU-'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Function Group Desc';
+
+COLUMN Row_Group_Validation IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(1)'
+   Prompt     = 'Row Group Validation';
+
+COLUMN User_Group IS
+   Flags      = 'PMI--'
+   Datatype   = 'STRING(30)/UPPERCASE'
+   Prompt     = 'User Group';
+
+COLUMN Cust_Check_Vou_Type IS
+   Flags      = 'KMI-L'
+   Datatype   = 'STRING(3)/UPPERCASE'
+   Prompt     = 'Voucher Type';
+
+COLUMN Supp_Check_Vou_Type IS
+   Flags      = 'KMI-L'
+   Datatype   = 'STRING(3)/UPPERCASE'
+   Prompt     = 'Voucher Type';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@Override
+VIEW Voucher_Type IS
+ORDER BY voucher_type;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_Voucher_Group IS
+   Prompt = 'Voucher Type'
+SELECT a.company                                company,
+       b.function_group                         function_group,
+       a.voucher_type                           voucher_type,
+       Function_Group_API.Get_Description(b.function_group)  function_group_desc,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company,'ACCRUL','VoucherType',
+           a.voucher_type), description)        description,
+       Finance_Yes_No_API.Decode(a.lable_print) lable_print,
+       a.lable_print                            lable_print_db,
+       Finance_Yes_No_API.Decode(a.store_original) store_original,
+       a.store_original                         store_original_db,
+       Voucher_Type_API.Is_Row_Group_Validated(a.company, a.voucher_type)
+                                                row_group_validation,
+       b.rowkey                                objkey
+FROM   voucher_type_tab a, voucher_type_detail_tab b
+WHERE  a.company = b.company
+AND    a.voucher_type = b.voucher_type;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_Function_Group IS
+   Prompt = 'Voucher Type Function Group'
+   Voucher_Type.Flags = 'PMI-L'
+SELECT a.company                                company,
+       b.function_group                         function_group,
+       a.voucher_type                           voucher_type,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company,'ACCRUL','VoucherType',
+           a.voucher_type), description)        description,
+       b.rowkey                                objkey
+FROM   voucher_type_tab a, voucher_type_detail_tab b
+WHERE  a.company      = b.company
+AND    a.voucher_type = b.voucher_type;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_Gen IS
+   Prompt = 'Voucher Type'
+   Automatic_Allot.Flags = 'AMIUL'
+   Automatic_Allot_Db.Datatype = 'STRING(20)'
+   Lable_Print_Db.Datatype = 'STRING(20)'
+   Store_Original_Db.Datatype = 'STRING(20)'
+   Ledger_Id.Flags = 'AMIUL'
+   Ledger_Id.Ref = 'LedgerId'
+   Automatic_Vou_Balance_Db.Flags = 'A----'
+   Simulation_Voucher.Flags = 'AMIUL'
+   Balance.Flags = 'AMIUL'
+   Balance.Datatype = 'STRING'
+   Single_Function_Group.Flags = 'AMIUL'
+   Single_Function_Group.Datatype = 'STRING'
+   Single_Function_Group.Prompt = 'Single function group'
+   Ledger.Flags = 'AMIUL'
+   Function_Group.Flags = 'A----'
+   Function_Group.Datatype = 'STRING(10)'
+   Function_Group.Prompt = 'function_group'
+SELECT a.company                                  company,
+       voucher_type                             voucher_type,
+       Finance_Yes_No_API.Decode(automatic_allot) automatic_allot,
+       automatic_allot                          automatic_allot_db,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company,'ACCRUL','VoucherType',
+           voucher_type), description)          description,
+       Finance_Yes_No_API.Decode(lable_print)   lable_print,
+       lable_print                              lable_print_db,
+       Finance_Yes_No_API.Decode(store_original) store_original,
+       store_original                           store_original_db,
+       ledger_id                                ledger_id,
+       automatic_vou_balance                    automatic_vou_balance_db,
+       use_manual                               use_manual,
+       simulation_voucher                       simulation_voucher,
+       balance                                  balance,
+       single_function_group                    single_function_group,
+       Ledger_API.Get_Ledger(ledger_id)         ledger,
+       DECODE(single_function_group,'Y',Voucher_Type_Detail_API.get_function_group(company,voucher_type),
+                                    'MULTI')    function_group,
+       rowid                                   objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                              objversion,
+       rowkey                                  objkey
+FROM   voucher_type_tab a
+WHERE  ledger_id IN ('00','*');
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_Int IS
+   Prompt = 'Voucher Type'
+   Automatic_Allot.Flags = 'AMIUL'
+   Automatic_Allot_Db.Datatype = 'STRING(20)'
+   Lable_Print_Db.Datatype = 'STRING(20)'
+   Store_Original_Db.Datatype = 'STRING(20)'
+   Ledger_Id.Flags = 'AMIUL'
+   Ledger_Id.Ref = 'LedgerId'
+   Automatic_Vou_Balance_Db.Flags = 'A----'
+   Simulation_Voucher.Flags = 'AMIUL'
+   Balance.Flags = 'AMIUL'
+   Balance.Datatype = 'STRING'
+   Single_Function_Group.Flags = 'AMIUL'
+   Single_Function_Group.Datatype = 'STRING'
+   Single_Function_Group.Prompt = 'Single function group'
+   Ledger.Flags = 'AMIUL'
+SELECT a.company                                  company,
+       voucher_type                             voucher_type,
+       Finance_Yes_No_API.Decode(automatic_allot)   automatic_allot,
+       automatic_allot                          automatic_allot_db,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company,'ACCRUL','VoucherType',
+           voucher_type), description)          description,
+       Finance_Yes_No_API.Decode(lable_print)   lable_print,
+       lable_print                              lable_print_db,
+       Finance_Yes_No_API.Decode(store_original) store_original,
+       store_original                           store_original_db,
+       ledger_id                                ledger_id,
+       automatic_vou_balance                    automatic_vou_balance_db,
+       use_manual                               use_manual,
+       simulation_voucher                       simulation_voucher,
+       balance                                  balance,
+       single_function_group                    single_function_group,
+       Ledger_API.Get_Ledger(ledger_id)         ledger,
+       rowid                                   objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                              objversion,
+       rowkey                                  objkey
+FROM   voucher_type_tab a
+WHERE  ledger_id NOT IN ('00','*');
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_All_Ledger IS
+   Prompt = 'Voucher Type'
+   Automatic_Allot.Flags = 'AMIUL'
+   Automatic_Allot_Db.Datatype = 'STRING(20)'
+   Lable_Print_Db.Datatype = 'STRING(20)'
+   Store_Original_Db.Datatype = 'STRING(20)'
+   Ledger_Id.Flags = 'AMIUL'
+   Ledger_Id.Ref = 'LedgerId'
+   Automatic_Vou_Balance_Db.Flags = 'A----'
+   Simulation_Voucher.Flags = 'AMIUL'
+   Balance.Flags = 'AMIUL'
+   Balance.Datatype = 'STRING'
+   Single_Function_Group.Flags = 'AMIUL'
+   Single_Function_Group.Datatype = 'STRING'
+   Single_Function_Group.Prompt = 'Single function group'
+   Ledger.Flags = 'AMIUL'
+SELECT a.company                                company,
+       voucher_type                             voucher_type,
+       Finance_Yes_No_API.Decode(automatic_allot)   automatic_allot,
+       automatic_allot                          automatic_allot_db,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company,'ACCRUL','VoucherType',
+           voucher_type), description)          description,
+       Finance_Yes_No_API.Decode(lable_print)   lable_print,
+       lable_print                              lable_print_db,
+       Finance_Yes_No_API.Decode(store_original) store_original,
+       store_original                           store_original_db,
+       ledger_id                                ledger_id,
+       automatic_vou_balance                    automatic_vou_balance_db,
+       use_manual                               use_manual,
+       simulation_voucher                       simulation_voucher,
+       balance                                  balance,
+       single_function_group                    single_function_group,
+       Ledger_API.Get_Ledger(ledger_id)         ledger,
+       rowid                                   objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                              objversion,
+       rowkey                                  objkey
+FROM   voucher_type_tab a
+WHERE  ledger_id = '*';
+
+VIEW Voucher_Type_For_Z IS
+   Prompt = 'Voucher Type Query'
+   Voucher_Type.Ref = 'VoucherType(company)'
+   Description.Flags = 'A---L'
+SELECT company                                                      company,
+       voucher_type                                                 voucher_type,
+       Voucher_Type_API.Get_Description(company, voucher_type)      description,
+       rowid                                                       objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))     objversion,
+       rowkey                                                      objkey
+FROM   voucher_type_detail_tab
+WHERE  function_group = 'Z';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_For_F IS
+   Prompt = 'Voucher Type Function Group'
+   Voucher_Type.Flags = 'PMI-L'
+SELECT a.company                                            company,
+       a.voucher_type                                       voucher_type,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company,'ACCRUL','VoucherType',
+           a.voucher_type), description)                    description,
+       b.rowkey                                            objkey
+FROM   Voucher_Type_Tab a, Voucher_Type_Detail_Tab b
+WHERE  a.company      = b.company
+AND    a.voucher_type = b.voucher_type
+AND    b.function_group = 'F';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_Int_All IS
+   Prompt = 'Voucher Type'
+   Ledger_Id.Flags = 'AMIUL'
+   Ledger_Id.Ref = 'LedgerId'
+   Ledger.Flags = 'AMIUL'
+SELECT a.company                                  company,
+       voucher_type                             voucher_type,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company,'ACCRUL','VoucherType',
+           voucher_type), description)          description,
+       ledger_id                                ledger_id,
+       Ledger_API.Get_Ledger(ledger_id)         ledger,
+       rowid                                   objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                              objversion,
+       rowkey                                  objkey
+FROM   voucher_type_tab a
+WHERE  ledger_id != '00';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_For_H IS
+   Prompt = 'Voucher Type Function Group'
+   Voucher_Type.Flags = 'PMI-L'
+SELECT a.company                                            company,
+       a.voucher_type                                       voucher_type,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company,'ACCRUL','VoucherType',
+           a.voucher_type), description)                    description,
+       a.ledger_id                                          ledger_id,
+       b.rowkey                                            objkey
+FROM   Voucher_Type_Tab a, Voucher_Type_Detail_Tab b
+WHERE  a.company      = b.company
+AND    a.voucher_type = b.voucher_type
+AND    b.function_group = 'H';
+
+VIEW Vou_Type_Multi_Func_Group IS
+   Prompt = 'Voucher Type Multi Function Group'
+   Voucher_Type.Flags = 'PMI-L'
+SELECT DISTINCT
+       company                                company,
+       voucher_type                           voucher_type,
+       description                            description
+FROM   voucher_type_function_group
+WHERE  function_group IN ('B', 'U', 'G', 'N', 'CB');
+
+@SecurityCheck Company.UserAuthorized(u.company)
+VIEW Cust_Check_Vou_Type IS
+   Prompt = 'Voucher Type Function Group'
+SELECT DISTINCT
+          u.company                                            company,
+          u.user_group                                         user_group,
+          u.voucher_type                                       cust_check_vou_type,
+          nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(v.company,'ACCRUL','VoucherType',
+              v.voucher_type), description)                    description
+FROM   voucher_type_tab v,
+       voucher_type_user_group_tab u
+WHERE  v.company      = u.company
+AND    v.voucher_type = u.voucher_type
+AND    v.ledger_id IN ('*', '00')
+AND    u.function_group = 'B';
+
+@SecurityCheck Company.UserAuthorized(u.company)
+VIEW Supp_Check_Vou_Type IS
+   Prompt = 'Voucher Type Function Group'
+SELECT DISTINCT
+          u.company                                            company,
+          u.user_group                                         user_group,
+          u.voucher_type                                       supp_check_vou_type,
+          nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(v.company,'ACCRUL','VoucherType',
+              v.voucher_type), description)                    description
+FROM   voucher_type_tab v,
+       voucher_type_user_group_tab u
+WHERE  v.company      = u.company
+AND    v.voucher_type = u.voucher_type
+AND    v.ledger_id IN ('*', '00')
+AND    u.function_group = 'U';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_For_P IS
+   Prompt = 'Voucher Type Function Group'
+   Voucher_Type.Flags = 'PMI-L'
+SELECT a.company                                            company,
+       a.voucher_type                                       voucher_type,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company,'ACCRUL','VoucherType',
+           a.voucher_type), description)                    description,
+       a.ledger_id                                          ledger_id,
+       b.rowkey                                            objkey
+FROM   Voucher_Type_Tab a, Voucher_Type_Detail_Tab b
+WHERE  a.company      = b.company
+AND    a.voucher_type = b.voucher_type
+AND    b.function_group = 'P';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_For_Pc IS
+   Prompt = 'Voucher Type Function Group'
+   Voucher_Type.Flags = 'PMI-L'
+   Ledger_Id.Flags = 'A----'
+SELECT a.company                                            company,
+       a.voucher_type                                       voucher_type,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company,'ACCRUL','VoucherType',
+           a.voucher_type), description)                    description,
+       a.ledger_id                                          ledger_id,
+       b.rowkey                                            objkey
+FROM   Voucher_Type_Tab a, Voucher_Type_Detail_Tab b
+WHERE  a.company      = b.company
+AND    a.voucher_type = b.voucher_type
+AND    b.function_group = 'PPC';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_For_Ard IS
+   Prompt = 'Voucher Type Approval Rule Definition'
+   Voucher_Type.Flags = 'PMI-L'
+SELECT a.company                                            company,
+       a.voucher_type                                       voucher_type,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company,'ACCRUL','VoucherType',
+           a.voucher_type), description)                    description,
+       b.rowkey                                            objkey
+FROM   Voucher_Type_Tab a, Voucher_Type_Detail_Tab b
+WHERE  a.company      = b.company
+AND    a.voucher_type = b.voucher_type
+AND    b.function_group IN ('M','K','Q');
+

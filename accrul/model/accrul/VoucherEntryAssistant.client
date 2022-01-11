@@ -1,0 +1,617 @@
+client VoucherEntryAssistant;
+component ACCRUL;
+layer Core;
+projection VoucherEntryAssistantHandling;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+@DynamicComponentDependency PROJ
+include fragment ProjectActivityPostableSelector;
+include fragment CurrencyRate2Selector;
+include fragment CurrencyType3Selector;
+include fragment TaxCodeRestrictedSelector;
+include fragment AccountLovSelector;
+include fragment CurrencyRate1Selector;
+include fragment AccountingYearPeriodSelector;
+include fragment AccountingYearSelector;
+include fragment VoucherTypeUserGroup3Selector;
+include fragment UserGroupMemberFinance4Selector;
+include fragment Voucher;
+include fragment InterimVoucherDialog;
+include fragment CodeStringAllBasic;
+@DynamicComponentDependency INTLED
+include fragment InternalManualPostingAssistant;
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+-- gelr:saft_poland, begin
+@DynamicComponentDependency INVOIC
+include fragment VouchersInvoiceLovSelector;
+-- gelr:saft_poland, end
+
+warningsenabled = CreateVoucher;
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+assistant Assistant using VoucherSet {
+   label = "New Voucher";
+   savemode = OnLostFocus;
+
+   setup InitVoucherAssistant {
+      variable InitOpennedFrom {
+         type = Text;
+      }
+      variable InitCompany {
+         type = Text;
+      }
+      variable InitAccountingYear {
+         type = Number;
+      }
+      variable InitVoucherType {
+         type = Text;
+      }
+      variable InitVoucherNo {
+         type = Number;
+      }
+      variable InitPostingMethod {
+         type = Enumeration(CorrectionType);
+      }
+      execute {
+         set OpennedFrom = "${InitOpennedFrom}";
+         set CompanyFrom = "${InitCompany}";
+         set AccountingYearFrom = InitAccountingYear;
+         set VoucherTypeFrom = "${InitVoucherType}";
+         set VoucherNoFrom = InitVoucherNo;
+         set PostingMethod = InitPostingMethod;
+         set FunctionGroup = "M";
+         -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set SaftPolandEnabled = LocalizationFunctionalityStructure.SaftPoland;
+         -- gelr:localization_control_center, end
+      }
+   }
+   steps {
+      step {
+         group VoucherEntryGroup;
+         group VoucherPostingSummaryGroup;
+         list VoucherPostingList(VoucherPostingArray) {
+            copyoncruddefault(UseCorrectionRows, computed.RowGroupIdValue) to(Correction, RowGroupId);
+         }
+      }
+      final step {
+      }
+   }
+   finish command {
+      label = "Create Voucher";
+
+      enabled = [component.Assistant.IsActiveStepDirty = false];
+      variable VoucherNumber {
+         type = Number;
+      }
+      variable InterimVoucherDialogStructVar {
+         type = Structure(InterimVoucherDialogStructure);
+      }
+
+      execute {
+
+         if [(VoucherStatus = "Approved" or VoucherStatus = "AwaitingApproval") and(computed.BalanceInParallelCurrency != 0 or computed.BalanceInAccountingCurrency != 0)] {
+            error("Voucher is not balanced.");
+            exit CANCEL;
+         }
+         call AutomaticVoucherBalance(Company, VoucherType, FunctionGroup) into AutomaticVoucherBalanceVar;
+         if [AutomaticVoucherBalanceVar = "N" and VoucherStatus = "Approved" and(computed.CurrencyBalance != 0 or  computed.BalanceInParallelCurrency != 0)] {
+            confirm("Currency balance is not in balance. Save Changes?") {
+               when CANCEL {
+                  exit CANCEL;
+               }
+            }
+         }
+
+         call CreateVoucher() into VoucherNumber;
+         if [SimulationVoucher = "TRUE" and InterimVoucher != "TRUE" and VoucherStatus = "Approved"] {
+            call ValidateInterim(Company, UserGroup) {
+               when SUCCESS {
+                  call FetchInterimVouDefs(Company, AccountingYear, VoucherType, VoucherNumber, MultiCompany) into InterimVoucherDialogStructVar;
+                  dialog InterimVoucherDialog(InterimVoucherDialogStructVar) {
+                     when OK {
+                        info("Voucher ${VoucherNumber} created.");
+                        navigate "page/Voucher/Form?$filter=Company eq $[Company] and VoucherType eq $[VoucherType]  and AccountingYear eq $[AccountingYear] and VoucherNo eq $[VoucherNumber]";
+                     }
+                  }
+               }
+               when FAIL {
+                  error("${error.Message}");
+               }
+            }
+         }
+         info("Voucher ${VoucherNumber} created.");
+         navigate "page/Voucher/Form?$filter=Company eq $[Company] and VoucherType eq $[VoucherType]  and AccountingYear eq $[AccountingYear] and VoucherNo eq $[VoucherNumber]";
+
+      }
+   }
+   cancel command {
+      execute {
+         call RemoveTempVoucher();
+         navigate back;
+      }
+   }
+   restart command {
+      enabled = [false];
+   }
+}
+
+
+assistant CopyGenledVoucherAssistant using CopyGlHeaderVirtualSet {
+   label = "Copy GL Voucher Rows";
+
+   input(Company, VoucherObjkey, UseCorrectionRows);
+
+   init command {
+      execute {
+         if [UseCorrectionRows] {
+            set PostingMethod = "Correction";
+         }
+      }
+   }
+   singlestep {
+      group PostingMethod;
+      @DynamicComponentDependency GENLED
+      list GenledVoucherList(GenLedVoucherVirtualArray);
+   }
+
+   command CopyVoucher;
+   command Cancel;
+}
+
+
+assistant UseTemplateAssistant using UseTemplateVirtualSet {
+   label = "Use Voucher Template";
+   input(VoucherObjkey, Company, VoucherDate);
+
+   singlestep {
+      list UseVoucherTemplateList(TemplateArray);
+   }
+
+   command CopyTemplateRowsCommand;
+   command Cancel;
+
+}
+
+@DynamicComponentDependency GENLED
+assistant CopyVoucherDetailsAssistant using CopyGlVoucherDetailsHeaderVirtualSet {
+   label = "GL Voucher Rows Analysis";
+   input(Company, VoucherNo, VoucherType, AccountingYear);
+
+   singlestep {
+      group GlVoucherHeaderInfoGroup;
+      list GlVoucherRowList(GlVoucherRowsArray);
+
+   }
+   command Ok;
+}
+
+
+
+
+--------------------------------- COMMANDS ----------------------------------
+@Override
+command ValidateVoucherDate for VoucherEntry {
+}
+
+@DynamicComponentDependency GENLED
+command CopyGLVoucherRowsCommand for VoucherPosting {
+   label = "Copy GL Voucher Rows";
+   mode = Global;
+
+   enabled = [not(VoucherType = null or AccountingYear = null or AccountingPeriod = null or AmountMethod = null or UserGroup = null)];
+
+   execute {
+
+      assistant CopyGenledVoucherAssistant(Company, Objkey, UseCorrectionRows) {
+         when CANCEL {
+            refresh;
+         }
+         when OK {
+            refresh;
+         }
+      }
+   }
+}
+
+command UseVoucherTemplateCommand for VoucherPosting {
+   label = "Use Voucher Template";
+   mode = Global;
+
+   enabled = [not(VoucherType = null or AccountingYear = null or AccountingPeriod = null or AmountMethod = null or UserGroup = null) and not(VoucherStatus = null) and not(VoucherStatus = "Cancelled")
+   and(FunctionGroup in("M", "K", "Q") or(FunctionGroup = "Z" and RevenueCostClearVoucher = "PCAMA"))
+   and not(AuthorizeLevel = "ApproveOnly") and not(IsCancellation = "TRUE")];
+
+   execute {
+      assistant UseTemplateAssistant(Objkey, Company, VoucherDate) {
+         when CANCEL {
+            exit;
+         }
+         when OK {
+            refresh;
+         }
+      }
+   }
+}
+
+command CopyVoucher for CopyGlHeaderVirtual {
+   label = "Copy";
+   enabled = [component.GenledVoucherList.SelectionCount > 0];
+
+   execute {
+      call CopyGenledVoucher(VoucherObjkey, Objkey, component.GenledVoucherList.Selection, PostingMethod);
+   }
+}
+
+
+command CopyTemplateRowsCommand for UseVoucherTemplateVirtual {
+   label = "OK";
+   execute {
+      call CopyTemplateRows(VoucherObjkey, VoucherDate, component.UseVoucherTemplateList.Selection);
+   }
+}
+
+@DynamicComponentDependency GENLED
+command DetailsCommand for GenLedVoucher {
+   label = "Details";
+   mode = SingleRecord;
+
+   execute {
+      assistant CopyVoucherDetailsAssistant(Company, VoucherNo, VoucherType, AccountingYear) {
+         when OK {
+            exit;
+         }
+
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+//@Override
+//group VoucherEntryGroup for VoucherEntry {
+//   field VoucherDate {
+//      validate command ValidateVoucherDateEntry;
+//   }
+//}
+//group VoucherEntryGroup for VoucherEntry {
+//   label = "";
+
+//   field VoucherDate {
+//      validate command ValidateVoucherDate;
+//   }
+
+
+
+//   lov UserGroupRef with ReferenceUserGroupMemberFinance4Selector {
+//      size = Small;
+//      validate command ValidateUserGroup;
+
+//      validate command {
+//         variable AccountingYearPeriodVar {
+//            type = Structure(AccountingYearPeriodInfoStruct);
+//         }
+//         variable VoucherHeaderInfoVar {
+//            type = Structure(VoucherHeaderInfoStructure);
+//         }
+//         execute {
+//            call VoucherHeaderInfo(Company, AccountingYear, UserGroup, VoucherType) into VoucherHeaderInfoVar;
+//            set Automatic = VoucherHeaderInfoVar.Automatic;
+//            set FunctionGroup = VoucherHeaderInfoVar.FunctionGroup;
+//            set SimulationVoucher = VoucherHeaderInfoVar.SimulationVoucher;
+//            set UseApporvalWorkflow = VoucherHeaderInfoVar.UseApporvalWorkflow;
+//            if [UseApporvalWorkflow = "TRUE"] {
+//               set VoucherStatus = "AwaitingApproval";
+//            }
+//            else {
+//               if [VoucherHeaderInfoVar.AuthorizeLevel = "Approved"] {
+//                  set VoucherStatus = "Approved";
+//               }
+//               else {
+//                  if [VoucherHeaderInfoVar.AuthorizeLevel = "Not Approved"] {
+//                     set VoucherStatus = "AwaitingApproval";
+//                  }
+//               }
+//            }
+//            if [VoucherHeaderInfoVar.AuthorizeLevel = "ApproveOnly"] {
+//               set VoucherType = null;
+//               error("Users included in a user group with Approve Only authorization level are not allowed to enter or modify vouchers.");
+//            }
+//
+//            call AccYearPeriodInfo(Company, VoucherDate, UserGroup) into AccountingYearPeriodVar;
+//            set AccountingYear = AccountingYearPeriodVar.AccountingYear;
+//            set AccountingPeriod = AccountingYearPeriodVar.AccountingPeriod;
+//            set AccountingPeriodDescription = AccountingYearPeriodVar.AccPeriodDescription;
+//         }
+//   }
+   //}
+//   lov VoucherTypeRef with ReferenceVoucherTypeUserGroup3Selector {
+//      size = Small;
+//      validate command ValidateVoucherType;
+//
+//   }
+//   field VoucherNo {
+//    --  size = Small;
+//      editable = [Automatic != "Y" and VoucherType != null];
+//   }
+//   field VoucherStatus {
+//      label = "Voucher Status";
+//      size = Medium;
+//   }
+//   field AccountingYear {
+//      size = Small;
+//   }
+//   field AccountingPeriod {
+//      size = Small;
+//   }
+//   field AccountingPeriodDescription;
+//   field AmountMethod {
+//      size = Medium;
+//      editable = [FunctionGroup in("K", "M", "Q")];
+//   }
+//   field RowGroupValidation {
+//      visible = [false];
+//      columnexclude = [true];
+//   }
+//   field Notes {
+//      visible = [PageType = "VOUCHERPAGE"];
+//   }
+//   field UseCorrectionRows {
+//      size = Small;
+//   }
+//   field TextIdRef {
+//      size = Small;
+//   }
+//   field VoucherText2 {
+//      size = Medium;
+//   }
+//}
+
+group PostingMethod for CopyGlHeaderVirtual {
+   label = "";
+   field PostingMethod {
+      editable = [not UseCorrectionRows];
+   }
+}
+
+@DynamicComponentDependency GENLED
+group GlVoucherHeaderInfoGroup for CopyGlVoucherDetailsHeaderVirtual {
+   label = "";
+
+   field VoucherNo {
+      size = Small;
+   }
+   field AccountingYear {
+      size = Small;
+   }
+   field VoucherType {
+      size = Small;
+   }
+
+   computedfield DebitAmount {
+      value = "#{GlVoucherRowsArray.sum(DebetAmount)}";
+      type = Number;
+      format = ifscurrency;
+   }
+   computedfield CreditAmount {
+      value = "#{GlVoucherRowsArray.sum(CreditAmount)}";
+      type = Number;
+      format = ifscurrency;
+   }
+   computedfield Balance {
+      value = "#{GlVoucherRowsArray.sum(Amount)}";
+      type = Number;
+      format = ifscurrency;
+      size = Small;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+@Override
+list VoucherPostingList for VoucherPosting {
+   //   field AddInternal;
+   savemode = Default;
+
+   crudactions {
+      new {
+         enabled = [not(parent.IsDirty = true)];
+      }
+      delete {
+         enabled = [not(parent.IsDirty = true)];
+      }
+      edit {
+         enabled = [not(parent.IsDirty = true)];
+      }
+   }
+   -- gelr:saft_poland, begin
+   field ReferenceNumber {
+      validate command {
+         execute {
+            @DynamicComponentDependency INVOIC
+            if [parent.SaftPolandEnabled] {
+               set ReferenceSerie = ReferenceNumberRef.ReferenceSerie;
+            }
+         }
+      }
+      lovswitch {
+
+         when [parent.SaftPolandEnabled] {
+            @DynamicComponentDependency INVOIC
+            lov ReferenceNumberRef with ReferenceReferenceNumberLovSelector;
+         }
+      }
+   }
+   -- gelr:saft_poland, begin
+   @DynamicComponentDependency GENLED
+   command CopyGLVoucherRowsCommand;
+   command UseVoucherTemplateCommand;
+}
+
+
+@DynamicComponentDependency GENLED
+list GenledVoucherList for GenLedVoucher {
+   label = "GL Vouchers";
+   multiselect = [false];
+
+   field VoucherType {
+      size = Small;
+   }
+   field VoucherNo;
+   field IsMultiCompanyVoucher {
+      size = Small;
+   }
+   field VoucherDate;
+   field UserGroup {
+      size = Small;
+   }
+   field AccountingYear {
+      size = Small;
+   }
+   field AccountingPeriod {
+      size = Small;
+   }
+   field DateReg;
+   field Userid {
+      label = "User ID";
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field Notes {
+      size = Small;
+   }
+   field JouNo;
+   field InterimVoucherDb {
+      size = Small;
+   }
+   field VoucherTypeReference {
+      size = Small;
+   }
+   field VoucherNoReference;
+   field AccountingYearReference;
+
+   command DetailsCommand;
+}
+
+
+list UseVoucherTemplateList for VoucherTemplate {
+   multiselect = [true];
+
+   lov TemplateRef with ReferenceVoucherTemplateSelector {
+      description = Description;
+      size = Large;
+   }
+   field Description {
+      searchable = true;
+      columnexclude = [true];
+      columnvisible = [false];
+   }
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid";
+      size = Large;
+   }
+}
+
+@DynamicComponentDependency GENLED
+list GlVoucherRowList for GenLedVoucherRow {
+   label = "GL Voucher Rows";
+
+   field Correction {
+      size = Small;
+   }
+
+   fieldset CodeStringAllBasicLovFieldSet;
+
+   field DebetAmount;
+   field CreditAmount;
+   field Amount;
+   field CurrencyCode {
+      size = Small;
+   }
+   field CurrencyRate;
+   field ConversionFactor;
+   field CurrencyDebetAmount;
+   field CurrencyCreditAmount;
+   field CurrencyAmount;
+   field ParallelCurrencyRate;
+   field ParallelConversionFactor;
+   field ThirdCurrencyDebitAmount;
+   field ThirdCurrencyCreditAmount;
+   field ThirdCurrencyAmount;
+   field Text;
+   field Quantity;
+   field ProcessCode {
+      size = Small;
+   }
+   @DynamicComponentDependency INVOIC
+   lov DelivTypeIdRef with ReferenceDeliveryTypeSelector {
+      search = DelivTypeId, Description;
+      description = DelivTypeIdRef.Description;
+   }
+   field OptionalCode {
+      size = Small;
+   }
+   field PartyTypeId {
+      size = Small;
+   }
+   field TransCode {
+      size = Small;
+   }
+   field TransferId {
+      size = Small;
+   }
+   field Corrected {
+      size = Small;
+   }
+   field ReferenceSerie {
+      size = Small;
+   }
+   field ReferenceNumber {
+      size = Small;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

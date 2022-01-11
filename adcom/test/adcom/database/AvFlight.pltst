@@ -1,0 +1,1095 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvFlight
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210407  siselk  AD-1026, Added test for Get_Ground_Time
+--  210301  siselk  LMM2020R1-1744, Modified Get_Closed_Faults_Count to address issues when there are only 28 days in february.
+--  210223  siselk  LMM2020R1-1744, Removed pltst for Get_Departure_Flight and updated Get_Departure_Timestamp
+--  210215  UPIWLK  LMM2020R1-1613 - Added test for Has_Logbook_Fault function
+--  201105  majslk  LMM2020R1-1379 - Added test for Check_Insert__
+--  201022  Tajalk  LMM2020R1-1371, Changed Get_Closed_Faults_Count mock data use SYSDATE
+--  201006  lahnlk  LMM2020R1-427,  added Get_Closed_Faults_Count
+--  200911  SatGlk  LMM2020R1-1042 - Added tests for Get_Departure_Timestamp, Get_Arrival_Timestamp
+--  200904  SatGlk  LMM2020R1-1042 - Added tests for Get_Outbound_Station, Get_Departure_Flight_Id, Get_Departure_Flight
+--  200902  TAJALK  LMM2020R1-1014 - Added tests for Sync_State_Handle___, Post_Sync_Action
+--  200818  dildlk  LMM2020R1-311 - Added Pre_Sync_Action test.
+--  200720  majslk  LMM2020R1-111 - Modified test descriptions for total count functions.
+--  200712  rosdlk  LMM2020R1-345 - Added tests for total count functions.
+--  200704  majslk  LMM2020R1-290 - Changed Get_Departure_Flight
+--  200701  Tajalk  LMM2020R1-252 - Changed the test
+--  200619  majslk  Created
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Get_Assigned_Task_Count should return the number of assigned tasks when it is assigned to a specific work package" FOR
+   FUNCTION Get_Assigned_Task_Count (
+      work_package_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_tab
+   VALUES
+      | task_id | aircraft_wp_id |
+      | 1       | 1              |
+      | 2       | 1              |
+      | 3       | 1              |
+      | 4       | 2              |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | work_package_id_ |
+      | 3         |  1               |
+      | 1         |  2               |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Assigned_Task_Count(work_package_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Opened_Faults_Count should return the number of faults in open state when aircraft id is given" FOR
+   FUNCTION Get_Opened_Faults_Count (
+      aircraft_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_tab
+   VALUES
+      | fault_id | aircraft_id | rowstate  |
+      | 1        | 1           | 'Open'    |
+      | 2        | 1           | 'Deffered'|
+      | 3        | 1           | 'Closed'  |
+      | 4        | 2           | 'Open'    |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | aircraft_id_ |
+      | 1         |  1           |
+      | 1         |  2           |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Opened_Faults_Count(aircraft_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Deferred_Faults_Count should return the number of faults in Deferred state when aircraft id is given" FOR
+   FUNCTION Get_Deferred_Faults_Count (
+      aircraft_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_tab
+   VALUES
+      | fault_id | aircraft_id | rowstate  |
+      | 1        | 1           | 'Open'    |
+      | 2        | 1           | 'Deferred'|
+      | 3        | 1           | 'Closed'  |
+      | 4        | 2           | 'Deferred'|
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | aircraft_id_ |
+      | 1         |  1           |
+      | 1         |  2           |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Deferred_Faults_Count(aircraft_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+
+
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+
+   --Insert your mock directives and mock return variables here
+   @MockTable aircraft_tab
+   VALUES
+      | aircraft_id | mx_unique_key |
+      | 1           | 'MXKEY1'      |
+   END VALUES;
+
+   @MockTable av_airport_tab
+   VALUES
+      |airport_id |mx_unique_key|
+      | 2         |  'MXKEY2'   |
+      | 3         |  'MXKEY3'   |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_    VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+   expected2_  VARCHAR2(2000);
+   expected3_  VARCHAR2(2000);
+
+BEGIN
+   FOR
+      | attr_ |
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXKEY1'||chr(30)||'WITH_AIRCRAFT_KEY'|
+      | 'DEPARTURE_AIRPORT_UNIQUE_KEY'||chr(31)||'MXKEY2'||chr(30)||'WITH_DEPARTURE_AIRPORT_UNIQUE_KEY'|
+      | 'ARRIVAL_AIRPORT_UNIQUE_KEY'||chr(31)||'MXKEY3'||chr(30)||'WITH_ARRIVAL_AIRPORT_UNIQUE_KEY'|
+
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_AIRCRAFT_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30);
+      expected2_ := 'WITH_DEPARTURE_AIRPORT_UNIQUE_KEY'||'DEPARTURE_AIRPORT_ID'||chr(31)||'2'||chr(30);
+      expected3_ := 'WITH_ARRIVAL_AIRPORT_UNIQUE_KEY'||'ARRIVAL_AIRPORT_ID'||chr(31)||'3'||chr(30);
+
+      --Insert your assertions here
+
+      IF attr_ LIKE '%WITH_AIRCRAFT_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_DEPARTURE_AIRPORT_UNIQUE_KEY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_ARRIVAL_AIRPORT_UNIQUE_KEY%' THEN
+         ASSERT output1_ = expected3_ MESSAGE 'Expected '||expected3_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Sync_State_Handle___ should correct the incoming state based on the current state" FOR
+   PROCEDURE Sync_State_Handle___(
+      current_rowstate_  IN     VARCHAR2,
+      incoming_rowstate_ IN     VARCHAR2,
+      input_objid_       IN     VARCHAR2,
+      input_objversion_  IN     VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage  Av_Flight_API
+   PROCEDURE Start__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('MXOUT')     MESSAGE 'Expected '||'MXOUT'||' but  was '||objid_;
+   END Start__;
+
+   @MockPackage  Av_Flight_API
+   PROCEDURE Cancel_Flight__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('MXCANCEL')     MESSAGE 'Expected '||'MXCANCEL'||' but  was '||objid_;
+   END Cancel_Flight__;
+
+   @MockPackage  Av_Flight_API
+   PROCEDURE Takeoff_Aircraft__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('MXOFF')     MESSAGE 'Expected '||'MXOFF'||' but  was '||objid_;
+   END Takeoff_Aircraft__;
+
+   @MockPackage  Av_Flight_API
+   PROCEDURE Arrived_At_Gate__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('MXIN')     MESSAGE 'Expected '||'MXIN'||' but  was '||objid_;
+   END Arrived_At_Gate__;
+
+   @MockPackage  Av_Flight_API
+   PROCEDURE Land_Aircraft__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('MXON')     MESSAGE 'Expected '||'MXON'||' but  was '||objid_;
+   END Land_Aircraft__;
+
+   @MockPackage  Av_Flight_API
+   PROCEDURE Complete__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('MXCMPLT')     MESSAGE 'Expected '||'MXCMPLT'||' but  was '||objid_;
+   END Complete__;
+IS
+   --Insert your test variables here
+BEGIN
+   FOR
+      | current_rowstate_ | incoming_rowstate_ | input_objid_ | input_objversion_ |
+      | 'Planned'         |  'MXPLAN'          |  'NOTAPP1'   |  'A'              |
+      | 'Out'             |  'MXOUT'           |  'NOTAPP2'   |  'A'              |
+      | 'Canceled'        |  'MXCANCEL'        |  'NOTAPP3'   |  'A'              |
+      | 'On'              |  'MXON'            |  'NOTAPP4'   |  'A'              |
+      | 'Off'             |  'MXOFF'           |  'NOTAPP5'   |  'A'              |
+      | 'In'              |  'MXIN'            |  'NOTAPP6'   |  'A'              |
+      | 'Completed'       |  'MXCMPLT'         |  'NOTAPP7'   |  'A'              |
+
+      | 'Planned'         |  'MXOUT'           |  'MXOUT'     |  'A'              |
+      | 'Planned'         |  'MXCANCEL'        |  'MXCANCEL'  |  'A'              |
+      | 'Out'             |  'MXOFF'           |  'MXOFF'     |  'A'              |
+      | 'On'              |  'MXIN'            |  'MXIN'      |  'A'              |
+      | 'Off'             |  'MXON'            |  'MXON'      |  'A'              |
+      | 'In'              |  'MXCMPLT'         |  'MXCMPLT'   |  'A'              |
+   LOOP
+      --Insert your test code here
+      Sync_State_Handle___(current_rowstate_, incoming_rowstate_, input_objid_, input_objversion_);
+      --Insert your assertions here
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Post_Sync_Action should ... when ..." FOR
+   PROCEDURE Post_Sync_Action(
+      objid_      IN     VARCHAR2,
+      objversion_ IN     VARCHAR2,
+      attr_       IN     VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage  Av_Flight_API
+   FUNCTION Get_Object_By_Id___ (
+      objid_ IN     VARCHAR2 ) RETURN av_flight_tab%ROWTYPE
+   IS
+      rec_         av_flight_tab%ROWTYPE;
+   BEGIN
+      CASE objid_
+      WHEN 'NOTAPP1' THEN
+         rec_.flight_id := 1;
+         RETURN rec_;
+      WHEN 'NOTAPP2' THEN
+         rec_.flight_id := 2;
+         RETURN rec_;
+      WHEN 'NOTAPP3' THEN
+         rec_.flight_id := 3;
+         RETURN rec_;
+      WHEN 'NOTAPP4' THEN
+         rec_.flight_id := 4;
+         RETURN rec_;
+      WHEN 'NOTAPP5' THEN
+         rec_.flight_id := 5;
+         RETURN rec_;
+      WHEN 'NOTAPP6' THEN
+         rec_.flight_id := 6;
+         RETURN rec_;
+      WHEN 'NOTAPP7' THEN
+         rec_.flight_id := 7;
+         RETURN rec_;
+      WHEN 'MXOUT' THEN
+         rec_.flight_id := 8;
+         RETURN rec_;
+      WHEN 'MXCANCEL' THEN
+         rec_.flight_id := 9;
+         RETURN rec_;
+      WHEN 'MXOFF' THEN
+         rec_.flight_id := 10;
+         RETURN rec_;
+      WHEN 'MXIN' THEN
+         rec_.flight_id := 11;
+         RETURN rec_;
+      WHEN 'MXON' THEN
+         rec_.flight_id := 12;
+         RETURN rec_;
+      WHEN 'MXCMPLT' THEN
+         rec_.flight_id := 13;
+         RETURN rec_;
+      END CASE ;
+
+      RETURN NULL;
+END Get_Object_By_Id___;
+
+@MockPackage  Av_Flight_API
+FUNCTION Get_Objstate (
+   flight_id_ IN     NUMBER ) RETURN VARCHAR2
+IS
+BEGIN
+   CASE flight_id_
+   WHEN 1 THEN
+      RETURN 'Planned';
+   WHEN 2 THEN
+      RETURN 'Out';
+   WHEN 3 THEN
+      RETURN 'Canceled';
+   WHEN 4 THEN
+      RETURN 'On';
+   WHEN 5 THEN
+      RETURN 'Off';
+   WHEN 6 THEN
+      RETURN 'In';
+   WHEN 7 THEN
+      RETURN 'Completed';
+   WHEN 8 THEN
+      RETURN 'Planned';
+   WHEN 9 THEN
+      RETURN 'Planned';
+   WHEN 10 THEN
+      RETURN 'Out';
+   WHEN 11 THEN
+      RETURN 'On';
+   WHEN 12 THEN
+      RETURN 'Off';
+   WHEN 13 THEN
+      RETURN 'In';
+   END CASE ;
+
+   RETURN NULL;
+END Get_Objstate;
+
+@MockPackage  Av_Flight_API
+PROCEDURE Sync_State_Handle___(
+   current_rowstate_  IN     VARCHAR2,
+   incoming_rowstate_ IN     VARCHAR2,
+   input_objid_       IN     VARCHAR2,
+   input_objversion_  IN     VARCHAR2)
+IS
+BEGIN
+   ASSERT  current_rowstate_ IN  ('Planned', 'Out', 'Canceled','On','Off','In','Completed')  MESSAGE 'Expected '||'Planned,Out,Canceled,On,Off,In,Completed'||' but  was '||current_rowstate_;
+   ASSERT  incoming_rowstate_ IN  ('MXOUT', 'MXCANCEL', 'MXOFF','MXIN','MXON','MXCMPLT','MXPLAN')     MESSAGE 'Expected '||'MXOUT,MXCANCEL,MXOFF,MXIN,MXON,MXCMPLT,MXPLAN'||' but  was '||incoming_rowstate_;
+END Sync_State_Handle___;
+IS
+--Insert your test variables here
+BEGIN
+FOR
+   | objid_      | objversion_ | attr_                                   |
+   | 'NOTAPP1'   |  'A'        | 'ROWSTATE'||chr(31)||'MXPLAN'||chr(30)  |
+   | 'NOTAPP2'   |  'A'        | 'ROWSTATE'||chr(31)||'MXOUT'||chr(30)   |
+   | 'NOTAPP3'   |  'A'        | 'ROWSTATE'||chr(31)||'MXCANCEL'||chr(30)|
+   | 'NOTAPP4'   |  'A'        | 'ROWSTATE'||chr(31)||'MXON'||chr(30)    |
+   | 'NOTAPP5'   |  'A'        | 'ROWSTATE'||chr(31)||'MXOFF'||chr(30)   |
+   | 'NOTAPP6'   |  'A'        | 'ROWSTATE'||chr(31)||'MXIN'||chr(30)    |
+   | 'NOTAPP7'   |  'A'        | 'ROWSTATE'||chr(31)||'MXCMPLT'||chr(30) |
+   | 'MXOUT'     |  'A'        | 'ROWSTATE'||chr(31)||'MXOUT'||chr(30)   |
+   | 'MXCANCEL'  |  'A'        | 'ROWSTATE'||chr(31)||'MXCANCEL'||chr(30)|
+   | 'MXOFF'     |  'A'        | 'ROWSTATE'||chr(31)||'MXOFF'||chr(30)   |
+   | 'MXIN'      |  'A'        | 'ROWSTATE'||chr(31)||'MXIN'||chr(30)    |
+   | 'MXON'      |  'A'        | 'ROWSTATE'||chr(31)||'MXON'||chr(30)    |
+   | 'MXCMPLT'   |  'A'        | 'ROWSTATE'||chr(31)||'MXCMPLT'||chr(30) |
+LOOP
+   --Insert your test code here
+   Post_Sync_Action(objid_, objversion_, attr_);
+   --Insert your assertions here
+END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Outbound_Station should return IATA Code of the Outbound Station when aircraft_id_, arrival_airport_id_, shed_arrival_date_ is passed in" FOR
+   FUNCTION Get_Outbound_Station (
+      aircraft_id_        IN     NUMBER,
+      arrival_airport_id_ IN     NUMBER,
+      shed_arrival_date_  IN     TIMESTAMP ) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+
+   @MockPackage Av_Flight_API
+   FUNCTION Get_Departure_Flight_Id (
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      shed_arr_time_  IN     TIMESTAMP )  RETURN  NUMBER
+   IS
+
+   BEGIN
+      IF aircraft_id_ = 1000 AND arr_airport_id_ = 1001 THEN
+         RETURN 1001;
+      ELSIF aircraft_id_ = 1001 AND arr_airport_id_ = 1004 THEN
+         RETURN 1004;
+      END IF;
+      RETURN NULL;
+   END Get_Departure_Flight_Id;
+
+   @MockPackage Av_Flight_API
+   FUNCTION Get_Arrival_Airport_Id (
+      flight_id_ IN     NUMBER )  RETURN  NUMBER
+   IS
+   BEGIN
+      IF flight_id_ = 1001 THEN
+         RETURN 1002;
+      ELSIF flight_id_ = 1004 THEN
+         RETURN 1005;
+      END IF;
+      RETURN NULL;
+   END Get_Arrival_Airport_Id;
+
+   @MockPackage Av_Airport_API
+   FUNCTION Get_Iata_Code (
+      airport_id_ IN     NUMBER )  RETURN  VARCHAR2
+   IS
+   BEGIN
+      CASE airport_id_
+      WHEN 1000 THEN
+         RETURN 'CMB';
+      WHEN 1001 THEN
+         RETURN 'ATL';
+      WHEN 1002 THEN
+         RETURN 'YOW';
+      WHEN 1003 THEN
+         RETURN 'LAX';
+      WHEN 1004 THEN
+         RETURN 'YYC';
+      WHEN 1005 THEN
+         RETURN 'SFO';
+      END CASE ;
+
+      RETURN NULL;
+END Get_Iata_Code;
+
+IS
+--Insert your test variables here
+return_   VARCHAR2(2000);
+expected_ VARCHAR2(2000);
+   BEGIN
+FOR
+   | expected_ | aircraft_id_ | arrival_airport_id_ | shed_arrival_date_ |
+   | 'YOW'     |  1000        |  1001               | TO_DATE('2020-06-20 05:00:00', 'yyyy-mm-dd HH:MI:SS') |
+   | 'SFO'     |  1001        |  1004               | TO_DATE('2020-06-20 05:00:00', 'yyyy-mm-dd HH:MI:SS') |
+LOOP
+   --Insert your test code here
+   return_ := Get_Outbound_Station(aircraft_id_, arrival_airport_id_, shed_arrival_date_);
+   --Insert your assertions here
+   ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Departure_Flight_Id should return the Flight_Id of the departure flight when aircraft_id_, arr_airport_id_, shed_arr_time_ are passed" FOR
+   FUNCTION Get_Departure_Flight_Id(
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      shed_arr_time_  IN     TIMESTAMP) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_flight_tab
+   VALUES
+      | flight_id | aircraft_id | departure_airport_id | arrival_airport_id   | shed_departure_date_time |
+      | 1000      | 1000        | 1000                 | 1001                 | TO_DATE('2020-06-21 05:00:00', 'yyyy-mm-dd HH:MI:SS') |
+      | 1001      | 1000        | 1001                 | 1002                 | TO_DATE('2020-06-21 10:00:00', 'yyyy-mm-dd HH:MI:SS') |
+      | 1003      | 1001        | 1003                 | 1004                 | TO_DATE('2020-06-22 01:00:00', 'yyyy-mm-dd HH:MI:SS') |
+      | 1004      | 1001        | 1004                 | 1005                 | TO_DATE('2020-06-22 12:00:00', 'yyyy-mm-dd HH:MI:SS') |
+   END VALUES;
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | aircraft_id_ | arr_airport_id_ | shed_arr_time_ |
+      | 1001      |  1000        |  1001           |  TO_DATE('2020-06-20 05:00:00', 'yyyy-mm-dd HH:MI:SS') |
+      | 1004      |  1001        |  1004           |  TO_DATE('2020-06-20 05:00:00', 'yyyy-mm-dd HH:MI:SS') |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Departure_Flight_Id(aircraft_id_, arr_airport_id_, shed_arr_time_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+
+UNITTEST "Get_Departure_Timestamp should return the depature timestamp of the flight when aircraft_id_, arr_airport_id_, shed_arr_time_ are passed" FOR
+   FUNCTION Get_Departure_Timestamp(
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      shed_arr_time_  IN     TIMESTAMP) RETURN TIMESTAMP;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Flight_API
+   FUNCTION Get_Departure_Flight_Id (
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      shed_arr_time_  IN     TIMESTAMP )  RETURN  NUMBER
+   IS
+   BEGIN
+      IF aircraft_id_ = 1000  AND arr_airport_id_ = 1021 THEN
+         RETURN 1001;
+      ELSIF aircraft_id_ = 1001 AND arr_airport_id_ = 1036 THEN
+         RETURN 1028;
+      END IF;
+      RETURN NULL;
+   END Get_Departure_Flight_Id;
+
+   @MockPackage Av_Flight_API
+   FUNCTION Get_Turn_Status (
+      flight_id_ IN     NUMBER )  RETURN  VARCHAR2
+   IS
+   BEGIN
+      IF flight_id_ = 1001 THEN
+         RETURN 'Departed';
+      ELSIF flight_id_ = 1028 THEN
+         RETURN 'Inbound';
+      END IF;
+      RETURN NULL;
+   END Get_Turn_Status;
+
+   @MockPackage Av_Flight_API
+   FUNCTION Get_Actual_Departure_Date_Time (
+      flight_id_ IN     NUMBER )  RETURN  DATE
+   IS
+   BEGIN
+      IF flight_id_ = 1001 THEN
+         RETURN TO_DATE('2020-06-20 05:19:00', 'yyyy-mm-dd HH:MI:SS');
+      ELSIF flight_id_ = 1028 THEN
+         RETURN TO_DATE('2020-06-22 09:03:00', 'yyyy-mm-dd HH:MI:SS') ;
+      END IF;
+      RETURN NULL;
+   END Get_Actual_Departure_Date_Time;
+
+   @MockPackage Av_Flight_API
+   FUNCTION Get_Shed_Departure_Date_Time (
+      flight_id_ IN     NUMBER )  RETURN  DATE
+   IS
+   BEGIN
+      IF flight_id_ = 1001 THEN
+         RETURN TO_DATE('2020-06-20 03:30:00', 'yyyy-mm-dd HH:MI:SS');
+      ELSIF flight_id_ = 1028 THEN
+         RETURN TO_DATE('2020-06-22 08:03:00', 'yyyy-mm-dd HH:MI:SS') ;
+      END IF;
+      RETURN NULL;
+   END Get_Shed_Departure_Date_Time;
+
+IS
+   --Insert your test variables here
+   return_   TIMESTAMP;
+   expected_ TIMESTAMP;
+BEGIN
+   FOR
+      | expected_                                              | aircraft_id_ | arr_airport_id_ | shed_arr_time_                                        |
+      | TO_DATE('2020-06-20 05:19:00', 'yyyy-mm-dd HH:MI:SS')  |  1000        |     1021        | TO_DATE('2020-06-19 05:00:00', 'yyyy-mm-dd HH:MI:SS') |
+      | TO_DATE('2020-06-22 08:03:00', 'yyyy-mm-dd HH:MI:SS')  |  1001        |     1036        | TO_DATE('2020-06-19 05:00:00', 'yyyy-mm-dd HH:MI:SS') |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Departure_Timestamp(aircraft_id_, arr_airport_id_, shed_arr_time_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Arrival_Timestamp should return the arrival timestamp of the flight when flight_id_ is passed" FOR
+   FUNCTION Get_Arrival_Timestamp(
+      flight_id_ IN     NUMBER) RETURN TIMESTAMP;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Flight_API
+   FUNCTION Get_Turn_Status (
+      flight_id_ IN     NUMBER )  RETURN  VARCHAR2
+   IS
+   BEGIN
+      IF flight_id_ = 1001 THEN
+         RETURN 'Departed';
+      ELSIF flight_id_ = 1028 THEN
+         RETURN 'Inbound';
+      END IF;
+      RETURN NULL;
+   END Get_Turn_Status;
+
+   @MockPackage Av_Flight_API
+   FUNCTION Get_Shed_Arrival_Date_Time (
+      flight_id_ IN     NUMBER )  RETURN  DATE
+   IS
+   BEGIN
+      IF flight_id_ = 1001 THEN
+         RETURN TO_DATE('2020-06-19 01:25:00', 'yyyy-mm-dd HH:MI:SS');
+      ELSIF flight_id_ = 1028 THEN
+         RETURN TO_DATE('2020-06-21 11:21:00', 'yyyy-mm-dd HH:MI:SS') ;
+      END IF;
+      RETURN NULL;
+   END Get_Shed_Arrival_Date_Time;
+
+   @MockPackage Av_Flight_API
+   FUNCTION Get_Actual_Arrival_Date_Time (
+      flight_id_ IN     NUMBER )  RETURN  DATE
+   IS
+   BEGIN
+      IF flight_id_ = 1001 THEN
+         RETURN TO_DATE('2020-06-19 02:10:00', 'yyyy-mm-dd HH:MI:SS');
+      ELSIF flight_id_ = 1028 THEN
+         RETURN TO_DATE('2020-06-21 12:35:00', 'yyyy-mm-dd HH:MI:SS') ;
+      END IF;
+      RETURN NULL;
+   END Get_Actual_Arrival_Date_Time;
+
+IS
+   --Insert your test variables here
+   return_   TIMESTAMP;
+   expected_ TIMESTAMP;
+BEGIN
+   FOR
+      | expected_                                              | flight_id_ |
+      | TO_DATE('2020-06-19 02:10:00', 'yyyy-mm-dd HH:MI:SS')  |  1001      |
+      | TO_DATE('2020-06-21 11:21:00', 'yyyy-mm-dd HH:MI:SS')  |  1028      |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Arrival_Timestamp(flight_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Split_Time should return split time when time is passed" FOR
+   FUNCTION Get_Split_Time(
+      time_  TIMESTAMP) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_flight_tab
+   VALUES
+      | flight_id | leg_no    |
+      | 1001      | 'OT1556'  |
+      | 1002      | 'OT1521'  |
+   END VALUES;
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | time_ |
+      | '11:21'   |  TO_DATE('2020-06-21 11:21:00', 'yyyy-mm-dd HH:MI:SS')      |
+      | '01:31'   |  TO_DATE('2020-03-22 01:31:00', 'yyyy-mm-dd HH:MI:SS')      |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Split_Time(time_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Arrival_Offset_Time should return the arrival Offset timestamp of the flights when arrival_airport_id_ is passed" FOR
+   FUNCTION Get_Arrival_Offset_Time (
+      arrival_airport_id_ IN     NUMBER) RETURN TIMESTAMP;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Airport_API
+   FUNCTION Get_Arrival_Offset (
+      airport_id_ IN     NUMBER )  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN CASE airport_id_
+      WHEN 1 THEN 3
+      WHEN 3 THEN 3
+      WHEN 4 THEN 5
+   END;
+END Get_Arrival_Offset;
+
+@MockTable dual
+VALUES
+   |dummy|
+   |1    |
+END VALUES;
+
+IS
+--Insert your test variables here
+return_   TIMESTAMP;
+expected_ TIMESTAMP;
+BEGIN
+FOR
+   | expected_ | arrival_airport_id_ |
+   |    sysdate+(3/24)|  1                  |
+   |    sysdate+(3/24)|  3                  |
+   |    sysdate+(5/24)|  4                  |
+LOOP
+   --Insert your test code here
+   return_ := Get_Arrival_Offset_Time(arrival_airport_id_);
+   --Insert your assertions here
+   ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Departure_Offset_Time should return the departure Offset timestamp of the flights when arrival_airport_id_ is passed" FOR
+   FUNCTION Get_Departure_Offset_Time (
+      arrival_airport_id_ IN     NUMBER) RETURN TIMESTAMP;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Airport_API
+   FUNCTION Get_Departure_Offset (
+      airport_id_ IN     NUMBER )  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN CASE airport_id_
+      WHEN 1 THEN 3
+      WHEN 3 THEN 3
+      WHEN 4 THEN 5
+   END;
+END Get_Departure_Offset;
+
+@MockTable dual
+VALUES
+   |dummy|
+   |1    |
+END VALUES;
+
+IS
+--Insert your test variables here
+return_   TIMESTAMP;
+expected_ TIMESTAMP;
+   BEGIN
+FOR
+   | expected_ | arrival_airport_id_ |
+   |    sysdate-(3/24)|  1                  |
+   |    sysdate-(3/24)|  3                  |
+   |    sysdate-(5/24)|  4                  |
+LOOP
+   --Insert your test code here
+   return_ := Get_Departure_Offset_Time(arrival_airport_id_);
+   --Insert your assertions here
+   ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+END LOOP;
+   END UNITTEST;
+
+UNITTEST "Get_Closed_Faults_Count should return closed fault count when aircraft_id and airport_id are passed" FOR
+   FUNCTION Get_Closed_Faults_Count (
+      aircraft_id_        IN     NUMBER,
+      arrival_airport_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Airport_API
+   FUNCTION Get_Faults_Offset (
+      airport_id_ IN     NUMBER )  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN CASE airport_id_
+      WHEN 1 THEN 3
+      WHEN 3 THEN 10
+      WHEN 4 THEN 5
+   END;
+END Get_Faults_Offset;
+
+@MockTable dual
+VALUES
+   |dummy|
+   |1    |
+END VALUES;
+
+@MockTable av_fault_tab
+VALUES
+   | fault_id | aircraft_id | rowstate | closed_date   |
+   | 1        | 1           | 'Closed' |sysdate - 85   | -- changed from 90 to 85 to solve the issues arise when there are 28 days in february
+   | 2        | 1           | 'Closed' |sysdate - 80   |
+   | 3        | 1           | 'Closed' |sysdate - 70   |
+   | 4        | 1           | 'Closed' |sysdate - 60   |
+   | 5        | 1           | 'Closed' |sysdate - 50   |
+   | 6        | 1           | 'Closed' |sysdate - 40   |
+END VALUES;
+
+IS
+--Insert your test variables here
+return_   NUMBER;
+expected_ NUMBER;
+BEGIN
+FOR
+   | expected_ | aircraft_id_ | arrival_airport_id_ |
+   |   6       |  1           |  1                  |
+   |   6       |  1           |  3                  |
+LOOP
+   --Insert your test code here
+   return_ := Get_Closed_Faults_Count(aircraft_id_, arrival_airport_id_);
+   --Insert your assertions here
+   ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Check_Insert___ should genarate next sequence value when flight id is null" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT Av_Flight_Tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   @MockTable dual
+   VALUES
+      |dummy |
+      |1     |
+   END VALUES;
+
+IS
+   test_rec1_  Av_Flight_Tab%ROWTYPE;
+   test_rec2_  Av_Flight_Tab%ROWTYPE;
+   output_     Indicator_Rec;
+BEGIN
+   test_rec1_.flight_id                  := NULL;
+   test_rec1_.flight_alt_id              := 'ALT-01';
+   test_rec1_.aircraft_id                := 1001;
+   test_rec1_.departure_airport_id       := 1000;
+   test_rec1_.arrival_airport_id         := 1002;
+   test_rec1_.leg_no                     := 'YOW-348';
+   test_rec1_.master_flight_no           := 'YOW-348';
+   test_rec1_.is_historic                := 'true';
+   test_rec1_.shed_departure_date_time   :=  TO_DATE('2020-11-22 05:00:00', 'yyyy-mm-dd HH:MI:SS');
+   test_rec1_.actual_departure_date_time := TO_DATE('2020-11-22 05:00:00', 'yyyy-mm-dd HH:MI:SS');
+   test_rec1_.departure_gate             := 'Gate1';
+   test_rec1_.off_date_time              := TO_DATE('2020-11-21 05:00:00', 'yyyy-mm-dd HH:MI:SS');
+   test_rec1_.shed_arrival_date_time     := TO_DATE('2020-11-21 05:00:00', 'yyyy-mm-dd HH:MI:SS');
+   test_rec1_.actual_arrival_date_time   := TO_DATE('2020-11-21 05:00:00', 'yyyy-mm-dd HH:MI:SS');
+   test_rec1_.on_date_time               := TO_DATE('2020-11-21 05:00:00', 'yyyy-mm-dd HH:MI:SS');
+   test_rec1_.arrival_gate               := 'Gate2';
+   test_rec1_.mx_unique_key              := NULL;
+
+   test_rec2_.flight_id                  := 5000;
+
+   FOR
+      | newrec_    | indrec_  | attr_ |
+      | test_rec1_ | output_  |  'A'  |
+      | test_rec2_ | output_  |  'A'  |
+   LOOP
+      IF newrec_.flight_id IS NULL THEN
+         newrec_.flight_id := av_flight_seq.NEXTVAL;
+         ASSERT newrec_.flight_id IS NOT NULL MESSAGE 'Returned '||newrec_.flight_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Has_Logbook_Fault should return TRUE when flight has logbook fault" FOR
+   FUNCTION Has_Logbook_Fault (
+      flight_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+
+   @MockTable av_fault_tab
+   VALUES
+      | found_on_id |
+      | 1234        |
+      | 593         |
+      | 210         |
+      | 69          |
+   END VALUES;
+
+IS
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | flight_id_ |
+      | 'FALSE'   |  143       |
+      | 'TRUE'    |  1234      |
+      | 'TRUE'    |  210       |
+      | 'FALSE'   |  1339      |
+   LOOP
+      return_ := Has_Logbook_Fault(flight_id_);
+
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Overlapping_Planned_Flights should return TRUE when flight is overlapping" FOR
+   FUNCTION Overlapping_Planned_Flights(
+      aircraft_id_           IN     NUMBER,
+      actual_departure_date_ IN     TIMESTAMP,
+      actual_arrival_date_   IN     TIMESTAMP)RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_flight_tab
+   VALUES
+      | flight_id | aircraft_id | actual_departure_date_time | actual_arrival_date_time |
+      | 1         | 1           | TO_DATE('2020-06-21 05:00:00', 'yyyy-mm-dd HH:MI:SS')   | TO_DATE('2020-06-21 08:00:00', 'yyyy-mm-dd HH:MI:SS')   |
+      | 2         | 1           | TO_DATE('2020-06-22 05:20:00', 'yyyy-mm-dd HH:MI:SS')   | TO_DATE('2020-06-22 09:10:00', 'yyyy-mm-dd HH:MI:SS')   |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | aircraft_id_ | actual_departure_date_ | actual_arrival_date_ |
+      | 'TRUE'    |  1           | TO_DATE('2020-06-21 05:20:00', 'yyyy-mm-dd HH:MI:SS') |TO_DATE('2020-06-21 09:10:00', 'yyyy-mm-dd HH:MI:SS') |
+      | 'FALSE'   |  1           | TO_DATE('2020-06-21 09:20:00', 'yyyy-mm-dd HH:MI:SS') |TO_DATE('2020-06-21 11:10:00', 'yyyy-mm-dd HH:MI:SS') |
+   LOOP
+      --Insert your test code here
+      return_ := Overlapping_Planned_Flights(aircraft_id_, actual_departure_date_, actual_arrival_date_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Flight_Exist should return TRUE when flight exists" FOR
+   FUNCTION Flight_Exist(
+      flight_name_ IN     VARCHAR2,
+      dep_airport_ IN     NUMBER,
+      dep_date_    IN     TIMESTAMP) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_flight_tab
+   VALUES
+      | flight_id | leg_no | departure_airport_id | actual_departure_date_time |
+      | 1         | 'IS'   | 1                    | TO_DATE('2020-06-21 05:20:00', 'yyyy-mm-dd HH:MI:SS')                    |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | flight_name_ | dep_airport_ | dep_date_ |
+      | 'TRUE'    |  'IS'        |  1           | TO_DATE('2020-06-21 05:20:00', 'yyyy-mm-dd HH:MI:SS')       |
+      | 'FALSE'   |  'HA'        |  2           | TO_DATE('2020-06-22 05:20:00', 'yyyy-mm-dd HH:MI:SS')       |
+   LOOP
+      --Insert your test code here
+      return_ := Flight_Exist(flight_name_, dep_airport_, dep_date_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Calculate_Ground_Time should return ground time when departure and arrival is provided" FOR
+   FUNCTION Calculate_Ground_Time(
+      shed_dep_time_  TIMESTAMP,
+      shed_arr_time_  TIMESTAMP
+      )RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      |dummy|
+      |1    |
+   END VALUES;
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | shed_dep_time_ | shed_arr_time_ |
+      | '02:18'   | TO_DATE('2020-06-22 03:00:00', 'yyyy-mm-dd HH:MI:SS')               |   TO_DATE('2020-06-22 05:18:00', 'yyyy-mm-dd HH:MI:SS')             |
+   LOOP
+      --Insert your test code here
+      return_ := Calculate_Ground_Time(shed_dep_time_, shed_arr_time_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Calculate_Arrival_Date should return arrival date when departure and duration provided" FOR
+   FUNCTION Calculate_Arrival_Date(
+      shed_dep_time_  TIMESTAMP,
+      duration_       VARCHAR2) RETURN TIMESTAMP;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      |dummy|
+      |1    |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   TIMESTAMP;
+   expected_ TIMESTAMP;
+BEGIN
+   FOR
+      | expected_ | shed_dep_time_ | duration_ |
+      | TO_DATE('2020-06-22 05:18:00', 'yyyy-mm-dd HH:MI:SS')           | TO_DATE('2020-06-22 03:00:00', 'yyyy-mm-dd HH:MI:SS')               |  '02:18'  |
+   LOOP
+      --Insert your test code here
+      return_ := Calculate_Arrival_Date(shed_dep_time_, duration_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+
+UNITTEST "Get_Ground_Time should return actual arrival and departure times to Ground_time___ function when flight_id_, aircraft_id_, arr_airport_id_ and shed_arr_time_ provided" FOR
+   FUNCTION Get_Ground_Time(
+      flight_id_      NUMBER,
+      aircraft_id_    NUMBER,
+      arr_airport_id_ NUMBER,
+      shed_arr_time_  TIMESTAMP) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Flight_API
+   FUNCTION Get_Departure_Flight_Id (
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      shed_arr_time_  IN     TIMESTAMP )  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN CASE
+      WHEN aircraft_id_ = 1221 AND arr_airport_id_ = 1234 AND shed_arr_time_= TO_DATE('2020-06-22 05:18:00', 'yyyy-mm-dd HH:MI:SS') THEN 12
+   END;
+END Get_Departure_Flight_Id;
+
+@MockPackage Av_Flight_API
+FUNCTION Ground_time___ (
+   flight_id_      IN     NUMBER,
+   arrival_time_   IN     TIMESTAMP,
+   departure_time_ IN     TIMESTAMP )  RETURN  VARCHAR2
+IS
+BEGIN
+   RETURN CASE
+   WHEN flight_id_ = 11 AND arrival_time_ = TO_DATE('2020-06-22 05:18:00', 'yyyy-mm-dd HH:MI:SS') AND departure_time_ = TO_DATE('2020-06-23 06:18:00', 'yyyy-mm-dd HH:MI:SS') THEN 'A'
+   WHEN flight_id_ = 11 AND arrival_time_ = TO_DATE('2020-06-22 05:15:00', 'yyyy-mm-dd HH:MI:SS') AND departure_time_ = TO_DATE('2020-06-23 06:15:00', 'yyyy-mm-dd HH:MI:SS') THEN 'B'
+END;
+END Ground_time___;
+
+@MockTable av_flight_tab
+VALUES
+   | actual_arrival_date_time                             |shed_arrival_date_time                                 | flight_id | actual_departure_date_time                          |shed_departure_date_time                             |
+   | TO_DATE('2020-06-22 05:18:00', 'yyyy-mm-dd HH:MI:SS')|TO_DATE('2020-06-22 05:15:00', 'yyyy-mm-dd HH:MI:SS')  | 11        |TO_DATE('2020-06-21 05:18:00', 'yyyy-mm-dd HH:MI:SS')|TO_DATE('2020-06-21 05:15:00', 'yyyy-mm-dd HH:MI:SS')|
+   | TO_DATE('2020-06-24 06:18:00', 'yyyy-mm-dd HH:MI:SS')|TO_DATE('2020-06-24 06:15:00', 'yyyy-mm-dd HH:MI:SS')  | 12        |TO_DATE('2020-06-23 06:18:00', 'yyyy-mm-dd HH:MI:SS')|TO_DATE('2020-06-23 06:15:00', 'yyyy-mm-dd HH:MI:SS')|
+END VALUES;
+
+IS
+--Insert your test variables here
+return_   VARCHAR2(2000);
+expected_ VARCHAR2(2000);
+   BEGIN
+FOR
+   | expected_ | flight_id_ | aircraft_id_ | arr_airport_id_ | shed_arr_time_                                      |
+   | 'A'       |  11        |  1221        |  1234           |TO_DATE('2020-06-22 05:18:00', 'yyyy-mm-dd HH:MI:SS')|
+LOOP
+   --Insert your test code here
+   return_ := Get_Ground_Time(flight_id_, aircraft_id_, arr_airport_id_, shed_arr_time_);
+   --Insert your assertions here
+   ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+END LOOP;
+   END UNITTEST;
+

@@ -1,0 +1,135 @@
+---------------------------------------------------------------
+-- Component:  ACCRUL
+-- File     :  Mv_AccrulFactCurrencyRates.cre
+-- Purpose  :  Create materialized view CURRENCY_RATE_MV serving as a
+--             fact source
+-- Note     :  The Materialized View is created as COMPLETE
+--             refreshable and will be empty and have the state
+--             UNUSABLE after creation.
+--             True/natual join columns are defined to synchronize
+--             DataMart and Online definitions.
+---------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   --------------------------------------------
+----------------------------------------------------------------
+
+DEFINE TAB    = CURRENCY_RATE_TAB
+DEFINE MV     = CURRENCY_RATE_MV
+DEFINE MODULE = ACCRUL
+
+-------------------------------------------------------------------
+
+PROMPT ********* Component &MODULE, definition begins ***********
+
+SET SERVEROUTPUT ON
+DECLARE
+   stmt_                    VARCHAR2(32000);
+   columns_                 Database_SYS.ColumnTabType;
+   table_name_              VARCHAR2(30) := '&MV';
+   index_name_              VARCHAR2(30);
+   constraint_name_         VARCHAR2(30);
+BEGIN
+
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+   'CREATE MATERIALIZED VIEW &MV
+    TABLESPACE &IFSAPP_DATA
+    BUILD DEFERRED
+    USING INDEX TABLESPACE &IFSAPP_INDEX
+    REFRESH COMPLETE ON DEMAND
+    EVALUATE USING CURRENT EDITION
+    AS
+    SELECT cr.company_key||''^''||TO_CHAR(cr.valid_from_key,''YYYY-MM-DD'')||''^''||cr.currency_rate_type_key||''^''||cr.currency_code_key id,
+           cr.company_key                                                                                                                  company_key,
+           cr.valid_from_key                                                                                                               valid_from_key,
+           cr.currency_rate_type_key                                                                                                       currency_rate_type_key,
+           cr.currency_code_key                                                                                                            currency_code_key,
+           CAST (cr.currency_rate AS NUMBER)                                                                                               currency_rate,
+           CAST (cr.direct_currency_rate AS NUMBER)                                                                                        direct_currency_rate,
+           CAST (cr.direct_currency_rate_round AS NUMBER)                                                                                  direct_currency_rate_round,
+           cr.valid_from                                                                                                                   valid_from,
+           cr.valid_until                                                                                                                  valid_until,
+           cr.is_max_valid_from                                                                                                            is_max_valid_from,
+           cr.dim_company_id                                                                                                               dim_company_id,
+           cr.dim_currency_code_id                                                                                                         dim_currency_code_id,
+           cr.dim_currency_rate_type_id                                                                                                    dim_currency_rate_type_id,
+           cr.currency_code                                                                                                                currency_code,
+           cr.currency_type                                                                                                                currency_type
+    FROM currency_rate_mv_hlp cr';
+
+   EXECUTE IMMEDIATE stmt_;
+
+   /*
+   ----------------------------------------------------------------------------------
+   Template section for creation of indexes on a fact based MV.
+   It is suggested to create one primary key (or maybe unique) contraint on the key
+   columns. It is also suggested to create indexes on dimension identity columns for
+   the most commonly used dimensions. Indexes with combination of id columns are
+   preferred compared to adding single id column indexes.
+   ----------------------------------------------------------------------------------
+   */
+   dbms_output.put_line('Create constraints and indexes on Materialized View &MV');
+
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'VALID_FROM_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'CURRENCY_RATE_TYPE_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'CURRENCY_CODE_KEY');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_ || '_IX1';
+   Database_SYS.Set_Table_Column (columns_, 'DIM_COMPANY_ID');
+   Database_Sys.Create_Index(table_name_,
+                             index_name_,
+                             columns_,
+                             'N',
+                             '&IFSAPP_INDEX',
+                             NULL,
+                             TRUE,
+                             TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_ || '_IX2';
+   Database_SYS.Set_Table_Column (columns_, 'DIM_COMPANY_ID');
+   Database_SYS.Set_Table_Column (columns_, 'DIM_CURRENCY_CODE_ID');
+   Database_SYS.Set_Table_Column (columns_, 'DIM_CURRENCY_RATE_TYPE_ID');
+   Database_Sys.Create_Index(table_name_,
+                             index_name_,
+                             columns_,
+                             'N',
+                             '&IFSAPP_INDEX',
+                             NULL,
+                             TRUE,
+                             TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+EXCEPTION
+   WHEN OTHERS THEN
+   dbms_output.put_line('Error when creating MV &MV');
+   dbms_output.put_line(SQLERRM);
+END;
+/
+
+PROMPT ********* Component &MODULE, definition ends ***********
+
+-------------------------------------------------------------------
+
+UNDEFINE TAB
+UNDEFINE MV
+UNDEFINE MODULE
+
+-------------------------------------------------------------------

@@ -1,0 +1,95 @@
+fragment PsCodeAccountSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ps_code_account";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferencePsCodeAccountSelector for PsCodeAccount {
+   orderby = DisplayOrder, SortValue;
+   static Value {
+      label = "${context.Company.CodeAName}";
+   }
+   static Description;
+}
+
+@Override
+list PsCodeAccountLovList for PsCodeAccount {
+   orderby = DisplayOrder, SortValue;
+   static Value {
+      label = "${context.Company.CodeAName}";
+   }
+
+}
+
+card PsCodeAccountCard for PsCodeAccount {
+   label = "";
+   fieldranking Value;
+   field Value {
+      label = "${context.Company.CodeAName}";
+   }
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query PsCodeAccount {
+   from = "ps_code_account";
+   lu = Account;
+   keys = Company, Value;
+   ludependencies = Account;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Value Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Type Text {
+      lovcolumn = [true];
+   }
+   attribute LogicalAccountType Enumeration(AccountTypeValue) {
+      lovcolumn = [true];
+      fetch = "logical_account_type_db";
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [false];
+   }
+   attribute ValidUntil Date {
+      lovcolumn = [false];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute DisplayOrder Text {
+      lovcolumn = [false];
+   }
+   attribute StatAccountDb Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------
+function FetchNonStatAccount List < Entity(PsCodeAccount) > {
+   where = "stat_account_db = 'N'";
+}
+
+function FetchNonStatValidDateAccount List < Entity(PsCodeAccount) > {
+   parameter Company Text;
+   parameter TransactionDate Date;
+   where = "(company = :Company AND stat_account_db = 'N' AND (:TransactionDate BETWEEN valid_from AND valid_until))";
+}
+
+function FetchValidDateAccount List < Entity(PsCodeAccount) > {
+   parameter Company Text;
+   parameter TransactionDate Date;
+   where = "(company = :Company AND (:TransactionDate BETWEEN valid_from AND valid_until))";
+}

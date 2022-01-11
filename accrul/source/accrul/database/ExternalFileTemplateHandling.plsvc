@@ -1,0 +1,84 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalFileTemplateHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200513  jadulk  FIXTEND-2942, Added Import_File___ to support import file using assistants.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Check_Valid_Definition___ (
+   key_            IN Ext_File_Template_Key,
+   system_defined_ IN BOOLEAN ) RETURN VARCHAR2
+IS
+   info_ VARCHAR2(32000) := NULL; 
+BEGIN
+   IF (NOT system_defined_) THEN
+      Ext_File_Template_API.Update_Valid_Definition(info_, key_.file_template_id);
+   END IF;
+   RETURN info_;
+END Check_Valid_Definition___;
+
+FUNCTION Get_Destination_Column___ (
+  file_type_ IN VARCHAR2, 
+  record_type_id_ IN VARCHAR2, 
+  column_id_ IN VARCHAR2) RETURN VARCHAR2
+IS
+BEGIN
+   RETURN Ext_File_Type_Rec_Column_API.Get_Destination_Column(file_type_, record_type_id_, column_id_);
+END Get_Destination_Column___;
+
+PROCEDURE Update_File_Name___ (
+   key_                  IN Out_Ext_File_Template_Dir_Key,
+   xml_style_sheet_name_ IN VARCHAR2 ) 
+IS
+   
+BEGIN
+   Out_Ext_File_Template_Dir_API.Update_Style_Sheet_Name__(key_.file_template_id, xml_style_sheet_name_);
+END Update_File_Name___;
+
+
+PROCEDURE Remove_Style_Sheet___ (
+   key_ IN Out_Ext_File_Template_Dir_Key  ) 
+IS
+   
+BEGIN
+   Out_Ext_File_Template_Dir_API.Remove_Xml_Style_Sheet__(key_.file_template_id,'2');
+   Out_Ext_File_Template_Dir_API.Update_Style_Sheet_Name__(key_.file_template_id, NULL);
+END Remove_Style_Sheet___;
+
+
+PROCEDURE Import_File___ (
+   key_  IN Import_Style_Sheet_Virtual_Key) 
+IS
+   file_data_blob_ BLOB;
+   objid_          VARCHAR2(3200);
+   objversion_     VARCHAR2(3200);
+   head_rec_       Import_Style_Sheet_Virtual_Rec;
+   
+   CURSOR get_blob_object IS
+      SELECT xml_style_sheet
+      FROM ${PROJECTION}_IMPORT_STYLE_SHEET_VIRTUAL_VRT
+      WHERE objkey = head_rec_.objkey;
+BEGIN
+   head_rec_ := Get_Record___(key_);
+   
+   OPEN get_blob_object;
+   FETCH get_blob_object INTO file_data_blob_;
+   CLOSE get_blob_object;
+   
+--   IF (Dbms_Lob.Getlength(file_data_blob_) IS NULL) THEN
+--      Error_SYS.Appl_General(lu_name_, 'ERRGENERAL: An Error occurred while importing the Style Sheet.');
+--   END IF;
+--   IF (LENGTH(head_rec_.file_name) > 260) THEN
+--      Error_SYS.Appl_General(lu_name_, 'MAXLENGTH: The length of File Name should be less than 260 characters.');
+--   END IF;
+   Out_Ext_File_Template_Dir_API.Get_Id_Version_By_Keys__(objid_, objversion_, head_rec_.file_template_id, '2');
+   Out_Ext_File_Template_Dir_API.Write_Xml_Style_Sheet__(objversion_, objid_, file_data_blob_);
+   Out_Ext_File_Template_Dir_API.Update_Style_Sheet_Name__(head_rec_.file_template_id, head_rec_.file_name);
+END Import_File___;

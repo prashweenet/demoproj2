@@ -1,0 +1,26 @@
+-------------------------------------------------------------------------------------------- 
+--  Substitution variables Accrul.
+-- 
+--  Date    Sign    History
+--  ------  ------  -----------------------------------------------------------
+--  061016  PPerse  Created.
+-------------------------------------------------------------------------------------------- 
+SET SERVEROUT ON
+
+PROMPT Register Context Substitution Variable "DEFAULT_COMPANY"
+DECLARE
+   Variable_Name_      VARCHAR2(120)   := NULL;
+   info_msg_           VARCHAR2(32000) := NULL;
+BEGIN
+   Variable_Name_ := 'DEFAULT_COMPANY';
+   info_msg_    := Message_SYS.Construct('');
+   Message_SYS.Add_Attribute(info_msg_, 'SERVER_METHOD', 'User_Finance_API.Get_Default_Company_Func');
+   Message_SYS.Add_Attribute(info_msg_, 'IMPLEMENTATION_TYPE_DB', 'SERVER');
+   Message_SYS.Add_Attribute(info_msg_, 'FND_DATA_TYPE_DB', 'STRING');
+   Message_SYS.Add_Attribute(info_msg_, 'TRANSIENT_DB', 'FALSE');
+   Message_SYS.Add_Attribute(info_msg_, 'MODULE', 'ENTERP');
+-- Register Context Substitution Variable
+   Context_Substitution_Var_API.Register__(Variable_Name_, info_msg_);
+END;
+/
+

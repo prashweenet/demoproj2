@@ -1,0 +1,1616 @@
+-------------------------------------------------------
+File Type: IFS Foundation Language File
+Type version: 10.00
+-------------------------------------------------------
+Module: ACCRUL
+Layer: Core
+Main Type: SVC
+Sub Type: All
+Content: 
+-------------------------------------------------------
+CS:AccountGroupsHandling^SVC^Projection^N^N
+	CS:UpdateAccountsAccountTypeEnum^SVC^Enumeration^N^N
+		CS:ACCOUNTSWITHOUTDEFAULTGROUPACCOUNT^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Accounts without default group account.^
+		CE:
+		CS:ALLACCOUNTS^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^All accounts.^
+		CE:
+	CE:
+CE:
+CS:AccountHandling^SVC^Projection^N^N
+	CS:BUDCD_BLK^SVC^Message^N^N
+		A:Text^Budget Code Part :P1 is set as not used in Defined Code String.^
+	CE:
+CE:
+CS:AccountingPeriodsHandling^SVC^Projection^N^N
+	CS:CLOSEDYEAR^SVC^Message^N^N
+		A:Text^All Periods for the Accounting Year must be closed^
+	CE:
+	CS:ERROREXIST^SVC^Message^N^N
+		A:Text^Command is not allowed as there are error transactions^
+	CE:
+	CS:HANDLELEASEACCOUPROPS^SVC^Message^N^N
+		A:Text^Not posted Lease Periodical Accounting Proposals^
+	CE:
+	CS:HANDLELEASEPAYACCOUPROPS^SVC^Message^N^N
+		A:Text^Not posted Lease Payable Accounting Proposals^
+	CE:
+	CS:HANDLETRNSNONAPPROVEDCASHBOX^SVC^Message^N^N
+		A:Text^Not approved Cash Box transactions^
+	CE:
+	CS:HANDLETRNSNONAPPROVEDPAY^SVC^Message^N^N
+		A:Text^Not approved Preliminary Payments transactions^
+	CE:
+	CS:HANDLETRNSNONAPPROVMIXPAY^SVC^Message^N^N
+		A:Text^Not approved Mixed Payment transactions^
+	CE:
+	CS:HANDLETRNSNONCLOSEDPCAEXIST^SVC^Message^N^N
+		A:Text^Not closed Cost Allocation Procedure^
+	CE:
+	CS:HANDLETRNSNONCREAEXTOUTINV^SVC^Message^N^N
+		A:Text^External Customer Invoices waiting to be created^
+	CE:
+	CS:HANDLETRNSNONCREEXTINCINV^SVC^Message^N^N
+		A:Text^External Supplier Invoices waiting to be created^
+	CE:
+	CS:HANDLETRNSNONCREEXTVOUEXIST^SVC^Message^N^N
+		A:Text^External Vouchers waiting to be created^
+	CE:
+	CS:HANDLETRNSNONPOSTCHAACQTRANS^SVC^Message^N^N
+		A:Text^Not posted transactions in Change Acquisition Value - Progress page^
+	CE:
+	CS:HANDLETRNSNONPOSTCHANETTRANS^SVC^Message^N^N
+		A:Text^Not posted transactions in Change Net Value - Progress page^
+	CE:
+	CS:HANDLETRNSNONPOSTCURRREVEXIST^SVC^Message^N^N
+		A:Text^Not posted Currency Revaluation^
+	CE:
+	CS:HANDLETRNSNONPOSTEDFAIMPTRANS^SVC^Message^N^N
+		A:Text^Not posted transactions in Post Imported Transactions page^
+	CE:
+	CS:HANDLETRNSNONPOSTEDREVENUE^SVC^Message^N^N
+		A:Text^Not posted Revenue Recognition^
+	CE:
+	CS:HANDLETRNSNONPOSTFADEPRPROP^SVC^Message^N^N
+		A:Text^Not posted depreciation proposals^
+	CE:
+	CS:HANDLETRNSNONTRANSTRANSDISTRIB^SVC^Message^N^N
+		A:Text^Transactions waiting to be transferred from Distribution and/or Manufacturing^
+	CE:
+	CS:HANDLETRNSNONTRANSTRANSMAINT^SVC^Message^N^N
+		A:Text^Transactions waiting to be transferred from Maintenance^
+	CE:
+	CS:HANDLETRNSNONUPDPERALLOC^SVC^Message^N^N
+		A:Text^Not updated Vouchers with Period Allocation in selected period^
+	CE:
+	CS:HANDLETRNSNONUSEDEXTPAYEXIST^SVC^Message^N^N
+		A:Text^External Payments waiting to be created^
+	CE:
+	CS:HANDLETRNSNOTUPDVOUEXIST^SVC^Message^N^N
+		A:Text^Not updated Vouchers in selected period^
+	CE:
+	CS:HANDLETRNSPOSTERRINVS^SVC^Message^N^N
+		A:Text^Invoices with posting errors in the Customer Invoices with Posting Errors page^
+	CE:
+	CS:HANDLETRNSPRELIMINVS^SVC^Message^N^N
+		A:Text^Customer Invoices in Preliminary status^
+	CE:
+	CS:HANDLETRNSPROJPOSTINGERROR^SVC^Message^N^N
+		A:Text^Transactions waiting to be transferred from Project Postings^
+	CE:
+	CS:VALIDATETRANS^SVC^Message^N^N
+		A:Text^Command is not allowed for validate transactions^
+	CE:
+CE:
+CS:AccountsHandling^SVC^Projection^N^N
+	CS:BUDCD_BLK^SVC^Message^N^N
+		A:Text^Budget Code Part :P1 is set as not used in Defined Code String.^
+	CE:
+CE:
+CS:AdditionalCodePartsHandling^SVC^Projection^N^N
+	CS:INVCHARACTORS^SVC^Message^N^N
+		A:Text^You have entered an invalid character in this field^
+	CE:
+CE:
+CS:ApproveVouchersHandling^SVC^Projection^N^N
+	CS:ENTERPERM^SVC^Message^N^N
+		A:Text^The voucher cannot be approved by :P1 user as :P2 voucher type is defined with the option Separate User Approval.^
+	CE:
+	CS:ENTERPERMS^SVC^Message^N^N
+		A:Text^There are voucher(s) that cannot be approved by :P1 user since the connected voucher type(s) is defined with the option Separate User Approval.^
+	CE:
+	CS:FINNOTES^SVC^Message^N^N
+		A:Text^Notes^
+	CE:
+	CS:NOTAPPADD^SVC^Message^N^N
+		A:Text^Vouchers created outside financials are not possible to be approved before manual postings are added.^
+	CE:
+	CS:VOUNOTBAL^SVC^Message^N^N
+		A:Text^Some of the vouchers are not in balance. They cannot be approved for update.^
+	CE:
+CE:
+CS:AuditInterfaceHandling^SVC^Projection^N^N
+	CS:AUDITSOURCEINACTIVE^SVC^Message^N^N
+		A:Text^Audit source :P1 is not available in an active module.^
+	CE:
+	CS:AUDITSOURCENULL^SVC^Message^N^N
+		A:Text^Audit source cannot be null.^
+	CE:
+	CS:BCKGROUNDJOB^SVC^Message^N^N
+		A:Text^Background Job :P1 is started.^
+	CE:
+	CS:CHECKDEFAULTTEMP^SVC^Message^N^N
+		A:Text^:P1^
+	CE:
+	CS:CHKBALTYPE^SVC^Message^N^N
+		A:Text^At least one Balance Type must be selected.^
+	CE:
+	CS:COMPANYNULL^SVC^Message^N^N
+		A:Text^Field Company requires a value^
+	CE:
+	CS:CodePartBasedOnEnum^SVC^Enumeration^N^N
+		CS:CODE_STR^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Code String^
+		CE:
+		CS:PRE_POST^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Pre Posting^
+		CE:
+	CE:
+	CS:CustomerGroupingEnum^SVC^Enumeration^N^N
+		CS:ADDITIONAL_REFERENCE^SVC^Iid Element^N^N
+			P:Position^6^
+			A:Text^Additional Reference^
+		CE:
+		CS:COUNTRY^SVC^Iid Element^N^N
+			P:Position^4^
+			A:Text^Country^
+		CE:
+		CS:CUSTOMER_ID^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Customer ID^
+		CE:
+		CS:CUSTOMER_NAME^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Customer Name^
+		CE:
+		CS:LEDGER_ACCOUNT^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Ledger Account^
+		CE:
+		CS:PAYER^SVC^Iid Element^N^N
+			P:Position^5^
+			A:Text^Payer^
+		CE:
+	CE:
+	CS:CustomerSortOrderEnum^SVC^Enumeration^N^N
+		CS:COUNTRY^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Country^
+		CE:
+		CS:CURR^SVC^Iid Element^N^N
+			P:Position^4^
+			A:Text^Currency^
+		CE:
+		CS:CUSTGRP^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Customer Group^
+		CE:
+		CS:CUSTID^SVC^Iid Element^N^N
+			P:Position^5^
+			A:Text^Customer ID^
+		CE:
+		CS:LEGACC^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Ledger Account^
+		CE:
+	CE:
+	CS:DATERANGEERR^SVC^Message^N^N
+		A:Text^Both Dates need values.^
+	CE:
+	CS:ERROR1^SVC^Message^N^N
+		A:Text^Date Range Error^
+	CE:
+	CS:ERROR_LAYOUTPRINT^SVC^Message^N^N
+		A:Text^Invalid Selection. Option Pre Posting cannot combine with Account/CodePart.^
+	CE:
+	CS:ERROR_PERIODBASE_VALUES^SVC^Message^N^N
+		A:Text^Invalid Selection. Option Show User-defined Base Values cannot combine with Accounting Year^
+	CE:
+	CS:FA_REPORT_INFO_1^SVC^Message^N^N
+		A:Text^Financial Year field can not be Empty.^
+	CE:
+	CS:FA_REPORT_INFO_16^SVC^Message^N^N
+		A:Text^Accounting Period does not Exist.^
+	CE:
+	CS:FA_REPORT_INFO_17^SVC^Message^N^N
+		A:Text^Invalid Selection. Option Code String can only be combined with Accounting Year.^
+	CE:
+	CS:FA_REPORT_INFO_18^SVC^Message^N^N
+		A:Text^FA Period does not Exist.^
+	CE:
+	CS:FA_REPORT_INFO_2^SVC^Message^N^N
+		A:Text^Financial Period field can not be Empty.^
+	CE:
+	CS:FA_REPORT_INFO_3^SVC^Message^N^N
+		A:Text^Book ID field can not be Empty^
+	CE:
+	CS:FA_REPORT_INFO_4^SVC^Message^N^N
+		A:Text^Object Group Id field can not be Empty.^
+	CE:
+	CS:FA_REPORT_INFO_5^SVC^Message^N^N
+		A:Text^Object Id field can not be Empty.^
+	CE:
+	CS:FILENULL^SVC^Message^N^N
+		A:Text^File Type cannot be null.^
+	CE:
+	CS:FILETEMPNULL^SVC^Message^N^N
+		A:Text^File Template cannot be null.^
+	CE:
+	CS:GroupingEnum^SVC^Enumeration^N^N
+		CS:ADDITIONALREFERENCE^SVC^Iid Element^N^N
+			P:Position^6^
+			A:Text^Additional Reference^
+		CE:
+		CS:COUNTRY^SVC^Iid Element^N^N
+			P:Position^4^
+			A:Text^Country^
+		CE:
+		CS:CUSTOMERID^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Customer ID^
+		CE:
+		CS:CUSTOMERNAME^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Customer Name^
+		CE:
+		CS:LEDGERACCOUNT^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Ledger Account^
+		CE:
+		CS:PAYER^SVC^Iid Element^N^N
+			P:Position^5^
+			A:Text^Payer^
+		CE:
+	CE:
+	CS:INFOMISSING^SVC^Message^N^N
+		A:Text^All mandatory fields must be filled.^
+	CE:
+	CS:INVALIDFROMTODATE^SVC^Message^N^N
+		A:Text^Date From should be Less than OR Equal to Until Date^
+	CE:
+	CS:INVALIDFROMTOPERIOD^SVC^Message^N^N
+		A:Text^Until Period must be later than From Period^
+	CE:
+	CS:INVALIDFROMTOYEAR^SVC^Message^N^N
+		A:Text^Until Year must be later than From Year^
+	CE:
+	CS:INVALIDLID^SVC^Message^N^N
+		A:Text^Invalid Ledger ID^
+	CE:
+	CS:INVALIDPERIOD^SVC^Message^N^N
+		A:Text^Invalid selection criteria in From/Until Period.^
+	CE:
+	CS:INVALIDSELECTION^SVC^Message^N^N
+		A:Text^Invalid Selection^
+	CE:
+	CS:INVALIDSELFORECAST^SVC^Message^N^N
+		A:Text^Invalid selection for Forecast Report^
+	CE:
+	CS:INVSUBSTVAR^SVC^Message^N^N
+		A:Text^Invalid Substitution Variable.^
+	CE:
+	CS:KEYSNULL^SVC^Message^N^N
+		A:Text^Company, Country or Report type cannot be null.^
+	CE:
+	CS:LEDGERIDNULL^SVC^Message^N^N
+		A:Text^Ledger Id cannot be null.^
+	CE:
+	CS:LayoutBasedOnEnum^SVC^Enumeration^N^N
+		CS:ACCOUNT^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Account/CodePart^
+		CE:
+		CS:MAIN_OBJECT^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Main Object^
+		CE:
+		CS:OBJECT^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Object^
+		CE:
+	CE:
+	CS:NOCOMP^SVC^Message^N^N
+		A:Text^Company is mandatory to enter^
+	CE:
+	CS:NODEFAUDITCOUNTRY^SVC^Message^N^N
+		A:Text^There is no default audit format specified in company :P1^
+	CE:
+	CS:NULLVOUDATE^SVC^Message^N^N
+		A:Text^Both From and Until Voucher Date should have values.^
+	CE:
+	CS:PERIODRANGEERR^SVC^Message^N^N
+		A:Text^Period Range is incomplete.^
+	CE:
+	CS:PeriodDateRangeEnum^SVC^Enumeration^N^N
+		CS:DATE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Date^
+		CE:
+		CS:PERIOD^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Period^
+		CE:
+	CE:
+	CS:REPCURRERR^SVC^Message^N^N
+		A:Text^Invalid print option for Reporting Currency^
+	CE:
+	CS:RangeTypeEnum^SVC^Enumeration^N^N
+		CS:DATE^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Date^
+		CE:
+		CS:PERIOD^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Period^
+		CE:
+	CE:
+	CS:ReportTypeEnum^SVC^Enumeration^N^N
+		CS:DETAIL^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Detail^
+		CE:
+		CS:SUMMARIZE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Summarize^
+		CE:
+	CE:
+	CS:ReportingCurrEnum^SVC^Enumeration^N^N
+		CS:ACCOUNTING^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Accounting Currency^
+		CE:
+		CS:PARALLEL^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Parallel Currency^
+		CE:
+	CE:
+	CS:ReportingCurrencyEnum^SVC^Enumeration^N^N
+		CS:ACCOUNTING_CURRENCY^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Accounting Currency^
+		CE:
+		CS:PARALLEL_CURRENCY^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Parallel Currency^
+		CE:
+	CE:
+	CS:SETDEFAULTTEMPLATE^SVC^Message^N^N
+		A:Text^:P1^
+	CE:
+	CS:SUBSTVARNULL^SVC^Message^N^N
+		A:Text^You are required to select a substitution variable^
+	CE:
+	CS:SelectionBasedOnEnum^SVC^Enumeration^N^N
+		CS:GROUP^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Object Group^
+		CE:
+		CS:OBJECT^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Object^
+		CE:
+	CE:
+	CS:SuppGroupingEnum^SVC^Enumeration^N^N
+		CS:ADDITIONALREFERENCE^SVC^Iid Element^N^N
+			P:Position^6^
+			A:Text^Additional Reference^
+		CE:
+		CS:COUNTRY^SVC^Iid Element^N^N
+			P:Position^4^
+			A:Text^Country^
+		CE:
+		CS:LEDGERACCOUNT^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Ledger Account^
+		CE:
+		CS:PAYER^SVC^Iid Element^N^N
+			P:Position^5^
+			A:Text^Payer^
+		CE:
+		CS:SUPPLIERID^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Supplier ID^
+		CE:
+		CS:SUPPLIERNAME^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Supplier Name^
+		CE:
+	CE:
+	CS:SuppReportTypeEnum^SVC^Enumeration^N^N
+		CS:DETAIL^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Detail^
+		CE:
+		CS:SUMMARIZE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Summarize^
+		CE:
+	CE:
+	CS:SupplierGroupingEnum^SVC^Enumeration^N^N
+		CS:COUNTRY^SVC^Iid Element^N^N
+			P:Position^4^
+			A:Text^Country^
+		CE:
+		CS:LEDGER_ACCOUNT^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Ledger Account^
+		CE:
+		CS:PAYEE^SVC^Iid Element^N^N
+			P:Position^5^
+			A:Text^Payee^
+		CE:
+		CS:SUPPLIER_ID^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Supplier ID^
+		CE:
+		CS:SUPPLIER_NAME^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Supplier Name^
+		CE:
+	CE:
+	CS:SupplierSortOrderEnum^SVC^Enumeration^N^N
+		CS:COUNTRY^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Country^
+		CE:
+		CS:CURR^SVC^Iid Element^N^N
+			P:Position^4^
+			A:Text^Currency^
+		CE:
+		CS:LEGACC^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Ledger Account^
+		CE:
+		CS:SUPGRP^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Supplier Group^
+		CE:
+		CS:SUPID^SVC^Iid Element^N^N
+			P:Position^5^
+			A:Text^Supplier ID^
+		CE:
+	CE:
+	CS:TEMPLATENULL^SVC^Message^N^N
+		A:Text^The Template ID must be entered or selected from the list of values. If a template does not exist create a selection template in Payment Basic Data^
+	CE:
+	CS:TEXT_FAYEARREPCODEPART^SVC^Message^N^N
+		A:Text^Code Part must have a value.^
+	CE:
+	CS:TaskOptions^SVC^Enumeration^N^N
+		CS:NOW^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Start now^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:TaskOptionsAsync^SVC^Enumeration^N^N
+		CS:BACKGROUND^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Run in background^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:TaskOptionsExtended^SVC^Enumeration^N^N
+		CS:BACKGROUND^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Run in background^
+		CE:
+		CS:NOW^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Start now^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:WRONGDATE^SVC^Message^N^N
+		A:Text^From Date should be Less than OR Equal to Until Date.^
+	CE:
+	CS:WRONGPERIOD^SVC^Message^N^N
+		A:Text^Voucher Period From should be Less than OR Equal to Until Period.^
+	CE:
+	CS:XMLERROROCCURED^SVC^Message^N^N
+		A:Text^An error occurred while generating the XML file. Please refer the partially generated XML file for more details.^
+	CE:
+	CS:YearPeriodBasedOnEnum^SVC^Enumeration^N^N
+		CS:ACC_YEAR^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Accounting Year^
+		CE:
+		CS:FA_YEAR^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^FA Year^
+		CE:
+	CE:
+CE:
+CS:CleanupAuditSourceInformationHandling^SVC^Projection^N^N
+	CS:DaysEnum^SVC^Enumeration^N^N
+		CS:CREATEDBEFORE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Created Before^
+		CE:
+		CS:DAYSBEFORE^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Days Before Current Date^
+		CE:
+	CE:
+	CS:TaskOptions^SVC^Enumeration^N^N
+		CS:NOW^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Start now^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:TaskOptionsAsync^SVC^Enumeration^N^N
+		CS:BACKGROUND^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Run in background^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:TaskOptionsExtended^SVC^Enumeration^N^N
+		CS:BACKGROUND^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Run in background^
+		CE:
+		CS:NOW^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Start now^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Schedule^
+		CE:
+	CE:
+CE:
+CS:CodeNHandling^SVC^Projection^N^N
+	CS:INVCHARACTORS^SVC^Message^N^N
+		A:Text^You have entered an invalid character in this field^
+	CE:
+CE:
+CS:CodeOHandling^SVC^Projection^N^N
+	CS:INVCHARACTORS^SVC^Message^N^N
+		A:Text^You have entered an invalid character in this field^
+	CE:
+CE:
+CS:CodePHandling^SVC^Projection^N^N
+	CS:INVCHARACTORS^SVC^Message^N^N
+		A:Text^You have entered an invalid character in this field^
+	CE:
+CE:
+CS:CodePartValuesHandling^SVC^Projection^N^N
+	CS:FUNCUSED^SVC^Message^N^N
+		A:Text^Can not insert values for Code part :P1 since the code part has code part values^
+	CE:
+	CS:FUNCUSED1^SVC^Message^N^N
+		A:Text^Can not copy Code part :P1 since the code part in the source company :P2 has code part values^
+	CE:
+	CS:FUNCUSED2^SVC^Message^N^N
+		A:Text^Can not copy Code part :P1 since the code part in company :P2 has code part values^
+	CE:
+	CS:FUNCUSED3^SVC^Message^N^N
+		A:Text^Can not export Code part :P1 since the code part in the company :P2  has code part values^
+	CE:
+	CS:INVCHARACTORS^SVC^Message^N^N
+		A:Text^You have entered an invalid character in this field^
+	CE:
+	CS:ISNOTUSED^SVC^Message^N^N
+		A:Text^Code part :P1 is not used in define codestring^
+	CE:
+	CS:NODATAFOUND^SVC^Message^N^N
+		A:Text^No Data Found^
+	CE:
+	CS:NODIRECTINSERT^SVC^Message^N^N
+		A:Text^A record cannot be entered/modified as :P1 window has been set up for copying data only from source company in Basic Data Synchronization window.^
+	CE:
+	CS:NODIRECTREMOVE^SVC^Message^N^N
+		A:Text^A record cannot be removed as :P1 window has been set up for copying data only from source company in Basic Data Synchronization window.^
+	CE:
+	CS:NOTEXTCODEB^SVC^Message^N^N
+		A:Text^The :P2 code part value :P1 does not exists.^
+	CE:
+	CS:NOTEXTCODEE^SVC^Message^N^N
+		A:Text^The :P2 code part value :P1 does not exists.^
+	CE:
+	CS:NOTEXTCODEF^SVC^Message^N^N
+		A:Text^The :P2 code part value :P1 does not exists.^
+	CE:
+	CS:TOOMANYCHARS^SVC^Message^N^N
+		A:Text^Too many characters in code part value^
+	CE:
+CE:
+CS:CodeQHandling^SVC^Projection^N^N
+	CS:INVCHARACTORS^SVC^Message^N^N
+		A:Text^You have entered an invalid character in this field^
+	CE:
+CE:
+CS:CodeRHandling^SVC^Projection^N^N
+	CS:INVCHARACTORS^SVC^Message^N^N
+		A:Text^You have entered an invalid character in this field^
+	CE:
+CE:
+CS:CodeSHandling^SVC^Projection^N^N
+	CS:INVCHARACTORS^SVC^Message^N^N
+		A:Text^You have entered an invalid character in this field^
+	CE:
+CE:
+CS:CodeStringCompletionHandling^SVC^Projection^N^N
+	CS:CODEPARTBLOCKED^SVC^Message^N^N
+		A:Text^The codepart :P1 is blocked for Account :P2.^
+	CE:
+CE:
+CS:CodeStringCompletionsAnalysis^SVC^Projection^N^N
+	CS:CODEPARTBLOCKED^SVC^Message^N^N
+		A:Text^The codepart :P1 is blocked.^
+	CE:
+CE:
+CS:CodeTHandling^SVC^Projection^N^N
+	CS:INVCHARACTORS^SVC^Message^N^N
+		A:Text^You have entered an invalid character in this field^
+	CE:
+CE:
+CS:CombinationControlTypesHandling^SVC^Projection^N^N
+	CS:NOTALLOWED^SVC^Message^N^N
+		A:Text^Posting Type :P1 is not allowed to use in Combination Control Types^
+	CE:
+CE:
+CS:CostRevenueBreakdownStructureHandling^SVC^Projection^N^N
+	CS:CANTDELETENODE^SVC^Message^N^N
+		A:Text^You cannot delete this node if it is the root node or the Cost Structure Item Type is a Cost Element.^
+	CE:
+	CS:CANTMOVEITEM^SVC^Message^N^N
+		A:Text^Cannot move or copy to a subitem of the source item.^
+	CE:
+	CS:COSTSTRUCTITEMCANNOTDELETE^SVC^Message^N^N
+		A:Text^You cannot modify items in this group.^
+	CE:
+	CS:COSTSTRUCTITEMCANNOTINSERT^SVC^Message^N^N
+		A:Text^You cannot insert items in to this group.^
+	CE:
+	CS:COSTSTRUCTITEMCANNOTMODIFY^SVC^Message^N^N
+		A:Text^You cannot delete items in this group.^
+	CE:
+	CS:DELETENOTALLOWED^SVC^Message^N^N
+		A:Text^You are not allowed to delete the top node^
+	CE:
+	CS:DELETEWARNING^SVC^Message^N^N
+		A:Text^Selected node will be deleted along with connected nodes/values.^
+	CE:
+	CS:ERRORINCONDITION^SVC^Message^N^N
+		A:Text^Cannot connect a Cost Element to another Cost Element^
+	CE:
+	CS:INVALIDNODEABOVE^SVC^Message^N^N
+		A:Text^The "Node Above" value [:P1] does not exist in the structure as a Node^
+	CE:
+	CS:INVALIDSTATE^SVC^Message^N^N
+		A:Text^The cost breakdown structure cannot be modified when it has status :P1^
+	CE:
+	CS:LEVELNOTEXIST^SVC^Message^N^N
+		A:Text^The Level ID [:P1] does not exist in the structure [:P2]^
+	CE:
+CE:
+CS:CreateAccountingPeriodsHandling^SVC^Projection^N^N
+	CS:NOVOUPERIODERROR^SVC^Message^N^N
+		A:Text^Use Voucher Number Series per Period is not checked in company :P1.^
+	CE:
+	CS:VOUPERIODERROR^SVC^Message^N^N
+		A:Text^Use Voucher Number Series per Period is checked in company :P1.^
+	CE:
+	CS:YEARLIMITERROR^SVC^Message^N^N
+		A:Text^Company :P1 Until Year can not be greater than 99 years from the original Source Year^
+	CE:
+CE:
+CS:CurrencyCodesHandling^SVC^Projection^N^N
+	CS:CURRCODEUSED^SVC^Message^N^N
+		A:Text^Currency Code :P1 may have been used in transactions.^
+	CE:
+	CS:CurrencyRoundingEnum^SVC^Enumeration^N^N
+		CS:TWO^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^2^
+		CE:
+		CS:ZERO^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^0^
+		CE:
+	CE:
+CE:
+CS:CurrencyRateTypesHandling^SVC^Projection^N^N
+	CS:DEFAULTTYPEXIST^SVC^Message^N^N
+		A:Text^Currency Rate Type :P1 is the default rate type for currency :P2.^
+	CE:
+CE:
+CS:CurrencyRatesHandling^SVC^Projection^N^N
+	CS:DEFAULTTYPEXIST^SVC^Message^N^N
+		A:Text^Currency Rate Type :P1 is the default rate type for currency :P2. Do you want to proceed ?^
+	CE:
+CE:
+CS:CurrencyUpdateAssistantHandling^SVC^Projection^N^N
+	CS:FILETYPENOTAVAILABLE^SVC^Message^N^N
+		A:Text^File type :P1 is not available for the user.^
+	CE:
+	CS:MAXLENGTH^SVC^Message^N^N
+		A:Text^The length of File Name should be less than 260 characters.^
+	CE:
+	CS:NOFILETEMPLATE^SVC^Message^N^N
+		A:Text^File template must have correct value^
+	CE:
+	CS:NOFILETYPE^SVC^Message^N^N
+		A:Text^File type must have a value^
+	CE:
+	CS:NOLINE^SVC^Message^N^N
+		A:Text^No File Lines Found^
+	CE:
+	CS:NOLOADTYPE^SVC^Message^N^N
+		A:Text^Load Type must have a value for file type ExtVoucher^
+	CE:
+	CS:NOPROJACTAVAILABLE^SVC^Message^N^N
+		A:Text^Projection action :P1 is not available for the user.^
+	CE:
+	CS:NOTMASTERT^SVC^Message^N^N
+		A:Text^This Assistant can only be used by a Master Company  for Group Consolidation.^
+	CE:
+	CS:ProcessOptionsEnum^SVC^Enumeration^N^N
+		CS:BATCH^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Batch Process^
+		CE:
+		CS:ONLINE^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Online Process^
+		CE:
+	CE:
+	CS:TaskOptions^SVC^Enumeration^N^N
+		CS:NOW^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Start now^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:TaskOptionsAsync^SVC^Enumeration^N^N
+		CS:BACKGROUND^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Run in background^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:TaskOptionsExtended^SVC^Enumeration^N^N
+		CS:BACKGROUND^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Run in background^
+		CE:
+		CS:NOW^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Start now^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:WRONGSETID^SVC^Message^N^N
+		A:Text^Parameter Set Id does not exist^
+	CE:
+CE:
+CS:DefineCodeStringHandling^SVC^Projection^N^N
+	CS:MAXNUMCHARBETWEEN010^SVC^Message^N^N
+		A:Text^Max number of characters must be between 1 and 10.^
+	CE:
+CE:
+CS:DocumentFooterHandling^SVC^Projection^N^N
+	CS:COLUMNNOVALID1^SVC^Message^N^N
+		A:Text^It is not possible to enter more than 8 columns in the No of Columns field.^
+	CE:
+	CS:SUMOFWIDTHSVALID1^SVC^Message^N^N
+		A:Text^The width of the "1st Column" cannot be a negative value^
+	CE:
+	CS:SUMOFWIDTHSVALID2^SVC^Message^N^N
+		A:Text^The width of the "2nd Column" cannot be a negative value^
+	CE:
+	CS:SUMOFWIDTHSVALID3^SVC^Message^N^N
+		A:Text^The width of the "3rd Column" cannot be a negative value^
+	CE:
+	CS:SUMOFWIDTHSVALID4^SVC^Message^N^N
+		A:Text^The width of the "4th Column" cannot be a negative value^
+	CE:
+	CS:SUMOFWIDTHSVALID5^SVC^Message^N^N
+		A:Text^The width of the "5th Column" cannot be a negative value^
+	CE:
+	CS:SUMOFWIDTHSVALID6^SVC^Message^N^N
+		A:Text^The width of the "6th Column" cannot be a negative value^
+	CE:
+	CS:SUMOFWIDTHSVALID7^SVC^Message^N^N
+		A:Text^The width of the "7th Column" cannot be a negative value^
+	CE:
+	CS:SUMOFWIDTHSVALID8^SVC^Message^N^N
+		A:Text^The width of the "8th Column" cannot be a negative value^
+	CE:
+	CS:SUMOFWIDTHSVALID9^SVC^Message^N^N
+		A:Text^The Sum of the column widths should be 100%^
+	CE:
+CE:
+CS:ExternalFileAssistantHandling^SVC^Projection^N^N
+	CS:FILETYPENOTAVAILABLE^SVC^Message^N^N
+		A:Text^File type :P1 is not available for the user.^
+	CE:
+	CS:MAXLENGTH^SVC^Message^N^N
+		A:Text^The length of File Name should be less than 260 characters.^
+	CE:
+	CS:NOFILETEMPLATE^SVC^Message^N^N
+		A:Text^File template must have correct value^
+	CE:
+	CS:NOFILETYPE^SVC^Message^N^N
+		A:Text^File type must have a value^
+	CE:
+	CS:NOLINE^SVC^Message^N^N
+		A:Text^No File Lines Found^
+	CE:
+	CS:NOLOADTYPE^SVC^Message^N^N
+		A:Text^Load Type must have a value for file type ExtVoucher^
+	CE:
+	CS:NOPROJACTAVAILABLE^SVC^Message^N^N
+		A:Text^Projection action :P1 is not available for the user.^
+	CE:
+	CS:NOTMASTERT^SVC^Message^N^N
+		A:Text^This Assistant can only be used by a Master Company  for Group Consolidation.^
+	CE:
+	CS:ProcessOptionsEnum^SVC^Enumeration^N^N
+		CS:BATCH^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Batch Process^
+		CE:
+		CS:ONLINE^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Online Process^
+		CE:
+	CE:
+	CS:TaskOptions^SVC^Enumeration^N^N
+		CS:NOW^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Start now^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:TaskOptionsAsync^SVC^Enumeration^N^N
+		CS:BACKGROUND^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Run in background^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:TaskOptionsExtended^SVC^Enumeration^N^N
+		CS:BACKGROUND^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Run in background^
+		CE:
+		CS:NOW^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Start now^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:WRONGSETID^SVC^Message^N^N
+		A:Text^Parameter Set Id does not exist^
+	CE:
+CE:
+CS:ExternalFileTypeHandling^SVC^Projection^N^N
+	CS:WARNVIEWDIFF^SVC^Message^N^N
+		A:Text^The view :P1 does not match with the base view of entity :P2. It could lead to errors when loading external files.^
+	CE:
+CE:
+CS:ExternalFileTypesHandling^SVC^Projection^N^N
+	CS:INVALIDPACKAGE^SVC^Message^N^N
+		A:Text^Not a valid input package^
+	CE:
+	CS:INVALIDVIEW^SVC^Message^N^N
+		A:Text^Not a valid view^
+	CE:
+CE:
+CS:ExternalVoucherAssistantHandling^SVC^Projection^N^N
+	CS:FILETYPENOTAVAILABLE^SVC^Message^N^N
+		A:Text^File type :P1 is not available for the user.^
+	CE:
+	CS:MAXLENGTH^SVC^Message^N^N
+		A:Text^The length of File Name should be less than 260 characters.^
+	CE:
+	CS:NOFILETEMPLATE^SVC^Message^N^N
+		A:Text^File template must have correct value^
+	CE:
+	CS:NOFILETYPE^SVC^Message^N^N
+		A:Text^File type must have a value^
+	CE:
+	CS:NOLINE^SVC^Message^N^N
+		A:Text^No File Lines Found^
+	CE:
+	CS:NOLOADTYPE^SVC^Message^N^N
+		A:Text^Load Type must have a value for file type ExtVoucher^
+	CE:
+	CS:NOPROJACTAVAILABLE^SVC^Message^N^N
+		A:Text^Projection action :P1 is not available for the user.^
+	CE:
+	CS:NOTMASTERT^SVC^Message^N^N
+		A:Text^This Assistant can only be used by a Master Company  for Group Consolidation.^
+	CE:
+	CS:ProcessOptionsEnum^SVC^Enumeration^N^N
+		CS:BATCH^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Batch Process^
+		CE:
+		CS:ONLINE^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Online Process^
+		CE:
+	CE:
+	CS:TaskOptions^SVC^Enumeration^N^N
+		CS:NOW^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Start now^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:TaskOptionsAsync^SVC^Enumeration^N^N
+		CS:BACKGROUND^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Run in background^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:TaskOptionsExtended^SVC^Enumeration^N^N
+		CS:BACKGROUND^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Run in background^
+		CE:
+		CS:NOW^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Start now^
+		CE:
+		CS:SCHEDULE^SVC^Iid Element^N^N
+			P:Position^3^
+			A:Text^Schedule^
+		CE:
+	CE:
+	CS:WRONGSETID^SVC^Message^N^N
+		A:Text^Parameter Set Id does not exist^
+	CE:
+CE:
+CS:ExternalVoucherLoadInformationHandling^SVC^Projection^N^N
+	CS:NOAUTOTAXTRANS^SVC^Message^N^N
+		A:Text^No automatic tax transaction will be created on a voucher of function group Q^
+	CE:
+CE:
+CS:ExternalVouchers^SVC^Projection^N^N
+	CS:NOCURRCODE^SVC^Message^N^N
+		A:Text^No Currency Code selected.^
+	CE:
+	CS:NOTRANSDATE^SVC^Message^N^N
+		A:Text^Transaction Date is empty.^
+	CE:
+CE:
+CS:MultiCompanyVoucherDetailsAnalysis^SVC^Projection^N^N
+	CS:FINNOTES^SVC^Message^N^N
+		A:Text^Notes^
+	CE:
+CE:
+CS:MultiCompanyVoucherEntryAssistantHandling^SVC^Projection^N^N
+	CS:ACCCURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Tax Amount^
+	CE:
+	CS:ALLOCEXITS^SVC^Message^N^N
+		A:Text^Period Allocation information will not be copied to the destination voucher.^
+	CE:
+	CS:COPYVOUCHERNONONMANVOUROW^SVC^Message^N^N
+		A:Text^Copy voucher not allowed because non manual voucher row exist.^
+	CE:
+	CS:COPYVOUCHERNOTALLOWED^SVC^Message^N^N
+		A:Text^Copy voucher not allowed^
+	CE:
+	CS:COPYVOUCHERNOTALLOWEDAUTH^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for Approve only users.^
+	CE:
+	CS:COPYVOUCHERNOTALLOWEDCANCEL^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for cancellation vouchers.^
+	CE:
+	CS:COPYVOUCHERVOUSTATUS^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for voucher status :P1.^
+	CE:
+	CS:COPYVOUCHERVOUTYPE^SVC^Message^N^N
+		A:Text^Copy voucher only allowed for voucher types M, K and Q.^
+	CE:
+	CS:CURRENCYBALNCENOTBALANCED^SVC^Message^N^N
+		A:Text^Currency Balance should be zero^
+	CE:
+	CS:CURRTAXAMOUNTNULL^SVC^Message^N^N
+		A:Text^Currency Tax Amount must be entered^
+	CE:
+	CS:CURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Currency Tax Amount^
+	CE:
+	CS:DEVIDEBYZERO^SVC^Message^N^N
+		A:Text^DEVIDED_BY_ZERO_Error: Divided by zero error.^
+	CE:
+	CS:DIFFSIGNTAX^SVC^Message^N^N
+		A:Text^Different sign in Tax Amount.^
+	CE:
+	CS:ERRORSTATUS^SVC^Message^N^N
+		A:Text^Status :P1 is not allowed for new voucher entry.^
+	CE:
+	CS:EXTERNALTRANSMESSAGE^SVC^Message^N^N
+		A:Text^This External Voucher contains tax transactions and can not be copied.^
+	CE:
+	CS:EntryBasedOn^SVC^Enumeration^N^N
+		CS:AMOUNT^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Amount^
+		CE:
+		CS:PERCENTAGE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Percentage^
+		CE:
+	CE:
+	CS:INVALIDOPERATION^SVC^Message^N^N
+		A:Text^Operation not allowed.^
+	CE:
+	CS:MCNOROWS^SVC^Message^N^N
+		A:Text^Voucher rows must exist for at least two Companies.^
+	CE:
+	CS:MCNOROWSATHOME^SVC^Message^N^N
+		A:Text^At least one voucher line must exist for the original Multi Company Voucher.^
+	CE:
+	CS:NEGATIVECURRRATE^SVC^Message^N^N
+		A:Text^Currency Rate cannot be zero or negative.^
+	CE:
+	CS:NOCURRRATE^SVC^Message^N^N
+		A:Text^A Currency Rate Type must be specified in the voucher postings line.^
+	CE:
+	CS:NOTALLOWPERIOD^SVC^Message^N^N
+		A:Text^The user :P1 is not registered in any ordinary user group^
+	CE:
+	CS:NOTAX^SVC^Message^N^N
+		A:Text^Tax Amount must have a value.^
+	CE:
+	CS:NOTOPENPERIOD^SVC^Message^N^N
+		A:Text^Voucher date is not within an open period.^
+	CE:
+	CS:PARACURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Parallel Currency Tax Amount^
+	CE:
+	CS:PARARATETYPENULL^SVC^Message^N^N
+		A:Text^A Parallel Currency Rate Type must be specified in the voucher postings line.^
+	CE:
+	CS:POSTINGNOTBALANCE^SVC^Message^N^N
+		A:Text^balance should be zero^
+	CE:
+	CS:REFMANDAT^SVC^Message^N^N
+		A:Text^Reference Series and Reference Number cannot be null when Reference Mandatory is checked for Voucher Type :P1^
+	CE:
+	CS:TEMPLATENOTEXIST^SVC^Message^N^N
+		A:Text^Voucher Template :P1 doesnot exist.^
+	CE:
+	CS:USERNOTREGERROR^SVC^Message^N^N
+		A:Text^The User :P1 is not Registered in any non Year End User Group.^
+	CE:
+	CS:VOUTEMPLATEEXPIREDDATE^SVC^Message^N^N
+		A:Text^Voucher date does not match the valid date interval of the :P1 template^
+	CE:
+CE:
+CS:MultiCompanyVoucherHandling^SVC^Projection^N^N
+	CS:ACCCURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Tax Amount^
+	CE:
+	CS:ACCTYPENOTALLOWED^SVC^Message^N^N
+		A:Text^Period Allocation can be done for accounts of type Cost, Revenues and Statistics which are not set as ledger accounts and/or tax accounts.^
+	CE:
+	CS:AMOUNTNOTALLOWED^SVC^Message^N^N
+		A:Text^Period allocation is not allowed if the currency amount is zero.^
+	CE:
+	CS:CANCELNOTALLOWED^SVC^Message^N^N
+		A:Text^Period allocation cannot be done for cancellation voucher rows.^
+	CE:
+	CS:COPYVOUCHERNONONMANVOUROW^SVC^Message^N^N
+		A:Text^Copy voucher not allowed because non manual voucher row exist.^
+	CE:
+	CS:COPYVOUCHERNOTALLOWED^SVC^Message^N^N
+		A:Text^Copy voucher not allowed^
+	CE:
+	CS:COPYVOUCHERNOTALLOWEDAUTH^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for Approve only users.^
+	CE:
+	CS:COPYVOUCHERNOTALLOWEDCANCEL^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for cancellation vouchers.^
+	CE:
+	CS:COPYVOUCHERVOUSTATUS^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for voucher status :P1.^
+	CE:
+	CS:COPYVOUCHERVOUTYPE^SVC^Message^N^N
+		A:Text^Copy voucher only allowed for voucher types M, K and Q.^
+	CE:
+	CS:CORRECTIONROWERROR^SVC^Message^N^N
+		A:Text^Interim voucher cannot be proceed. Voucher contains correction rows.^
+	CE:
+	CS:CURRENCYBALNCENOTBALANCED^SVC^Message^N^N
+		A:Text^Currency Balance should be zero^
+	CE:
+	CS:CURRTAXAMOUNTNULL^SVC^Message^N^N
+		A:Text^Currency Tax Amount must be entered^
+	CE:
+	CS:CURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Currency Tax Amount^
+	CE:
+	CS:DEVIDEBYZERO^SVC^Message^N^N
+		A:Text^DEVIDED_BY_ZERO_Error: Divided by zero error.^
+	CE:
+	CS:DIFFSIGNTAX^SVC^Message^N^N
+		A:Text^Different sign in Tax Amount.^
+	CE:
+	CS:EARLYACQDATEERROR^SVC^Message^N^N
+		A:Text^The event date :P1 of the add investment must not be earlier than the acquisition date :P2 of the object :P3.^
+	CE:
+	CS:EARLYEVENTDATEEROOR^SVC^Message^N^N
+		A:Text^Retroactive Date should be less than or equal to Event Date in the object :P1.^
+	CE:
+	CS:EDITNOTALLOW^SVC^Message^N^N
+		A:Text^Can not modify, when the origin of the current period allocation is not from the voucher.^
+	CE:
+	CS:EXTERNALTRANSMESSAGE^SVC^Message^N^N
+		A:Text^This External Voucher contains tax transactions and can not be copied.^
+	CE:
+	CS:EntryBasedOn^SVC^Enumeration^N^N
+		CS:AMOUNT^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Amount^
+		CE:
+		CS:PERCENTAGE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Percentage^
+		CE:
+	CE:
+	CS:FINNOTES^SVC^Message^N^N
+		A:Text^Notes^
+	CE:
+	CS:FUNCTYPENOTALLOWED^SVC^Message^N^N
+		A:Text^Period allocation is not allowed for periodical cost allocation vouchers and vouchers created to clear revenue/cost balances.^
+	CE:
+	CS:INVALIDOPERATION^SVC^Message^N^N
+		A:Text^Operation not allowed.^
+	CE:
+	CS:NEGATIVECURRRATE^SVC^Message^N^N
+		A:Text^Currency Rate cannot be zero or negative.^
+	CE:
+	CS:NOCURRRATE^SVC^Message^N^N
+		A:Text^A Currency Rate Type must be specified in the voucher postings line.^
+	CE:
+	CS:NOOPENPERIOD^SVC^Message^N^N
+		A:Text^There are no open periods exist in Accounting Periods.^
+	CE:
+	CS:NOPERMISSION^SVC^Message^N^N
+		A:Text^User Group entered must have authority to Enter and Approve.^
+	CE:
+	CS:NOTALLOWEDEDITING^SVC^Message^N^N
+		A:Text^It only allowed to Add/Modify/Delete a multi company voucher row having function groups M/K/Q^
+	CE:
+	CS:NOTALLOWPERIOD^SVC^Message^N^N
+		A:Text^The user :P1 is not registered in any ordinary user group^
+	CE:
+	CS:NOTAX^SVC^Message^N^N
+		A:Text^Tax Amount must have a value.^
+	CE:
+	CS:NOTMANUALERROR^SVC^Message^N^N
+		A:Text^Interim voucher cannot be proceed. Voucher contains automatically created rows.^
+	CE:
+	CS:NOTOPENPERIOD^SVC^Message^N^N
+		A:Text^Voucher date is not within an open period.^
+	CE:
+	CS:PARACURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Parallel Currency Tax Amount^
+	CE:
+	CS:PARARATETYPENULL^SVC^Message^N^N
+		A:Text^A Parallel Currency Rate Type must be specified in the voucher postings line.^
+	CE:
+	CS:PERIODALLOROWERROR^SVC^Message^N^N
+		A:Text^Interim voucher cannot be proceed. Voucher contains one or more rows with period allocation.^
+	CE:
+	CS:PERIODCLOSED^SVC^Message^N^N
+		A:Text^One or more Period(s) in the interval are closed for user group :P1.^
+	CE:
+	CS:PERIODRANGEINVALID^SVC^Message^N^N
+		A:Text^Period range is same as the Basic Period. Period Allocation will not be created.^
+	CE:
+	CS:POSTINGNOTBALANCE^SVC^Message^N^N
+		A:Text^balance should be zero^
+	CE:
+	CS:PSEUDOEXISTS^SVC^Message^N^N
+		A:Text^Psuedo code :P1 already exists.^
+	CE:
+	CS:SIMULATIONNOTALLOWED^SVC^Message^N^N
+		A:Text^Period allocation cannot be done for simulation vouchers.^
+	CE:
+	CS:TOTALAMOUNT^SVC^Message^N^N
+		A:Text^Total Amount of Period Allocation must be equal to the Amount from Voucher Row.^
+	CE:
+	CS:USERNOTREGERROR^SVC^Message^N^N
+		A:Text^The User :P1 is not Registered in any non Year End User Group.^
+	CE:
+	CS:VOUCHERERRORSTATE^SVC^Message^N^N
+		A:Text^Status :P1 is not allowed for new voucher entry.^
+	CE:
+CE:
+CS:NewVoucherTypeAssistantHandling^SVC^Projection^N^N
+	CS:SingleOrAll^SVC^Enumeration^N^N
+		CS:ALL^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^All^
+		CE:
+		CS:SINGLEFUNCTIONGROUP^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Single Function Group^
+		CE:
+	CE:
+CE:
+CS:PaymentTermHandling^SVC^Projection^N^N
+	CS:ERRORSUMNETAM^SVC^Message^N^N
+		A:Text^The total sum of Net Amount Percentage must be 100 % !^
+	CE:
+CE:
+CS:ReportingPeriodDefinitionsHandling^SVC^Projection^N^N
+	CS:INVALMNUMYEAR^SVC^Message^N^N
+		A:Text^Number of Years should be greater than 0.^
+	CE:
+CE:
+CS:TasksForCurrencyUpdatesHandling^SVC^Projection^N^N
+	CS:CANTRMVCOMPANY^SVC^Message^N^N
+		A:Text^If there are any scheduled currency update jobs using :P1 task id, such jobs will not be executed when you remove all the connected companies.^
+	CE:
+CE:
+CS:TaxBookStructureHandling^SVC^Projection^N^N
+	CS:CANTMOVEITEM^SVC^Message^N^N
+		A:Text^Cannot move or copy to a subitem of the source item.^
+	CE:
+	CS:ERRORINCONDISCON^SVC^Message^N^N
+		A:Text^Cannot connect a Code part Value to another code part value^
+	CE:
+CE:
+CS:TaxBooksHandling^SVC^Projection^N^N
+	CS:TAXCODEREMOVE^SVC^Message^N^N
+		A:Text^When Tax Code is changed from Restricted to All, tax codes entered in window Tax Codes Per Tax Book will be removed.^
+	CE:
+	CS:WARNTAXRESTR^SVC^Message^N^N
+		A:Text^You are required to define tax code(s) in Tax Codes Per Tax Book window when tax code is set to restricted.^
+	CE:
+CE:
+CS:UserRelatedVoucherData^SVC^Projection^N^N
+	CS:EnumFunctionGroup^SVC^Enumeration^N^N
+		CS:ALL^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^All^
+		CE:
+		CS:SINGLE^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Single Function Group^
+		CE:
+	CE:
+	CS:NEGATIVEFROMNUMBER^SVC^Message^N^N
+		A:Text^From Number must be larger than 0^
+	CE:
+	CS:NEGATIVEUNTILNUMBER^SVC^Message^N^N
+		A:Text^Until Number must be larger than 0^
+	CE:
+	CS:RANGEEXISTS^SVC^Message^N^N
+		A:Text^The Voucher Number Already Exists in Another Range^
+	CE:
+	CS:WRONGYEARFORMAT^SVC^Message^N^N
+		A:Text^Year must be entered with 4 digits^
+	CE:
+CE:
+CS:VoucherDetailsAnalysis^SVC^Projection^N^N
+	CS:FINNOTES^SVC^Message^N^N
+		A:Text^Notes^
+	CE:
+CE:
+CS:VoucherEntryAssistantHandling^SVC^Projection^N^N
+	CS:ACCCURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Tax Amount^
+	CE:
+	CS:ALLOCEXITS^SVC^Message^N^N
+		A:Text^Period Allocation information will not be copied to the destination voucher.^
+	CE:
+	CS:APPONLYUSERGRP^SVC^Message^N^N
+		A:Text^Users included in a user group with Approve Only authorization level are not allowed to enter or modify vouchers.^
+	CE:
+	CS:COPYVOUCHERNONONMANVOUROW^SVC^Message^N^N
+		A:Text^Copy voucher not allowed because non manual voucher row exist.^
+	CE:
+	CS:COPYVOUCHERNOTALLOWED^SVC^Message^N^N
+		A:Text^Copy voucher not allowed^
+	CE:
+	CS:COPYVOUCHERNOTALLOWEDAUTH^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for Approve only users.^
+	CE:
+	CS:COPYVOUCHERNOTALLOWEDCANCEL^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for cancellation vouchers.^
+	CE:
+	CS:COPYVOUCHERVOUSTATUS^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for voucher status :P1.^
+	CE:
+	CS:COPYVOUCHERVOUTYPE^SVC^Message^N^N
+		A:Text^Copy voucher only allowed for voucher types M, K and Q.^
+	CE:
+	CS:CURRENCYBALNCENOTBALANCED^SVC^Message^N^N
+		A:Text^Currency Balance should be zero^
+	CE:
+	CS:CURRTAXAMOUNTNULL^SVC^Message^N^N
+		A:Text^Currency Tax Amount must be entered^
+	CE:
+	CS:CURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Currency Tax Amount^
+	CE:
+	CS:DEVIDEBYZERO^SVC^Message^N^N
+		A:Text^DEVIDED_BY_ZERO_Error: Divided by zero error.^
+	CE:
+	CS:DIFFSIGNTAX^SVC^Message^N^N
+		A:Text^Different sign in Tax Amount.^
+	CE:
+	CS:EXTERNALTRANSMESSAGE^SVC^Message^N^N
+		A:Text^This External Voucher contains tax transactions and can not be copied.^
+	CE:
+	CS:EntryBasedOn^SVC^Enumeration^N^N
+		CS:AMOUNT^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Amount^
+		CE:
+		CS:PERCENTAGE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Percentage^
+		CE:
+	CE:
+	CS:INVALIDOPERATION^SVC^Message^N^N
+		A:Text^Operation not allowed.^
+	CE:
+	CS:NEGATIVECURRRATE^SVC^Message^N^N
+		A:Text^Currency Rate cannot be zero or negative.^
+	CE:
+	CS:NOCURRRATE^SVC^Message^N^N
+		A:Text^A Currency Rate Type must be specified in the voucher postings line.^
+	CE:
+	CS:NOTALLOWPERIOD^SVC^Message^N^N
+		A:Text^The user :P1 is not registered in any ordinary user group^
+	CE:
+	CS:NOTAX^SVC^Message^N^N
+		A:Text^Tax Amount must have a value.^
+	CE:
+	CS:NOTOPENPERIOD^SVC^Message^N^N
+		A:Text^Voucher date is not within an open period.^
+	CE:
+	CS:NULLREFROWEXISTS^SVC^Message^N^N
+		A:Text^Reference Series and Reference Number cannot be null when Reference Mandatory is checked for Voucher Type :P1^
+	CE:
+	CS:PARACURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Parallel Currency Tax Amount^
+	CE:
+	CS:PARARATETYPENULL^SVC^Message^N^N
+		A:Text^A Parallel Currency Rate Type must be specified in the voucher postings line.^
+	CE:
+	CS:POSTINGNOTBALANCE^SVC^Message^N^N
+		A:Text^balance should be zero^
+	CE:
+	CS:TEMPLATENOTEXIST^SVC^Message^N^N
+		A:Text^Voucher Template :P1 doesnot exist.^
+	CE:
+	CS:USERNOTREGERROR^SVC^Message^N^N
+		A:Text^The User :P1 is not Registered in any non Year End User Group.^
+	CE:
+	CS:VOUTEMPLATEEXPIREDDATE^SVC^Message^N^N
+		A:Text^Voucher date does not match the valid date interval of the :P1 template^
+	CE:
+CE:
+CS:VoucherHandling^SVC^Projection^N^N
+	CS:ACCCURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Tax Amount^
+	CE:
+	CS:ACCTYPENOTALLOWED^SVC^Message^N^N
+		A:Text^Period Allocation can be done for accounts of type Cost, Revenues and Statistics which are not set as ledger accounts and/or tax accounts.^
+	CE:
+	CS:AMOUNTNOTALLOWED^SVC^Message^N^N
+		A:Text^Period allocation is not allowed if the currency amount is zero.^
+	CE:
+	CS:CANCELNOTALLOWED^SVC^Message^N^N
+		A:Text^Period allocation cannot be done for cancellation voucher rows.^
+	CE:
+	CS:CANNOTMODIFYUSERGROUP^SVC^Message^N^N
+		A:Text^Cannot modify User Group.^
+	CE:
+	CS:COPYVOUCHERNONONMANVOUROW^SVC^Message^N^N
+		A:Text^Copy voucher not allowed because non manual voucher row exist.^
+	CE:
+	CS:COPYVOUCHERNOTALLOWED^SVC^Message^N^N
+		A:Text^Copy voucher not allowed^
+	CE:
+	CS:COPYVOUCHERNOTALLOWEDAUTH^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for Approve only users.^
+	CE:
+	CS:COPYVOUCHERNOTALLOWEDCANCEL^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for cancellation vouchers.^
+	CE:
+	CS:COPYVOUCHERVOUSTATUS^SVC^Message^N^N
+		A:Text^Copy voucher not allowed for voucher status :P1.^
+	CE:
+	CS:COPYVOUCHERVOUTYPE^SVC^Message^N^N
+		A:Text^Copy voucher only allowed for voucher types M, K and Q.^
+	CE:
+	CS:CORRECTIONROWERROR^SVC^Message^N^N
+		A:Text^Interim voucher cannot be proceed. Voucher contains correction rows.^
+	CE:
+	CS:CURRENCYBALNCENOTBALANCED^SVC^Message^N^N
+		A:Text^Currency Balance should be zero^
+	CE:
+	CS:CURRTAXAMOUNTNULL^SVC^Message^N^N
+		A:Text^Currency Tax Amount must be entered^
+	CE:
+	CS:CURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Currency Tax Amount^
+	CE:
+	CS:DEVIDEBYZERO^SVC^Message^N^N
+		A:Text^DEVIDED_BY_ZERO_Error: Divided by zero error.^
+	CE:
+	CS:DIFFSIGNTAX^SVC^Message^N^N
+		A:Text^Different sign in Tax Amount.^
+	CE:
+	CS:EARLYACQDATEERROR^SVC^Message^N^N
+		A:Text^The event date :P1 of the add investment must not be earlier than the acquisition date :P2 of the object :P3.^
+	CE:
+	CS:EARLYEVENTDATEEROOR^SVC^Message^N^N
+		A:Text^Retroactive Date should be less than or equal to Event Date in the object :P1.^
+	CE:
+	CS:EDITNOTALLOW^SVC^Message^N^N
+		A:Text^Can not modify, when the origin of the current period allocation is not from the voucher.^
+	CE:
+	CS:ENTERPERM^SVC^Message^N^N
+		A:Text^The voucher cannot be approved by :P1 user as :P2 voucher type is defined with the option Separate User Approval.^
+	CE:
+	CS:ENTERPERMS^SVC^Message^N^N
+		A:Text^There are voucher(s) that cannot be approved by :P1 user since the connected voucher type(s) is defined with the option Separate User Approval.^
+	CE:
+	CS:EXTERNALTRANSMESSAGE^SVC^Message^N^N
+		A:Text^This External Voucher contains tax transactions and can not be copied.^
+	CE:
+	CS:EntryBasedOn^SVC^Enumeration^N^N
+		CS:AMOUNT^SVC^Iid Element^N^N
+			P:Position^1^
+			A:Text^Amount^
+		CE:
+		CS:PERCENTAGE^SVC^Iid Element^N^N
+			P:Position^2^
+			A:Text^Percentage^
+		CE:
+	CE:
+	CS:FINNOTES^SVC^Message^N^N
+		A:Text^Notes^
+	CE:
+	CS:FUNCTYPENOTALLOWED^SVC^Message^N^N
+		A:Text^Period allocation is not allowed for periodical cost allocation vouchers and vouchers created to clear revenue/cost balances.^
+	CE:
+	CS:INVALIDOPERATION^SVC^Message^N^N
+		A:Text^Operation not allowed.^
+	CE:
+	CS:NEGATIVECURRRATE^SVC^Message^N^N
+		A:Text^Currency Rate cannot be zero or negative.^
+	CE:
+	CS:NOCURRRATE^SVC^Message^N^N
+		A:Text^A Currency Rate Type must be specified in the voucher postings line.^
+	CE:
+	CS:NOOPENPERIOD^SVC^Message^N^N
+		A:Text^There are no open periods exist in Accounting Periods.^
+	CE:
+	CS:NOPERMISSION^SVC^Message^N^N
+		A:Text^User Group entered must have authority to Enter and Approve.^
+	CE:
+	CS:NOTALLOWPERIOD^SVC^Message^N^N
+		A:Text^The user :P1 is not registered in any ordinary user group^
+	CE:
+	CS:NOTAPPADD^SVC^Message^N^N
+		A:Text^Vouchers created outside financials are not possible to be approved before manual postings are added.^
+	CE:
+	CS:NOTAX^SVC^Message^N^N
+		A:Text^Tax Amount must have a value.^
+	CE:
+	CS:NOTMANUALERROR^SVC^Message^N^N
+		A:Text^Interim voucher cannot be proceed. Voucher contains automatically created rows.^
+	CE:
+	CS:NOTOPENPERIOD^SVC^Message^N^N
+		A:Text^Voucher date is not within an open period.^
+	CE:
+	CS:PARACURRTAXAMOUNTSIGN^SVC^Message^N^N
+		A:Text^Different sign in Parallel Currency Tax Amount^
+	CE:
+	CS:PARARATETYPENULL^SVC^Message^N^N
+		A:Text^A Parallel Currency Rate Type must be specified in the voucher postings line.^
+	CE:
+	CS:PERIODALLOROWERROR^SVC^Message^N^N
+		A:Text^Interim voucher cannot be proceed. Voucher contains one or more rows with period allocation.^
+	CE:
+	CS:PERIODCLOSED^SVC^Message^N^N
+		A:Text^One or more Period(s) in the interval are closed for user group :P1.^
+	CE:
+	CS:PERIODRANGEINVALID^SVC^Message^N^N
+		A:Text^Period range is same as the Basic Period. Period Allocation will not be created.^
+	CE:
+	CS:POSTINGNOTBALANCE^SVC^Message^N^N
+		A:Text^balance should be zero^
+	CE:
+	CS:PSEUDOEXISTS^SVC^Message^N^N
+		A:Text^Psuedo code :P1 already exists.^
+	CE:
+	CS:SIMULATIONNOTALLOWED^SVC^Message^N^N
+		A:Text^Period allocation cannot be done for simulation vouchers.^
+	CE:
+	CS:TOTALAMOUNT^SVC^Message^N^N
+		A:Text^Total Amount of Period Allocation must be equal to the Amount from Voucher Row.^
+	CE:
+	CS:USERNOTREGERROR^SVC^Message^N^N
+		A:Text^The User :P1 is not Registered in any non Year End User Group.^
+	CE:
+	CS:VOUCHERERRORSTATE^SVC^Message^N^N
+		A:Text^Status :P1 is not allowed for new voucher entry.^
+	CE:
+	CS:VOUNOTBAL^SVC^Message^N^N
+		A:Text^Some of the vouchers are not in balance. They cannot be approved for update.^
+	CE:
+CE:
+CS:VoucherTemplateHandling^SVC^Projection^N^N
+	CS:MULTICOMVOUTEMUPDATE^SVC^Message^N^N
+		A:Text^You cannot change the type of the template from multi company to single company as the template includes multi company voucher lines.^
+	CE:
+CE:
+CS:VouchersAnalysis^SVC^Projection^N^N
+	CS:FINNOTES^SVC^Message^N^N
+		A:Text^Notes^
+	CE:
+CE:

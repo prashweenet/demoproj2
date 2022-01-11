@@ -1,0 +1,30 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210415_ADCOM_AD-1032.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210419   siselk  Added is repairable attribute to av_part_number_tab
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','210415_ADCOM_AD-1032.cdb','Timestamp_1');
+PROMPT Starting 200322_ADCOM_AD-1056.cdb
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_PART_NUMBER_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'IS_REPAIRABLE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','210415_ADCOM_AD-1032.cdb','Done');
+SET SERVEROUTPUT OFF

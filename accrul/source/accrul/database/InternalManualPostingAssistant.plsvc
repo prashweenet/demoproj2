@@ -1,0 +1,403 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     InternalManualPostingAssistant
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@ApproveGlobalVariable
+internal_posting_key_   Internal_Postings_Accrul_Key;
+
+@Override
+PROCEDURE CRUD_Create___(
+   rec_ IN Manual_Int_Posting_Virtual_Rec )
+IS 
+   new_rec_        Manual_Int_Posting_Virtual_Rec;
+BEGIN
+   new_rec_ := rec_;
+   new_rec_.entry_based_on := 'AMOUNT';
+   super(new_rec_);
+   
+   Add_Ledger_Records___(rec_.Objkey);
+END CRUD_Create___;
+
+@Override
+PROCEDURE CRUD_Create___(
+   rec_ IN Internal_Posting_Ledger_Virtual_Rec )
+IS 
+   new_rec_        Internal_Posting_Ledger_Virtual_Rec;
+BEGIN
+   new_rec_ := rec_;
+   new_rec_.entry_based_on := 'AMOUNT';
+   super(new_rec_);
+END CRUD_Create___;
+
+PROCEDURE Add_Ledger_Records___ (
+   objkey_ IN VARCHAR2)
+IS
+   master_     Manual_Int_Posting_Virtual_Rec;
+   master_key_ Manual_Int_Posting_Virtual_Key;
+   
+   delimiter_        VARCHAR2(1) := '|';
+   ledger_list_      Utility_SYS.STRING_TABLE;
+   ledger_count_     NUMBER := 0;
+   ledger_index_     NUMBER := 0;
+   ledger_detail_    Internal_Posting_Ledger_Virtual_Rec;
+   user_id_          ${PROJECTION}_Internal_Posting_Ledger_Virtual_VRT.obj_created_by%TYPE;
+BEGIN
+	master_key_.Objkey := objkey_ ;
+   master_            := Get_Record___(master_key_);
+   DELETE 
+   FROM ${PROJECTION}_Internal_Posting_Ledger_Virtual_VRT 
+   WHERE internal_seq_number = master_.internal_seq_number;
+   $IF Component_Intled_SYS.INSTALLED $THEN
+      IF (Voucher_Type_API.Get_Use_Manual(master_.company, master_.voucher_type) = 'TRUE') THEN
+         master_.ledger_ids := Internal_Voucher_Util_Pub_API.Check_If_Not_Excluded_Manual(
+            master_.company,
+            master_.account,
+            master_.voucher_date,
+            master_.voucher_type);        
+      END IF;
+   $END
+   user_id_ := Fnd_Session_API.Get_Fnd_User();
+   Utility_SYS.Tokenize(master_.ledger_ids, delimiter_, ledger_list_, ledger_count_);
+   
+   WHILE (ledger_index_ < ledger_count_) LOOP
+      ledger_index_ := ledger_index_+1;
+      ledger_detail_.company := master_.company;
+      ledger_detail_.account := master_.account;
+      ledger_detail_.ledger_id := ledger_list_(ledger_index_);
+      ledger_detail_.accounting_year := master_.accounting_year;
+      ledger_detail_.voucher_no := master_.voucher_no;
+      ledger_detail_.currency_rate := master_.currency_rate;
+      ledger_detail_.internal_seq_number := master_.internal_seq_number;
+      ledger_detail_.entry_based_on := 'AMOUNT';
+      ledger_detail_.obj_created_by := user_id_;
+      $IF Component_Intled_SYS.INSTALLED $THEN
+         ledger_detail_.manual_code_parts := Int_Posting_Method_API.Get_Manual_Code_Parts(master_.company, ledger_detail_.ledger_id, master_.account, master_.voucher_date);
+      $END
+      New_Detail___(master_key_, ledger_detail_);
+   END LOOP;   
+END Add_Ledger_Records___;
+
+PROCEDURE Check_Posting_Balance___ (
+   init_ IN BOOLEAN)
+IS
+   currency_remaining_balance_   NUMBER;
+   remaining_balance_            NUMBER;   
+   master_                       Manual_Int_Posting_Virtual_Rec;   
+BEGIN
+   IF init_ THEN
+      internal_posting_key_ := NULL; 
+   ELSE
+      Internal_Postings_Accrul_API.Calculate_Remaining_Balances(
+         internal_posting_key_.company, internal_posting_key_.ledger_id, 
+         internal_posting_key_.account, internal_posting_key_.internal_seq_number,
+         currency_remaining_balance_, remaining_balance_);
+      master_ := Get_Grand_Parent___(internal_posting_key_);
+      
+      IF NVL(master_.amount,0) != NVL(remaining_balance_,0) THEN
+         Error_SYS.Record_General(lu_name_, 'POSTINGNOTBALANCE: balance should be zero');
+      END IF;
+      IF NVL(master_.currency_amount,0) != NVL(currency_remaining_balance_,0) THEN
+         Error_SYS.Record_General(lu_name_, 'CURRENCYBALNCENOTBALANCED: Currency Balance should be zero');
+      END IF;
+   END IF;
+END Check_Posting_Balance___;
+
+
+@Override
+PROCEDURE CRUD_Create___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Internal_Postings_Accrul_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+   new_attr_ VARCHAR2(32000);
+BEGIN
+   --background_trace_util_api.trace_raw('CREATE '||internal_posting_key_.company||'^^'||internal_posting_key_.ledger_id||'^^'||internal_posting_key_.account||'^^'|| internal_posting_key_.internal_seq_number);
+   new_attr_ := Client_SYS.Remove_Attr('AMOUNT', attr_);
+   new_attr_ := Client_SYS.Remove_Attr('CURRENCY_AMOUNT', new_attr_);
+   super(etag_, key_, new_attr_, info_, action_);
+   internal_posting_key_ := key_;
+   --Add post-processing code here
+END CRUD_Create___;
+
+@Override
+PROCEDURE CRUD_Update___(
+   old_ IN Manual_Int_Posting_Virtual_Rec,
+   new_ IN Manual_Int_Posting_Virtual_Rec )
+IS
+BEGIN
+   super(old_, new_);
+   IF (old_.entry_based_on != new_.entry_based_on) THEN
+      UPDATE ${PROJECTION}_INTERNAL_POSTING_LEDGER_VIRTUAL_VRT 
+      SET entry_based_on = new_.entry_based_on 
+      WHERE parent_objkey = new_.objkey;
+   END IF;
+END CRUD_Update___;
+
+
+@Override
+PROCEDURE CRUD_Update___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Internal_Postings_Accrul_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+   new_attr_ VARCHAR2(32000);
+   master_ Manual_Int_Posting_Virtual_Rec;
+   
+   percentage_      Internal_Postings_Accrul.percentage%TYPE;
+   currency_amount_ Internal_Postings_Accrul.currency_amount%TYPE;
+   amount_          Internal_Postings_Accrul.amount%TYPE;
+   
+BEGIN
+   internal_posting_key_ := key_;
+   new_attr_  := attr_;
+   IF (Client_SYS.Item_Exist('CURRENCY_AMOUNT', attr_) OR Client_SYS.Item_Exist('AMOUNT', attr_)) THEN
+      master_ := Get_Grand_Parent___(key_);
+      percentage_      := Client_SYS.Get_Item_Value_To_Number('PERCENTAGE', attr_, lu_name_);
+      currency_amount_ := Client_SYS.Get_Item_Value_To_Number('CURRENCY_AMOUNT', attr_, lu_name_);
+      amount_          := Client_SYS.Get_Item_Value_To_Number('AMOUNT', attr_, lu_name_);
+      
+      IF master_.currency_amount != 0 AND master_.currency_amount IS NOT NULL THEN
+         percentage_ := currency_amount_ / master_.currency_amount * 100;
+      ELSIF master_.amount != 0 AND master_.amount IS NOT NULL THEN
+         percentage_ := amount_ / master_.amount * 100; 
+      ELSE
+         percentage_ := 0;
+      END IF;
+      percentage_ := Abs(percentage_);
+      Client_SYS.Set_Item_Value('PERCENTAGE', percentage_, attr_);   
+      new_attr_ := Client_SYS.Remove_Attr('AMOUNT', attr_);
+      new_attr_ := Client_SYS.Remove_Attr('CURRENCY_AMOUNT', new_attr_);
+   END IF;
+   super(etag_, key_, new_attr_, info_, action_);
+END CRUD_Update___;
+
+@Override
+PROCEDURE CRUD_Delete___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Internal_Postings_Accrul_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   internal_posting_key_ := key_;
+   super(etag_, key_, info_, action_);
+END CRUD_Delete___;
+
+
+FUNCTION Get_Grand_Parent___ (
+   key_ Internal_Postings_Accrul_Key) RETURN Manual_Int_Posting_Virtual_Rec
+IS
+   master_        Manual_Int_Posting_Virtual_Rec;
+   master_key_    Manual_Int_Posting_Virtual_Key;
+   master_objkey_ ${PROJECTION}_Internal_Posting_Ledger_Virtual_VRT.objkey%TYPE;
+BEGIN
+   select parent_objkey INTO master_objkey_
+   FROM ${PROJECTION}_Internal_Posting_Ledger_Virtual_VRT
+   WHERE ledger_id = internal_posting_key_.ledger_id 
+   AND internal_seq_number = internal_posting_key_.internal_seq_number;
+   
+   master_key_.objkey := master_objkey_;
+   master_ := get_record___(master_key_);
+	RETURN master_;
+END Get_Grand_Parent___;
+
+FUNCTION Validate_Percentage___ (
+   currency_amount_ IN NUMBER,
+   amount_          IN NUMBER,
+   correction_      IN BOOLEAN,
+   percentage_      IN NUMBER) RETURN Amount_From_Percentage_Structure_Rec
+IS
+   rec_ Amount_From_Percentage_Structure_Rec;
+   dummy_rec_ Amount_From_Percentage_Structure_Rec;
+BEGIN
+   Internal_Postings_Accrul_API.Validate_Percentage(
+      currency_amount_, 
+      NULL, 
+      percentage_,
+      correction_, 
+      rec_.currency_debit_amount,
+      rec_.currency_credit_amount,
+      rec_.currency_amount,
+      dummy_rec_.debit_amount,
+      dummy_rec_.credit_amount,
+      dummy_rec_.amount);
+   Internal_Postings_Accrul_API.Validate_Percentage(
+      NULL, 
+      amount_, 
+      percentage_,
+      correction_, 
+      dummy_rec_.currency_debit_amount,
+      dummy_rec_.currency_credit_amount,
+      dummy_rec_.currency_amount,
+      rec_.debit_amount,
+      rec_.credit_amount,
+      rec_.amount);
+   rec_.percentage := percentage_;
+   RETURN rec_;
+END Validate_Percentage___;
+
+FUNCTION Validate_Amounts___ (
+   company_             IN VARCHAR2,
+   total_               IN NUMBER,
+   debit_               IN NUMBER,
+   credit_              IN NUMBER,
+   rate_                IN NUMBER,
+   currency_code_       IN VARCHAR2,
+   conversion_factor_   IN NUMBER) RETURN Amount_From_Percentage_Structure_Rec
+IS
+   rec_                 Amount_From_Percentage_Structure_Rec;
+   inverted_            VARCHAR2(5);
+   currency_rounding_   NUMBER;
+   conversion_fac_      NUMBER;
+   currency_rate_       NUMBER;
+   currency_rate_type_  Voucher_Row_Tab.currency_type%TYPE;
+   base_currency_code_  voucher_template_row_tab.currency_code%TYPE;
+BEGIN
+   base_currency_code_ := Company_Finance_API.Get_Currency_Code(company_);
+   currency_rate_type_ := Currency_Type_API.Get_Default_Type(company_);
+   currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(company_, base_currency_code_);
+   Currency_Rate_API.Fetch_Currency_Rate_Base(conversion_fac_, currency_rate_, inverted_, company_, currency_code_, base_currency_code_ , currency_rate_type_, sysdate, 'DUMMY' );
+   
+   IF debit_ > 0 THEN
+      rec_.percentage             := Internal_Postings_Accrul_API.Calculate_Percentage(total_, debit_);
+      rec_.currency_amount        := debit_;
+      rec_.Currency_debit_amount  := debit_;
+      rec_.Currency_credit_amount := NULL;
+      rec_.debit_amount           := Currency_Amount_API.Calculate_Accounting_Amount(debit_, rate_, conversion_factor_, inverted_, currency_rounding_);  -- #TODO convert with rate
+      rec_.credit_amount          := NULL; 
+      rec_.amount                 := Currency_Amount_API.Calculate_Accounting_Amount(debit_, rate_, conversion_factor_, inverted_, currency_rounding_);   -- #TODO convert with rate
+   ELSIF credit_ > 0 THEN
+      rec_.percentage             := Internal_Postings_Accrul_API.Calculate_Percentage(total_, debit_);
+      rec_.currency_amount        := credit_;
+      rec_.Currency_debit_amount  := NULL;
+      rec_.Currency_credit_amount := credit_;
+      rec_.credit_amount          := Currency_Amount_API.Calculate_Accounting_Amount(credit_, rate_, conversion_factor_, inverted_, currency_rounding_); 
+      rec_.amount                 := Currency_Amount_API.Calculate_Accounting_Amount(credit_, rate_, conversion_factor_, inverted_, currency_rounding_);      
+   END IF;
+	RETURN rec_;
+END Validate_Amounts___;
+
+FUNCTION Validate_Curr_Amounts___ (
+   company_             IN VARCHAR2,
+   total_               IN NUMBER,
+   amounts_             IN Amount_From_Percentage_Structure_Rec,
+   rate_                IN NUMBER,
+   currency_code_       IN VARCHAR2,
+   conversion_factor_   IN NUMBER) RETURN Amount_From_Percentage_Structure_Rec
+IS
+   rec_                 Amount_From_Percentage_Structure_Rec;
+   inverted_            VARCHAR2(5);
+   currency_rounding_   NUMBER;
+   currency_rate_type_  Voucher_Row_Tab.currency_type%TYPE;
+   base_currency_code_  voucher_template_row_tab.currency_code%TYPE;
+BEGIN
+   base_currency_code_ := Company_Finance_API.Get_Currency_Code(company_);
+   currency_rate_type_ := Currency_Type_API.Get_Default_Type(company_);
+   currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(company_, base_currency_code_);
+   inverted_           := Currency_Code_API.Get_Inverted(company_, currency_code_);
+   
+   IF (amounts_.currency_debit_amount IS NOT NULL) THEN
+      IF (NVL(total_,0) =0 ) THEN
+         rec_.percentage := 0;
+      ELSE
+         rec_.percentage             := Internal_Postings_Accrul_API.Calculate_Percentage(total_, amounts_.currency_debit_amount);
+      END IF;
+      rec_.currency_debit_amount  := amounts_.currency_debit_amount;
+      rec_.currency_credit_amount := NULL;
+      rec_.debit_amount           := Currency_Amount_API.Calculate_Accounting_Amount(amounts_.currency_debit_amount, rate_, conversion_factor_, inverted_, currency_rounding_);  -- #TODO convert with rate
+      rec_.credit_amount          := NULL; 
+   ELSIF (amounts_.currency_credit_amount IS NOT NULL) THEN
+      IF (NVL(total_,0) =0 ) THEN
+         rec_.percentage := 0;
+      ELSE
+         rec_.percentage             := Internal_Postings_Accrul_API.Calculate_Percentage(total_, amounts_.currency_credit_amount);
+      END IF;
+      rec_.currency_debit_amount  := NULL;
+      rec_.currency_credit_amount := amounts_.currency_credit_amount;
+      rec_.debit_amount           := NULL;
+      rec_.credit_amount          := Currency_Amount_API.Calculate_Accounting_Amount(amounts_.currency_credit_amount, rate_, conversion_factor_, inverted_, currency_rounding_);
+   END IF;
+   IF (amounts_.currency_debit_amount IS NOT NULL OR amounts_.currency_credit_amount IS NOT NULL) THEN
+      rec_.currency_amount        := amounts_.currency_amount;
+      rec_.amount                 := NVL(rec_.debit_amount, 0) - NVL(rec_.credit_amount, 0);
+   END IF;
+	RETURN rec_;
+END Validate_Curr_Amounts___;
+
+FUNCTION Validate_Amounts___ (
+   company_         IN VARCHAR2,
+   total_           IN NUMBER,
+   currency_code_   IN VARCHAR2,
+   amounts_         IN Amount_From_Percentage_Structure_Rec) RETURN Amount_From_Percentage_Structure_Rec
+IS
+   rec_                 Amount_From_Percentage_Structure_Rec;
+   currency_rounding_   NUMBER;
+   base_currency_code_  voucher_template_row_tab.currency_code%TYPE;
+BEGIN
+   base_currency_code_ := Company_Finance_API.Get_Currency_Code(company_);
+   currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(company_, base_currency_code_);
+   
+   IF (amounts_.debit_amount IS NOT NULL) THEN
+      rec_.debit_amount           := ROUND(amounts_.debit_amount, currency_rounding_);
+      rec_.credit_amount          := NULL; 
+      IF (NVL(total_,0) =0 ) THEN
+         rec_.percentage := 0;
+      ELSE
+         rec_.percentage             := Internal_Postings_Accrul_API.Calculate_Percentage(total_, rec_.debit_amount);
+      END IF;
+   ELSIF (amounts_.credit_amount IS NOT NULL) THEN
+      rec_.debit_amount           := NULL;
+      rec_.credit_amount          := ROUND(amounts_.credit_amount, currency_rounding_);
+      IF (NVL(total_,0) =0 ) THEN
+         rec_.percentage := 0;
+      ELSE
+         rec_.percentage             := Internal_Postings_Accrul_API.Calculate_Percentage(total_, rec_.credit_amount);
+      END IF;
+   END IF;
+   IF (amounts_.debit_amount IS NOT NULL OR amounts_.credit_amount IS NOT NULL) THEN
+      rec_.amount                 := ROUND(amounts_.amount, currency_rounding_);
+   END IF;
+   IF (base_currency_code_ = currency_code_) THEN
+      rec_.currency_debit_amount  := rec_.debit_amount;
+      rec_.currency_credit_amount := rec_.credit_amount;
+      rec_.currency_amount        := rec_.amount;
+   ELSE
+      rec_.currency_debit_amount  := amounts_.currency_debit_amount;
+      rec_.currency_credit_amount := amounts_.currency_credit_amount;
+      rec_.currency_amount        := amounts_.currency_amount;
+   END IF;
+	RETURN rec_;
+END Validate_Amounts___;
+
+FUNCTION Validate_Postings_Balance___ (
+   company_               IN VARCHAR2,
+   voucher_type_          IN VARCHAR2,
+   voucher_date_          IN DATE,
+   internal_seq_number_   IN NUMBER,
+   account_               IN VARCHAR2,
+   amount_                IN NUMBER,
+   curr_amount_           IN NUMBER) RETURN BOOLEAN
+IS
+BEGIN
+	Voucher_Row_API.Validate_Int_Manual(company_,
+                                     voucher_type_,
+                                     voucher_date_,
+                                     internal_seq_number_,
+                                     account_,
+                                     amount_,
+                                     curr_amount_);
+   RETURN TRUE;
+END Validate_Postings_Balance___;

@@ -1,0 +1,90 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: Aircraft
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210416  majslk  AD-1086, Updated Aircraft_Lov view.
+--  201029  chdslk  AD2020R1-861, Added Locked_Bool to Aircraft_List view.
+--  200821  SatGlk  LMM2020R1-513, Added additional attributes to Aircraft_Lov view
+--  200819  SWiclk  LMM2020R1-702, Removed columns APPLICABLITY_CODE, CARRIER_CODE, ASSM_CODE, OPERATOR_DESCRIPTION, 
+--  200819          AIRCRAFT_TYPE_ID and added AIRCRAFT_TYPE_CODE.
+--  200701  SatGlk  LMM2020R1-187, Added aircraft_lov view to show aircraft_desc and reg_code in one column
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+VIEW Aircraft_List IS
+   Prompt     = 'Aircraft List'
+   Table      = 'AIRCRAFT_TAB'
+SELECT
+      aa.aircraft_id                    aircraft_id,
+      aa.aircraft_desc                  aircraft_desc,
+      aa.barcode                        barcode,
+      aa.serial_number                  serial_number,
+      aa.part_number                    part_number,
+      aa.manufacturer                   manufacturer,
+      aa.manufactured_date              manufactured_date,
+      aa.received_date                  received_date,
+      aa.release_remarks                release_remarks,
+      aa.release_number                 release_number,
+      aa.release_date                   release_date,     
+      aa.reg_code                       reg_code,
+      aa.fin_no_code                    fin_no_code,
+      aa.line_no_oem                    line_no_oem,
+      aa.var_no_oem                     var_no_oem,
+      aa.ipc_effectivity_code           ipc_effectivity_code,
+      aa.airworth_code                  airworth_code,
+      aa.regulatory_body_code           regulatory_body_code,
+      aa.country_code                   country_code,
+      aa.capability_code                capability_code,     
+      aa.operator_code                  operator_code,    
+      aa.condition                      condition,
+      aa.owner_code                     owner_code,
+      aa.authority_code                 authority_code,
+      aa.forcast_model_desc             forcast_model_desc,
+      aa.aircraft_type_code             aircraft_type_code,
+      aa.inventory_id                   inventory_id,
+      aa.alt_id                         alt_id,
+      aa.rowkey                         objkey,
+      aa.rowversion                     objversion,
+      aa.rowid                          objid,
+      aa.mx_unique_key                  mx_unique_key,
+      ai.locked_bool                    locked_bool
+FROM   aircraft_tab aa,
+       av_inventory_tab ai
+WHERE  ai.inventory_id = aa.inventory_id 
+AND    aa.condition NOT IN  ('SCRAP','INREP')
+AND    aa.condition != 'ARCHIVE'
+AND    ai.locked_bool = 'FALSE';
+
+@Override
+VIEW Aircraft_Lov IS
+SELECT
+      a.aircraft_id                    aircraft_id,
+      CONCAT(CONCAT(a.aircraft_desc, ' - '), TO_CHAR(a.reg_code))                        
+                                     aircraft,
+      CONCAT(TO_CHAR(a.reg_code), CONCAT(' (', CONCAT(a.manufacturer, CONCAT(' ', CONCAT(a.aircraft_desc, ')')))))                        
+                                     aircraft_mob,
+      a.aircraft_type_code             aircraft_type_code,
+      a.capability_code                capability_code,
+      a.manufacturer                   manufacturer,
+      a.rowkey                         objkey,
+      a.rowversion                     objversion,
+      a.rowid                          objid,
+      i.locked_bool                    locked_bool,
+      i.locked_bool                    locked_bool_db
+FROM   aircraft_tab a
+LEFT OUTER JOIN av_inventory_tab i 
+ON     a.inventory_id = i.inventory_id
+WHERE (a.condition != 'SCRAP' and a.condition != 'ARCHIVE')
+AND   (i.locked_bool = 'FALSE' OR i.locked_bool IS NULL);
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------

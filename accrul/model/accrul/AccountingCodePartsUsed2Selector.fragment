@@ -1,0 +1,51 @@
+fragment AccountingCodePartsUsed2Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view accounting_code_parts_used2";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccountingCodePartsUsed2Selector for AccountingCodePartsUsed2 {
+   orderby = Company, CodePart;
+   static CodeName;
+   static Description;
+}
+
+@Override
+list AccountingCodePartsUsed2LovList for AccountingCodePartsUsed2 {
+   orderby = Company, CodePart;
+}
+
+card AccountingCodePartsUsed2Card for AccountingCodePartsUsed2 {
+   label = "";
+   fieldranking CodeName;
+   field CodeName;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccountingCodePartsUsed2 {
+   from = "accounting_code_parts_used2";
+   lu = AccountingCodeParts;
+   keys = Company, CodeName;
+   ludependencies = AccountingCodeParts;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CodePart Text {
+      label = "Code part";
+      lovcolumn = [false];
+   }
+   attribute CodeName Text {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

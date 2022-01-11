@@ -1,0 +1,85 @@
+fragment ExternalFileParametersAssistant;
+component ACCRUL;
+layer Core;
+description "External File Parameters";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+assistant ExternalFileParamAssistant using ExternalFileParamSet {
+   label = "External File Parameters";
+   input(LoadFileId, SetId);
+
+   steps {
+      step {
+         list ExternalFileParamList(ExternalFileParamArray);
+      }
+      final step {
+      }
+      cancelled step {
+      }
+   }
+   finish command {
+      execute {
+         navigate back;
+      }
+   }
+   cancel command {
+      visible = [false];
+   }
+   restart command {
+      visible = [false];
+   }
+}
+
+----------------------------------- LISTS -----------------------------------
+
+list ExternalFileParamList for ExtFileTypeParam {
+   label = "";
+   multiselect = [false];
+
+   orderby = ParamNo;
+   field Description {
+      size = Medium;
+   }
+   field ParamValue;
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+entityset ExternalFileParamSet for ExternalFileParamVirtual;
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+query ExtFileTypeParam {
+   from = "EXT_FILE_TYPE_PARAM_LOAD";
+   lu = ExtFileTypeParam;
+   keys = LoadFileId, SetId, FileType, ParamId {
+      where = "LOAD_FILE_ID = :LoadFileId AND SET_ID = :SetId";
+   }
+   attribute LoadFileId Number;
+   attribute SetId Text;
+   attribute FileType Text;
+   attribute ParamId Text;
+   attribute Description Text;
+   attribute ParamValue Text {
+      label = "Value";
+   }
+   attribute BrowsableField Text;
+   attribute HelpText Text;
+   attribute ParamNo Number;
+   attribute LovView Text;
+   attribute EnumerateMethod Text;
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+
+virtual ExternalFileParamVirtual {
+   attribute LoadFileId Number;
+   attribute SetId Text;
+   array ExternalFileParamArray(LoadFileId, SetId) to ExtFileTypeParam(LoadFileId, SetId);
+}
+

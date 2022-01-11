@@ -1,0 +1,134 @@
+client CombinationRules;
+component ACCRUL;
+layer Core;
+projection CombinationRulesHandling;
+
+include fragment CopyToCompaniesAssistant;
+include fragment CodeStringAllBasic;
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CombinationRuleNavEntry parent AccrulNavigator.PostingRulesMenu at index 500 {
+      label = "Combination Rules";
+      page List home AccountingCodeStringComb;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AccountingCodestrCombSet {
+   label = "Combination Rules";
+   list AccountingCodestrCombList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command CopyToCompaniesCommand for AccountingCodestrComb {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "AccountingCodestrComb", "MANUAL", Selection, "Accounting_Codestr_Comb_API") {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand for AccountingCodestrComb {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "AccountingCodestrComb") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "AccountingCodestrComb", "AUTOMATIC", SelectionVar, "Accounting_Codestr_Comb_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountingCodestrCombList for AccountingCodestrComb {
+   orderby = CombRuleId;
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+
+   field CombRuleId {
+      size = Small;
+   }
+   lov UserGroupRef with ReferenceUserGroupFinanceSelector {
+      search = UserGroup, Description;
+      description = UserGroupRef.Description;
+   }
+
+   field Allowed {
+      enumerationtrue = "Allowed";
+      enumerationfalse = "NotAllowed";
+
+   }
+
+   fieldset CodeStringAllBasicFreeLovFieldSet;
+   field ProcessCodeRef {
+      size = Small;
+   }
+
+   command CopyToCompaniesCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

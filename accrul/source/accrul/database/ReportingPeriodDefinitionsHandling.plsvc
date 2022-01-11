@@ -1,0 +1,53 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ReportingPeriodDefinitionsHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+PROCEDURE Do_Gen_On_Sys_Calendar___ (
+   rpd_id_            IN VARCHAR2,
+   start_year_        IN NUMBER,
+   number_of_years_   IN NUMBER,
+   from_cal_month_    IN NUMBER,
+   start_rpd_year_id_ IN NUMBER)
+IS
+   end_year_    NUMBER;
+BEGIN
+   end_year_ := start_year_ + number_of_years_ - 1;
+   Is_Field_In_Sys_Valid___(number_of_years_);
+   Rpd_Identity_API.Generate_Rpd_Periods(rpd_id_, start_year_, end_year_, from_cal_month_, start_rpd_year_id_);
+END Do_Gen_On_Sys_Calendar___;
+
+
+PROCEDURE Do_Gen_On_Acc_Calendar___ (
+   rpd_id_           IN VARCHAR2,
+   company_          IN VARCHAR2,
+   acc_year_from_    IN NUMBER,
+   acc_year_to_      IN NUMBER,
+   include_year_end_ IN BOOLEAN)
+IS
+   is_include_year_end_ VARCHAR2(5);
+BEGIN
+   IF include_year_end_ THEN
+      is_include_year_end_ := 'TRUE';
+   ELSE
+      is_include_year_end_ := 'FALSE';
+   END IF;
+   Rpd_Company_API.Generate_Rpd_Periods(rpd_id_, company_, acc_year_from_, acc_year_to_, is_include_year_end_);
+END Do_Gen_On_Acc_Calendar___;
+
+PROCEDURE Is_Field_In_Sys_Valid___ (
+   number_of_years_ IN NUMBER)
+IS
+BEGIN
+   IF( (NVL(number_of_years_, 0) < 1) OR (NVL(number_of_years_, 0) = 0)) THEN
+      Error_SYS.Appl_General(lu_name_, 'INVALMNUMYEAR: Number of Years should be greater than 0.');
+   END IF; 
+END Is_Field_In_Sys_Valid___;

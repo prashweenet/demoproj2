@@ -1,0 +1,77 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CurrencyRatesHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override 
+PROCEDURE CRUD_Delete___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Currency_Type_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+   exists_              VARCHAR2(5);
+   ref_currency_code_   VARCHAR2(3);
+   CURSOR get_ref_currency_code(company_ VARCHAR2,currency_type_ VARCHAR2) IS
+      SELECT ref_currency_code
+      FROM   currency_type_tab
+      WHERE  company       = company_
+      AND    currency_type = currency_type_;
+BEGIN
+   OPEN get_ref_currency_code(key_.company, key_.currency_type);
+   FETCH get_ref_currency_code INTO ref_currency_code_;
+   CLOSE get_ref_currency_code;
+   Currency_Type_API.Check_If_Default_Rate(exists_, key_.company, key_.currency_type);
+   IF (exists_ = 'TRUE') THEN
+      Client_SYS.Add_Warning(lu_name_, 'DEFAULTTYPEXIST: Currency Rate Type :P1 is the default rate type for currency :P2. Do you want to proceed ?',  key_.currency_type, ref_currency_code_);
+   END IF;
+   super(etag_, key_, info_, action_);
+END CRUD_Delete___;
+
+
+FUNCTION Get_Curr_Code_Attributes___ (
+   company_           IN VARCHAR2,
+   currency_code_     IN VARCHAR2 ) RETURN NUMBER
+IS
+   description_       VARCHAR2(200);
+   conv_factor_       NUMBER;
+   currency_rounding_ NUMBER;
+BEGIN
+   Currency_Code_API.Get_Currency_Code_Attribute__(description_, conv_factor_, currency_rounding_ ,company_, currency_code_);
+   RETURN conv_factor_;
+END Get_Curr_Code_Attributes___;
+
+FUNCTION Get_Page_Search_Context_Defaults___ RETURN Show_Only_Valid_Rates_Structure_Rec
+IS
+   page_search_context_struct_      Show_Only_Valid_Rates_Structure_Rec;
+BEGIN
+   page_search_context_struct_.show_only_valid_rates := false;
+   RETURN page_search_context_struct_;
+END Get_Page_Search_Context_Defaults___;
+
+
+@Override
+PROCEDURE CRUD_Default_Copy___ (
+   objid_  IN  VARCHAR2,
+   key_    IN  Currency_Rate_Key,
+   values_ IN  Copy_Values_Rec,
+   attr_   OUT VARCHAR2,
+   info_   OUT VARCHAR2 )
+IS
+   valid_from_ DATE;
+BEGIN
+   valid_from_ := key_.valid_from;
+   super(objid_, key_, values_, attr_, info_);
+   IF (Client_SYS.Item_Exist('VALID_FROM', attr_)) THEN
+      attr_ := Client_SYS.Remove_Attr('VALID_FROM', attr_);
+      Client_SYS.Add_To_Attr('VALID_FROM', valid_from_, attr_);
+   END IF;
+END CRUD_Default_Copy___;

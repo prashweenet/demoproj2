@@ -1,0 +1,45 @@
+fragment AllowedPeriodsPubSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view allowed_periods_pub";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAllowedPeriodsPubSelector for AllowedPeriodsPub {
+   static AccountingYear;
+   static AccountingPeriod;
+   static Description;
+}
+
+card AllowedPeriodsPubCard for AllowedPeriodsPub {
+   label = "";
+   fieldranking AccountingYear;
+   field AccountingYear;
+   field AccountingPeriod;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AllowedPeriodsPub {
+   from = "allowed_periods_pub";
+   keys = Company, AccountingYear, AccountingPeriod;
+   ludependencies = AccountingCodePartUtil;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute AccountingYear Number {
+      lovcolumn = [true];
+   }
+   attribute AccountingPeriod Number {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

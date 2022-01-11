@@ -1,0 +1,96 @@
+fragment StatutoryFeeTaxWithholdSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view statutory_fee_tax_withhold";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceStatutoryFeeTaxWithholdSelector for StatutoryFeeTaxWithhold {
+   static FeeCode;
+   static Description;
+}
+
+card StatutoryFeeTaxWithholdCard for StatutoryFeeTaxWithhold {
+   label = "";
+   fieldranking FeeCode;
+   field FeeCode;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query StatutoryFeeTaxWithhold {
+   from = "statutory_fee_tax_withhold";
+   lu = StatutoryFee;
+   keys = Company, FeeCode;
+   ludependencies = StatutoryFee;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute FeeCode Text {
+      label = "Tax Code";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute FeeRate Number {
+      label = "Tax (%)";
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [true];
+   }
+   attribute ValidUntil Date {
+      label = "Valid To";
+      lovcolumn = [true];
+   }
+   attribute FeeType Enumeration(FeeType) {
+      label = "Tax Type";
+      lovcolumn = [true];
+      fetch = "fee_type_db";
+   }
+   attribute VatReceived Enumeration(VatMethod) {
+      label = "Tax Method Tax Received";
+      lovcolumn = [true];
+      fetch = "vat_received_db";
+   }
+   attribute VatDisbursed Enumeration(VatMethod) {
+      label = "Tax Method Tax Disbursed";
+      lovcolumn = [true];
+      fetch = "vat_disbursed_db";
+   }
+   attribute Deductible Number {
+      label = "Deductible (%)";
+      lovcolumn = [true];
+   }
+   attribute AmountNotTaxable Number {
+      label = "Not Taxable Amount";
+      lovcolumn = [true];
+   }
+   attribute MinWithheldAmount Number {
+      label = "Minimum Withheld Amount";
+      lovcolumn = [true];
+   }
+   attribute UseWithholdAmountTable Text {
+      label = "Use Withholding Amount Table";
+      lovcolumn = [true];
+   }
+   attribute TaxAmtLimit Number {
+      label = "Tax Amount Limit in Accounting Currency";
+      lovcolumn = [true];
+   }
+   attribute MinimumBaseAmount Number {
+      lovcolumn = [true];
+   }
+   attribute TaxReportingCategory Enumeration(TaxReportingCategory) {
+      lovcolumn = [true];
+      fetch = "tax_reporting_category_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

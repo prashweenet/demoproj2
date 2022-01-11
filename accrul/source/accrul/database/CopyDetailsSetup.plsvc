@@ -1,0 +1,158 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     CopyDetailsSetup
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override
+PROCEDURE CRUD_Create___(
+   rec_ IN Copy_Details_Setup_Virtual_Rec )
+IS
+BEGIN
+   super(rec_);   
+   Populate_Posting_Control_Details_Data___(rec_.company, rec_.posting_type,rec_.control_type,rec_.code_part, rec_.objkey);   
+END CRUD_Create___;
+
+PROCEDURE Populate_Posting_Control_Details_Data___(
+   company_       IN VARCHAR2,
+   posting_type_  IN VARCHAR2,
+   control_type_  IN VARCHAR2,
+   code_part_     IN VARCHAR2,
+   parent_objkey_ IN VARCHAR2)
+IS
+   posting_ctrl_details_virtual_rec_      Posting_Ctrl_Details_Virtual_Rec;
+   
+   CURSOR get_posting_ctrl_data IS
+   SELECT   posting_type,
+            posting_type_desc,
+            module,
+            code_part,
+            sort_order
+      FROM  posting_ctrl_alwd_combination     
+      WHERE control_type = control_type_
+      AND code_part IN (code_part_,'*')
+      AND posting_type != posting_type_;
+   
+BEGIN
+   
+   FOR rec_ IN get_posting_ctrl_data LOOP
+      posting_ctrl_details_virtual_rec_.company                   := company_;
+      posting_ctrl_details_virtual_rec_.posting_type              := rec_.posting_type;
+      posting_ctrl_details_virtual_rec_.posting_type_description  := rec_.posting_type_desc;
+      posting_ctrl_details_virtual_rec_.current_control_type      := Posting_Ctrl_API.Get_Current_Control_Type(company_, rec_.posting_type, code_part_);
+      posting_ctrl_details_virtual_rec_.module                    := rec_.module;
+      posting_ctrl_details_virtual_rec_.code_part                 := rec_.code_part;
+      IF (Posting_Ctrl_API.Is_Detail_Spec(company_,rec_.posting_type,rec_.code_part) = 'TRUE') THEN
+         posting_ctrl_details_virtual_rec_.spec_exists            := TRUE;
+      ELSE
+         posting_ctrl_details_virtual_rec_.spec_exists            := FALSE;
+      END IF;
+      
+      posting_ctrl_details_virtual_rec_.include_in_copy           := FALSE;      
+      posting_ctrl_details_virtual_rec_.sort_order                := rec_.sort_order;      
+      posting_ctrl_details_virtual_rec_.parent_objkey             := parent_objkey_; 
+      posting_ctrl_details_virtual_rec_.objkey                    := sys_guid(); 
+      
+      CRUD_Create___(posting_ctrl_details_virtual_rec_);
+   END LOOP;
+   
+END Populate_Posting_Control_Details_Data___;
+
+
+FUNCTION Check_Replace___(
+   company_      IN VARCHAR2,
+   posting_type_ IN VARCHAR2,
+   code_part_    IN VARCHAR2,
+   objkey_       IN VARCHAR2) RETURN VARCHAR2
+IS
+   replace_       VARCHAR2(10);
+   key_           Copy_Details_Setup_Virtual_Key;
+   
+BEGIN
+   key_.objkey := objkey_;
+   
+   FOR rec_ IN Get_Posting_Ctrl_Details_Array___(key_) LOOP
+      IF(rec_.include_in_copy = 'TRUE') THEN
+         replace_ := Posting_Ctrl_API.Check_Copy_Replace(company_,posting_type_,code_part_,rec_.copy_valid_from,rec_.posting_type);
+      END IF;      
+   END LOOP; 
+   RETURN replace_;
+END Check_Replace___;
+
+PROCEDURE Copy_Details_Setup___(
+   company_      IN VARCHAR2,
+   posting_type_ IN VARCHAR2,
+   code_part_    IN VARCHAR2,
+   valid_from_   IN DATE,
+   objkey_       IN VARCHAR2,
+   replace_      IN VARCHAR2)
+IS
+   key_          Copy_Details_Setup_Virtual_Key;
+BEGIN
+   key_.objkey := objkey_;
+   
+   FOR rec_ IN Get_Posting_Ctrl_Details_Array___(key_) LOOP
+      IF(rec_.include_in_copy = 'TRUE') THEN
+         Posting_Ctrl_API.Copy_Details_Set_Up(company_,posting_type_,code_part_,valid_from_,rec_.posting_type,replace_,rec_.copy_valid_from);         
+      END IF;      
+   END LOOP;  
+   Remove_Data___(objkey_);
+END Copy_Details_Setup___;
+
+PROCEDURE Update_Fields___(
+   valid_from_  IN DATE,
+   direction_   IN VARCHAR2,
+   objkey_      IN VARCHAR2)
+IS
+   temp_valid_from_      DATE;         
+   include_copy_         VARCHAR2(20);
+   key_                 Copy_Details_Setup_Virtual_Key;
+   det_key_             Posting_Ctrl_Details_Virtual_Key;
+   oldrec_              Posting_Ctrl_Details_Virtual_Rec;
+   newrec_              Posting_Ctrl_Details_Virtual_Rec;
+BEGIN   
+   key_.objkey := objkey_;
+   
+   FOR rec_ IN Get_Posting_Ctrl_Details_Array___(key_) LOOP
+      det_key_.objkey := rec_.objkey;
+      oldrec_ := Get_Record___(det_key_);
+      User_Finance_API.Exist_Current_User(oldrec_.company);
+      newrec_ := oldrec_;
+      IF(rec_.include_in_copy = 'FALSE' AND direction_ = 'INCLUDE') THEN
+         newrec_.include_in_copy := TRUE;
+         newrec_.copy_valid_from := valid_from_;
+         CRUD_Update___(oldrec_,newrec_);
+      ELSIF(direction_ = 'EXCLUDE') THEN
+         newrec_.include_in_copy := FALSE;
+         newrec_.copy_valid_from := NULL;
+         CRUD_Update___(oldrec_,newrec_);
+      END IF;      
+   END LOOP;  
+   
+END Update_Fields___;
+
+PROCEDURE Remove_Data___ (
+   objkey_    IN VARCHAR2 )
+IS   
+   key_        Copy_Details_Setup_Virtual_Key;
+   rec_        Copy_Details_Setup_Virtual_Rec;   
+   det_key_    Posting_Ctrl_Details_Virtual_Key;
+   det_rec_    Posting_Ctrl_Details_Virtual_Rec;      
+BEGIN  
+   key_.objkey := objkey_;
+   rec_ := Get_Record___(key_);
+   User_Finance_API.Exist_Current_User(rec_.company);
+   CRUD_Delete___(rec_);   
+   FOR i_ IN Get_Posting_Ctrl_Details_Array___(key_) LOOP
+      det_key_.objkey := i_.objkey;
+      det_rec_ := Get_Record___(det_key_);
+      CRUD_Delete___(det_rec_);
+   END LOOP;   
+END Remove_Data___;

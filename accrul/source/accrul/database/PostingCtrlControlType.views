@@ -1,0 +1,49 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingCtrlControlType
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Company IS
+   Flags      = 'P----'
+   Datatype   = 'STRING(10)/UPPERCASE'
+   Prompt     = 'Company';
+
+COLUMN Posting_Type IS
+   Flags      = 'PMI--'
+   Datatype   = 'STRING(10)/UPPERCASE'
+   Prompt     = 'Posting Type';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+-- The a.allowed_for_comb column may be used in the future to exclude some ordinary
+-- control types for combinations.
+       
+VIEW Allowed_Control_Type IS
+   Prompt = 'Allowed Control Type'
+   Description.Datatype = 'STRING(10)'
+   Module.Flags = 'AMI--'
+SELECT c.company                           company,
+       b.posting_type                      posting_type,
+       a.control_type                      control_type,
+       --nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(a.module, lu,'PostingCtrlControlType'||'^'||a.control_type ), a.description)  description,
+       Posting_Ctrl_Control_Type_API.Get_Description(a.control_type, a.module, company) description,
+       a.module                            module,
+       a.rowkey                           objkey
+FROM   posting_ctrl_control_type_tab a, posting_ctrl_allowed_comb_tab b, company_finance_tab c
+WHERE  a.control_type     = b.control_type
+AND    a.ctrl_type_category IN ( 'ORDINARY', 'SYSTEM_DEFINED');
+
+

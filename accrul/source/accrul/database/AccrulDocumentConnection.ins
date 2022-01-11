@@ -1,0 +1,28 @@
+-----------------------------------------------------------------------------------------
+--
+--  Module:       ACCRUL
+--
+--  File:         AccrulDocumentConnection.ins
+--
+--  Localization: Needed, search for the expression LOCALIZE HERE!
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------------------
+--  040525  PPerse  Created
+--  080616  Nugalk  Bug 72589 Corrected. Removed the duplicate entry for Voucher LU with VOUCHER_ROW_QRY view
+--  080616          and updated the keys to the basic data in VoucherRow with ROW_NO 
+--  090120  Jakalk  Bug 78024 Corrected. Updated the key reference in LU MultiCompanyVoucherRow by adding ROW_NO 
+--  090120          Rearranged the order of key reference of VoucherRow LU to comply with docman.  
+--  100217  Jobase  EAFH-2099, Clean up in object connection enabling.  
+--  200709  ALWOLK  FIXTEND-3234, Moved object connections to Voucher LU, VoucherRow LU. 
+-----------------------------------------------------------------------------------------
+
+SET SERVEROUT ON
+
+PROMPT Registrates Document Connections
+BEGIN
+   Finance_Doc_Reg_API.Insert_Basic_Data( 'Voucher' );
+   Finance_Doc_Reg_API.Insert_Basic_Data( 'VoucherRow' );
+END;
+/
+COMMIT;

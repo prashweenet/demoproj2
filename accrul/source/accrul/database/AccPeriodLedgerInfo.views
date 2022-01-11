@@ -1,0 +1,33 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccPeriodLedgerInfo
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+VIEW Accounting_Year_End_Period IS
+   Prompt     = 'Acc Period Ledger Info'
+   Accounting_Period.Flags = 'AMI-L'
+   Ledger_Id.Flags = 'AMI-L'
+SELECT
+       l.company                        company,
+       l.accounting_year                accounting_year,
+       l.accounting_period              accounting_period,
+       l.ledger_id                      ledger_id
+FROM   acc_period_ledger_info_tab l, accounting_period_tab p
+WHERE  l.company = p.company
+AND    l.accounting_year = p.accounting_year
+AND    l.accounting_period = p.accounting_period
+AND    l.period_status = 'O'
+AND    p.year_end_period = 'YEARCLOSE';
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

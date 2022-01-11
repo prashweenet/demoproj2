@@ -1,0 +1,48 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TasksForCurrencyUpdatesHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override
+PROCEDURE CRUD_Default___ (
+   key_  IN  Ext_Currency_Task_Detail_Key,
+   attr_ IN OUT VARCHAR2,
+   info_ OUT VARCHAR2 )
+IS
+   company_             VARCHAR2(20);
+BEGIN
+   company_ := User_Finance_API.Get_Default_Company_Func;
+   Client_SYS.Add_To_Attr('COMPANY', company_, attr_ );
+   super(key_, attr_, info_);
+END CRUD_Default___;
+
+@Override 
+PROCEDURE CRUD_Delete___ (
+   etag_ IN OUT VARCHAR2,
+   key_  IN  Ext_Currency_Task_Detail_Key,
+   info_ OUT VARCHAR2,
+   action_ IN VARCHAR2 )
+IS
+   CURSOR check_available IS
+      SELECT COUNT(*) total_no
+      FROM  ext_currency_task_detail_tab
+      WHERE  task_id = key_.task_id;
+   
+   total_        check_available%ROWTYPE;
+BEGIN
+   OPEN  check_available;
+   FETCH check_available INTO total_;
+   CLOSE check_available;
+   IF (total_.total_no = 1) THEN
+      Client_SYS.Add_Warning(lu_name_, 'CANTRMVCOMPANY: If there are any scheduled currency update jobs using :P1 task id, such jobs will not be executed when you remove all the connected companies.',  key_.task_id); 
+   END IF;  
+   super(etag_, key_, info_, action_);   
+END CRUD_Delete___;

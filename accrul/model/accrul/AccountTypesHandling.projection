@@ -1,0 +1,86 @@
+projection AccountTypesHandling;
+component ACCRUL;
+layer Core;
+description "Account Types";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountTypes for AccountType {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountType {
+   attribute AccntType Text {
+      label = "Account Type";
+   }
+   attribute Description Text {
+      label = "Account Type Description";
+   }
+   attribute Action  Boolean("TRUE", "FALSE") {
+      label = "Update Code Part Demands for all existing accounts";
+      editable = [true];
+      updatable = [true];
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetRecordBeforeModify Structure(AccountTypeRecStructure) {
+   parameter Company Text;
+   parameter AccntType Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure AccountTypeRecStructure {
+   attribute Company Text;
+   attribute AccntType Text;
+   attribute LogicalAccountType Enumeration(AccountTypeValue);
+   attribute Description Text;
+   attribute ReqCodeBDefault Enumeration(AccountRequest);
+   attribute ReqCodeCDefault Enumeration(AccountRequest);
+   attribute ReqCodeDDefault Enumeration(AccountRequest);
+   attribute ReqCodeEDefault Enumeration(AccountRequest);
+   attribute ReqCodeFDefault Enumeration(AccountRequest);
+   attribute ReqCodeGDefault Enumeration(AccountRequest);
+   attribute ReqCodeHDefault Enumeration(AccountRequest);
+   attribute ReqCodeIDefault Enumeration(AccountRequest);
+   attribute ReqCodeJDefault Enumeration(AccountRequest);
+   attribute ReqQuantityDefault Enumeration(AccountRequest);
+   attribute ProcessCodeDefault Enumeration(AccountRequest);
+   attribute TextDefault Enumeration(AccountRequestText);
+   attribute ReqBudCodeBDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeCDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeDDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeEDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeFDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeGDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeHDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeIDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeJDefault Enumeration(AccountRequest);
+   attribute ReqBudQuantityDefault Enumeration(AccountRequest);
+   attribute Objversion Text;
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

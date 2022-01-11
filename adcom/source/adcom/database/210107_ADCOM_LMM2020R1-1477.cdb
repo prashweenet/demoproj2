@@ -1,0 +1,16 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210107_ADCOM_LMM2020R1-1477.cdb.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210122   hasmlk  Created this deleted file again to void build failures.
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+SET SERVEROUTPUT OFF

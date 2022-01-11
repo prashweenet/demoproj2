@@ -1,0 +1,26 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     UuidInformation
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-- 200821   Sacnlk  GESPRING20-5337, gelr: Added to support Global Extension Functionalities.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-- gelr:epayment_receipt, begin
+PROCEDURE Validate_Cancelled_Uuid___ (
+   company_                 IN VARCHAR2,
+   related_pay_uuid_number_ IN VARCHAR2 ) 
+IS    
+   
+BEGIN
+   IF (Company_Localization_Info_API.Get_Parameter_Value_Db(company_, 'EPAYMENT_RECEIPT') = Fnd_Boolean_API.DB_TRUE) THEN
+      Uuid_Information_API.Validate_Cancelled_Uuids(company_, related_pay_uuid_number_);
+   END IF;
+END Validate_Cancelled_Uuid___;
+-- gelr:epayment_receipt, end

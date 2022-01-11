@@ -1,0 +1,21 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistUsageRecord
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+UNIQUE CONSTRAINT av_hist_usage_rec_uc1 IS av_hist_usage_record_tab (usage_record_alt_id);
+INDEX av_hist_usage_rec_ix1 IS av_hist_usage_record_tab (inventory_id);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+SEQUENCE av_hist_usage_record_seq IS MAXVALUE 999999999999999 INCREMENT BY 1 START WITH 1 NOCACHE;
+

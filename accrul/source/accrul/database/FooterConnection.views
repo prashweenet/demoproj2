@@ -1,0 +1,42 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: FooterConnection
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Description IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING(20)'
+   Prompt     = 'Site Description';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Footer_Connection_Gen_Pct IS
+   Prompt = 'Footer Connection'
+SELECT company                        company,
+       report_id                      report_id,
+       contract                       contract,
+       footer_id                      footer_id,
+       Footer_Connection_Master_API.Get_Module(report_id)   
+                                      module
+FROM   FOOTER_CONNECTION_TAB;
+
+VIEW Footer_Without_Site_Lov IS
+   Prompt = 'Footer Without Site'
+   Contract.Flags = 'K---L'
+SELECT '*'                            contract,
+       '*'                            description
+FROM   DUAL;
+

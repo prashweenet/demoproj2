@@ -1,0 +1,89 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CurrencyType
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  151118  Bhhilk  STRFI-39, Modified CurrTypeDef enumeration to FinanceYesNo.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@Override
+VIEW Currency_Type IS
+WHERE  rate_type_category NOT IN ('PROJECT', 'PARALLEL_CURRENCY','TAX_REPORTING');
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Currency_Type1 IS
+   Prompt = 'Currency Type'
+   Description.Datatype = 'STRING(35)'
+SELECT a.company                                            company,
+       currency_type                                        currency_type,
+       a.description                                        description,
+       ref_currency_code                                    ref_currency_code,
+       a.rowid                                             objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                                          objversion,
+       rowkey                                              objkey
+FROM   currency_type_tab a
+WHERE  ref_currency_code = 'EUR';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Currency_Type2 IS
+   Prompt = 'Currency Type'
+   Ref_Currency_Code.Flags = 'PMIUL'
+   Description.Datatype = 'STRING(35)'
+SELECT a.company                                            company,
+       ref_currency_code                                    ref_currency_code,
+       currency_type                                        currency_type,
+       a.description                                        description,
+       a.rowid                                             objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                                          objversion,
+       a.rowkey                                            objkey
+FROM   currency_type_tab a, company_finance b
+--AND    ref_currency_code = 'EUR'
+WHERE  a.company           = b.company
+AND    a.ref_currency_code = b.currency_code;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Currency_Type3 IS
+   Prompt = 'Currency Type'
+   Description.Datatype = 'STRING(35)'
+   Type_Default_Db.Datatype = 'STRING(20)'
+SELECT a.company                                                           company,
+       currency_type                                                       currency_type,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company,'ACCRUL', 'CurrencyType', currency_type),description) 
+                                                                           description,
+       Finance_Yes_No_API.Decode(type_default)                              type_default,
+       type_default                                                        type_default_db,
+       ref_currency_code                                                   ref_currency_code,
+       Curr_Rate_Type_Category_API.Decode(rate_type_category)              rate_type_category,
+       rate_type_category                                                  rate_type_category_db,
+       a.rowid                                                            objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                                                         objversion,
+       rowkey                                                             objkey
+FROM   currency_type_tab a
+ORDER BY a.currency_type;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Currency_Type4 IS
+   Prompt = 'Currency Type'
+   Description.Datatype = 'STRING(35)'
+SELECT a.company                                            company,
+       currency_type                                        currency_type,
+       a.description                                        description,
+       ref_currency_code                                    ref_currency_code,
+       a.rowid                                             objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                                          objversion,
+       rowkey                                              objkey
+FROM   currency_type_tab a
+WHERE  rate_type_category IN ('NORMAL', 'PARALLEL_CURRENCY');

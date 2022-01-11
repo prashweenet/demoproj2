@@ -1,0 +1,388 @@
+fragment CodeStringAdditionalBasic;
+component ACCRUL;
+layer Core;
+description "Fragment with a fieldset, CodeStringAdditionalBasicLovFieldSet, for Codepart K-T using the ReferenceSelector of the entities CodeK-T";
+// The page using this fieldset must be Company Context dependent
+// Code K, L and M are hardwired to the entities CounterPartOne, CounterPartTwo and CurrencyCode so for K, L and M the reference names must be
+// CounterPartOneRef, CounterPartTwoRef and CodeMRef
+// For Code N-T the reference in the projection must be named CodeN-TRef (e.g. CodeNRef) and the attributes needs to be called CodeK-T.
+// The fragment has basic support for codepart handling which means that it will display the correct label and if the code part is visible or not
+// If there is a need for specific Validate Command handling then override the command
+// namned ValidateCodeStringAdditionalBasicCode<CODEPART>Ref e.g. ValidateCodeStringAdditionalBasicCodeKRef
+// The Validate Command for K, L and M will also be named with K, L and M and not using the hardwired entities as names.
+//
+// For CounterPartOne and CounterPartTwo, CodeStringCounterPartBasicLovFieldSet must be used.
+// For Code N-T, CodeStringAdditionalBasicLovFieldSet must be used.
+// For Currency Code, CodeStringCurrencyCodeBasicLovFieldSet must be used.
+
+// Fieldsets CodeStringAdditionalBasicLovNoSearchFieldSet and CodeStringAdditionalBasicSearchOnlyFieldSet to be used together with pages with group and sum where
+//           currently the referenced values (description in this case) is not yet supported when using OData aggregate.
+// Fieldset CodeStringAdditionalBasicLovNoSearchFieldSet displays the code parts in the list with ID and Description but is not searchable.
+// Fieldset CodeStringAdditionalBasicSearchOnlyFieldSet does not display the code part in the lists but is searchable but only ID is searchable.
+
+// Fieldsets CodeStringCounterPartBasicLovNoSearchFieldSet and CodeStringCounterPartBasicSearchOnlyFieldSet to be used together with pages with group and sum where
+//           currently the referenced values (description in this case) is not yet supported when using OData aggregate.
+// Fieldset CodeStringCounterPartBasicLovNoSearchFieldSet displays the code parts in the list with ID and Description but is not searchable.
+// Fieldset CodeStringCounterPartBasicSearchOnlyFieldSet does not display the code part in the lists but is searchable but only ID is searchable.
+
+// Fieldsets CodeStringCurrencyCodeBasicLovNoSearchFieldSet and CodeStringCurrencyCodeBasicSearchOnlyFieldSet to be used together with pages with group and sum where
+//           currently the referenced values (description in this case) is not yet supported when using OData aggregate.
+// Fieldset CodeStringCurrencyCodeBasicLovNoSearchFieldSet displays the code parts in the list with ID and Description but is not searchable.
+// Fieldset CodeStringCurrencyCodeBasicSearchOnlyFieldSet does not display the code part in the lists but is searchable but only ID is searchable.
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+--------------------------------- SELECTOR ----------------------------------
+
+--------------------------------- LOV LISTS ---------------------------------
+
+
+-------------------------------- FIELD SETS ---------------------------------
+fieldset CodeStringCounterPartBasicLovFieldSet {
+   lov CounterPartOneRef with ReferenceCounterPartOneSelector {
+      label = "${context.Company.CodeKName}";
+      columnvisible = [context.Company.CodeKUsed = "Y"];
+      visible = [context.Company.CodeKUsed = "Y"];
+      description = CounterPartOneRef.Description;
+      search = CounterPartOneId, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAdditionalBasicCodeKRef;
+   }
+   lov CounterPartTwoRef with ReferenceCounterPartTwoSelector {
+      label = "${context.Company.CodeLName}";
+      columnvisible = [context.Company.CodeLUsed = "Y"];
+      visible = [context.Company.CodeLUsed = "Y"];
+      description = CounterPartTwoRef.Description;
+      search = CounterPartTwoId, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAdditionalBasicCodeLRef;
+   }
+}
+
+fieldset CodeStringCounterPartBasicLovNoSearchFieldSet clone CodeStringCounterPartBasicLovFieldSet {
+   lov CounterPartOneRef with ReferenceCounterPartOneSelector {
+      description = CounterPartOneRef.Description;
+      searchable = false;
+   }
+   lov CounterPartTwoRef with ReferenceCounterPartTwoSelector {
+      description = CounterPartTwoRef.Description;
+      searchable = false;
+   }
+}
+
+
+fieldset CodeStringCounterPartBasicSearchOnlyFieldSet {
+   field CounterPartOneRef {
+      label = "${context.Company.CodeKName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAdditionalBasicCodeKRef;
+   }
+   field CounterPartTwoRef {
+      label = "${context.Company.CodeLName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAdditionalBasicCodeLRef;
+   }
+}
+
+
+fieldset CodeStringCurrencyCodeBasicLovFieldSet {
+   lov CodeMRef with ReferenceCurrencyCodeSelector {
+      label = "${context.Company.CodeMName}";
+      columnvisible = [context.Company.CodeMUsed = "Y"];
+      visible = [context.Company.CodeMUsed = "Y"];
+      description = CodeMRef.Description;
+      search = CurrencyCode, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAdditionalBasicCodeMRef;
+   }
+}
+
+fieldset CodeStringCurrencyCodeBasicLovNoSearchFieldSet clone CodeStringCurrencyCodeBasicLovFieldSet {
+   lov CodeMRef with ReferenceCurrencyCodeSelector {
+      description = CodeMRef.Description;
+      search = CurrencyCode, Description;
+      searchable = false;
+   }
+}
+
+fieldset CodeStringCurrencyCodeBasicSearchOnlyFieldSet {
+   field CodeMRef {
+      label = "${context.Company.CodeMName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAdditionalBasicCodeMRef;
+   }
+}
+
+
+fieldset CodeStringAdditionalBasicLovFieldSet {
+   lov CodeNRef with ReferenceCodeNSelector {
+      label = "${context.Company.CodeNName}";
+      columnvisible = [context.Company.CodeNUsed = "Y"];
+      visible = [context.Company.CodeNUsed = "Y"];
+      description = CodeNRef.Description;
+      search = CodeN, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAdditionalBasicCodeNRef;
+   }
+   lov CodeORef with ReferenceCodeOSelector {
+      label = "${context.Company.CodeOName}";
+      columnvisible = [context.Company.CodeOUsed = "Y"];
+      visible = [context.Company.CodeOUsed = "Y"];
+      description = CodeORef.Description;
+      search = CodeO, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAdditionalBasicCodeORef;
+   }
+   lov CodePRef with ReferenceCodePSelector {
+      label = "${context.Company.CodePName}";
+      columnvisible = [context.Company.CodePUsed = "Y"];
+      visible = [context.Company.CodPFUsed = "Y"];
+      description = CodePRef.Description;
+      search = CodeP, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAdditionalBasicCodePRef;
+   }
+   lov CodeQRef with ReferenceCodeQSelector {
+      label = "${context.Company.CodeQName}";
+      columnvisible = [context.Company.CodeQUsed = "Y"];
+      visible = [context.Company.CodeQUsed = "Y"];
+      description = CodeQRef.Description;
+      search = CodeQ, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAdditionalBasicCodeQRef;
+   }
+   lov CodeRRef with ReferenceCodeRSelector {
+      label = "${context.Company.CodeRName}";
+      columnvisible = [context.Company.CodeRUsed = "Y"];
+      visible = [context.Company.CodeRUsed = "Y"];
+      description = CodeRRef.Description;
+      search = CodeR, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAdditionalBasicCodeRRef;
+   }
+   lov CodeSRef with ReferenceCodeSSelector {
+      label = "${context.Company.CodeSName}";
+      columnvisible = [context.Company.CodeSUsed = "Y"];
+      visible = [context.Company.CodeSUsed = "Y"];
+      description = CodeSRef.Description;
+      search = CodeS, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAdditionalBasicCodeSRef;
+   }
+   lov CodeTRef with ReferenceCodeTSelector {
+      label = "${context.Company.CodeTName}";
+      columnvisible = [context.Company.CodeTUsed = "Y"];
+      visible = [context.Company.CodeTUsed = "Y"];
+      description = CodeTRef.Description;
+      search = CodeT, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAdditionalBasicCodeTRef;
+   }
+}
+
+fieldset CodeStringAdditionalBasicLovNoSearchFieldSet clone CodeStringAdditionalBasicLovFieldSet {
+   lov CodeNRef with ReferenceCodeNSelector {
+      description = CodeNRef.Description;
+      searchable = false;
+   }
+   lov CodeORef with ReferenceCodeOSelector {
+      description = CodeORef.Description;
+      searchable = false;
+   }
+   lov CodePRef with ReferenceCodePSelector {
+      description = CodePRef.Description;
+      searchable = false;
+   }
+   lov CodeQRef with ReferenceCodeQSelector {
+      description = CodeQRef.Description;
+      searchable = false;
+   }
+   lov CodeRRef with ReferenceCodeRSelector {
+      description = CodeRRef.Description;
+      searchable = false;
+   }
+   lov CodeSRef with ReferenceCodeSSelector {
+      description = CodeSRef.Description;
+      searchable = false;
+   }
+   lov CodeTRef with ReferenceCodeTSelector {
+      description = CodeTRef.Description;
+      searchable = false;
+   }
+}
+
+
+fieldset CodeStringAdditionalBasicSearchOnlyFieldSet {
+   field CodeNRef {
+      label = "${context.Company.CodeNName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAdditionalBasicCodeNRef;
+   }
+   field CodeORef {
+      label = "${context.Company.CodeOName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAdditionalBasicCodeORef;
+   }
+   field CodePRef {
+      label = "${context.Company.CodePName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAdditionalBasicCodePRef;
+   }
+   field CodeQRef {
+      label = "${context.Company.CodeQName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAdditionalBasicCodeQRef;
+   }
+   field CodeRRef {
+      label = "${context.Company.CodeRName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAdditionalBasicCodeRRef;
+   }
+   field CodeSRef {
+      label = "${context.Company.CodeSName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAdditionalBasicCodeSRef;
+   }
+   field CodeTRef {
+      label = "${context.Company.CodeTName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAdditionalBasicCodeTRef;
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+command ValidateCodeStringAdditionalBasicCodeKRef {
+   variable Dummy;
+}
+command ValidateCodeStringAdditionalBasicCodeLRef {
+   variable Dummy;
+}
+command ValidateCodeStringAdditionalBasicCodeMRef {
+   variable Dummy;
+}
+command ValidateCodeStringAdditionalBasicCodeNRef {
+   variable Dummy;
+}
+command ValidateCodeStringAdditionalBasicCodeORef {
+   variable Dummy;
+}
+command ValidateCodeStringAdditionalBasicCodePRef {
+   variable Dummy;
+}
+command ValidateCodeStringAdditionalBasicCodeQRef {
+   variable Dummy;
+}
+command ValidateCodeStringAdditionalBasicCodeRRef {
+   variable Dummy;
+}
+command ValidateCodeStringAdditionalBasicCodeSRef {
+   variable Dummy;
+}
+command ValidateCodeStringAdditionalBasicCodeTRef {
+   variable Dummy;
+}
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+@Override
+entity CounterPartOne {
+   attribute CounterPartOneId Text {
+      label = "${context.Company.CodeKName}";
+   }
+}
+@Override
+entity CounterPartTwo {
+   attribute CounterPartTwoId Text {
+      label = "${context.Company.CodeLName}";
+   }
+}
+@Override
+entity CurrencyCode {
+   attribute CurrencyCode Text {
+      label = "${context.Company.CodeMName}";
+   }
+}
+@Override
+entity CodeN {
+   attribute CodeN Text {
+      label = "${context.Company.CodeNName}";
+   }
+}
+@Override
+entity CodeO {
+   attribute CodeO Text {
+      label = "${context.Company.CodeOName}";
+   }
+}
+@Override
+entity CodeP {
+   attribute CodeP Text {
+      label = "${context.Company.CodePName}";
+   }
+}
+@Override
+entity CodeQ {
+   attribute CodeQ Text {
+      label = "${context.Company.CodeQName}";
+   }
+}
+@Override
+entity CodeR {
+   attribute CodeR Text {
+      label = "${context.Company.CodeRName}";
+   }
+}
+@Override
+entity CodeS {
+   attribute CodeS Text {
+      label = "${context.Company.CodeSName}";
+   }
+}
+@Override
+entity CodeT {
+   attribute CodeT Text {
+      label = "${context.Company.CodeTName}";
+   }
+}

@@ -1,0 +1,378 @@
+--------------------------------------------------------------------------------------
+-- Date     Sign   History
+-- -------  ------   -----------------------------------------------------------------
+-- 200602   SACNLK   GESPRING20-4612, Added accounting_xml_data functionality.
+-- 200623   SACNLK   GESPRING20-4642, Added SatLevel and SatAccountGroup to accounting_xml_data functionality.
+-- 201112   SACNLK   GESPRING20-5995, Added SatParentAccount for accounting_xml_data functionality.
+--------------------------------------------------------------------------------------
+
+client PseudoCodes;
+component ACCRUL;
+layer Core;
+projection PseudoCodesHandling;
+
+@DynamicComponentDependency PROJ
+include fragment ProjectActivityPostableSelector;
+include fragment CodeStringAccountExtended;
+include fragment CodeStringExtended;
+--gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+--gelr:localization_control_center, end
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AccountTypeNavEntry parent AccrulNavigator.CodeStringMenu at index 1000 {
+      label = "Pseudo Codes";
+      page List home PseudoCodes;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using PseudoCodesSet {
+   label = "Pseudo Codes";
+   initcontext PageInitContext;
+   list PseudoCodesList;
+}
+
+initcontext PageInitContext {
+   parameter AccountingXmlDataEnabled Boolean;
+   init command {
+      execute {
+         -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set AccountingXmlDataEnabled = LocalizationFunctionalityStructure.AccountingXmlData;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand for PseudoCodes {
+   label = "Translation";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'PseudoCodes' and AttributeKey eq $[AttributeKey]";
+   }
+}
+
+@Override
+command ValidateCodeStringAccountExtendedAccountRef {
+   variable ProjOriginRec {
+      type = Structure(ProjectOriginStructure);
+   }
+   -- gelr:accounting_xml_data, begin
+   variable SatValuesRec {
+      type = Structure(SatValues);
+   }
+   -- gelr:accounting_xml_data, end
+   execute {
+      super;
+      if [ProjectId != null] {
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+      -- gelr:accounting_xml_data, begin
+      if [initcontext.AccountingXmlDataEnabled = true] {
+         call ValidateAccount(context.Company, Account) into SatValuesRec;
+         set SatAccountType = SatValuesRec.SatAccountType;
+         set SatAccountGroup = SatValuesRec.SatAccountGroup;
+         set SatLevel = SatValuesRec.SatLevel;
+         set SatParentAccount = SatValuesRec.SatParentAccount;
+      }
+      -- gelr:accounting_xml_data, end
+   }
+}
+
+@Override
+command ValidateCodeStringCodePartDemandCodeBRef {
+   variable ProjOriginRec {
+      type = Structure(ProjectOriginStructure);
+   }
+   execute {
+      if [context.Company.ProjCodePart = "B" and CodeB != null] {
+         set ProjectId = CodeB;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringCodePartDemandCodeCRef {
+   variable ProjOriginRec {
+      type = Structure(ProjectOriginStructure);
+   }
+   execute {
+      if [context.Company.ProjCodePart = "C" and CodeC != null] {
+         set ProjectId = CodeC;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringCodePartDemandCodeDRef {
+   variable ProjOriginRec {
+      type = Structure(ProjectOriginStructure);
+   }
+   execute {
+      if [context.Company.ProjCodePart = "D" and CodeD != null] {
+         set ProjectId = CodeD;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringCodePartDemandCodeERef {
+   variable ProjOriginRec {
+      type = Structure(ProjectOriginStructure);
+   }
+   execute {
+      if [context.Company.ProjCodePart = "E" and CodeE != null] {
+         set ProjectId = CodeE;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringCodePartDemandCodeFRef {
+   variable ProjOriginRec {
+      type = Structure(ProjectOriginStructure);
+   }
+   execute {
+      if [context.Company.ProjCodePart = "F" and CodeF != null] {
+         set ProjectId = CodeF;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringCodePartDemandCodeGRef {
+   variable ProjOriginRec {
+      type = Structure(ProjectOriginStructure);
+   }
+   execute {
+      if [context.Company.ProjCodePart = "G" and CodeG != null] {
+         set ProjectId = CodeG;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringCodePartDemandCodeHRef {
+   variable ProjOriginRec {
+      type = Structure(ProjectOriginStructure);
+   }
+   execute {
+      if [context.Company.ProjCodePart = "H" and CodeH != null] {
+         set ProjectId = CodeH;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringCodePartDemandCodeIRef {
+   variable ProjOriginRec {
+      type = Structure(ProjectOriginStructure);
+   }
+   execute {
+      if [context.Company.ProjCodePart = "I" and CodeI != null] {
+         set ProjectId = CodeI;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringCodePartDemandCodeJRef {
+   variable ProjOriginRec {
+      type = Structure(ProjectOriginStructure);
+   }
+   execute {
+      if [context.Company.ProjCodePart = "J" and CodeJ != null] {
+         set ProjectId = CodeJ;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list PseudoCodesList for PseudoCodes {
+   field PseudoCode {
+      size = Small;
+   }
+   field Description;
+   fieldset CodeStringAccountExtendedLovFieldSet;
+   fieldset CodeStringCodePartDemandLovFieldSet;
+   lov ProcessCodeRef with ReferenceAccountProcessCodeSelector {
+      search = ProcessCode, Description;
+      description = ProcessCodeRef.Description;
+   }
+   @DynamicComponentDependency PROJ
+   lov ProjectActivityIdRef with ReferenceProjectActivityPostableSelector {
+      editable = [ActivityIdEnabled];
+   }
+   field Text;
+   field Quantity;
+   field PseudoCodeOwnership {
+      size = Small;
+   }
+   lov UserNameRef with ReferenceFndUserSelector {
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field RequiredString {
+      columnexclude = [true];
+      searchable = false;
+   }
+   field ProjectId {
+      columnexclude = [true];
+      searchable = false;
+   }
+   field ActivityIdEnabled {
+      columnexclude = [true];
+      searchable = false;
+   }
+   -- gelr:accounting_xml_data, begin
+   lov SatAccountGroupRef with ReferenceSatAccountGroupSelector {
+      columnexclude = [not initcontext.AccountingXmlDataEnabled];
+      description = SatAccountGroupRef.Description;
+   }
+   field SatLevel {
+      columnexclude = [not initcontext.AccountingXmlDataEnabled];
+      validate command {
+         execute {
+            if [SatLevel in("None", "One") or SatLevel = null] {
+               set SatParentAccount = null;
+            }
+         }
+      }
+   }
+   field SatAccountType {
+      columnexclude = [not initcontext.AccountingXmlDataEnabled];
+      when [initcontext.AccountingXmlDataEnabled] use subset MxSatAccType;
+   }
+   lov SatParentAccountRef with ReferenceAccountSelector {
+      columnexclude = [not initcontext.AccountingXmlDataEnabled];
+      description = SatParentAccountRef.Description;
+      editable = [SatLevel = "Two"];
+   }
+   -- gelr:accounting_xml_data, end
+   command TranslationCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

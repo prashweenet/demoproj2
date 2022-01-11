@@ -1,0 +1,56 @@
+fragment PsCodeAccountingCodePartASelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ps_code_accounting_code_part_a";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferencePsCodeAccountingCodePartASelector for PsCodeAccountingCodePartA {
+   orderby = DisplayOrder, SortValue;
+   static Value;
+   static Description;
+}
+
+@Override
+list PsCodeAccountingCodePartALovList for PsCodeAccountingCodePartA {
+   orderby = DisplayOrder, SortValue;
+}
+
+card PsCodeAccountingCodePartACard for PsCodeAccountingCodePartA {
+   label = "";
+   fieldranking Value;
+   field Value;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query PsCodeAccountingCodePartA {
+   from = "ps_code_accounting_code_part_a";
+   keys = Company, Value;
+   ludependencies = AccountingCodePartA;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Value Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Type Text {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute SortValue Text {
+      lovcolumn = [false];
+   }
+   attribute DisplayOrder Text {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

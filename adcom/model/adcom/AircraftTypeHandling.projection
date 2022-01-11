@@ -1,0 +1,91 @@
+--  Date        Sign    History
+--  ----------  ------  -----------------------------------------------------
+--  210112      LAHNLK  LMM2020R1-1481, Modified..
+--  201015      MADGLK  AD2020R1-792, AD2020R1-764 related aurena correction.
+--  200820      SWiclk  LMM2020R1-870, Replaced AircraftTypeId by AircraftTypeCode due to key change.
+--  200709      KAWJLK  LMM2020R1-302, Introduce a Tree navigator for Aircraft Systems and Subsystems
+--  200630      TAJALK  LMM2020R1-191, Added image field and changes
+--  200618      SURBLK  LMM2020R1-78, Created.
+-----------------------------------------------------------------------------
+
+projection AircraftTypeHandling;
+component ADCOM;
+layer Core;
+description "Aircraft Type will handle through this API";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+entityset AircraftTypeSet for AvAircraftType;
+entityset AvAircraftSystemSet for AvAircraftSystem;
+entityset AvAircraftSubSystemSet for AvAircraftSubSystem;
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+@Override
+entity AvAircraftType {
+   attribute AircraftTypeCode Text {
+      label = "Aircraft Type Code";
+      required = [false];
+   }
+   attribute AircraftTypeImage Stream;
+   array AircraftSystemArray(AircraftTypeCode) to AvAircraftSystem(AircraftTypeCode);
+
+}
+
+@Override
+entity AvAircraftSystem {
+
+   attribute SystemCode Text {
+      required = [false];
+   }
+
+   reference AircraftTypeRef(AircraftTypeCode) to AvAircraftType(AircraftTypeCode);
+   array AvAircraftSubSystemArray(SystemId) to AvAircraftSubSystem(SystemId);
+
+}
+
+@Override
+entity AvAircraftSubSystem {
+   ludependencies = AvAircraftSystem, AvAircraftType, AvAircraftSubSystem;
+   attribute SubSystemCode Text {
+      required = [false];
+   }
+   attribute AircraftTypeCode Text {
+      editable = [true];
+   }
+   attribute AircraftTypeName Text {
+      editable = [false];
+      fetch = "Av_Aircraft_Type_API.Get_Aircraft_Type_Name(aircraft_type_code)";
+   }
+
+   reference AvAircraftSystemRef(SystemId, AircraftTypeCode) to AvAircraftSystem(SystemId, AircraftTypeCode);
+   reference AvAircraftTypeRef(AircraftTypeCode) to AvAircraftType(AircraftTypeCode);
+
+}
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+//function GetNewAircraftTypeName Text {
+//   parameter AircraftTypeCode Text;
+//}
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

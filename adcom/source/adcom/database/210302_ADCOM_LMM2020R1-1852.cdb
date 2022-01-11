@@ -1,0 +1,28 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210302_ADCOM_LMM2020R1-1852.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210302   satglk  LMM2020R1-1852, Created.
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+EXEC Installation_SYS.Log_Detail_Time_Stamp('ADCOM', '210302_ADCOM_LMM2020R1-1852.cdb', 'Timestamp_1');
+PROMPT Drop column ASSOCIATED_DEFERRAL_REF_ID in AV_CONFLICTING_DEF_REF_TAB 
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_CONFLICTING_DEF_REF_TAB';
+BEGIN
+   IF Database_SYS.Column_Exist(table_name_, 'ASSOCIATED_DEFERRAL_REF_ID') THEN
+      Database_SYS.Alter_Table_Column( table_name_, 'DROP COLUMN', Database_SYS.Set_Column_Values('ASSOCIATED_DEFERRAL_REF_ID'), TRUE );
+   END IF;
+END;
+/
+EXEC Installation_SYS.Log_Detail_Time_Stamp('ADCOM','210302_ADCOM_LMM2020R1-1852.cdb','Done');
+
+SET SERVEROUTPUT OFF

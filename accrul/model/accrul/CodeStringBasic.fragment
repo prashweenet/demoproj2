@@ -1,0 +1,198 @@
+fragment CodeStringBasic;
+component ACCRUL;
+layer Core;
+description "Fragment with a fieldset, CodeStringBasicLovFieldSet, for Codepart B-J using the ReferenceSelector of the entities CodeB-J";
+// The page using this fieldset must be Company Context dependent
+// The reference in the projection must be named CodeB-JRef (e.g. CodeBRef) and the attributes needs to be called CodeB-J e.g. CodeB.
+// The fragment has basic support for codepart handling which means that it will display the correct label and if the code part is visible or not
+// For other support, typically codestring completion etc. use the fragment with the word "Extended" in it.
+// If there is a need for specific Validate Command handling then override the command
+// namned ValidateCodeStringBasicCode<CODEPART>Ref e.g. ValidateCodeStringBasicCodeBRef
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+--------------------------------- SELECTOR ----------------------------------
+
+
+--------------------------------- LOV LISTS ---------------------------------
+
+
+-------------------------------- FIELD SETS ---------------------------------
+fieldset CodeStringBasicLovFieldSet {
+   lov CodeBRef with ReferenceCodeBSelector {
+      label = "${context.Company.CodeBName}";
+      columnvisible = [context.Company.CodeBUsed = "Y"];
+      visible = [context.Company.CodeBUsed = "Y"];
+      description = CodeBRef.Description;
+      search = CodeB, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringBasicCodeBRef;
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      label = "${context.Company.CodeCName}";
+      columnvisible = [context.Company.CodeCUsed = "Y"];
+      visible = [context.Company.CodeCUsed = "Y"];
+      description = CodeCRef.Description;
+      search = CodeC, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringBasicCodeCRef;
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      label = "${context.Company.CodeDName}";
+      columnvisible = [context.Company.CodeDUsed = "Y"];
+      visible = [context.Company.CodeDUsed = "Y"];
+      search = CodeD, Description;
+      description = CodeDRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringBasicCodeDRef;
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      label = "${context.Company.CodeEName}";
+      columnvisible = [context.Company.CodeEUsed = "Y"];
+      visible = [context.Company.CodeEUsed = "Y"];
+      search = CodeE, Description;
+      description = CodeERef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringBasicCodeERef;
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      label = "${context.Company.CodeFName}";
+      columnvisible = [context.Company.CodeFUsed = "Y"];
+      visible = [context.Company.CodeFUsed = "Y"];
+      search = CodeF, Description;
+      description = CodeFRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringBasicCodeFRef;
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      label = "${context.Company.CodeGName}";
+      columnvisible = [context.Company.CodeGUsed = "Y"];
+      visible = [context.Company.CodeGUsed = "Y"];
+      search = CodeG, Description;
+      description = CodeGRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringBasicCodeGRef;
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      label = "${context.Company.CodeHName}";
+      columnvisible = [context.Company.CodeHUsed = "Y"];
+      visible = [context.Company.CodeHUsed = "Y"];
+      search = CodeH, Description;
+      description = CodeHRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringBasicCodeHRef;
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      label = "${context.Company.CodeIName}";
+      columnvisible = [context.Company.CodeIUsed = "Y"];
+      visible = [context.Company.CodeIUsed = "Y"];
+      search = CodeI, Description;
+      description = CodeIRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringBasicCodeIRef;
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      label = "${context.Company.CodeJName}";
+      columnvisible = [context.Company.CodeJUsed = "Y"];
+      visible = [context.Company.CodeJUsed = "Y"];
+      search = CodeJ, Description;
+      description = CodeJRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringBasicCodeJRef;
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+command ValidateCodeStringBasicCodeBRef {
+   variable Dummy;
+}
+command ValidateCodeStringBasicCodeCRef {
+   variable Dummy;
+}
+command ValidateCodeStringBasicCodeDRef {
+   variable Dummy;
+}
+command ValidateCodeStringBasicCodeERef {
+   variable Dummy;
+}
+command ValidateCodeStringBasicCodeFRef {
+   variable Dummy;
+}
+command ValidateCodeStringBasicCodeGRef {
+   variable Dummy;
+}
+command ValidateCodeStringBasicCodeHRef {
+   variable Dummy;
+}
+command ValidateCodeStringBasicCodeIRef {
+   variable Dummy;
+}
+command ValidateCodeStringBasicCodeJRef {
+   variable Dummy;
+}
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+@Override
+entity CodeB {
+   attribute CodeB Text {
+      label = "${context.Company.CodeBName}";
+   }
+}
+@Override
+entity CodeC {
+   attribute CodeC Text {
+      label = "${context.Company.CodeCName}";
+   }
+}
+@Override
+entity CodeD {
+   attribute CodeD Text {
+      label = "${context.Company.CodeDName}";
+   }
+}
+@Override
+entity CodeE {
+   attribute CodeE Text {
+      label = "${context.Company.CodeEName}";
+   }
+}
+@Override
+entity CodeF {
+   attribute CodeF Text {
+      label = "${context.Company.CodeFName}";
+   }
+}
+@Override
+entity CodeG {
+   attribute CodeG Text {
+      label = "${context.Company.CodeGName}";
+   }
+}
+@Override
+entity CodeH {
+   attribute CodeH Text {
+      label = "${context.Company.CodeHName}";
+   }
+}
+@Override
+entity CodeI {
+   attribute CodeI Text {
+      label = "${context.Company.CodeIName}";
+   }
+}
+@Override
+entity CodeJ {
+   attribute CodeJ Text {
+      label = "${context.Company.CodeJName}";
+   }
+}

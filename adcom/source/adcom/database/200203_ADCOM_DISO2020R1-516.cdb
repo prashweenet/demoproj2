@@ -1,0 +1,73 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 200203_ADCOM_DISO2020R1-516.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210203   chdslk  Created.
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','200203_ADCOM_DISO2020R1-516.cdb','Timestamp_1');
+PROMPT REMOVING COLUMN INST_RMVL_INVENTORY_ID FROM AV_HIST_EXECUTION_TASK_TAB
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_HIST_EXECUTION_TASK_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   IF Database_SYS.Column_Exist(table_name_, 'INST_RMVL_INVENTORY_ID') THEN
+      column_ := Database_SYS.Set_Column_Values('INST_RMVL_INVENTORY_ID', 'NUMBER', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'D', column_, TRUE);
+   END IF;
+END;
+/
+
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','200203_ADCOM_DISO2020R1-516.cdb','Timestamp_2');
+PROMPT REMOVING COLUMN INST_RMVL_INVENTORY_ID FROM AV_HIST_PLANNING_TASK_TAB
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_HIST_PLANNING_TASK_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   IF Database_SYS.Column_Exist(table_name_, 'INST_RMVL_INVENTORY_ID') THEN
+      column_ := Database_SYS.Set_Column_Values('INST_RMVL_INVENTORY_ID', 'NUMBER', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'D', column_, TRUE);
+   END IF;
+END;
+/
+
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','200203_ADCOM_DISO2020R1-516.cdb','Timestamp_3');
+PROMPT ADDING COLUMN INSTALLED_INVENTORY_ID TO AV_HIST_TASK_PART_TAB
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_HIST_TASK_PART_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   IF NOT Database_SYS.Column_Exist(table_name_, 'INSTALLED_INVENTORY_ID') THEN
+      column_ := Database_SYS.Set_Column_Values('INSTALLED_INVENTORY_ID', 'NUMBER', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   END IF;
+END;
+/
+
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','200203_ADCOM_DISO2020R1-516.cdb','Timestamp_4');
+PROMPT ADDING COLUMN REMOVED_INVENTORY_ID TO AV_HIST_TASK_PART_TAB
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_HIST_TASK_PART_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   IF NOT Database_SYS.Column_Exist(table_name_, 'REMOVED_INVENTORY_ID') THEN
+      column_ := Database_SYS.Set_Column_Values('REMOVED_INVENTORY_ID', 'NUMBER', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   END IF;
+END;
+/
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','200203_ADCOM_DISO2020R1-516.cdb','Timestamp_5');
+
+SET SERVEROUTPUT OFF

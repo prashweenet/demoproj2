@@ -1,0 +1,143 @@
+client ExternalFileLog;
+component ACCRUL;
+layer Core;
+projection ExternalFileLogHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ExternalFileLogNavEntry parent AccrulNavigator.MonitorExternalFilesMenu at index 400 {
+      label = "External File Log";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ExtFileLoads {
+   label = "External File Log";
+   startupmode = search;
+   currentdatafilter {
+      description = "Files loaded during last 2 years";
+   }
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+   selector ExtFileLoadSelector;
+   group ExtFileLoadGroup;
+   list ExtFileLogList(ExtFileLogArray);
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command DetailCommand for ExtFileLog {
+   label = "External File Log Details";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/ExternalFileLogDetail/Form?$filter=LoadFileId eq $[LoadFileId] and SeqNo eq $[SeqNo]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ExtFileLoadSelector for ExtFileLoad {
+   label = "${LoadFileId} - ${FileTemplateId}";
+   orderby = LoadFileId desc;
+
+   static LoadFileId;
+   static LoadDate;
+   static FileTemplateId;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ExtFileLoadGroup for ExtFileLoad {
+   label = "";
+
+   field LoadFileId;
+   field LoadDate;
+   field UserId {
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   lov FileTypeRef with ReferenceExtFileTypeSelector {
+      search = FileType, Description;
+      size = Large;
+      description = FileTypeRef.Description;
+   }
+   badge State {
+      size = Small;
+      style = TextOnly;
+      emphasis Progress2 = [State = "Empty"];
+      emphasis Progress3 = [State = "Loaded"];
+      emphasis Progress6 = [State = "Unpacked"];
+      emphasis Progress11 = [State = "Transferred"];
+      emphasis StateError = [State = "Aborted"];
+      emphasis Progress6 = [State = "Packed"];
+      emphasis Progress11 = [State = "FileCreated"];
+      emphasis Progress11 = [State = "Removed"];
+      emphasis StateError = [State = "TransferError"];
+      emphasis Progress9 = [State = "PartlyTransferred"];
+   }
+   lov FileTemplateIdRef with ReferenceExtFileTemplateSelector {
+      search = FileTemplateId, Description;
+      size = Large;
+      description = FileTemplateIdRef.Description;
+   }
+   field FileDirection {
+      size = Small;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileLogList for ExtFileLog {
+   label = "Log Information";
+   orderby = SeqNo asc;
+
+   field State;
+   field LogDate;
+
+   command DetailCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

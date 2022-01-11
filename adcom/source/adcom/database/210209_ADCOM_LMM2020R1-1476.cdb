@@ -1,0 +1,25 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210209_ADCOM_LMM2020R1-1476.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210211   aruflk  LMM2020R1-1476, Added alt_id to the av_exe_task_part_request_tab.
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+PROMPT Adding new column ALT_ID to AV_EXE_TASK_PART_REQUEST_TAB
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_EXE_TASK_PART_REQUEST_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ALT_ID', 'VARCHAR2(50)', 'Y');
+   Database_SYS.Alter_Table(table_name_, columns_);
+END;
+
+SET SERVEROUTPUT OFF

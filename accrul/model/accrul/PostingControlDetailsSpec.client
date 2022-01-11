@@ -1,0 +1,160 @@
+client PostingControlDetailsSpec;
+component ACCRUL;
+layer Core;
+
+projection PostingControlDetailsSpecHandling;
+include fragment AccountingCodePartsUsed2Selector;
+include fragment CtrlTypeAllowedValueSelector;
+include fragment AccountingCodePartValueLovSelector;
+include fragment CopyToCompaniesAssistant;
+include fragment PostingControlDefValueLovExtended;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using PostingCtrlDetailSet {
+   label = "Posting Control Details Specification";
+   singleton PostingCtrlDetailSingleton;
+   group PostCtrlDetSpecGroup;
+   list PostCtrlDetSpecList(PostCtrlDetSpecArray);
+}
+
+page PcForm using PostingCtrlDetailSet {
+   label = "Posting Control Navigator - Posting Control Details Specification";
+   singleton PostingCtrlDetailSingleton;
+   group PostCtrlDetSpecGroup;
+   list PostCtrlDetSpecList(PostCtrlDetSpecArray);
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command CopyToCompaniesCommand for PostingCtrlDetailSpec {
+   label = "Copy to Companies";
+   enabled = [true];
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PostingCtrlDetailSpec", "MANUAL", Selection, "Posting_Ctrl_API") {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand for PostingCtrlDetailSpec {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "PostingCtrlDetailSpec") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PostingCtrlDetailSpec", "AUTOMATIC", SelectionVar, "Posting_Ctrl_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+--------------------------------- SELECTORS ---------------------------------
+singleton PostingCtrlDetailSingleton for PostingCtrlDetail;
+
+
+---------------------------------- GROUPS -----------------------------------
+group PostCtrlDetSpecGroup for PostingCtrlDetail {
+   label = "";
+   lov PostingTypeRef with ReferencePostingCtrlPostingTypeSelector;
+   lov CodeNaRef with ReferenceAccountingCodePartsUsed2Selector;
+   lov ControlTypeRef with ReferenceCtrlTypeAllowedValueSelector {
+      description = ControlTypeDesc;
+   }
+   field ControlTypeValue;
+   lov SpecControlTypeRef with PostingCtrlDetailSelector {
+      description = SpecControlTypeDesc;
+   }
+   lov SpecDefaultValueRef with ReferenceAccountingCodepartValFinrepSelector;
+   lov SpecDefaultValueNoCtRef with ReferenceAccountingCodepartValFinrepSelector;
+   field ValidFrom {
+      searchable = false;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list PostCtrlDetSpecList for PostingCtrlDetailSpec {
+   label = "Details";
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+
+   field SpecControlType {
+      columnexclude = [true];
+   }
+   field CtrlType1ValueRef {
+      label = "${parent.SpecControlTypeDesc}";
+
+      validate command {
+         variable DescVar;
+         execute {
+            call GetControlTypeDesc(Company, PostingType, CodePart, ControlTypeValue, PcValidFrom, ValidFrom, SpecControlType, SpecControlTypeValue) into DescVar;
+            set SpecControlTypeValueDesc = DescVar;
+         }
+      }
+   }
+   field SpecControlTypeValueDesc;
+
+   fieldset PostingCtrlCodePartValueLovExtendedFieldSet;
+
+   field NoCodePartValue {
+      size = Small;
+   }
+
+   command CopyToCompaniesCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

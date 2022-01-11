@@ -1,0 +1,21 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CounterPartOne
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  170424  Sufelk  STRFI-5815, Overtaking base primary key definition
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+@Overtake Base
+PRIMARY KEY accounting_code_part_value_pk IS accounting_code_part_value_tab (company, code_part, code_part_value);
+-------------------- OTHER DEFINITIONS --------------------------------------
+

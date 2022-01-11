@@ -1,0 +1,56 @@
+fragment CurrencyRatesPerRateTypeSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view currency_rates_per_rate_type";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCurrencyRatesPerRateTypeSelector for CurrencyRatesPerRateType {
+   static CurrencyCode;
+   static ValidFrom;
+}
+
+card CurrencyRatesPerRateTypeCard for CurrencyRatesPerRateType {
+   label = "";
+   fieldranking CurrencyCode;
+   field CurrencyCode;
+   field ValidFrom;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CurrencyRatesPerRateType {
+   from = "currency_rates_per_rate_type";
+   lu = CurrencyRate;
+   keys = Company, CurrencyType, CurrencyCode;
+   ludependencies = CurrencyRate;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CurrencyType Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CurrencyCode Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [true];
+   }
+   attribute CurrencyRate Number {
+      label = "Rate";
+      lovcolumn = [false];
+   }
+   attribute ConvFactor Number {
+      lovcolumn = [false];
+   }
+   attribute RefCurrencyCode Text {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

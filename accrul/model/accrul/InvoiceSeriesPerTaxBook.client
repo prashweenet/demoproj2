@@ -1,0 +1,71 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 191030      Kagalk  gelr: Added to support Global Extension Functionalities.
+-- 191030      Kagalk  GESPRING20-1261, Created for gelr:tax_book_and_numbering.
+----------------------------------------------------------------------------------------------------
+client InvoiceSeriesPerTaxBook;
+component ACCRUL;
+layer Core;
+projection InvoiceSeriesPerTaxBookHandling;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+-------------------------------- MAIN PAGES ---------------------------------
+@DynamicComponentDependency INVOIC
+page Form using TaxBookSet {
+   label = "Invoice Series Per Tax Book";
+   initcontext PageInitContext;
+   selector TaxBookSelector;
+   list InvoiceSeriesPerTaxBookList(InvSeriesPerTaxBookArray);
+}
+
+initcontext PageInitContext {
+   parameter TaxBookAndNumberingEnabled Boolean;
+   init command {
+      execute {
+          -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set TaxBookAndNumberingEnabled = LocalizationFunctionalityStructure.TaxBookAndNumbering;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+@DynamicComponentDependency INVOIC
+selector TaxBookSelector for TaxBook {
+   label = "${TaxBookId} - ${Description} - ${TaxDirectionSp} - ${TaxBookBase}";
+   static TaxBookId;
+   static Description;
+   static TaxDirectionSp;
+   static TaxBookBase;
+}
+
+----------------------------------- LISTS -----------------------------------
+@DynamicComponentDependency INVOIC
+list InvoiceSeriesPerTaxBookList for InvSeriesPerTaxBook {
+   label = "";
+   crudactions {
+      new {
+         enabled = [initcontext.TaxBookAndNumberingEnabled and parent.TaxBookBase = "InvoiceSeries" and parent.TaxBookBaseValues != "All"];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [initcontext.TaxBookAndNumberingEnabled and parent.TaxBookBase = "InvoiceSeries" and parent.TaxBookBaseValues != "All"];
+      }
+   }
+
+   lov SeriesIdRef with ReferenceInvoiceSeriesSelector {
+      size = Large;
+      description = SeriesIdRef.Description;
+   }
+}
+

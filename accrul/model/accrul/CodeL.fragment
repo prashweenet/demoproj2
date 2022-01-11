@@ -1,0 +1,40 @@
+fragment CodeL;
+component ACCRUL;
+layer Core;
+description "Contains Common Client Code and Projection Logic for Code L";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand for CounterPartTwo {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'CounterPartTwo' and AttributeKey eq $[CounterPartTwoId]";
+   }
+}
+----------------------------------- LISTS -----------------------------------
+list CounterPartTwo for CounterPartTwo {
+   field CounterPartTwoId {
+      size = Small;
+   }
+   field Description;
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid Period";
+   }
+   command TranslationCommand;
+}
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+@Override
+entity CounterPartTwo {
+   attribute CounterPartTwoId Text {
+      label = "${context.Company.CodeLName}";
+   }
+   attribute Description Text {
+      label = "Description";
+   }
+}

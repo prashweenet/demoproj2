@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>SatAccountType</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <NAME>None</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>Debit</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>Credit</NAME>
+      </VALUE>
+   </VALUES>
+   <SUBSETS>
+      <SUBSET>
+         <NAME>MxSatAccType</NAME>
+         <VALUES>
+            <SUBSET_VALUE>
+               <NAME>Debit</NAME>
+            </SUBSET_VALUE>
+            <SUBSET_VALUE>
+               <NAME>Credit</NAME>
+            </SUBSET_VALUE>
+         </VALUES>
+      </SUBSET>
+   </SUBSETS>
+</ENUMERATION>

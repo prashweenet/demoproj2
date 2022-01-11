@@ -1,0 +1,49 @@
+--  Date        Sign    History
+--  ----------  ------  -----------------------------------------------------
+--  2020-07-28  TAJALK  LMM2020R1-89, Created.
+-----------------------------------------------------------------------------
+
+projection TaskMeasurementsHandling;
+component ADCOM;
+layer Core;
+description "This to handle LU AvExeTaskMeasurement";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AvExeTaskMeasurementSet for AvExeTaskMeasurement;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvExeTaskMeasurement {
+   attribute MeasurementId Number {
+      required = [false];
+   }
+
+   reference MeasurementTypeCodeRef(MeasurementTypeCode) to AvMeasurementType(MeasurementTypeCode);
+   reference TaskRef(TaskId) to AvExeTask(TaskId);
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

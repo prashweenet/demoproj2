@@ -1,0 +1,48 @@
+--  Date        Sign    History
+--  ----------  ------  -----------------------------------------------------
+--  200930      KAWJLK  LMM2020R1-1288, Create User - Airport Connection
+-----------------------------------------------------------------------------
+projection AvAirportForUserHandling;
+component ADCOM;
+layer Core;
+description "User Airport Details will be handled from this";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AvAirportForUserSet for AvAirportForUser;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvAirportForUser {
+   crud = Create, Read, Update, Delete;
+   reference AirportRef(AirportId) to AvAirport(AirportId);
+   reference UserRef(Identity) to FndUser(Identity);
+
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

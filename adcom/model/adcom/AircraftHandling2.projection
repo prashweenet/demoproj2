@@ -1,0 +1,161 @@
+---------------------------------------------------------------------------------
+--  Date          Sign    History
+--  ----------    ------  -------------------------------------------------------
+--  201125        SatGlk  LMM2020R1-1442, Used entity default state enum for AvAircraftWorkPackage.
+--  200703        SURBLK  LMM2020R1-269 - Created
+---------------------------------------------------------------------------------
+
+-- This is a temporary projection. FLM team will change.
+projection AircraftHandling2;
+component ADCOM;
+layer Core;
+description "This API shows the information related to Aircraft";
+category Users;
+include fragment AircraftLovSelector;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AircraftSet for Aircraft;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity Aircraft {
+   crud = Create, Read, Update, Delete;
+   attribute AircraftId Number {
+      required = [false];
+   }
+   attribute DummyAircraft Text {
+      fetch = "CONCAT(CONCAT(aircraft_desc, ' - '), TO_CHAR(reg_code))";
+      editable = [false];
+   }
+   @DynamicComponentDependency APPSRV
+   reference CountryCodeRef(CountryCode) to IsoCountry(CountryCode);
+   reference RegulatoryBodyRef(RegulatoryBodyCode) to AvRegulatoryBody(RegulatoryBodyCode);
+
+   array FaultArray(AircraftId) to AvFault(AircraftId);
+   array TaskArray(AircraftId) to AvExeTask(AircraftId);
+   array WorkPackageArray(AircraftId) to AvAircraftWorkPackage(AircraftId);
+   array FlightArray(AircraftId) to AvFlight(AircraftId);
+}
+
+@Override
+entity AvFault {
+   attribute FaultId Number {
+      required = [false];
+   }
+   attribute Priority Text {
+      fetch = "Av_Exe_Task_API.Get_Priority(Av_Exe_Task_API.Get_Task_Id(fault_id))";
+   }
+   attribute DeferralId Text {
+      fetch = "Av_Fault_Deferral_API.Get_Active_Deferral(fault_id)";
+   }
+   reference    AvFaultDeferralRef(DeferralId) to  AvFaultDeferral(DeferralId);
+   reference    AircraftRef(AircraftId) to  AircraftLov(AircraftId);
+   reference    AircraftSubSystemRef(SubSystemId) to  AvAircraftSubSystem(SubSystemId);
+   reference    FoundByUserRef(FoundByUser) to  FndUser(Identity);
+   reference    PhaseOfFlightCodeRef(PhaseOfFlightCode) to  AvPhaseOfFlight(PhaseOfFlightCode);
+   reference    LogbookTypeCodeRef(LogbookTypeCode) to  AvLogbookType(LogbookTypeCode);
+   reference    FaultSourceCodeRef(FaultSourceCode) to  AvFaultSource(FaultSourceCode);
+   reference    FailureTypeCodeRef(FailureTypeCode) to  AvFailureType(FailureTypeCode);
+}
+
+@Override
+entity AvExeTask {
+   attribute TaskId Number {
+      required = [false];
+   }
+   attribute IsHistoric Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   reference AircraftIdRef(AircraftId) to AircraftLov(AircraftId);
+   reference FaultIdRef(FaultId) to AvFault(FaultId);
+   reference AircraftWpIdRef(AircraftWpId) to AvAircraftWorkPackage(AircraftWorkPackageId);
+}
+
+@Override
+entity AvAircraftWorkPackage {
+   ludependencies = AvAircraftWorkPackage, Aircraft, AvMaintenanceLocation;
+
+   attribute IsHistoric  Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+
+   attribute IsReleaseToService  Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+
+   attribute AircraftWorkPackageId Number {
+      required = [false];
+   }
+   attribute Objstate Enumeration(AvAircraftWorkPackageState) {
+      fetch = "objstate";
+      label = "State";
+      maxlength = 50;
+      editable = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   reference AircraftRef(AircraftId) to Aircraft(AircraftId);
+   reference MaintenanceLocationRef(LocationCode) to AvMaintenanceLocation(LocationCode);
+}
+
+@Override
+entity AvFlight {
+   attribute FlightId Number {
+      required = [false];
+   }
+   attribute IsHistoric Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute TurnStatus Enumeration(TurnStatusEnum) {
+      editable = [false];
+      fetch = "Av_Flight_API.Get_Turn_Status(flight_id)";
+   }
+
+   reference AircraftRef(AircraftId) to AircraftLov(AircraftId);
+   reference DepartureAirportRef(DepartureAirportId) to AvAirport(AirportId);
+   reference ArrivalAirportRef(ArrivalAirportId) to AvAirport(AirportId);
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+enumeration TurnStatusEnum {
+   value = "InBound" {
+      label = "In Bound";
+   }
+   value = "Arrived" {
+      label = "Arrived";
+   }
+   value = "Departed" {
+      label = "Departed";
+   }
+   value = "InMaintenance" {
+      label = "In Maintenance";
+   }
+   value = "Released" {
+      label = "Released";
+   }
+   value = "NotApplicable" {
+      label = "Not Applicable";
+   }
+}
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

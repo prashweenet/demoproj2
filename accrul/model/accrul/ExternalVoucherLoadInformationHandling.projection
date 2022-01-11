@@ -1,0 +1,121 @@
+projection ExternalVoucherLoadInformationHandling;
+component ACCRUL;
+layer Core;
+description "External Voucher Load Information";
+category Users;
+
+include fragment UserGroupMemberFinance2Selector;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtLoadInfoSet for ExtLoadInfo {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtLoadInfo {
+   crud = Read;
+
+   attribute LoadId Text {
+      label = "Load ID";
+   }
+   attribute Userid Text {
+      label = "User ID";
+   }
+   attribute ExtLoadState Enumeration(ExtLoadState) {
+      label = "Load Status";
+   }
+   attribute ExtLoadStateDb Text;
+   attribute LoadIdSort Text {
+      fetch = "LPAD(load_id, 50, ' ')";
+   }
+   attribute LoadFileId Number {
+      label = "Load File ID";
+   }
+
+   action DoRemoveErrorCodes {
+      ludependencies = ExtLoadInfo;
+   }
+   action DoCreateVoucher {
+      ludependencies = ExtLoadInfo;
+   }
+   action DoCheckTransactions {
+      supportwarnings = [true];
+   }
+
+   function GetExtTransValidityInfo Structure(ExternalVoucherUserDataStruct);
+
+   action DoRemoveLoads {
+      ludependencies = ExtLoadInfo;
+      parameter LoadFileId Number;
+   }
+
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+-- Added @SecurityCheck Company.UserAuthorized(company_) in Ext_Transactions_API.Update_New_User_Data.
+action DoUpdateNewUserData {
+   initialcheck implementation;
+   parameter Company Text;
+   parameter LoadId Text;
+   parameter UserId Text;
+   parameter UserGroup Text;
+   parameter UserIdPrv Text;
+   parameter UserGroupPrv Text;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function IsValidUserData Text {
+   parameter Company Text;
+   parameter UserId Text;
+   parameter UserGroup Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure ExternalVoucherUserDataStruct {
+   attribute Results Text;
+   attribute UserIdPrv Text;
+   attribute UserGroupPrv Text;
+   attribute UserId Text;
+   attribute UserGroup Text;
+}
+
+structure ChangeUserDataStruct {
+   attribute Company Text;
+   attribute LoadId Text;
+   attribute UserId Text;
+   attribute UserGroup Text;
+   attribute UserIdPrv Text;
+   attribute UserGroupPrv Text;
+   attribute ValidUserData Text;
+   
+   reference UserIdRef(Company, UserId) to UserFinance(Company, Userid) {
+      label = "User ID";
+   }
+   reference UserGroupRef(Company, UserId, UserGroup) to UserGroupMemberFinance2(Company, Userid, UserGroup) {
+      label = "User Group";
+   }
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

@@ -1,0 +1,30 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TaxCalculationStructureHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+FUNCTION Fetch_Tax_Code_Info___ (
+   company_  IN VARCHAR2,
+   tax_code_ IN VARCHAR2 ) RETURN Tax_Code_Info_Structure_Rec
+IS
+   rec_   Tax_Code_Info_Structure_Rec;
+BEGIN
+   rec_.tax := Statutory_Fee_API.Get_Fee_Rate(company_,tax_code_);
+   -- gelr: extend_tax_code_and_tax_struct, begin
+   IF (Statutory_Fee_API.Get_Tax_In_Tax_Base_Db(company_,tax_code_) = 'TRUE') THEN
+      rec_.tax_in_tax_base := TRUE;
+   ELSE
+      rec_.tax_in_tax_base := FALSE;
+   END IF;
+   -- gelr: extend_tax_code_and_tax_struct, end
+   RETURN rec_;
+END Fetch_Tax_Code_Info___;

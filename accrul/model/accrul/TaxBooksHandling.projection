@@ -1,0 +1,79 @@
+projection TaxBooksHandling;
+component ACCRUL;
+layer Core;
+description "Tax Books";
+category Users;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset TaxBookSet for TaxBook {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity TaxBook {
+   supportwarnings = [true];
+
+   attribute TaxBookId Text {
+      format = uppercase;
+      label = "Tax Book ID";
+   }
+   attribute Description Text {
+      label = "Tax Book Description";
+   }
+   attribute TaxDirectionSp Enumeration(TaxDirectionSp) {
+      label = "Tax Direction";
+   }
+   attribute TaxBookBase Enumeration(TaxBookBase) {
+      label = "Tax Book Base";
+   }
+   attribute TaxBookBaseDb Text {
+      fetch = "tax_book_base_db";
+   }
+   attribute TaxBookBaseValues Enumeration(TaxBookBaseValues) {
+      label = "Tax Book Base Values";
+   }
+   attribute TaxBookBaseValuesDb Text {
+      fetch = "tax_book_base_values_db";
+   }
+
+   @DynamicComponentDependency TAXLED
+   reference TaxSeriesIdRef(Company, TaxSeriesId) to TaxSeries(Company, TaxSeriesId) {
+      label = "Tax Series ID";
+   }
+
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

@@ -1,0 +1,115 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 181204      RAKUSE  FIUXX-1705, Converted dialog 'dlgPSheetCleanupAuditSourceInfo' using MTG Version: 1.34
+----------------------------------------------------------------------------------------------------
+client CleanupAuditSourceInformation;
+component ACCRUL;
+layer Core;
+projection CleanupAuditSourceInformationHandling;
+include fragment ScheduledTasksCommon;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TaskAssistantNavEntry parent AccrulNavigator.AuditInterfaceBasicDataMenu at index 300 {
+      label = "Cleanup Audit Information";
+      assistant TaskAssistant;
+   }
+}
+---------------------------------- GROUPS -----------------------------------
+
+group ParameterGroup for TaskVirtual {
+   label = "Parameters";
+
+   radiogroup DaysChecked {
+      required = [true];
+   }
+   field NumberOfDays {
+      visible = [DaysChecked = "DaysBefore"];
+   }
+   field BeforeDate {
+      visible = [DaysChecked = "CreatedBefore"];
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+assistant TaskAssistant using TaskVirtuals {
+   label = "Cleanup Audit Information";
+
+   init command {
+      execute {
+         call GetParameters() into Params;
+         set ScheduleMethodId = Params.ScheduleMethodId;
+         set ScheduleName = Params.Description;
+         -- Init parameters
+         set DaysChecked = Params.DaysChecked;
+         set NumberOfDays = Params.NumberOfDays;
+         set BeforeDate = Params.BeforeDate;
+      }
+   }
+
+   steps {
+      step {
+         label = "Task Options";
+         group ExecuteOptionGroup;
+         markdowntext {
+            text = "This will remove data which are saved in Audit_Storage_Tab.";
+         }
+         group ParameterGroup;
+         next command {
+            enabled = [TaskOption = "Schedule"];
+         }
+      }
+      step {
+         label = "Schedule";
+         group SchedulingParametersGroup;
+         group SchedulingStartAndStopDateGroup;
+      }
+      step {
+         label = "Schedule Options";
+         group ScheduledTasksAssistantAdvOpGroup;
+         group ScheduledTasksAssistantStreamsGroup;
+      }
+      final step {
+         description = "${Result}";
+         command NavigateToScheduledTask {
+            visible = [TaskOption = "Schedule"];
+         }
+      }
+      cancelled step {
+         description = "Task was cancelled";
+      }
+   }
+
+   finish command {
+      enabled = [(NumberOfDays != null or BeforeDate != null) and(
+      (TaskOption = "Now") or
+      (TaskOption = "Schedule" and ScheduleName != null and
+      (ScheduleOption = "Daily" and ScheduleTime != null) or
+      (ScheduleOption = "Weekly" and ScheduleTime != null and ScheduledDays != null) or
+      (ScheduleOption = "Monthly" and ScheduleTime != null and ScheduledDayNumber > 0 and ScheduledDayNumber < 32) or
+      (ScheduleOption = "Date" and ScheduleDatetime != null) or
+      (ScheduleOption = "Interval" and ScheduleInterval != null) or
+      (ScheduleOption = "Custom" and ExecutionPlan != null)))];
+
+      execute {
+         if [TaskOption = "Now"] {
+            call ExecuteTask();
+            set Result = "Task '${ScheduleName}' has been successfully completed.";
+         }
+         else {
+            call ScheduleTask() into ScheduledTask;
+            set ScheduleId = ScheduledTask.ScheduleId;
+            set Result = "Task '${ScheduleName}', assigned with the Id '${ScheduleId}', was successfully scheduled to start ${ScheduledTask.ScheduledDate} at ${ScheduledTask.ScheduledTime}.";
+         }
+      }
+   }
+   cancel command {
+      execute {
+         navigate back;
+      }
+   }
+
+}

@@ -1,0 +1,207 @@
+client TaxCalculationStructure;
+component ACCRUL;
+layer Core;
+
+projection TaxCalculationStructureHandling;
+
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TaxCalculationStructureNavEntry parent AccrulNavigator.TaxMenu at index 600 {
+      label = "Tax Calculation Structure";
+      page Form home TaxCalcStructure;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using TaxCalcStructureSet {
+   label = "Tax Calculation Structure";
+
+   stateindicator StructureSateIndicator;
+   selector TaxCalcStructureRecordSelector;
+   initcontext PageInitContext;
+   group TaxCalculationStructureGroup bind TaxCalcStructureRecordSelector;
+   list TaxStructureItemList(TaxStructureItemArray) bind TaxCalcStructureRecordSelector;
+   list TaxStructureItemRefList(TaxStructureItemRefArray) bind TaxStructureItemList;
+
+   command SetActive;
+   command SetPreliminary;
+   command SetObsolete;
+
+   command TranslationCommand;
+}
+
+initcontext PageInitContext {
+   parameter ExtendTaxCodeAndTaxStructEnabled Boolean;
+   init command {
+      execute {
+         -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set ExtendTaxCodeAndTaxStructEnabled = LocalizationFunctionalityStructure.ExtendTaxCodeAndTaxStruct;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'TaxCalcStructure' and AttributeKey eq $[TaxCalcStructureId]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector TaxCalcStructureRecordSelector for TaxCalcStructure {
+   label = "${TaxCalcStructureId} - ${Description}";
+
+   static TaxCalcStructureId;
+   static Description;
+   badge Objstate {
+      style = TextOnly;
+      showlabel = false;
+      emphasis Progress2 = [Objstate = "Preliminary"];
+      emphasis Progress11 = [Objstate = "Active"];
+      emphasis StateObsolete = [Objstate = "Obsolete"];
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group TaxCalculationStructureGroup for TaxCalcStructure {
+   label = "";
+
+   field TaxCalcStructureId;
+   field Description;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list TaxStructureItemList for TaxStructureItem {
+   label = "Structure Items";
+   orderby = CalculationOrder;
+
+   crudactions {
+      delete {
+         enabled = [parent.Objstate = "Preliminary"];
+      }
+      new {
+         enabled = [parent.Objstate = "Preliminary"];
+      }
+   }
+
+   field TaxCalcStructureId {
+      columnvisible = [false];
+      searchable = false;
+      columnexclude = [true];
+   }
+   field ItemId;
+   field CalculationOrder {
+      size = Small;
+      editable = [parent.Objstate = "Preliminary"];
+   }
+   lov TaxCodeRef with ReferenceStatutoryFeeSelector using GetTaxCodeUserwhere {
+      search = FeeCode, Description;
+      description = TaxCodeRef.Description;
+      editable = [parent.Objstate = "Active" or parent.Objstate = "Preliminary"];
+
+      validate command {
+         execute {
+            call FetchTaxCodeInfo(Company, TaxCode) into TaxCodeInfoStructure;
+            set  Tax = TaxCodeInfoStructure.Tax;
+            -- gelr: extend_tax_code_and_tax_struct, begin
+            set  TaxInTaxBase = TaxCodeInfoStructure.TaxInTaxBase;
+            -- gelr: extend_tax_code_and_tax_struct, end
+         }
+      }
+   }
+   field Tax {
+      size = Small;
+   }
+   field InclPriceInTaxBase {
+      editable = [parent.Objstate = "Preliminary"];
+   }
+   field TaxStructureRef.Objstate {
+      columnexclude = [true];
+   }
+   -- gelr: extend_tax_code_and_tax_struct, begin
+   field TaxInTaxBase {
+      columnexclude = [not initcontext.ExtendTaxCodeAndTaxStructEnabled];
+   }
+   field MarkUp {
+      columnexclude = [not initcontext.ExtendTaxCodeAndTaxStructEnabled];
+   }
+   -- gelr: extend_tax_code_and_tax_struct, end
+}
+
+list TaxStructureItemRefList for TaxStructureItemRef {
+   label = "Structure Item Reference";
+   orderby = DefaultOrderBy;
+
+   crudactions {
+      delete {
+         enabled = [parent.TaxStructureRef.Objstate = "Preliminary"];
+      }
+      new {
+         enabled = [parent.TaxStructureRef.Objstate = "Preliminary"];
+      }
+   }
+
+   lov ItemIdRefRef with  ReferenceTaxStructureItemSelector using FilterItem(Company, TaxCalcStructureId, ItemId);
+   field ItemIdRefRef.TaxCode;
+   field ItemIdRefRef.Tax {
+      size = Small;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+stateindicator StructureSateIndicator for TaxCalcStructure {
+   state "Preliminary" {
+      completed = 33%;
+      emphasis Progress2 = [Objstate = "Preliminary"];
+   }
+   state "Active" {
+      completed = 100%;
+      emphasis Progress11 = [Objstate = "Active"];
+   }
+   state "Obsolete" {
+      completed = 100%;
+      emphasis StateObsolete = [Objstate = "Obsolete"];
+   }
+}
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

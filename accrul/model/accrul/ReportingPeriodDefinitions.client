@@ -1,0 +1,208 @@
+client ReportingPeriodDefinitions;
+component ACCRUL;
+layer Core;
+projection ReportingPeriodDefinitionsHandling;
+
+include fragment AccountingYearSelector;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry BIReportingPeriodDefinitionsNavEntry parent AccrulNavigator.BIReportingPeriodsMenu at index 100 {
+      label = "Reporting Period Definitions";
+      page List home RpdIdentity;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using RpdIdentitySet {
+   label = "Reporting Period Definitions";
+   list RpdIdentityList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ItemRPDPeriodsCommand {
+   label = "Reporting Periods";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/ReportingPeriods/Form?$filter=RpdId eq $[RpdId]";
+   }
+}
+
+command ItemCompaniesPerRPDCommand {
+   label = "Companies per Reporting Period Definition ID";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/CompaniesPerReportingPeriodDefinition/Form?$filter=RpdId eq $[RpdId]";
+   }
+}
+
+command ItemGenOnSysCalCommand for RpdIdentity {
+   label = "Generate Based on System Calendar";
+
+   execute {
+      dialog GenOnSysCalendarDlg(RpdId) {
+         when OK {
+            success("Reporting period generation is successfully completed.");
+         }
+      }
+   }
+}
+
+command Ok for RpdGenOnSysCalendarStructure {
+   execute {
+      call DoGenOnSysCalendar(RpdId, StartYear, NumberOfYears, StartMonth, FirstYear);
+      exit OK;
+   }
+}
+
+command ItemGenOnAccCalCommand for RpdIdentity {
+   label = "Generate Based on Accounting Calendar";
+
+   execute {
+      dialog GenOnAccCalendarDlg(RpdId) {
+         when OK {
+            success("Reporting period generation is successfully completed.");
+         }
+      }
+   }
+}
+
+command Ok for RpdGenOnAccCalendarStructure {
+   execute {
+      call DoGenOnAccCalendar(RpdId, Company, AccYearFrom, AccYearTo, IncludeYearEndPeriod);
+      exit OK;
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+group CalendarYearGroup for RpdGenOnSysCalendarStructure {
+   label = "Calendar Year";
+
+   field StartYear {
+      validate command {
+         execute {
+            set FirstYear = StartYear;
+         }
+      }
+      required = [true];
+   }
+   field StartMonth {
+      required = [true];
+   }
+   field NumberOfYears {
+      required = [true];
+   }
+}
+
+group ReportingYearGroup for RpdGenOnSysCalendarStructure {
+   label = "Reporting Year";
+
+   field FirstYear;
+}
+
+group AccYearInfoGroup for RpdGenOnAccCalendarStructure {
+   label = "Accounting Year Information";
+
+   lov CompanyRef with ReferenceCompanyFinanceSelector {
+      required = [true];
+   }
+   lov AccFromYearRef with ReferenceAccountingYearSelector {
+      editable = [Company != "" and Company != null];
+      required = [true];
+   }
+   lov AccToYearRef with ReferenceAccountingYearSelector {
+      editable = [Company != "" and Company != null];
+      required = [true];
+   }
+   field IncludeYearEndPeriod {
+      required = [true];
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list RpdIdentityList for RpdIdentity {
+   field RpdId {
+      size = Large;
+   }
+   field Description {
+      size = Large;
+   }
+
+   commandgroup ItemRPDCmdGroup {
+      command ItemRPDPeriodsCommand;
+      command ItemCompaniesPerRPDCommand;
+   }
+   commandgroup ItemGenCmdGroup {
+      command ItemGenOnSysCalCommand;
+      command ItemGenOnAccCalCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+dialog GenOnSysCalendarDlg for RpdGenOnSysCalendarStructure {
+   label = "Generate Based on System Calendar";
+   input(RpdId);
+   output(RpdId, StartYear, StartMonth, NumberOfYears, FirstYear);
+   group CalendarYearGroup;
+   group ReportingYearGroup;
+
+   command Ok {
+      label = "Ok";
+
+      enabled = [StartYear != null and StartMonth != null and NumberOfYears != null  and FirstYear != null];
+   }
+   command Cancel;
+}
+
+dialog GenOnAccCalendarDlg for RpdGenOnAccCalendarStructure {
+   label = "Generate Based on Accounting Calendar";
+   input(RpdId);
+   output(RpdId, Company, AccYearFrom, AccYearTo, IncludeYearEndPeriod);
+   group AccYearInfoGroup;
+
+   command Ok {
+      label = "Ok";
+
+      enabled = [Company != "" and AccYearFrom != null and  AccYearTo != null];
+   }
+   command Cancel;
+}
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

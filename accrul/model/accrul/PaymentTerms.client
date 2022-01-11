@@ -1,0 +1,183 @@
+client PaymentTerms;
+component ACCRUL;
+layer Core;
+projection PaymentTermsHandling;
+
+include fragment CopyToCompaniesAssistant;
+
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry PaymentTermDetailsNavEntry parent AccrulNavigator.PaymentTermsMenu at index 200 {
+      label = "Payment Terms";
+      page List home PaymentTerm;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using PaymentTermSet {
+   label = "Payment Terms";
+
+   list PaymentTermList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command PaymentTermCommand {
+   label = "Payment Term";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/PaymentTerm/Form?$contexts=Company:$[Company]&$filter=PayTermId eq $[PayTermId]";
+   }
+}
+
+command CopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PaymentTerm", "MANUAL", Selection, "Payment_Term_API") {
+         when OK {
+            exit;
+
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "PaymentTerm") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PaymentTerm", "AUTOMATIC", SelectionVar, "Payment_Term_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+command TranslationCommand {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'PaymentTerm' and AttributeKey eq $[PayTermId]";
+   }
+}
+
+command PaymentVacationDaysCommand {
+   label = "Payment Vacation Days";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/PaymentVacationDays/List?$contexts=Company:$[Company]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list PaymentTermList for PaymentTerm {
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+   /*field Company {
+      //! TODO:UXX Shdilk 171102 This is handled in Prepare_insert. If we can have company in the attr_ of prepare_insert this value will assign there. Then no need this code. now we don't have access for context company in any place. So just write here.
+      validate command {
+         execute {
+            call GetReductCashDisc(Company) into ReductCashDisc;
+            if [ReductCashDisc = "FALSE"] {
+               set CashDiscFixassAcqValue = false;
+            }
+            if [ReductCashDisc = "TRUE"] {
+               set CashDiscFixassAcqValue = true;
+            }
+         }
+      }
+      size = Small;
+   }*/
+   field PayTermId {
+      size = Small;
+   }
+   field Description;
+   field UseCommercialYear;
+   field VatDistribution {
+      size = Large;
+   }
+   field ConsiderPayVacPeriod;
+   field BlockForDirectDebiting;
+   field ExcludeCreditLimit;
+   field SuppressAmount;
+   @DynamicComponentDependency FIXASS
+   field CashDiscFixassAcqValue {
+      validate command {
+         execute {
+            if [ReductCashDisc = "FALSE" and CashDiscFixassAcqValue = true] {
+               warning("Cash Discount will only be applied to the acquisition values of FA objects in companies which allow the reduction for cash discount in Company/Fixed Assets/Acquisition Parameters.");
+            }
+         }
+      }
+   }
+
+   commandgroup DetailsCmdGroup {
+      command PaymentTermCommand;
+      command CopyToCompaniesCommand;
+      command TranslationCommand;
+      command PaymentVacationDaysCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

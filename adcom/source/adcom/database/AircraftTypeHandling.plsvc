@@ -1,0 +1,27 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AircraftTypeHandling
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201015  MADGLK  AD2020R1-792, AD2020R1-764 related aurena correction
+--  200820  SWiclk  LMM2020R1-870, Replaced Get_Aircraft_Type_Id by Get_Aircraft_Type_Code.
+--  200820  SWiclk  LMM2020R1-870, Replaced Get_Aircraft_Type_Id by Get_Aircraft_Type_Code.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+--FUNCTION Get_New_Aircraft_Type_Name___ (
+--   sub_system_code_ IN VARCHAR2 ) RETURN VARCHAR2
+--IS
+--    aircraft_type_name_ VARCHAR2(400);
+--BEGIN
+--	-- NO IMPLEMENTATION WRITTEN YET
+--   aircraft_type_name_ := Av_Aircraft_Type_API.Get_Aircraft_Type_Name(Av_Aircraft_System_API.Get_Aircraft_Type_Code(sub_system_code_)) ;
+--   RETURN aircraft_type_name_;
+--END Get_New_Aircraft_Type_Name___;
+
+

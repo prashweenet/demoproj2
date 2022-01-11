@@ -1,0 +1,88 @@
+projection TaxCodesPerAccountHandling;
+component ACCRUL;
+layer Core;
+description "Tax Code Per Account";
+category Users;
+include fragment TaxCodeCommonSelector;
+include fragment AccountsConsolidationSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountSet for Account {
+   context Company(Company);
+   where = "TAX_HANDLING_VALUE_DB != 'BLOCKED'";
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity Account {
+   crud = Read;
+   attribute TaxHandlingValue Enumeration(TaxHandlingValue) {
+      label = "Tax Handling";
+      maxlength = 200;
+   }
+   attribute TaxFlag Enumeration(TaxAccountFlag) {
+      label = "Tax Account";
+   }
+   attribute ArchivingTransValue Enumeration(ArchivingTransValue) {
+      label = "Archiving Options";
+   }
+   attribute TaxCodeMandatory Boolean {
+      label = "Tax Code Mandatory in Voucher Entry";
+   }
+
+   reference AccountRef(Company, Account) to AccountsConsolidation(Company, Account) {
+      label = "Account";
+   }
+   array AccountTaxCodeArray(Company, Account) to AccountTaxCode(Company, Account);
+}
+
+@Override
+entity AccountTaxCode {
+   crud = Create, Read, Delete;
+   attribute FeeCode Text {
+      format = uppercase;
+   }
+   attribute DefaultTaxCode Boolean("Y", "N") {
+      editable = [false];
+      updatable = [false];
+   }
+   reference FeeCodeRef(Company, FeeCode) to TaxCodeCommon(Company, FeeCode) {
+      label = "Tax Code";
+   }
+   action DoSetDefault {
+      ludependencies = AccountTaxCode;
+   }
+   action DoResetDefault {
+      ludependencies = AccountTaxCode;
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function OptionalCodeUserWhere List<Entity(TaxCodeCommon)> {
+   where = "(valid_from <=  TRUNC(SYSDATE) AND valid_until >= TRUNC(SYSDATE))";
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

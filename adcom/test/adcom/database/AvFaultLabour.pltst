@@ -1,0 +1,185 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvFaultLabour
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210309  Jihalk  LMM2020R1-1591, Modified Converted_time Method.
+--  210309  Jihalk  LMM2020R1-1591, Added Converted_time Method.
+--  201202  aruflk  LMM2020R1-1453, Added unit test for Check_Insert___().
+--  200916  Tajalk  LMM2020R1-756 - Added tests for sync logic
+--  200715  dildlk  LMM2020R1-157, Created.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Get_Skills_Count should return skills count when fault id is given" FOR
+   FUNCTION Get_Skills_Count(
+      fault_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_labour_tab
+   VALUES
+      |fault_labour_id|fault_id |
+      |1              |1        |
+      |2              |2        |
+      |3              |3        |
+      |4              |3        |
+      |5              |3        |
+      |6              |3        |
+
+   END VALUES;
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | fault_id_ |
+      | 1         |  1        |
+      | 0         |  0        |
+      | 1         |  2        |
+      | 4         |  3        |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Skills_Count(fault_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_tab
+   VALUES
+      | fault_id | mx_unique_key |
+      | 1        | 'FAULT1'      |
+   END VALUES;
+
+   @MockTable av_fault_tab
+   VALUES
+      | fault_id | mx_unique_key |
+      | 1        | 'FAULT1'      |
+   END VALUES;
+
+   @MockPackage Av_Fault_Labour_API
+   PROCEDURE Get_Id_Version_By_Mx_Uniq_Key (
+      objid_            OUT VARCHAR2,
+      objversion_       OUT VARCHAR2,
+      mx_unique_key_ IN     VARCHAR2)
+   IS
+   BEGIN
+      IF mx_unique_key_ = 'KEY1' THEN
+         objid_ := 'AAA';
+      END IF;
+   END;
+IS
+   --Insert your test variables here
+   output1_    VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+   expected2_  VARCHAR2(2000);
+   expected3_  VARCHAR2(2000);
+   expected4_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'FAULT_UNIQUE_KEY'||chr(31)||'FAULT1'||chr(30)||'WITH_FAULT_KEY'|
+      | 'MX_UNIQUE_KEY'||chr(31)||'KEY1'||chr(30)||'FAULT_LABOUR_ID'||chr(31)||'1'||chr(30)||'REC_EXISTS'|
+      | 'MX_UNIQUE_KEY'||chr(31)||'KEY2'||chr(30)||'FAULT_LABOUR_ID'||chr(31)||'2'||chr(30)||'REC_NOT_EXISTS'|
+      | 'MX_UNIQUE_KEY'||chr(31)||'KEY1'||chr(30)||'FAULT_LABOUR_ID'||chr(31)||'1'||chr(30)||'FAULT_UNIQUE_KEY'||chr(31)||'FAULT1'||chr(30)||'BOTH_EXISTS'|
+      | 'HOURS_PER_PERSON'||chr(31)||'2'||chr(30)||'WITH_NO_KEY'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_FAULT_KEY'||'FAULT_ID'||chr(31)||'1'||chr(30);
+      expected2_ := 'MX_UNIQUE_KEY'||chr(31)||'KEY1'||chr(30)||'REC_EXISTS';
+      expected3_ := 'MX_UNIQUE_KEY'||chr(31)||'KEY2'||chr(30)||'FAULT_LABOUR_ID'||chr(31)||'2'||chr(30)||'REC_NOT_EXISTS';
+      expected4_ := 'MX_UNIQUE_KEY'||chr(31)||'KEY1'||chr(30)||'BOTH_EXISTS'||'FAULT_ID'||chr(31)||'1'||chr(30);
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_FAULT_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%REC_EXISTS%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%REC_NOT_EXISTS%' THEN
+         ASSERT output1_ = expected3_ MESSAGE 'Expected '||expected3_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%BOTH_EXISTS%' THEN
+         ASSERT output1_ = expected4_ MESSAGE 'Expected '||expected4_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Check_Insert___ should ... when ..." FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_fault_labour_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   @MockPackage Av_Exe_Task_Labour_API
+   FUNCTION Get_Next_Seq  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN task_labour_id_seq.NEXTVAL;
+   END Get_Next_Seq;
+
+IS
+   test_rec1_  av_fault_labour_tab%ROWTYPE;
+   test_rec2_  av_fault_labour_tab%ROWTYPE;
+   output_  Indicator_Rec;
+BEGIN
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.fault_labour_id IS NULL THEN
+         newrec_.fault_labour_id := Get_Next_Seq();
+         ASSERT newrec_.fault_labour_id IS NOT NULL MESSAGE 'Returned '||newrec_.fault_labour_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Converted_time should return converted time" FOR
+   FUNCTION Converted_time (
+      labour_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+
+   @MockTable av_fault_labour_tab
+   VALUES
+      | hours_per_person | fault_labour_id |
+      | 1.50             | 1               |
+      | 0.50             | 2               |
+      | 150.0            | 3               |
+      | 150.500          | 4               |
+      |  NULL            | 5               |
+      |  1               | 6               |
+   END VALUES;
+
+IS
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | labour_id_ |
+      | ' 01:30'  |  1         |
+      | ' 00:30'  |  2         |
+      | '150:00'  |  3         |
+      | '150:30'  |  4         |
+      |  NULL     |  5         |
+      | ' 01:00'  |  6         |
+   LOOP
+      return_ := Converted_time(labour_id_);
+      ASSERT (expected_ IS NULL AND return_ IS NULL) OR return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;

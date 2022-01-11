@@ -1,0 +1,85 @@
+fragment NewVoucherTemplateDialog;
+component ACCRUL;
+layer Core;
+description "New Voucher Template functionality handling";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+dialog CreateVoucherTemplateDialog for CreateVoucherTemplateStructure {
+   label = "New Voucher Template";
+
+   input(Company, ValidFrom, ValidUntil, AccountingYear, VoucherType, VoucherNo, IncludeAmounts, MultiCompany);
+
+   group CreateVoucherTemplateGroup;
+
+   command Ok;
+   command Cancel;
+}
+
+group CreateVoucherTemplateGroup for CreateVoucherTemplateStructure {
+   label = "";
+
+   field Template;
+   field Description {
+      size = Large;
+   }
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid";
+   }
+   field IncludeAmounts;
+}
+
+command Ok for CreateVoucherTemplateStructure {
+   enabled = [Template != null and Description != null and ValidFrom != null and ValidUntil != null];
+
+   execute {
+      call CreateVoucherTemplate(Company, Template, Description, ValidFrom, ValidUntil, AccountingYear, VoucherType, VoucherNo, IncludeAmounts, MultiCompany);
+      exit OK;
+   }
+}
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+structure CreateVoucherTemplateStructure {
+   attribute Company Text;
+   attribute Template Text {
+      required = [true];
+      format = uppercase;
+      maxlength = 10;
+   }
+   attribute Description Text {
+      required = [true];
+      maxlength = 200;
+   }
+   attribute ValidFrom Date;
+   attribute ValidUntil Date;
+   attribute IncludeAmounts Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute AccountingYear Number;
+   attribute VoucherType Text;
+   attribute VoucherNo Number;
+   attribute MultiCompany Text;
+}
+
+structure DefaultData {
+   attribute ValidFrom Date;
+   attribute ValidUntil Date;
+}
+
+function FetchDefaultData Structure(DefaultData);
+
+action CreateVoucherTemplate {
+   initialcheck implementation;
+   parameter Company Text;
+   parameter Template Text;
+   parameter Description Text;
+   parameter ValidFrom Date;
+   parameter ValidUntil Date;
+   parameter AccountingYear Number;
+   parameter VoucherType Text;
+   parameter VoucherNo Number;
+   parameter IncludeAmount Boolean;
+   parameter MultiCompany  Text;
+}
+

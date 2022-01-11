@@ -1,0 +1,88 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingAttributeCon
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  170103  ShFrlk  STRBI-1261, Added BI related view Accounting_Attribute_Con_Bia
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Accounting_Attribute_Con2 IS
+   Prompt = 'Accounting Attribute Con'
+SELECT x.company                      company,
+       x.code_part                    code_part,
+       x.code_part_value              code_part_value,
+       x.attribute                    attribute,
+       Accounting_Code_Parts_API.Get_Name(x.company, x.code_part)
+                                      code_part_name,
+       y.attribute_value              attribute_value,
+       y.rowid                       objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                        objkey
+FROM   ( SELECT a.company         company,
+                a.attribute       attribute,
+                a.code_part       code_part,
+                c.code_part_value code_part_value
+         FROM   accounting_attribute_tab a,
+                accounting_code_part_value_tab c
+         WHERE  a.company = c.company
+         AND    a.code_part = c.code_part  ) x,
+       ACCOUNTING_ATTRIBUTE_CON_TAB y
+WHERE  x.company         = y.company         (+)
+AND    x.code_part       = y.code_part       (+)
+AND    x.attribute       = y.attribute       (+)
+AND    x.code_part_value = y.code_part_value (+);
+
+VIEW Accounting_Attribute_All_Av IS
+   Prompt = 'Accounting Attribute Con Tax Audit'
+   Attribute.Flags = 'A----'
+   Attribute_Desc.Flags = 'A----'
+   Attribute_Desc.Datatype = 'STRING(200)'
+   Attribute_Desc.Prompt = 'Attribute Description'
+   Code_Part.Flags = 'A----'
+   Code_Name.Flags = 'A----'
+   Code_Name.Datatype = 'STRING(20)'
+   Code_Name.Prompt = 'Code Name'
+   Code_Part_Value.Flags = 'A----'
+   Attribute_Value.Flags = 'A----'
+   Attribute_Value_Desc.Flags = 'A----'
+   Attribute_Value_Desc.Datatype = 'STRING(200)'
+   Attribute_Value_Desc.Prompt = 'Attribute Value Description'
+SELECT company                        company,
+       attribute                      attribute, 
+       ACCOUNTING_ATTRIBUTE_API.Get_Desc(COMPANY,ATTRIBUTE)
+				                          attribute_desc,
+       code_part                      code_part, 
+       ACCOUNTING_CODE_PARTS_API.GET_NAME(COMPANY,CODE_PART) 
+                                      code_name,
+       code_part_value                code_part_value, 
+       attribute_value                attribute_value, 
+       ACCOUNTING_ATTRIBUTE_VALUE_API.Get_Desc(company,attribute,ATTRIBUTE_VALUE) 
+				                          attribute_value_desc
+FROM   accounting_attribute_con_tab ;
+
+
+VIEW Accounting_Attribute_Con_Bia IS
+SELECT company,
+       code_part,
+       code_part_value,
+       attribute,
+       code_part_name,
+       attribute_value,
+       objkey,
+       objversion,
+       objid
+FROM   Accounting_Attribute_Con;
+

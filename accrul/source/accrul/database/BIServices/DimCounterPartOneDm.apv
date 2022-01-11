@@ -1,0 +1,52 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  CounterPartOne
+--  Component:  ACCRUL
+--  LU:         DimCounterPartOne
+--
+--  File     :  DimCounterPartOneDm.api
+--  Purpose  :  Create DATA MART dimension view DIM_COUNTER_PART_ONE_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_COUNTER_PART_ONE
+DEFINE VIEW       = DIM_COUNTER_PART_ONE_DM
+DEFINE MV         = COUNTER_PART_ONE_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimCounterPartOne
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT id                    id,
+       company               company,
+       code                  code,
+       description           description
+FROM &MV 
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Counterpart One^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Counterpart One^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Description^';
+   
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

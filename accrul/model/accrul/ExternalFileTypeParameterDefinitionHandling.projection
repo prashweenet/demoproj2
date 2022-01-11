@@ -1,0 +1,90 @@
+projection ExternalFileTypeParameterDefinitionHandling;
+component ACCRUL;
+layer Core;
+description "External File Type Parameter Definitions";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtFileTypeSet for ExtFileType;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileType {
+   crud = Read, Update;
+
+   attribute SystemDefined Boolean("TRUE", "FALSE") {
+      editable = [false];
+      updatable = [false];
+      required = [true];
+   }
+
+   array ExtFileTypeParams(FileType) to ExtFileTypeParam(FileType);
+   array ExtTypeParamSets(FileType) to ExtTypeParamSet(FileType);
+}
+
+
+@Override
+entity ExtFileTypeParam {
+   attribute ValidateMethod Text {
+      label = "Parameter Validation Method";
+   }
+   attribute LovView Text {
+      label = "List of Values View";
+      format = uppercase;
+   }
+   attribute BrowsableField Boolean("TRUE", "FALSE");
+}
+
+@Override
+entity ExtTypeParamSet {
+   attribute SetId Text {
+      label = "Parameter Set ID";
+   }
+   attribute SetIdDefault Boolean("TRUE", "FALSE") {
+      label = "Default Set ID";
+      editable = [false];
+      updatable = [false];
+   }
+   attribute SystemDefined Boolean("TRUE", "FALSE") {
+      editable = [false];
+      updatable = [false];
+   }
+
+   action SetDefault {
+      ludependencies = ExtTypeParamSet;
+   }
+   action CopyParamSet;
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function IsViewAvailable Boolean {
+   parameter ViewName Text;
+}
+
+function IsMethodAvailable Boolean {
+   parameter MethodName Text;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

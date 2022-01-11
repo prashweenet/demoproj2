@@ -1,0 +1,276 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     InterimVoucherDialog
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+FUNCTION Validate_Interim_User_Group___(
+   company_            IN VARCHAR2,   
+   accounting_year_    IN NUMBER,
+   voucher_type_  IN VARCHAR2,
+   voucher_no_    IN NUMBER,   
+   user_group_         IN VARCHAR2 )  RETURN Interim_Voucher_Dialog_Structure_Rec
+IS
+   rec_        Interim_Voucher_Dialog_Structure_Rec;
+BEGIN   
+  -- rec_ := Fetch_Interim_Vou_Defs___(company_, accounting_year_, accounting_year_, accounting_period_, simulation_voucher_);  
+   rec_ := Interim_Voucher_Default___(company_, accounting_year_, voucher_type_, voucher_no_, NULL, user_group_);
+   RETURN rec_;
+--   IF (rec_.accounting_year_period = '0 00' AND rec_.voucher_date IS NULL) THEN
+--      rec_.error_code := 'E1';
+--   END IF;
+--   
+--   IF (rec_.accounting_year_period IS NOT NULL AND rec_.voucher_date IS NOT NULL AND rec_.default_voucher_type IS NULL)THEN
+--      rec_.error_code := 'E2';
+--   END IF;   
+ RETURN rec_;  
+END Validate_Interim_User_Group___;
+
+
+FUNCTION Interim_Voucher_Default___(
+   company_          IN VARCHAR2,
+	accounting_year_  IN NUMBER,
+	voucher_type_     IN VARCHAR2,
+	voucher_no_       IN NUMBER,
+   multi_company_    IN BOOLEAN,
+   user_group_       IN VARCHAR2 DEFAULT NULL ) RETURN Interim_Voucher_Dialog_Structure_Rec
+IS
+   rec_                       Interim_Voucher_Dialog_Structure_Rec;
+   accounting_period_temp_    NUMBER;
+   accounting_year_temp_      NUMBER;
+ --  passed_acc_period_         NUMBER;
+ --  hold_acc_year_             NUMBER;
+   voucher_type_temp_         VARCHAR2(20);   
+   year_end_user_group_       BOOLEAN; 
+   user_id_                   VARCHAR2(20);
+   head_rec_                  Voucher_API.Public_Rec;
+   CURSOR get_user_group IS
+      SELECT user_group
+         FROM user_group_member_finance4
+         WHERE company  = company_
+         AND userid    = rec_.user_id
+         AND allowed_acc_period_db != '2';
+   
+BEGIN
+   rec_.company                     := company_;
+   rec_.accounting_year             := accounting_year_;
+   rec_.voucher_type                := voucher_type_;
+   rec_.voucher_no                  := voucher_no_;
+   rec_.Multi_Company               := multi_company_;
+  
+   head_rec_ := Voucher_API.Get(company_, accounting_year_, voucher_type_, voucher_no_);
+   -- Voucher is simulation or not
+   rec_.Simulation_Voucher := head_rec_.Simulation_Voucher;  
+   
+  -- passed_acc_period_      := head_rec_.accounting_period;
+  -- hold_acc_year_          := accounting_year_;
+   rec_.Interim_Accounting_Year    := accounting_year_;
+   rec_.Interim_Accounting_period  := head_rec_.accounting_period +1;
+   rec_.user_id            := Fnd_Session_API.Get_Fnd_User;
+   year_end_user_group_    := FALSE;
+   IF ( user_group_ IS NOT NULL ) THEN
+      rec_.user_group         := user_group_;
+   ELSE      
+      rec_.user_group         := head_rec_.user_group;
+   END IF;
+   
+   IF (User_Group_Finance_API.Get_Allowed_Acc_Period(company_,head_rec_.user_group) = '2') THEN      
+      rec_.Interim_Accounting_period   := 1;
+      rec_.Interim_Accounting_Year     := accounting_year_ +1;
+      year_end_user_group_     := TRUE;   
+      
+      OPEN get_user_group;
+      FETCH get_user_group INTO rec_.user_group;
+      IF (get_user_group%NOTFOUND) THEN
+         CLOSE get_user_group;
+         Error_SYS.Appl_General(lu_name_, 'USERNOTREGERROR: The User :P1 is not Registered in any non Year End User Group.', user_id_);
+      ELSE
+         CLOSE get_user_group;
+      END IF;
+   ELSE
+      rec_.user_group := head_rec_.user_group;
+   END IF;
+   
+   Accounting_Period_API.Get_Firstdate_Nextopenperiod(accounting_period_temp_,
+                                                      accounting_year_temp_,
+                                                      rec_.voucher_date,
+                                                      company_,
+                                                      rec_.Interim_Accounting_Year,
+                                                      rec_.user_group,
+                                                      rec_.Interim_Accounting_period,
+                                                      '00');
+   Voucher_Type_User_Group_API.Get_Default_Voucher_Type(voucher_type_temp_,company_,rec_.user_group,rec_.accounting_year,'R');
+   
+   
+   rec_.accounting_year_period := accounting_year_temp_ ||' '|| LPAD(accounting_period_temp_,2,'0');   
+   rec_.Interim_Accounting_Year    := accounting_year_temp_;
+   rec_.Interim_Accounting_period  := accounting_period_temp_;
+--   IF (year_end_user_group_) THEN
+--      rec_.accounting_year := accounting_year_;
+--   END IF;
+   
+   IF(head_rec_.simulation_voucher = 'TRUE') THEN
+      IF (Voucher_Type_API.Get_Simulation_Voucher(company_,voucher_type_temp_) = 'TRUE') THEN
+         rec_.interim_voucher_type :=  voucher_type_temp_; 
+      ELSE
+         rec_.interim_voucher_type := NULL;
+      END IF; 
+   ELSE
+      IF (Voucher_Type_API.Get_Simulation_Voucher(company_,voucher_type_temp_) != 'TRUE') THEN
+         rec_.interim_voucher_type :=  voucher_type_temp_; 
+      ELSE
+         rec_.interim_voucher_type := NULL;
+      END IF;
+   END IF;    
+   
+   RETURN rec_;
+END Interim_Voucher_Default___;
+   
+FUNCTION Fetch_Interim_Vou_Defs___(
+   company_          IN VARCHAR2,
+	accounting_year_  IN NUMBER,
+	voucher_type_     IN VARCHAR2,
+	voucher_no_       IN NUMBER,
+   multi_company_    IN BOOLEAN ) RETURN Interim_Voucher_Dialog_Structure_Rec
+IS
+   rec_                       Interim_Voucher_Dialog_Structure_Rec;
+   accounting_period_temp_    NUMBER;
+   accounting_year_temp_      NUMBER;
+ --  passed_acc_period_         NUMBER;
+ --  hold_acc_year_             NUMBER;
+   voucher_type_temp_         VARCHAR2(20);   
+   year_end_user_group_       BOOLEAN; 
+   user_id_                   VARCHAR2(20);
+   head_rec_                  Voucher_API.Public_Rec;
+   CURSOR get_user_group IS
+      SELECT user_group
+         FROM user_group_member_finance4
+         WHERE company  = company_
+         AND userid    = rec_.user_id
+         AND allowed_acc_period_db != '2';
+   
+BEGIN
+   rec_ := Interim_Voucher_Default___(company_, accounting_year_, voucher_type_, voucher_no_, multi_company_);
+   RETURN rec_;
+END Fetch_Interim_Vou_Defs___;
+
+FUNCTION Fetch_Year_Period___(
+   company_      IN VARCHAR2,
+   user_group_   IN VARCHAR2,
+   voucher_date_ IN DATE) RETURN Interim_Vou_Dialog_Param_Strucute_Rec
+IS
+   rec_              Interim_Vou_Dialog_Param_Strucute_Rec;
+   acc_year_         NUMBER;
+   acc_year_temp_    NUMBER;
+   acc_period_       NUMBER;
+   is_period_open_   VARCHAR2(5);
+BEGIN 
+   IF (voucher_date_ IS NOT NULL) THEN 
+      acc_year_temp_ := extract(YEAR FROM voucher_date_);
+      
+      User_Group_Period_API.Is_Period_Open_Date__(is_period_open_,company_,acc_year_temp_,voucher_date_,user_group_);
+      
+      IF(is_period_open_ != 'TRUE') THEN
+         Error_SYS.Appl_General(lu_name_, 'NOTOPENPERIOD: Voucher date is not within an open period.');
+      END IF;
+      
+      User_Group_Period_API.Get_Period(acc_year_, acc_period_, company_, user_group_,voucher_date_);
+      
+      rec_.accounting_year_period :=  acc_year_ || ' ' ||LPAD(acc_period_,2,'0');
+      rec_.accounting_year        := acc_year_;
+      rec_.accounting_period      := acc_period_;
+      RETURN rec_;
+   END IF;
+   RETURN NULL;
+END Fetch_Year_Period___;
+
+FUNCTION Validate_Interim___(
+   company_      IN VARCHAR2,
+   user_group_   IN VARCHAR2) RETURN VARCHAR2
+IS
+   temp_count_            NUMBER;
+   
+   CURSOR get_user_group IS
+   SELECT  count(*) 
+      FROM USER_GROUP_MEMBER_FINANCE4 
+      WHERE company  = company_
+      AND  userid    = Fnd_Session_API.Get_Fnd_User  
+      AND  allowed_acc_period_db != '2';
+BEGIN   
+   IF (User_Group_Finance_API.Get_Allowed_Acc_Period(company_,user_group_) = '2') THEN
+      OPEN get_user_group;
+      FETCH get_user_group INTO temp_count_;
+      CLOSE get_user_group;
+      IF (temp_count_ = 0)THEN         
+         Error_SYS.Appl_General(lu_name_, 'NOTALLOWPERIOD: The user :P1 is not registered in any ordinary user group',Fnd_Session_API.Get_Fnd_User);
+      END IF;
+   END IF;  
+   RETURN 'TRUE';
+END Validate_Interim___;
+
+PROCEDURE Create_Interim_Voucher___(
+   company_                   IN VARCHAR2,
+   accounting_year_           IN NUMBER,
+   voucher_type_              IN VARCHAR2,
+   voucher_no_                IN NUMBER,   
+   interim_voucher_type_      IN VARCHAR2,
+   interim_accounting_year_   IN NUMBER,
+   interim_accounting_period_ IN NUMBER,
+   interim_voucher_date_      IN DATE,
+   interim_user_group_        IN VARCHAR2,
+   multi_company_             IN BOOLEAN )
+IS
+   interim_vou_no_    NUMBER := 0;  
+   head_rec_         Voucher_API.Public_Rec;           
+BEGIN  
+    
+
+   head_rec_ := Voucher_API.Get(company_, accounting_year_, voucher_type_, voucher_no_);
+   
+                                                                  
+   IF (head_rec_.function_group = 'Z' OR head_rec_.revenue_cost_clear_voucher = 'TRUE' OR 
+       (Voucher_Util_Pub_API.Disable_Interim_Voucher(  head_rec_.company, 
+                                                      head_rec_.accounting_year,
+                                                      head_rec_.voucher_type, 
+                                                      head_rec_.voucher_no, 
+                                                      head_rec_.function_group ) = 'TRUE') OR 
+         (Voucher_API.Is_Cancellation_voucher__( head_rec_.company,
+                                                 head_rec_.voucher_type,
+                                                 head_rec_.accounting_year,
+                                                 head_rec_.voucher_no) = 'TRUE')) THEN
+      Error_SYS.Record_General(lu_name_, 'INVALIDOPERATION: Operation not allowed.');
+   END IF;
+      
+                                                                  
+   IF (multi_company_)THEN
+      Voucher_API.Create_Multi_Interim_Voucher(voucher_type_,
+                                               voucher_no_,
+                                               accounting_year_,
+                                               company_,
+                                               interim_voucher_type_,
+                                               interim_voucher_date_,
+                                               interim_accounting_year_,
+                                               interim_accounting_period_,
+                                               interim_user_group_);
+   ELSE
+      Voucher_API.Interim_Voucher(  interim_vou_no_,
+                                    voucher_type_,
+                                    voucher_no_,
+                                    accounting_year_,
+                                    company_,
+                                    interim_voucher_type_,
+                                    interim_voucher_date_,
+                                    interim_accounting_year_,
+                                    interim_accounting_period_,
+                                    interim_user_group_);
+   END IF;
+   
+END Create_Interim_Voucher___;
+
+

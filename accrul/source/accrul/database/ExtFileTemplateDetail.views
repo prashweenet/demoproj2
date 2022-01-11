@@ -1,0 +1,123 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtFileTemplateDetail
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+@Override
+COLUMN Column_No IS
+   Flags      = 'A-I-L';
+
+COLUMN Destination_Column IS
+   Flags      = 'K-IUL'
+   Datatype   = 'STRING(30)'
+   Prompt     = 'Destination Column';
+
+COLUMN Description IS
+   Flags      = 'AMIUL'
+   Datatype   = 'STRING(200)'
+   Prompt     = 'Description';
+
+COLUMN Data_Type IS
+   Flags      = 'PMI--'
+   Datatype   = 'STRING(20)'
+   Prompt     = 'Data Type';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Ext_File_Template_Detail_Dest IS
+   Prompt = 'Ext File Detail Destination'
+   File_Type.Flags = 'PMI--'
+   File_Type.Datatype = 'STRING(20)'
+   Record_Type_Id.Flags = 'PMI--'
+   File_Template_Id.Datatype = 'STRING(10)'
+SELECT d.file_type                    file_type,
+       d.record_type_id               record_type_id,
+       d.file_template_id             file_template_id,
+       c.destination_column           destination_column,
+       nvl(rtrim(rpad(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileTemplateDetail', c.file_type || '^' || c.record_type_id || '^' || c.column_id ),100)),c.description)
+                                      description,
+       d.rowid                        objid,
+       ltrim(lpad(to_char(d.rowversion,'YYYYMMDDHH24MISS'),2000))                   objversion,
+       c.rowkey                      objkey
+FROM   ext_file_template_detail_tab d,
+       ext_file_type_rec_column_tab c
+WHERE  d.file_type      = c.file_type
+AND    d.record_type_id = c.record_type_id
+AND    d.column_id      = c.column_id;
+
+VIEW Ext_File_Template_Detail_Rec IS
+   Prompt = 'Ext File Detail Destination'
+   File_Type.Flags = 'PMI--'
+   File_Type.Datatype = 'STRING(20)'
+   File_Template_Id.Datatype = 'STRING(10)'
+   Record_Type_Id.Flags = 'K-IUL'
+SELECT DISTINCT
+       c.file_type                    file_type,
+       d.file_template_id             file_template_id,
+       c.record_type_id               record_type_id,
+       nvl(rtrim(rpad(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileTypeRec', c.file_type || '^' || c.record_type_id ),100)),c.description)
+                                      description,
+       c.rowid                        objid,
+       ltrim(lpad(to_char(c.rowversion,'YYYYMMDDHH24MISS'),2000))                   objversion
+FROM   ext_file_template_detail_tab d,
+       ext_file_type_rec_tab c
+WHERE  d.file_type      = c.file_type
+AND    d.record_type_id = c.record_type_id;
+--GROUP BY c.file_type, d.file_template_id, c.record_type_id;
+
+VIEW Ext_File_Templ_Rec_Type IS
+   Prompt = 'Ext File Detail Destination'
+   File_Template_Id.Datatype = 'STRING(20)'
+   Record_Type_Id.Flags = 'K-IUL'
+SELECT t.file_template_id               file_template_id,
+       r.record_type_id                 record_type_id,
+       r.description                    description,
+       r.rowid                          objid,
+       ltrim(lpad(to_char(r.rowversion,'YYYYMMDDHH24MISS'),2000))
+                                        objversion,
+       r.rowkey                        objkey
+FROM   ext_file_type_rec_tab r,
+       ext_file_template_tab t
+WHERE  r.file_type = t.file_type
+AND EXISTS
+   (SELECT 1
+    FROM   ext_file_template_detail_tab d
+    WHERE  d.file_template_id = t.file_template_id
+    AND    d.record_type_id   = r.record_type_id);
+
+VIEW Ext_File_Templ_Column IS
+   Prompt = 'Ext File Detail Destination'
+   File_Template_Id.Datatype = 'STRING(20)'
+   Record_Type_Id.Flags = 'PMI--'
+   Column_Id.Flags = 'K-IUL'
+   Column_Id.Datatype = 'STRING(20)'
+SELECT d.file_template_id               file_template_id,
+       d.record_type_id                 record_type_id,
+       c.data_type                      data_type,
+       d.column_id                      column_id,
+       c.description                    description,
+       d.rowid                          objid,
+       ltrim(lpad(to_char(d.rowversion,'YYYYMMDDHH24MISS'),2000))
+                                        objversion,
+       d.rowkey                        objkey
+FROM   ext_file_template_detail_tab d,
+       ext_file_template_tab        t,
+       ext_file_type_rec_column_tab c
+WHERE  d.file_template_id = t.file_template_id
+AND    t.file_type        = c.file_type
+AND    d.record_type_id   = c.record_type_id
+AND    d.column_id        = c.column_id;
+

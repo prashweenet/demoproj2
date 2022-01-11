@@ -1,0 +1,24 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvExeTaskStep
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200907  majslk  LMM2020R1-113, Override Av_Exe_Task_Step view.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+@Override
+VIEW Av_Exe_Task_Step IS
+SELECT Av_Exe_Task_Step_API.Get_Objstate(task_step_id) STEP_STATUS_DB;
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

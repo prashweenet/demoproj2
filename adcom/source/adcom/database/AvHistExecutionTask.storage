@@ -1,0 +1,20 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistExecutionTask
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+UNIQUE CONSTRAINT av_hist_exe_task_uc1 IS av_hist_execution_task_tab (task_alt_id);
+INDEX av_hist_exe_task_ix1 IS av_hist_execution_task_tab (inventory_id);
+-------------------- OTHER DEFINITIONS --------------------------------------
+
+-------------------- OTHER DEFINITIONS --------------------------------------

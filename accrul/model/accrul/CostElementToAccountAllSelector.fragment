@@ -1,0 +1,64 @@
+fragment CostElementToAccountAllSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view cost_element_to_account_all";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCostElementToAccountAllSelector for CostElementToAccountAll {
+   orderby = SortValue;
+   static Account;
+   static CodePartValueDesc;
+}
+
+@Override
+list CostElementToAccountAllLovList for CostElementToAccountAll {
+   orderby = SortValue;
+}
+
+card CostElementToAccountAllCard for CostElementToAccountAll {
+   label = "";
+   fieldranking Account;
+   field Account;
+   field CodePartValueDesc;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CostElementToAccountAll {
+   from = "cost_element_to_account_all";
+   lu = CostElementToAccount;
+   keys = Company, Account, ValidFrom;
+   ludependencies = CostElementToAccount;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Account Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute CodePart Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CodePartValueDesc Text {
+      label = "Code Part Value Description";
+      lovcolumn = [true];
+   }
+   attribute ProjectCostElement Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [false];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

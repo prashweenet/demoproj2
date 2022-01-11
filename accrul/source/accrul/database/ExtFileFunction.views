@@ -1,0 +1,24 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtFileFunction
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@Override
+VIEW Ext_File_Function IS
+WHERE  Ext_File_Function_API.Check_Valid(function_id) = 'TRUE';
+

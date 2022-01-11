@@ -1,0 +1,49 @@
+fragment AccountingPeriodLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view accounting_period_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccountingPeriodLovSelector for AccountingPeriodLov {
+   static AccountingYear;
+   static AccountingPeriod;
+   static Description;
+}
+
+card AccountingPeriodLovCard for AccountingPeriodLov {
+   label = "";
+   fieldranking AccountingYear;
+   field AccountingYear;
+   field AccountingPeriod;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccountingPeriodLov {
+   from = "accounting_period_lov";
+   lu = AccountingPeriod;
+   keys = Company, AccountingYear, AccountingPeriod;
+   ludependencies = AccountingPeriod;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute AccountingYear Number {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute PeriodStatus Text {
+      lovcolumn = [true];
+   }
+   attribute AccountingPeriod Number {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

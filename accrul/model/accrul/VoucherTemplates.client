@@ -1,0 +1,95 @@
+client VoucherTemplates;
+component ACCRUL;
+layer Core;
+projection VoucherTemplatesHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry VoucherTemplatesNavEntry parent AccrulNavigator.ManualVoucherMenu at index 400 {
+      label = "Voucher Templates";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using VoucherTemplates {
+   label = "Voucher Templates";
+   list VoucherTemplateList {
+      details = "/page/VoucherTemplate/Form?$filter=Company eq $[Company] and Template eq $[Template]";
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list VoucherTemplateList for VoucherTemplate {
+   field Template {
+      size = Small;
+   }
+   field Description {
+      size = Medium;
+      height = large;
+
+
+   }
+   field MultiCompany {
+      size = Small;
+      validate command {
+         variable DummyVar {
+            type = Text;
+         }
+         execute {
+            if [MultiCompany = false] {
+               call ValidateMultiCompany(Company, Template) into DummyVar;
+            }
+         }
+      }
+
+   }
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Validity";
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

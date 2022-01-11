@@ -1,0 +1,114 @@
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210407  SUPKLK  AD-1065, Changed Priority from enum to Text
+--  210112  LAHNLK  LMM2020R1-1481, Modified..
+--  201013  majslk  LMM2020R1-1285, Added FoundonType enumeration
+--  200703  MADGLK  LMM2020R1-276, Modified Status machine
+--  200701  SatGlk  LMM2020R1-187, Corrected AircraftRef with AircraftLov
+--  200630  SatGlk  LMM2020R1-187, Added Priority, DeferralId
+--  200617  LAHNLK  LMM2020R1-74: created.
+-----------------------------------------------------------------------------
+projection FaultHandling;
+component ADCOM;
+layer Core;
+description "This page uses to list down all the Fault Information";
+category Users;
+include fragment AircraftLovSelector;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AvFaultSet for AvFault;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvFault {
+   attribute FaultId Number {
+      required = [false];
+   }
+   attribute Priority Text {
+      fetch = "Av_Exe_Task_API.Get_Priority(Av_Exe_Task_API.Get_Task_Id(fault_id))";
+   }
+   attribute DeferralId Text {
+      fetch = "Av_Fault_Deferral_API.Get_Active_Deferral(fault_id)";
+   }
+   attribute Objstate Enumeration(FaultStatus) {
+      fetch = "objstate";
+      label = "State";
+      maxlength = 50;
+      editable = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   attribute FoundOnType Enumeration(FoundonType);
+
+   array        FaultActionArray(FaultId)                 to  AvFaultAction(FaultId);
+   array        FaultDeadlineArray(FaultId)               to  AvFaultDeadline(FaultId);
+   reference    AvFaultDeferralRef(DeferralId)            to  AvFaultDeferral(DeferralId);
+   reference    AircraftRef(AircraftId)                   to  AircraftLov(AircraftId);
+   reference    AircraftSubSystemRef(SubSystemId) to  AvAircraftSubSystem(SubSystemId);
+   reference    FoundByUserRef(FoundByUser)               to  FndUser(Identity);
+   reference    PhaseOfFlightCodeRef(PhaseOfFlightCode)   to  AvPhaseOfFlight(PhaseOfFlightCode);
+   reference    LogbookTypeCodeRef(LogbookTypeCode)       to  AvLogbookType(LogbookTypeCode);
+   reference    FaultSourceCodeRef(FaultSourceCode)       to  AvFaultSource(FaultSourceCode);
+   reference    FailureTypeCodeRef(FailureTypeCode)       to  AvFailureType(FailureTypeCode);
+}
+
+@Override
+entity AvFaultAction {
+   attribute FaultActionId Number {
+      required = [false];
+   }
+   attribute FaultId Number {
+      required = [false];
+   }
+   reference    FaultIdRef(FaultId) to  AvFault(FaultId);
+}
+
+@Override
+entity AvFaultDeadline {
+   attribute FaultId Number {
+      required = [false];
+   }
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+enumeration FaultStatus {
+   value = "Open" {
+      label = "Open";
+   }
+   value = "Deferred" {
+      label = "Deferred";
+   }
+   value = "Closed" {
+      label = "Closed";
+   }
+}
+
+enumeration FoundonType {
+   value = "Task" {
+      label = "Task";
+   }
+   value = "Flight" {
+      label = "Flight";
+   }
+}
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

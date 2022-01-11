@@ -1,0 +1,520 @@
+client ExternalFileTemplate;
+component ACCRUL;
+layer Core;
+projection ExternalFileTemplateHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ExternalFileTemplateNavEntry parent AccrulNavigator.ExternalFileBasicDataMenu at index 300 {
+      label = "External File Template";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ExtFileTemplateSet {
+   label = "External File Template";
+   crudactions {
+      delete {
+         enabled = [not SystemDefined];
+      }
+      duplicate {
+         enabled = [false];
+      }
+   }
+
+
+   selector ExtFileTemplateSelector;
+   group ExternalFileTemplateGroup bind ExtFileTemplateSelector;
+   arrange {
+      group LineTypeGroup bind ExtFileTemplateSelector;
+      arrange {
+         group NumberColumnsGroup bind ExtFileTemplateSelector;
+
+      }
+   }
+   tabs {
+      tab {
+         label = "Details";
+         list ExtFileTemplateDetailList(Details) bind ExtFileTemplateSelector;
+      }
+      tab {
+         label = "Input Files";
+         singleton ExtFileTemplateInSingleton(InputDirSet) bind ExtFileTemplateSelector;
+         arrange {
+            group FileNameOptionsGroup bind ExtFileTemplateInSingleton;
+            arrange {
+               group FileUnpackOptionsGroup bind ExtFileTemplateInSingleton;
+               group ProcessingOptionsGroup bind ExtFileTemplateInSingleton;
+            }
+         }
+         arrange {
+            group MethodsGroup bind ExtFileTemplateInSingleton;
+            arrange {
+               group RemoveTransOptionsGroup bind ExtFileTemplateInSingleton;
+               group RecordHandlingGroup bind ExtFileTemplateInSingleton;
+            }
+         }
+      }
+      tab {
+         label = "OutPut Files";
+         singleton ExtFileTemplateOutSingleton(OutPutDirSet) bind ExtFileTemplateSelector;
+         arrange {
+            group CreationOptionGroup bind ExtFileTemplateOutSingleton;
+            arrange {
+               group RemoveTransactionOptionsGroup bind ExtFileTemplateOutSingleton;
+               group XMLCreationGroup bind ExtFileTemplateOutSingleton;
+            }
+
+         }
+         group ApiToCallGroup bind ExtFileTemplateOutSingleton;
+      }
+   }
+
+   command ExternalFileSeparatorCommand;
+   command CheckIfDefinitionisValidCommand;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ExternalFileSeparatorCommand for ExtFileTemplate {
+   label = "External File Separator";
+   enabled = [true];
+   execute {
+      navigate "page/ExternalFileSeparators/List";
+   }
+}
+
+command CheckIfDefinitionisValidCommand for ExtFileTemplate {
+   label = "Check If Definition is Valid";
+   variable InfoVar;
+
+   enabled = [not SystemDefined and not ValidDefinition];
+   execute {
+      call CheckValidDefinition(SystemDefined) into InfoVar;
+      if [InfoVar != null] {
+         info("${InfoVar}");
+      }
+   }
+}
+
+command ExternalFileTemplateControlCommand {
+   label = "External File Template Control";
+   execute {
+      navigate "page/ExternalFileTemplateControl/Form?$filter=FileTemplateId eq $[FileTemplateId] and FileDirection eq IfsApp.ExternalFileTemplateControlHandling.FileDirection'${FileDirection}'";
+   }
+}
+
+command DetailFunctionsCommand for ExtFileTemplateDetail {
+   label = "Detail Functions";
+   execute {
+      assistant ExtFileTemplDetFuncAssistant(FileTemplateId, FileType, RecordTypeId, ColumnId, RowNo) {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+command ImportFileCommand for ImportStyleSheetVirtual {
+   icon = "upload";
+   label = "Upload";
+   mode = Global;
+   enabled = [component.UploadQueue.Count = 1 and component.UploadQueue.InvalidFileList = ""];
+   execute {
+      upload "ImportStyleSheetVirtualSet(Objkey=$[Objkey])/XmlStyleSheet";
+      call ImportFile();
+      success("Style Sheet was successfully imported");
+      exit OK;
+   }
+}
+
+command XmlImportCommand for OutExtFileTemplateDir {
+   label = "Import XSL";
+   enabled = [not parent.SystemDefined and not isNew];
+   execute {
+      assistant ImportStyleSheetAssistant(XmlStyleSheetName, XmlStyleSheet, FileTemplateId, FileDirection) {
+         when CANCEL {
+            exit CANCEL;
+         }
+         when OK {
+            refresh;
+         }
+      }
+   }
+}
+
+command XmlExportCommand for OutExtFileTemplateDir {
+   label = "Export XSL";
+   enabled = [XmlStyleSheetName != null];
+   execute {
+      download "OutExtFileTemplateDirSet(FileTemplateId=$[FileTemplateId],FileDirection=$[FileDirection])/XmlStyleSheet";
+   }
+
+}
+
+command XmlClearCommand for OutExtFileTemplateDir {
+   label = "Clear XSL";
+   enabled = [not parent.SystemDefined and XmlStyleSheetName != null];
+   execute {
+      call RemoveStyleSheet();
+      success("Style Sheet was successfully Cleared");
+   }
+
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ExtFileTemplateSelector for ExtFileTemplate {
+   orderby = FileTemplateId;
+   label = "${FileTemplateId} - ${Description}";
+
+   static FileTemplateId;
+   static Description;
+}
+
+singleton ExtFileTemplateInSingleton for InExtFileTemplateDir {
+   crudactions {
+      new {
+         enabled = [not parent.SystemDefined];
+      }
+      delete {
+         enabled = [not parent.SystemDefined];
+      }
+   }
+   command ExternalFileTemplateControlCommand;
+}
+
+singleton ExtFileTemplateOutSingleton for OutExtFileTemplateDir {
+   crudactions {
+      new {
+         enabled = [not parent.SystemDefined];
+      }
+      delete {
+         enabled = [not parent.SystemDefined];
+      }
+   }
+   command ExternalFileTemplateControlCommand;
+   commandgroup XmlFileGroup {
+
+      command XmlImportCommand;
+      command XmlExportCommand;
+      command XmlClearCommand;
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ExternalFileTemplateGroup for ExtFileTemplate {
+   label = "";
+
+   field FileTemplateId;
+   field Description {
+      editable = [not SystemDefined];
+   }
+   lov FileTypeRef with ReferenceExtFileTypeSelector {
+      search = FileType, Description;
+      description = FileTypeRef.Description;
+   }
+   field ValidDefinition;
+   field ActiveDefinition;
+   field SystemDefined;
+}
+
+group LineTypeGroup for ExtFileTemplate {
+   label = "Line Type";
+   field FileFormat {
+      editable = [not SystemDefined];
+   }
+   lov SeparatorIdRef with ReferenceExtFileSeparatorSelector {
+      search = SeparatorId, Description;
+      description = SeparatorIdRef.Description;
+   }
+   field TextQualifier;
+
+}
+
+group NumberColumnsGroup for ExtFileTemplate {
+   label = "Number/Date Columns";
+
+   field DecimalSymbol;
+   field Denominator;
+   field DateFormat;
+   field DateNlsCalendar;
+}
+
+group FileUnpackOptionsGroup for InExtFileTemplateDir {
+   label = "File Unpack Options";
+
+   field LogInvalidLines;
+   field LogSkippedLines;
+   field AbortImmediatly;
+}
+
+group ProcessingOptionsGroup for InExtFileTemplateDir {
+   label = "Processing Options";
+
+   field SkipAllBlanks {
+      editable = [not parent.SystemDefined];
+   }
+   field SkipInitialBlanks {
+      editable = [not parent.SystemDefined];
+   }
+}
+
+group FileNameOptionsGroup for InExtFileTemplateDir {
+   label = "File Name - Path Options";
+
+   field FileName;
+   field LoadFileTypeList {
+      editable = [not parent.SystemDefined];
+   }
+   field CharacterSet;
+   lov FilePathServerRef with ReferenceOracleDirectoryQuerySelector;
+   lov BackupFilePathServerRef with ReferenceOracleDirectoryQuerySelector;
+}
+
+group RemoveTransOptionsGroup for InExtFileTemplateDir {
+   label = "Remove Transaction Options";
+
+   field RemoveDays;
+   field RemoveComplete;
+}
+
+group MethodsGroup for InExtFileTemplateDir {
+   label = "Package Options";
+
+   field ApiToCall {
+      size = FullWidth;
+
+   }
+   field ApiToCallUnpBefore {
+      size = FullWidth;
+   }
+   field ApiToCallUnpAfter {
+      size = FullWidth;
+   }
+}
+
+
+group RecordHandlingGroup for InExtFileTemplateDir {
+   label = "Record Handling Options";
+   field AllowRecordSetRepeat {
+      editable = [not parent.SystemDefined];
+   }
+   field AllowOneRecordSetOnly {
+      editable = [not parent.SystemDefined];
+   }
+}
+
+
+group CreationOptionGroup for OutExtFileTemplateDir {
+   label = "Creation Options";
+
+   field FileName;
+   field NameOption {
+      editable = [not parent.SystemDefined];
+   }
+   lov FilePathServerRef with ReferenceOracleDirectoryQuerySelector;
+   field NumberOutFillValue {
+      editable = [not parent.SystemDefined];
+   }
+   field CharacterSet;
+   field OverwriteFile {
+      editable = [not parent.SystemDefined];
+   }
+   field CreateHeader {
+      editable = [not parent.SystemDefined];
+   }
+   field RemoveEndSeparator;
+}
+
+group RemoveTransactionOptionsGroup for OutExtFileTemplateDir {
+   label = "Remove Transaction Options";
+   field RemoveDays;
+   field RemoveComplete;
+}
+
+
+group XMLCreationGroup for OutExtFileTemplateDir {
+   label = "XML Creation Options";
+
+   field CreateXmlFile {
+      editable = [not parent.SystemDefined];
+   }
+   field XmlStyleSheetName {
+      editable = [not parent.SystemDefined];
+   }
+}
+
+
+group ApiToCallGroup for OutExtFileTemplateDir {
+   label = "Package Options";
+   field ApiToCall;
+}
+
+
+group ExtFileTemplDetFuncGroup for ExtFileTemplDetFuncVirtual {
+   label = "";
+
+   lov FileTemplateRef with ExtFileTemplateSelector {
+      search = FileTemplateId, Description;
+      description = FileTemplateRef.Description;
+   }
+   lov ExtFileTypeRecColumnRef with ExtFileTypeRecColumnSelector {
+      search = ColumnId, Description;
+      description = ExtFileTypeRecColumnRef.Description;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileTemplateDetailList for ExtFileTemplateDetail {
+   orderby = RecordTypeId, OrderByColumnNo, OrderByColumnSort, ColumnNo, StartPosition;
+   crudactions {
+      new {
+         enabled = [not parent.SystemDefined];
+      }
+      delete {
+         enabled = [not parent.SystemDefined];
+      }
+   }
+
+   lov RecordTypeIdRef with ReferenceExtFileTypeRecSelector {
+      label = "Record Type ID";
+      editable = [not parent.SystemDefined];
+
+   }
+   lov ExtFileTypeRecColumnRef with ReferenceExtFileTypeRecColumnSelector {
+      label = "Column ID";
+      editable = [not parent.SystemDefined];
+      validate command {
+         execute {
+            call GetDestinationColumn(FileType, RecordTypeId, ColumnId) into DestinationColumn;
+         }
+      }
+   }
+   field ExtFileTypeRecColumnRef.Description;
+   field ExtFileTypeRecColumnRef.DataType;
+   field ColumnNo {
+      editable = [not parent.SystemDefined];
+   }
+   field StartPosition {
+      editable = [not parent.SystemDefined];
+   }
+   field EndPosition {
+      editable = [not parent.SystemDefined];
+   }
+   field DetailFunctions;
+   field DateFormat {
+      editable = [not parent.SystemDefined];
+   }
+   field Denominator {
+      editable = [not parent.SystemDefined];
+   }
+   field ControlColumn;
+   field ExtFileTypeRecColumnRef.DestinationColumn;
+   field HideColumn;
+   field ColumnSort;
+   field MaxLength;
+
+   command DetailFunctionsCommand;
+}
+
+
+list ExtFileTemplDetFuncList for ExtFileTemplDetFunc {
+   label = "Functions";
+
+   field FunctionNo;
+   field MainFunctionRef;
+   field FunctionArgument;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+assistant ExtFileTemplDetFuncAssistant using ExtFileTemplDetFuncVirtualSet {
+   label = "Detail Functions";
+   input(FileTemplateId, FileType, RecordTypeId, ColumnId, RowNo);
+
+   steps {
+      step {
+         group ExtFileTemplDetFuncGroup;
+         list ExtFileTemplDetFuncList(ExtFileTemplDetFuncArray);
+      }
+      final step {
+
+      }
+      cancelled step {
+
+      }
+   }
+   finish command {
+      execute {
+         navigate back;
+      }
+   }
+   cancel command {
+      visible = [false];
+   }
+   restart command {
+      visible = [false];
+   }
+}
+
+
+assistant ImportStyleSheetAssistant using ImportStyleSheetVirtualSet {
+   label = "Upload Style Sheet";
+
+   input(XmlStyleSheetName, XmlStyleSheet, FileTemplateId, FileDirection);
+   output(FileName);
+
+   singlestep {
+      fileselector {
+         multifile = [false];
+         init command {
+            execute {
+               set component.UploadQueue.AcceptedExtensions = ".XSL";
+            }
+         }
+         onfileselect {
+            execute {
+               set FileName = component.UploadQueue.FileList;
+            }
+         }
+         label = "Browse";
+      }
+   }
+   command ImportFileCommand;
+   command Cancel;
+}

@@ -1,0 +1,101 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     AccountCommonHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Default_Code_Part_Demands___(
+   company_      IN VARCHAR2,
+   account_type_ IN VARCHAR2 ) RETURN Code_Part_Demands_Structure_Rec
+IS
+   code_part_demands_structure_rec_  Code_Part_Demands_Structure_Rec;   
+BEGIN
+   Account_Type_API.Get_Default_Codepart_Demands_(
+      code_part_demands_structure_rec_.req_code_b_default,
+      code_part_demands_structure_rec_.req_code_c_default,
+      code_part_demands_structure_rec_.req_code_d_default,
+      code_part_demands_structure_rec_.req_code_e_default,
+      code_part_demands_structure_rec_.req_code_f_default,
+      code_part_demands_structure_rec_.req_code_g_default,
+      code_part_demands_structure_rec_.req_code_h_default,
+      code_part_demands_structure_rec_.req_code_i_default,
+      code_part_demands_structure_rec_.req_code_j_default,
+      code_part_demands_structure_rec_.req_quantity_default,
+      code_part_demands_structure_rec_.text_default,
+      code_part_demands_structure_rec_.process_code_default,
+      code_part_demands_structure_rec_.req_bud_code_b_default,
+      code_part_demands_structure_rec_.req_bud_code_c_default,
+      code_part_demands_structure_rec_.req_bud_code_d_default,
+      code_part_demands_structure_rec_.req_bud_code_e_default,
+      code_part_demands_structure_rec_.req_bud_code_f_default,
+      code_part_demands_structure_rec_.req_bud_code_g_default,
+      code_part_demands_structure_rec_.req_bud_code_h_default,
+      code_part_demands_structure_rec_.req_bud_code_i_default,
+      code_part_demands_structure_rec_.req_bud_code_j_default,
+      code_part_demands_structure_rec_.req_bud_quantity_default,
+      company_,
+      account_type_);
+   RETURN code_part_demands_structure_rec_;
+END Default_Code_Part_Demands___; 
+
+FUNCTION Validate_Account_Group___(
+   company_       IN VARCHAR2,
+   account_       IN VARCHAR2,
+   account_group_ IN VARCHAR2,
+   req_code_b_    IN VARCHAR2,
+   req_code_c_    IN VARCHAR2,
+   req_code_d_    IN VARCHAR2,
+   req_code_e_    IN VARCHAR2,
+   req_code_f_    IN VARCHAR2,
+   req_code_g_    IN VARCHAR2,
+   req_code_h_    IN VARCHAR2,
+   req_code_i_    IN VARCHAR2,
+   req_code_j_    IN VARCHAR2,
+   curr_balance_  IN BOOLEAN) RETURN Accounting_Group_Defaults_Structure_Rec
+IS
+   accounting_group_defaults_rec_  Accounting_Group_Defaults_Structure_Rec;   
+   account_rec_                    accounting_code_part_value_tab%ROWTYPE;
+BEGIN
+   account_rec_.company         := company_;
+   account_rec_.accnt_group     := account_group_;
+   account_rec_.code_part_value := account_;
+   account_rec_.req_code_b      := req_code_b_;
+   account_rec_.req_code_c      := req_code_c_;
+   account_rec_.req_code_d      := req_code_d_;
+   account_rec_.req_code_e      := req_code_e_;
+   account_rec_.req_code_f      := req_code_f_;
+   account_rec_.req_code_g      := req_code_g_;
+   account_rec_.req_code_h      := req_code_h_;
+   account_rec_.req_code_i      := req_code_i_;
+   account_rec_.req_code_j      := req_code_j_;
+   
+   Account_API.Validate_Account_Group(account_rec_);
+   
+   accounting_group_defaults_rec_.req_code_b := account_rec_.req_code_b;
+   accounting_group_defaults_rec_.req_code_c := account_rec_.req_code_c;
+   accounting_group_defaults_rec_.req_code_d := account_rec_.req_code_d;
+   accounting_group_defaults_rec_.req_code_e := account_rec_.req_code_e;
+   accounting_group_defaults_rec_.req_code_f := account_rec_.req_code_f;
+   accounting_group_defaults_rec_.req_code_g := account_rec_.req_code_g;
+   accounting_group_defaults_rec_.req_code_h := account_rec_.req_code_h;
+   accounting_group_defaults_rec_.req_code_i := account_rec_.req_code_i;
+   accounting_group_defaults_rec_.req_code_j := account_rec_.req_code_j;
+   accounting_group_defaults_rec_.req_code_j := account_rec_.req_code_j;
+   
+   IF (account_rec_.curr_balance = 'Y') THEN
+      accounting_group_defaults_rec_.curr_balance := true;
+   ELSIF(account_rec_.curr_balance = 'N') THEN 
+      accounting_group_defaults_rec_.curr_balance := false;
+   ELSE
+      accounting_group_defaults_rec_.curr_balance := curr_balance_;
+   END IF;
+   accounting_group_defaults_rec_.master_com_code_part_value := account_rec_.master_com_code_part_value;
+   RETURN accounting_group_defaults_rec_;
+END Validate_Account_Group___; 

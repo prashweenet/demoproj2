@@ -1,0 +1,13 @@
+projection CurrencyUpdateAssistantHandling;
+component ACCRUL;
+layer Core;
+description "Currency Update Assistant Handling";
+category Users;
+
+include fragment ExtFileAssistant;
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+
+------------------------------ ENTITY DETAILS -------------------------------

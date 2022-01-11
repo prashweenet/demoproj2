@@ -1,0 +1,142 @@
+----------------------------------------------------------------------------
+--
+--  Dimension:  CostStructure
+--  Component:  ACCRUL
+--  LU:         DimCostStructure
+--
+--  File        : MVAccrul_DimCostStructure.cre
+--  Purpose     : Create Materialized views, constraints and indexes for ACCRUL BRA Services
+--  Localization: No translation needed.
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+
+
+-- ***** &MV - Start *****
+
+DEFINE MV     = COST_STRUCTURE_MV   
+DEFINE TAB    = COST_STRUCTURE_ITEM_TAB
+DEFINE TAB2   = COST_STRUCTURE_TAB
+DEFINE TAB3   = COMPANY_TAB 
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+'CREATE MATERIALIZED VIEW &MV 
+ TABLESPACE &IFSAPP_DATA
+ BUILD DEFERRED
+ USING NO INDEX
+ REFRESH COMPLETE ON DEMAND
+ EVALUATE USING CURRENT EDITION
+ AS 
+SELECT a.company || ''^'' || a.cost_structure_id || ''^'' || a.name_value || ''^'' || a.cost_struct_item_type
+                                                                           id,
+       a.company                                                           company,
+       a.cost_structure_id                                                 code,
+       a.cost_structure_id                                                 cost_structure_id,
+       a2.description                                                      structure_description,
+       Cost_Struct_Item_Type_API.Decode(a.cost_struct_item_type) item_type,
+       a.cost_struct_item_type                                        item_type_db,
+       a.name_value                                                        node_element,
+       a.description                                                       node_description,
+       a.level_id                                                          level_id,
+       Cost_Structure_Level_API.Get_Description (a.company, a.cost_structure_id, a.level_id)
+                                                                           level_description,
+       a.item_above                                                        parent_node
+FROM   &TAB  a,
+       &TAB2 a2
+WHERE  a.company           = a2.company
+AND    a.cost_structure_id = a2.cost_structure_id
+AND    a2.rowstate         = ''Active''
+UNION ALL
+       SELECT company||''^''||''#''||''^''||''#''||''^''||''#''                                          id,
+              company                                                                                    company,
+              NULL                                                                                       code,
+              NULL                                                                                       node_element,
+              NULL                                                                                       item_type_db,
+              NULL                                                                                       cost_structure_id,
+              NULL                                                                                       structure_description,
+              NULL                                                                                       item_type,
+              NULL                                                                                       node_description,
+              NULL                                                                                       level_id,
+              NULL                                                                                       level_description,
+              NULL                                                                                       parent_node
+       FROM   &TAB3
+UNION ALL
+       SELECT ''#''||''^''||''#''||''^''||''#''||''^''||''#''                                            id,
+              NULL                                                                                       company,
+              NULL                                                                                       code,
+              NULL                                                                                       node_element,
+              NULL                                                                                       item_type_db,
+              NULL                                                                                       cost_structure_id,
+              NULL                                                                                       structure_description,
+              NULL                                                                                       item_type,
+              NULL                                                                                       node_description,
+              NULL                                                                                       level_id,
+              NULL                                                                                       level_description,
+              NULL                                                                                       parent_node
+       FROM BI_DUAL_TAB
+    ';
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+   index_name_ := table_name_||'_UIX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Set_Table_Column (columns_ , 'NODE_ELEMENT');
+   Database_SYS.Set_Table_Column (columns_ , 'ITEM_TYPE_DB');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'U',
+                               '&IFSAPP_INDEX');
+   Database_SYS.Reset_Column_Table(columns_);
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE TAB
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** &MV - End *****
+------------------------------------------------------------------

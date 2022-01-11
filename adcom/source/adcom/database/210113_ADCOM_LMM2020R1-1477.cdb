@@ -1,0 +1,208 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210113_ADCOM_LMM2020R1-1477.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210113   kawjlk  Added new id for AvAircraftSubSystem and AvAircraftSubSystem LU
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+DECLARE
+BEGIN
+   DELETE FROM AV_AIRCRAFT_SUB_SYSTEM_TAB;
+END;
+/
+
+DECLARE
+BEGIN
+   DELETE FROM AV_AIRCRAFT_SYSTEM_TAB;
+END;
+/
+
+DECLARE
+BEGIN
+   DELETE FROM AV_DEFERRAL_REFERENCE_TAB;
+END;
+/
+
+DECLARE
+BEGIN
+   DELETE FROM AV_FAULT_TAB;
+END;
+/
+
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SYSTEM_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   IF NOT Database_SYS.Column_Exist(table_name_, 'SYSTEM_ID') AND NOT Database_SYS.Column_Exist(table_name_, 'MX_UNIQUE_KEY') THEN
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'SYSTEM_ID', 'NUMBER', 'N');
+      Database_SYS.Set_Table_Column(columns_, 'MX_UNIQUE_KEY', 'VARCHAR2(100)', 'Y');
+      Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+   END IF;
+END;
+/
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SYSTEM_PK';
+   table_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SYSTEM_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   IF Database_SYS.Column_Exist(table_name_, 'SYSTEM_CODE')  AND Database_SYS.Constraint_Exist(index_name_) THEN
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'SYSTEM_CODE');
+      Database_SYS.Remove_Constraints(table_name_, index_name_, TRUE); 
+   END IF;
+END;
+/
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SYSTEM_PK';
+   table_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SYSTEM_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   IF Database_SYS.Column_Exist(table_name_, 'SYSTEM_ID') AND NOT Database_SYS.Constraint_Exist(index_name_)THEN
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'SYSTEM_ID');
+      Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+   END IF;
+END;
+/
+
+DECLARE
+   sequence_name_ VARCHAR2(30) := 'AV_SYSTEM_SEQ';
+BEGIN
+   Database_SYS.Create_Sequence(sequence_name_, 'MAXVALUE 999999999999999 INCREMENT BY 1 START WITH 1 NOCACHE', TRUE);
+END;
+/
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SUB_SYSTEM_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   IF NOT Database_SYS.Column_Exist(table_name_, 'SUB_SYSTEM_ID')THEN
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'SUB_SYSTEM_ID', 'NUMBER', 'N');
+      Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+   END IF;
+   
+   IF NOT Database_SYS.Column_Exist(table_name_, 'MX_UNIQUE_KEY') THEN
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'MX_UNIQUE_KEY', 'VARCHAR2(100)', 'Y');
+      Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+   END IF;
+   
+   IF NOT Database_SYS.Column_Exist(table_name_, 'SYSTEM_ID') THEN
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'SYSTEM_ID', 'NUMBER', 'Y');
+      Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+   END IF;
+END;
+/
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SUB_SYSTEM_TAB';
+   column_ Database_SYS.ColRec;
+BEGIN
+   IF Database_SYS.Column_Exist(table_name_, 'SYSTEM_CODE') THEN
+      column_ := Database_SYS.Set_Column_Values('SYSTEM_CODE', 'VARCHAR2(50)', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'D', column_);
+   END IF; 
+END;
+/
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SUB_SYSTEM_PK';
+   table_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SUB_SYSTEM_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   IF Database_SYS.Column_Exist(table_name_, 'SUB_SYSTEM_CODE') AND Database_SYS.Constraint_Exist(index_name_) THEN
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'SUB_SYSTEM_CODE');
+      Database_SYS.Remove_Constraints(table_name_, index_name_, TRUE);
+   END IF;  
+END;
+/
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SUB_SYSTEM_PK';
+   table_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SUB_SYSTEM_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   IF Database_SYS.Column_Exist(table_name_, 'SUB_SYSTEM_ID') AND NOT Database_SYS.Constraint_Exist(index_name_) THEN
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'SUB_SYSTEM_ID');
+      Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+   END IF;
+END;
+/
+
+DECLARE
+   sequence_name_ VARCHAR2(30) := 'AV_SUB_SYSTEM_SEQ';
+BEGIN
+   Database_SYS.Create_Sequence(sequence_name_, 'MAXVALUE 999999999999999 INCREMENT BY 1 START WITH 1 NOCACHE', TRUE);
+END;
+/
+
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_FAULT_TAB';
+   column_ Database_SYS.ColRec;
+BEGIN
+   IF Database_SYS.Column_Exist(table_name_, 'SUB_SYSTEM_CODE') THEN 
+      column_ := Database_SYS.Set_Column_Values('SUB_SYSTEM_CODE', 'VARCHAR2(50)', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'D', column_);
+   END IF; 
+END;
+/
+
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_FAULT_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   IF NOT Database_SYS.Column_Exist(table_name_, 'SUB_SYSTEM_ID') THEN 
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'SUB_SYSTEM_ID', 'NUMBER', 'Y');
+      Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+   END IF;
+END;
+/
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_DEFERRAL_REFERENCE_TAB';
+   column_ Database_SYS.ColRec;
+BEGIN
+   IF Database_SYS.Column_Exist(table_name_, 'SUB_SYSTEM_CODE') THEN 
+      column_ := Database_SYS.Set_Column_Values('SUB_SYSTEM_CODE', 'VARCHAR2(50)', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'D', column_);
+   END IF;
+END;
+/
+
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_DEFERRAL_REFERENCE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   IF NOT Database_SYS.Column_Exist(table_name_, 'SUB_SYSTEM_ID') THEN 
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'SUB_SYSTEM_ID', 'NUMBER', 'Y');
+      Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+   END IF;
+END;
+/
+
+SET SERVEROUTPUT OFF

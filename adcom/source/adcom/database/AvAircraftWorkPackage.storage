@@ -1,0 +1,22 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvAircraftWorkPackage
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date          Sign    History
+--  ------        ------  ---------------------------------------------------------
+--  17-06-2020    ROSDLK   LMM2020R1-76, Created.
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+UNIQUE CONSTRAINT av_aircraft_wp_no_uc IS av_aircraft_work_package_tab(wo_number);
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+SEQUENCE AIRCRAFT_WORK_PACKAGE_SEQ IS INCREMENT BY 1 START WITH 1 NOCACHE;
+

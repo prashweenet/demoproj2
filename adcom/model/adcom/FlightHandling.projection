@@ -1,0 +1,82 @@
+---------------------------------------------------------------------------------
+--  Date          Sign    History
+--  ----------    ------  ---------------------------------------------------------
+--  2020-07-01    SatGlk  LMM2020R1-187, Corrected AircraftRef with AircraftLov
+--  2020-07-01    TAJALK  LMM2020R1-252, Changes
+--  2020-06-29    TAJALK  LMM2020R1-208, Changes to Turn Status
+--  2020-06-16    TAJALK  LMM2020R1-73 - Created.
+-----------------------------------------------------------------------------------
+projection FlightHandling;
+
+component ADCOM;
+layer Core;
+description "Flight API handled from this";
+category Users;
+include fragment AircraftLovSelector;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset FlightSet for AvFlight;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvFlight {
+   attribute FlightId Number {
+      required = [false];
+   }
+   attribute IsHistoric Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute TurnStatus Enumeration(TurnStatusEnum) {
+      editable = [false];
+      fetch = "Av_Flight_API.Get_Turn_Status(flight_id)";
+   }
+
+   reference AircraftRef(AircraftId) to AircraftLov(AircraftId);
+   reference DepartureAirportRef(DepartureAirportId) to AvAirport(AirportId);
+   reference ArrivalAirportRef(ArrivalAirportId) to AvAirport(AirportId);
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+enumeration TurnStatusEnum {
+   value = "Inbound" {
+      label = "Inbound";
+   }
+   value = "Arrived" {
+      label = "Arrived";
+   }
+   value = "Departed" {
+      label = "Departed";
+   }
+   value = "InMaintenance" {
+      label = "In Maintenance";
+   }
+   value = "Released" {
+      label = "Released";
+   }
+   value = "NotApplicable" {
+      label = "Not Applicable";
+   }
+}
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

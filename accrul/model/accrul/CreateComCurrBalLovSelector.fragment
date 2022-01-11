@@ -1,0 +1,45 @@
+fragment CreateComCurrBalLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view create_com_curr_bal_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCreateComCurrBalLovSelector for CreateComCurrBalLov {
+   static CodePart;
+   static CodeName;
+}
+
+card CreateComCurrBalLovCard for CreateComCurrBalLov {
+   label = "";
+   fieldranking CodePart;
+   field CodePart;
+   field CodeName;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CreateComCurrBalLov {
+   from = "create_com_curr_bal_lov";
+   lu = AccountingCodeParts;
+   keys = Company, CodePart;
+   ludependencies = AccountingCodeParts;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CodePart Text {
+      lovcolumn = [true];
+   }
+   attribute CodeName Text {
+      lovcolumn = [true];
+   }
+   attribute CodePartUsed Enumeration(FinanceYesNo) {
+      lovcolumn = [true];
+      fetch = "code_part_used_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

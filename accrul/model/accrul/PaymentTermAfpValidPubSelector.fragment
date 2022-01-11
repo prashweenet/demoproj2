@@ -1,0 +1,59 @@
+fragment PaymentTermAfpValidPubSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view payment_term_afp_valid_pub";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferencePaymentTermAfpValidPubSelector for PaymentTermAfpValidPub {
+   static PayTermId;
+   static Description;
+}
+
+card PaymentTermAfpValidPubCard for PaymentTermAfpValidPub {
+   label = "";
+   fieldranking PayTermId;
+   field PayTermId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query PaymentTermAfpValidPub {
+   from = "payment_term_afp_valid_pub";
+   lu = PaymentTerm;
+   keys = Company, PayTermId;
+   ludependencies = PaymentTerm;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute PayTermId Text {
+      label = "Payment Term";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute BlockForDirectDebiting Boolean("TRUE", "FALSE") {
+      lovcolumn = [true];
+   }
+   attribute ConsiderPayVacPeriod Text {
+      lovcolumn = [false];
+   }
+   attribute VatDistribution Enumeration(VatDistribution) {
+      lovcolumn = [false];
+      fetch = "vat_distribution_db";
+   }
+   attribute UseCommercialYear Text {
+      lovcolumn = [false];
+   }
+   attribute ExcludeCreditLimit Text {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

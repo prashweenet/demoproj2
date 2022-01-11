@@ -1,0 +1,72 @@
+projection CurrencyRateTypesHandling;
+component ACCRUL;
+layer Core;
+description "Currency Rate Types";
+category Users;
+include fragment CompanyFinance1Selector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CurrencyTypeSet for CurrencyType {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CurrencyType {
+   keys = Company, CurrencyType;
+   from = "currency_type3";
+   supportwarnings = [true];
+
+   attribute CurrencyType Text {
+      label = "Currency Rate Type";
+   }
+   attribute Description Text {
+      label = "Currency Rate Type Description";
+   }
+   attribute TypeDefault Enumeration(FinanceYesNo) {
+      label = "Default Type";
+      required = [false];
+      updatable = [false];
+   }
+   attribute RefCurrencyCode Text {
+      editable = [ETag = null];
+   }
+
+   reference RefCurrencyCodeRef(Company, RefCurrencyCode) to CompanyFinance1(Company, ReferenceCurrency) {
+      label = "Ref Currency Code";
+   }
+   reference CurrencyCodeRef(Company, RefCurrencyCode) to CurrencyCode(Company, CurrencyCode) {
+      label = "Currency Code";
+   }
+
+   action DoSetDefaultType {
+      ludependencies = CurrencyType;
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

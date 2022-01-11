@@ -1,0 +1,745 @@
+client MultiCompanyVoucherEntryAssistant;
+component ACCRUL;
+layer Core;
+
+projection MultiCompanyVoucherEntryAssistantHandling;
+
+--------------------------------- FRAGMENTS ---------------------------------
+include fragment Voucher;
+include fragment InterimVoucherDialog;
+include fragment CodeStringAllBasic;
+@DynamicComponentDependency INTLED
+include fragment InternalManualPostingAssistant;
+include fragment VoucherTypeUserGroup3Selector;
+
+warningsenabled = CreateMultiCompanyVoucher;
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+-------------------------------- MAIN PAGES ---------------------------------
+assistant Assistant using MultiCompanyVoucherSet {
+   label = "New Multi-Company Voucher";
+   savemode = OnLostFocus;
+
+   setup InitVoucherAssistant {
+      variable InitOpennedFrom {
+         type = Text;
+      }
+      variable InitCompany {
+         type = Text;
+      }
+      variable InitAccountingYear {
+         type = Number;
+      }
+      variable InitVoucherType {
+         type = Text;
+      }
+      variable InitVoucherNo {
+         type = Number;
+      }
+      variable InitPostingMethod {
+         type = Enumeration(CorrectionType);
+      }
+      execute {
+         set OpennedFrom = "${InitOpennedFrom}";
+         set CompanyFrom = "${InitCompany}";
+         set AccountingYearFrom = InitAccountingYear;
+         set VoucherTypeFrom = "${InitVoucherType}";
+         set VoucherNoFrom = InitVoucherNo;
+         set PostingMethod = InitPostingMethod;
+         set FunctionGroup = "M";
+      }
+   }
+   init command {
+      execute {
+         set Company = "${context.Company}";
+      }
+   }
+
+   steps {
+      step {
+         group VoucherEntryGroup;
+         group VoucherPostingSummaryGroup;
+         list VoucherPostingList(VoucherPostingArray) {
+            copyoncruddefault(UseCorrectionRows, computed.RowGroupIdValue) to(Correction, RowGroupId);
+         }
+      }
+      final step {
+      }
+   }
+   finish command {
+      label = "Create Voucher";
+      enabled = [component.Assistant.IsActiveStepDirty = false];
+      variable VoucherNumber {
+         type = Number;
+      }
+      variable InterimVoucherDialogStructVar {
+         type = Structure(InterimVoucherDialogStructure);
+      }
+
+      execute {
+         call CreateMultiCompanyVoucher() into VoucherNumber;
+         if [SimulationVoucher = "TRUE" and InterimVoucher != "TRUE" and VoucherStatus = "Approved"] {
+            call ValidateInterim(Company, UserGroup) {
+               when SUCCESS {
+                  call FetchInterimVouDefs(Company, AccountingYear, VoucherType, VoucherNumber, MultiCompany) into InterimVoucherDialogStructVar;
+                  dialog InterimVoucherDialog(InterimVoucherDialogStructVar) {
+                     when OK {
+                        info("Voucher ${VoucherNumber} created.");
+                        navigate "page/Voucher/Form?$filter=Company eq $[Company] and VoucherType eq $[VoucherType]  and AccountingYear eq $[AccountingYear] and VoucherNo eq $[VoucherNumber]";
+                     }
+                  }
+               }
+               when FAIL {
+                  error("${error.Message}");
+               }
+            }
+         }
+         info("Voucher ${VoucherNumber} created.");
+         navigate "page/MultiCompanyVoucher/Form?$filter=Company eq $[Company] and VoucherType eq $[VoucherType]  and AccountingYear eq $[AccountingYear] and VoucherNo eq $[VoucherNumber]";
+      }
+   }
+   cancel command {
+      execute {
+         call RemoveTempVoucher();
+         navigate back;
+      }
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+assistant CopyGenledVoucherAssistant using CopyGlHeaderVirtualSet {
+   label = "Copy GL Voucher Rows";
+
+   input(Company, VoucherObjkey, UseCorrectionRows);
+
+   init command {
+      execute {
+         if [UseCorrectionRows] {
+            set PostingMethod = "Correction";
+         }
+      }
+   }
+   singlestep {
+      group PostingMethod;
+      @DynamicComponentDependency GENLED
+      list GenledVoucherList(GenLedVoucherVirtualArray);
+   }
+
+   command CopyVoucher;
+   command Cancel;
+}
+
+assistant UseTemplateAssistant using UseTemplateVirtualSet {
+   label = "Use Voucher Template";
+   input(VoucherObjkey, Company, VoucherDate);
+
+   singlestep {
+      list UseVoucherTemplateList(TemplateArray);
+   }
+
+   command CopyTemplateRowsCommand;
+   command Cancel;
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+command CopyVoucher for CopyGlHeaderVirtual {
+   label = "Copy";
+   enabled = [component.GenledVoucherList.SelectionCount > 0];
+
+   execute {
+      call CopyGenledVoucher(VoucherObjkey, component.GenledVoucherList.Selection, PostingMethod);
+   }
+}
+
+@Override
+command ValidateVoucherDate for VoucherEntry {
+}
+
+@Override
+command ValidateCompany for VoucherPosting {
+   variable DefaultCompanyDataStruct {
+      type = Structure(DefaultCompanyDataStructure);
+   }
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   variable OldCurrencyRate {
+      type = Number;
+   }
+   variable OldCurrencyType {
+      type = Text;
+   }
+   variable IsCredit {
+      type = Boolean;
+   }
+
+   execute {
+      set Account = null;
+      set AccountRef = null;
+      set CodeB = null;
+      set CodeC = null;
+      set CodeD = null;
+      set CodeE = null;
+      set CodeF = null;
+      set CodeG = null;
+      set CodeH = null;
+      set CodeI = null;
+      set CodeJ = null;
+      set ProcessCode = null;
+      set ProjectActivityId = null;
+      set CurrencyCode = CompanyFinanceRef.CurrencyCode;
+      set AccountingCurrency = CompanyFinanceRef.CurrencyCode;
+      set ParallelCurrency = CompanyFinanceRef.ParallelAccCurrency;
+
+
+      if [not(Company = null)] {
+         call DefaultCompanyData(parent.Objkey, Company) into DefaultCompanyDataStruct {
+            when SUCCESS {
+               copy DefaultCompanyDataStruct into this;
+               set IsCredit = false;
+               if [not(CurrencyCreditAmount = null)] {
+                  set IsCredit = true;
+               }
+               if[CurrencyCreditAmount = null and CurrencyDebetAmount = null] {
+                  set CurrencyAmount = null;
+               }
+
+               if[DebetAmount = null and CreditAmount = null] {
+                  set Amount = null;
+               }
+
+               if[ThirdCurrencyDebitAmount = null and ThirdCurrencyCreditAmount = null] {
+                  set ThirdCurrencyAmount = null;
+               }
+
+               call GetValidEmu(Company, CurrencyCode, parent.VoucherDate) into IsEmu;
+
+               call ValidateCurrencyCodeVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+               CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+               CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount,
+               OptionalCode, TaxPercentage, TaxDirection, parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+               copy CurrencyAmountStruct into this;
+//               set Amount = CurrencyAmountStruct.Amount;
+//               set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//               set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//               set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//               set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//               set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//               set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//               set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//               set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//               set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//               set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//               set ParallelCurrencyTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//               set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//               set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//               set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//               set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//               set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//               set ParallelCurrCovFact = CurrencyAmountStruct.ParallelConversionFactor;
+//               set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//               set ParallelCurrCovFact = CurrencyAmountStruct.ParallelConversionFactor;
+//               set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//               set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+
+            }
+            when FAIL {
+               error("${error.Message}");
+            }
+         }
+
+      }
+   }
+}
+
+
+@DynamicComponentDependency GENLED
+command CopyGLVoucherRowsCommand for VoucherPosting {
+   label = "Copy GL Voucher Rows";
+   mode = Global;
+
+   enabled = [not(VoucherType = null or AccountingYear = null or AccountingPeriod = null or AmountMethod = null or UserGroup = null)];
+
+   execute {
+
+      assistant CopyGenledVoucherAssistant(Company, Objkey, UseCorrectionRows) {
+         when CANCEL {
+            refresh;
+         }
+         when OK {
+            refresh;
+         }
+      }
+   }
+}
+
+command UseVoucherTemplateCommand for VoucherPosting {
+   label = "Use Voucher Template";
+   mode = Global;
+
+   enabled = [VoucherStatus != null and VoucherStatus != "Cancelled"
+   and(FunctionGroup in("M", "K", "Q", "Z") or(FunctionGroup = "Z" and RevenueCostClearVoucher = "PCAMA"))
+   and AuthorizeLevel != "ApproveOnly" and IsCancellation != "TRUE"];
+
+   execute {
+      assistant UseTemplateAssistant(Objkey, Company, VoucherDate) {
+         when CANCEL {
+            exit;
+         }
+         when OK {
+            refresh;
+         }
+      }
+   }
+}
+
+@DynamicComponentDependency GENLED
+assistant CopyVoucherDetailsAssistant using CopyGlVoucherDetailsHeaderVirtualSet {
+   label = "GL Voucher Rows Analysis";
+   input(Company, VoucherNo, VoucherType, AccountingYear);
+
+   singlestep {
+      group GlVoucherHeaderInfoGroup;
+      list GlVoucherRowList(GlVoucherRowsArray);
+
+   }
+   command Ok;
+}
+
+command CopyTemplateRowsCommand for UseVoucherTemplateVirtual {
+   label = "OK";
+   execute {
+      call CopyTemplateRows(VoucherObjkey, VoucherDate, component.UseVoucherTemplateList.Selection);
+   }
+}
+
+---------------------------------- GROUPS -----------------------------------
+
+@Override
+group VoucherEntryGroup for VoucherEntry {
+   field VoucherDate {
+      validate command ValidateVoucherDateEntry;
+   }
+   field ManualBalanceDb {
+      size = Small;
+   }
+}
+
+//group VoucherEntryGroup for VoucherEntry {
+//   label = "";
+//
+//   field VoucherDate {
+//      validate command {
+//         variable AccountingYearPeriodVar {
+//            type = Structure(AccountingYearPeriodInfoStruct);
+//         }
+//         execute {
+//            call AccYearPeriodInfo(Company, VoucherDate, UserGroup) into AccountingYearPeriodVar;
+//            set AccountingYear = AccountingYearPeriodVar.AccountingYear;
+//            set AccountingPeriod = AccountingYearPeriodVar.AccountingPeriod;
+//            set AccountingPeriodDescription = AccountingYearPeriodVar.AccPeriodDescription;
+//
+//            call VoucherHeaderInfo(Company, AccountingYear, UserGroup, VoucherType) into VoucherHeaderInfoVar;
+//            set Automatic = VoucherHeaderInfoVar.Automatic;
+//            set FunctionGroup = VoucherHeaderInfoVar.FunctionGroup;
+//            set SimulationVoucher = VoucherHeaderInfoVar.SimulationVoucher;
+//            set UseApporvalWorkflow = VoucherHeaderInfoVar.UseApporvalWorkflow;
+//            if [UseApporvalWorkflow = "TRUE"] {
+//               set VoucherStatus = "AwaitingApproval";
+//            }
+//            else {
+//               if [VoucherHeaderInfoVar.AuthorizeLevel = "Approved"] {
+//                  set VoucherStatus = "Approved";
+//               }
+//               else {
+//                  set VoucherStatus = "AwaitingApproval";
+//               }
+//            }
+//         }
+//      }
+//   }
+//   lov UserGroupRef with ReferenceUserGroupMemberFinance4Selector {
+//      size = Small;
+//      validate command {
+//         variable AccountingYearPeriodVar {
+//            type = Structure(AccountingYearPeriodInfoStruct);
+//         }
+//         variable VoucherHeaderInfoVar {
+//            type = Structure(VoucherHeaderInfoStructure);
+//         }
+//         execute {
+//            call VoucherHeaderInfo(Company, AccountingYear, UserGroup, VoucherType) into VoucherHeaderInfoVar;
+//            set Automatic = VoucherHeaderInfoVar.Automatic;
+//            set FunctionGroup = VoucherHeaderInfoVar.FunctionGroup;
+//            set SimulationVoucher = VoucherHeaderInfoVar.SimulationVoucher;
+//            set UseApporvalWorkflow = VoucherHeaderInfoVar.UseApporvalWorkflow;
+//            if [UseApporvalWorkflow = "TRUE"] {
+//               set VoucherStatus = "AwaitingApproval";
+//            }
+//            else {
+//               if [VoucherHeaderInfoVar.AuthorizeLevel = "Approved"] {
+//                  set VoucherStatus = "Approved";
+//               }
+//               else {
+//                  set VoucherStatus = "NotApproved";
+//               }
+//            }
+//            if [VoucherHeaderInfoVar.AuthorizeLevel = "ApproveOnly"] {
+//               set VoucherType = null;
+//               error("Users included in a user group with Approve Only authorization level are not allowed to enter or modify vouchers.");
+//            }
+//
+//            call AccYearPeriodInfo(Company, VoucherDate, UserGroup) into AccountingYearPeriodVar;
+//            set AccountingYear = AccountingYearPeriodVar.AccountingYear;
+//            set AccountingPeriod = AccountingYearPeriodVar.AccountingPeriod;
+//            set AccountingPeriodDescription = AccountingYearPeriodVar.AccPeriodDescription;
+//         }
+//      }
+//   }
+//   lov VoucherTypeRef with ReferenceVoucherTypeUserGroup3Selector {
+//      description = VoucherTypeRef.VoucherTypeDesc;
+//      size = Small;
+//      validate command {
+//         variable VoucherHeaderInfoVar {
+//            type = Structure(VoucherHeaderInfoStructure);
+//         }
+//         execute {
+//            call VoucherHeaderInfo(Company, AccountingYear, UserGroup, VoucherType) into VoucherHeaderInfoVar;
+//            set Automatic = VoucherHeaderInfoVar.Automatic;
+//            set FunctionGroup = VoucherHeaderInfoVar.FunctionGroup;
+//            set SimulationVoucher = VoucherHeaderInfoVar.SimulationVoucher;
+//            set UseApporvalWorkflow = VoucherHeaderInfoVar.UseApporvalWorkflow;
+//            set VoucherNo = 0;
+//            if [UseApporvalWorkflow = "TRUE"] {
+//               set VoucherStatus = "AwaitingApproval";
+//            }
+//            else {
+//               if [VoucherHeaderInfoVar.AuthorizeLevel = "Approved"] {
+//                  set VoucherStatus = "Approved";
+//               }
+//               else {
+//                  set VoucherStatus = "NotApproved";
+//               }
+//            }
+//         }
+//      }
+//   }
+//   field VoucherNo {
+//      size = Small;
+//      editable = [Automatic != "Y" and VoucherType != null];
+//   }
+//   field VoucherStatus {
+//      label = "Voucher Status";
+//      size = Small;
+//   }
+//   field AccountingYear {
+//      size = Small;
+//   }
+//   field AccountingPeriod {
+//      size = Small;
+//   }
+//   field AccountingPeriodDescription;
+//   field AmountMethod {
+//      size = Small;
+//      editable = [FunctionGroup in("K", "M", "Q")];
+//   }
+//   field Notes {
+//      visible = [PageType = "EntryVoucherForm"];
+//   }
+//   field UseCorrectionRows {
+//      size = Small;
+//      editable = [((FunctionGroup = "M" or FunctionGroup = "K" or FunctionGroup = "Q") and(VoucherStatus = "Waiting") or((FunctionGroup = "M" or FunctionGroup = "K" or FunctionGroup = "Q") and(VoucherStatus = "AwaitingApproval" or VoucherStatus = "Confirmed")))];
+//   }
+//   field TextIdRef {
+//      size = Small;
+//   }
+//   field VoucherText2 {
+//      size = Large;
+//   }
+//   field ManualBalanceDb;
+//   field MultiCompanyMode;
+//   field RowGroupValidation;
+//
+//
+//}
+
+group PostingMethod for CopyGlHeaderVirtual {
+   label = "";
+   field PostingMethod;
+}
+
+@DynamicComponentDependency GENLED
+group GlVoucherHeaderInfoGroup for CopyGlVoucherDetailsHeaderVirtual {
+   label = "";
+
+   field VoucherNo {
+      size = Small;
+   }
+   field AccountingYear {
+      size = Small;
+   }
+   field VoucherType {
+      size = Small;
+   }
+
+   computedfield DebitAmount {
+      value = "#{GlVoucherRowsArray.sum(DebetAmount)}";
+      type = Number;
+      format = ifscurrency;
+   }
+   computedfield CreditAmount {
+      value = "#{GlVoucherRowsArray.sum(CreditAmount)}";
+      type = Number;
+      format = ifscurrency;
+   }
+   computedfield Balance {
+      value = "#{GlVoucherRowsArray.sum(Amount)}";
+      type = Number;
+      format = ifscurrency;
+      size = Small;
+   }
+}
+
+----------------------------------- LISTS -----------------------------------
+
+@Override
+fieldset VoucherRowAmountsFieldSet {
+
+   field AccountingCurrency;
+   fieldorder {
+      anchor ConversionFactor;
+      followedby AccountingCurrency;
+   }
+}
+
+@Override
+list VoucherPostingList for VoucherPosting {
+   savemode = Default;
+   crudactions {
+      new {
+         enabled = [not(parent.IsDirty = true)];
+      }
+      delete {
+         enabled = [not(parent.IsDirty = true)];
+      }
+      edit {
+         enabled = [not(parent.IsDirty = true)];
+      }
+   }
+
+   field RowGroupId {
+      columnvisible = [(parent.MultiCompanyMode and not(parent.ManualBalanceDb)) or parent.RowGroupValidation = "Y"];
+      columnexclude = [not((parent.MultiCompanyMode and not(parent.ManualBalanceDb)) or parent.RowGroupValidation = "Y")];
+      editable = [(parent.MultiCompanyMode and not(parent.ManualBalanceDb)) or parent.RowGroupValidation = "Y"];
+      required = [(parent.MultiCompanyMode and not(parent.ManualBalanceDb)) or parent.RowGroupValidation = "Y"];
+    --  format = decimal;
+      type = Number;
+   }
+
+   @DynamicComponentDependency GENLED
+   command CopyGLVoucherRowsCommand;
+   command UseVoucherTemplateCommand;
+
+
+}
+@DynamicComponentDependency GENLED
+list GenledVoucherList for GenLedVoucher {
+   label = "GL Vouchers";
+   multiselect = [false];
+
+   field VoucherType {
+      size = Small;
+   }
+   field VoucherNo;
+   field IsMultiCompanyVoucher {
+      size = Small;
+   }
+   field VoucherDate;
+   field UserGroup {
+      size = Small;
+   }
+   field AccountingYear {
+      size = Small;
+   }
+   field AccountingPeriod {
+      size = Small;
+   }
+   field DateReg;
+   field Userid {
+      label = "User ID";
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field Notes {
+      size = Small;
+   }
+   field JouNo;
+   field InterimVoucher {
+      size = Small;
+   }
+   field VoucherTypeReference {
+      size = Small;
+   }
+   field VoucherNoReference;
+   field AccountingYearReference;
+}
+
+list UseVoucherTemplateList for VoucherTemplate {
+   multiselect = [true];
+
+   lov TemplateRef with ReferenceVoucherTemplateSelector {
+      search = Template, Description;
+      description = Description;
+   }
+   field MultiCompany;
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid";
+   }
+}
+
+@Override
+list VoucherTemplateLovList for VoucherTemplate {
+   label = "";
+   static Template;
+   static Description;
+
+}
+
+
+@Override
+group VoucherPostingSummaryGroup for VoucherEntry {
+   field PostingCompanyRef {
+      editable = [component.VoucherPostingList.RowCount > 0];
+      visible = [ManualBalanceDb = true];
+
+   }
+   field PostingRowGroupIdRef {
+      size = Small;
+      editable = [component.VoucherPostingList.RowCount > 0];
+      visible = [ManualBalanceDb = false];
+   }
+   computedfield CurrencyBalance {
+      value = "#{ManualBalanceDb ? (VoucherPostingArray.sum(Company == parent.PostingCompany ? (IsStatAccount == 'TRUE' ? 0 : CurrencyAmount) : 0) + (AmountMethod == 'NetAmountEntry' ? VoucherPostingArray.sum(Company == parent.PostingCompany ? (IsStatAccount == 'TRUE' ? 0 : CurrencyTaxAmount) : 0) : 0)) : (VoucherPostingArray.sum(RowGroupId == parent.PostingRowGroupId ? (IsStatAccount == 'TRUE' ? 0 : CurrencyAmount) : 0) + (AmountMethod == 'NetAmountEntry' ? VoucherPostingArray.sum(RowGroupId == parent.PostingRowGroupId ? (IsStatAccount == 'TRUE' ? 0 : CurrencyTaxAmount) : 0) : 0))}";
+      type = Number;
+      format = ifscurrency;
+   }
+   computedfield BalanceInAccountingCurrency {
+      label = "Balance in Accounting Currency";
+      value = "#{ManualBalanceDb ? (VoucherPostingArray.sum(Company == parent.PostingCompany ? (IsStatAccount == 'TRUE' ? 0 : Amount) : 0) + (AmountMethod == 'NetAmountEntry' ? VoucherPostingArray.sum(Company == parent.PostingCompany ? (IsStatAccount == 'TRUE' ? 0 : TaxAmount) : 0) : 0)) : NULL}";
+      type = Number;
+      format = ifscurrency;
+   }
+   computedfield BalanceInParallelCurrency {
+      label = "Balance in Parallel Currency";
+      value = "#{ManualBalanceDb ? (VoucherPostingArray.sum(Company == parent.PostingCompany ? (IsStatAccount == 'TRUE' ? 0 : ThirdCurrencyAmount) : 0) + (AmountMethod == 'NetAmountEntry' ? VoucherPostingArray.sum(Company == parent.PostingCompany ? (IsStatAccount == 'TRUE' ? 0 : ParallelCurrTaxAmount) : 0) : 0)) : NULL}";
+      type = Number;
+      format = ifscurrency;
+   }
+   computedfield RowGroupIdValue {
+      label = "Next Row Group ID";
+      value = "#{VoucherPostingArray.count(RowGroupId) == 0 ? 1 : ManualBalanceDb==false? ((VoucherPostingArray.sum((IsStatAccount == 'TRUE' ? 0 : CurrencyAmount)+(IsStatAccount == 'TRUE' ? 0 : (parent.AmountMethod == 'NetAmountEntry' ? CurrencyTaxAmount: 0))) ==0)? (VoucherPostingArray.max(RowGroupId)+1):VoucherPostingArray.max(RowGroupId)): ((VoucherPostingArray.sum((IsStatAccount == 'TRUE' ? 0 : ThirdCurrencyAmount)+(IsStatAccount == 'TRUE' ? 0 : (parent.AmountMethod == 'NetAmountEntry' ? ParallelCurrTaxAmount: 0))) + VoucherPostingArray.sum((IsStatAccount == 'TRUE' ? 0 : Amount)+(IsStatAccount == 'TRUE' ? 0 : (parent.AmountMethod == 'NetAmountEntry' ? TaxAmount: 0)))) ==0 ? VoucherPostingArray.max(RowGroupId) + 1 : VoucherPostingArray.max(RowGroupId))}";
+
+      size = Small;
+      type = Number;
+      visible = [RowGroupValidation = "Y" or not(ManualBalanceDb)];
+   }
+   fieldorder = PostingCompanyRef, PostingRowGroupIdRef;
+}
+
+
+
+@DynamicComponentDependency GENLED
+list GlVoucherRowList for GenLedVoucherRow {
+   label = "GL Voucher Rows";
+
+   field Correction {
+      size = Small;
+
+   }
+
+   fieldset CodeStringAllBasicLovFieldSet;
+
+   field DebetAmount;
+   field CreditAmount;
+   field Amount;
+   field CurrencyCode {
+      size = Small;
+   }
+   field CurrencyRate;
+   field ConversionFactor;
+   field CurrencyDebetAmount;
+   field CurrencyCreditAmount;
+   field CurrencyAmount;
+   field ParallelCurrencyRate;
+   field ParallelConversionFactor;
+   field ThirdCurrencyDebitAmount;
+   field ThirdCurrencyCreditAmount;
+   field ThirdCurrencyAmount;
+   field Text;
+   field Quantity;
+   field ProcessCode {
+      size = Small;
+   }
+   @DynamicComponentDependency INVOIC
+   lov DelivTypeIdRef with ReferenceDeliveryTypeSelector {
+      search = DelivTypeId, Description;
+      description = DelivTypeIdRef.Description;
+   }
+   field OptionalCode {
+      size = Small;
+   }
+   field PartyTypeId {
+      size = Small;
+   }
+   field TransCode {
+      size = Small;
+   }
+   field TransferId {
+      size = Small;
+   }
+   field Corrected {
+      size = Small;
+   }
+   field ReferenceSerie {
+      size = Small;
+   }
+   field ReferenceNumber {
+      size = Small;
+   }
+}
+
+----------------------------------- CARDS -----------------------------------
+
+--------------------------------- SELECTOR ----------------------------------
+
+@Override
+selector ReferenceVoucherTemplateSelector for VoucherTemplate {
+   label = "";
+   static Template;
+   static Description;
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+
+----------------------------------- TREES -----------------------------------
+
+---------------------------------- PLUGINS ----------------------------------
+
+------------------------------- IMAGE VIEWERS -------------------------------

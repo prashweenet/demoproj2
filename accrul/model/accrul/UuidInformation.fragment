@@ -1,0 +1,76 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 200821      Sacnlk  GESPRING20-5337, gelr: Added to support Global Extension Functionalities.
+----------------------------------------------------------------------------------------------------
+
+fragment UuidInformation;
+component ACCRUL;
+layer Core;
+description "Uuid Number Information";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+----------------------------------- LISTS -----------------------------------
+
+-- gelr:epayment_receipt, begin
+@Override
+@DynamicComponentDependency PAYLED
+list UuidInformationLovList for UuidInformation {
+   static Company {
+      columnvisible = [false];
+   }
+   static SourceRef1 {
+      label = "Payment Receipt ID";
+   }
+   static SourceRef2 {
+      columnvisible = [false];
+   }
+   static SourceRef3 {
+      columnvisible = [false];
+   }
+   static SourceRefType {
+      columnvisible = [false];
+   }
+   static UuidNumber {
+      label = "Payment UUID Number";
+      size = Large;
+   }
+   static UuidDate {
+      label = "Payment UUID Date";
+   }
+}
+-- gelr:epayment_receipt, end
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+-- gelr:epayment_receipt, begin
+@DynamicComponentDependency PAYLED
+function MultilovRelatedUuid List < Entity(UuidInformation) > {
+   parameter Company Text;
+   where = "company = :Company
+            AND source_ref1 IN
+               (SELECT TO_CHAR(r.pay_receipt_id)
+                FROM payment_receipt r, payment p
+                WHERE r.company = :Company
+                AND r.company = p.company
+                AND r.series_id = p.series_id
+                AND r.payment_id = p.payment_id
+                AND p.payment_rollback_status_db NOT IN ('NOTCANCELLED','NOTROLLEDBACK')
+                AND r.way_id IS NOT NULL)
+            AND source_ref_type = Uuid_Source_Ref_Type_API.Get_Client_Value(4)";
+}
+-- gelr:epayment_receipt, end
+
+---------------------------------- ACTIONS ----------------------------------
+-- gelr:epayment_receipt, begin
+action ValidateCancelledUuid {
+   initialcheck none;
+   parameter Company Text;
+   parameter RelatedPayUuidNumber Text;
+}
+-- gelr:epayment_receipt, end

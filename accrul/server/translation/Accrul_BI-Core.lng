@@ -1,0 +1,3196 @@
+-------------------------------------------------------
+File Type: IFS Foundation Language File
+Type version: 10.00
+-------------------------------------------------------
+Module: ACCRUL
+Layer: Core
+Main Type: BI
+Sub Type: All
+Content: 
+-------------------------------------------------------
+CS:Dim_DIM_ACCOUNT^BI^Meta Data^N^N
+	A:Name^Account^
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_VALUE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_VALUE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_VALUE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_VALUE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_VALUE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_VALUE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_VALUE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_VALUE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_VALUE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_ATTRIBUTE_VALUE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_LEVEL_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_NODE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_SRI_LEVEL_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_SRI_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_SRI_NODE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_SRI_NODE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_SRI_STRUCTURE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_SRI_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_STRUCTURE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_STRUCTURE_NODE_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_ACCOUNT_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_ACCOUNT_GROUP^BI^Meta Data^N^N
+		A:Name^Account Group^
+	CE:
+	CS:Item_ACCOUNT_GROUP_DESC^BI^Meta Data^N^N
+		A:Name^Account Group Description^
+	CE:
+	CS:Item_ACCOUNT_TYPE^BI^Meta Data^N^N
+		A:Name^Account Type^
+	CE:
+	CS:Item_ACCOUNT_TYPE_DESC^BI^Meta Data^N^N
+		A:Name^Account Type Description^
+	CE:
+	CS:Item_BUDGET_ACCOUNT_ONLY^BI^Meta Data^N^N
+		A:Name^Budget Account Only^
+	CE:
+	CS:Item_BUDGET_ACCOUNT_ONLY_DESC^BI^Meta Data^N^N
+		A:Name^Budget Account Only Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Account^
+	CE:
+	CS:Item_CURRENCY_BALANCE^BI^Meta Data^N^N
+		A:Name^Currency Balance^
+	CE:
+	CS:Item_CURRENCY_BALANCE_DESC^BI^Meta Data^N^N
+		A:Name^Currency Balance Description^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Account Description^
+	CE:
+	CS:Item_EXCLUDE_FROM_CURR_TRANS^BI^Meta Data^N^N
+		A:Name^Exclude From Curr Translation^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Group Consolidation^
+		CE:
+	CE:
+	CS:Item_EXCLUDE_FROM_CURR_TRANS_DESC^BI^Meta Data^N^N
+		A:Name^Exclude From Curr Translation Description^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Group Consolidation^
+		CE:
+	CE:
+	CS:Item_KEEP_REPORTING_ENTITY^BI^Meta Data^N^N
+		A:Name^Keep Balances Seperated by Reporting Entity^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Group Consolidation^
+		CE:
+	CE:
+	CS:Item_KEEP_REPORTING_ENTITY_DESC^BI^Meta Data^N^N
+		A:Name^Keep Balances Seperated by Reporting Entity Description^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Group Consolidation^
+		CE:
+	CE:
+	CS:Item_KEEP_REP_CURRENCY^BI^Meta Data^N^N
+		A:Name^Keep Reported Currency as Currency Balance^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Group Consolidation^
+		CE:
+	CE:
+	CS:Item_KEEP_REP_CURRENCY_DESC^BI^Meta Data^N^N
+		A:Name^Keep Reported Currency as Currency Balance Description^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Group Consolidation^
+		CE:
+	CE:
+	CS:Item_LEDGER_ACCOUNT^BI^Meta Data^N^N
+		A:Name^Ledger Account^
+	CE:
+	CS:Item_LEDGER_ACCOUNT_DESC^BI^Meta Data^N^N
+		A:Name^Ledger Account Description^
+	CE:
+	CS:Item_LOGICAL_ACCOUNT_TYPE^BI^Meta Data^N^N
+		A:Name^Logical Account Type^
+	CE:
+	CS:Item_LOGICAL_ACCOUNT_TYPE_DESC^BI^Meta Data^N^N
+		A:Name^Logical Account Type Description^
+	CE:
+	CS:Item_MASTER_COMPANY_ACCOUNT^BI^Meta Data^N^N
+		A:Name^Group Account^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Group Consolidation^
+		CE:
+	CE:
+	CS:Item_SAT_ACCOUNT_GROUP^BI^Meta Data^N^N
+		A:Name^SAT Account Group^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^SAT Information^
+		CE:
+	CE:
+	CS:Item_SAT_ACCOUNT_GROUP_DESC^BI^Meta Data^N^N
+		A:Name^SAT Account Group Description^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^SAT Information^
+		CE:
+	CE:
+	CS:Item_SAT_ACCOUNT_TYPE^BI^Meta Data^N^N
+		A:Name^SAT Account Type^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^SAT Information^
+		CE:
+	CE:
+	CS:Item_SAT_ACCOUNT_TYPE_DESC^BI^Meta Data^N^N
+		A:Name^SAT Account Type Description^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^SAT Information^
+		CE:
+	CE:
+	CS:Item_SAT_LEVEL^BI^Meta Data^N^N
+		A:Name^SAT Level^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^SAT Information^
+		CE:
+	CE:
+	CS:Item_SAT_LEVEL_DESC^BI^Meta Data^N^N
+		A:Name^SAT Level Description^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^SAT Information^
+		CE:
+	CE:
+	CS:Item_TAX_ACCOUNT^BI^Meta Data^N^N
+		A:Name^Tax Account^
+	CE:
+	CS:Item_TAX_ACCOUNT_DESC^BI^Meta Data^N^N
+		A:Name^Tax Account Description^
+	CE:
+	CS:Item_TAX_HANDLING^BI^Meta Data^N^N
+		A:Name^Tax Handling^
+	CE:
+	CS:Item_TAX_HANDLING_DESC^BI^Meta Data^N^N
+		A:Name^Tax Handling Description^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+CE:
+CS:Dim_DIM_ACCOUNTING_PERIOD^BI^Meta Data^N^N
+	A:Name^Accounting Period^
+	CS:AddonItem_DIM_ACCOUNTING_PERIOD_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CBusiness Plan Period Definition^
+	CE:
+	CS:AddonItem_DIM_ACCOUNTING_PERIOD_YEAR_PERIOD_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CBusiness Plan Period Definition^
+	CE:
+	CS:Item_ACCOUNTING_PERIOD^BI^Meta Data^N^N
+		A:Name^Period^
+	CE:
+	CS:Item_ACCOUNTING_YEAR^BI^Meta Data^N^N
+		A:Name^Year^
+	CE:
+	CS:Item_ATTRIBUTE_FIVE^BI^Meta Data^N^N
+		A:Name^Attribute 5^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Period Grouping Attributes^
+		CE:
+	CE:
+	CS:Item_ATTRIBUTE_FOUR^BI^Meta Data^N^N
+		A:Name^Attribute 4^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Period Grouping Attributes^
+		CE:
+	CE:
+	CS:Item_ATTRIBUTE_ONE^BI^Meta Data^N^N
+		A:Name^Attribute 1^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Period Grouping Attributes^
+		CE:
+	CE:
+	CS:Item_ATTRIBUTE_THREE^BI^Meta Data^N^N
+		A:Name^Attribute 3^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Period Grouping Attributes^
+		CE:
+	CE:
+	CS:Item_ATTRIBUTE_TWO^BI^Meta Data^N^N
+		A:Name^Attribute 2^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Period Grouping Attributes^
+		CE:
+	CE:
+	CS:Item_CLOSING_BALANCES^BI^Meta Data^N^N
+		A:Name^GL Closing Balance^
+	CE:
+	CS:Item_CLOSING_BALANCES_DESC^BI^Meta Data^N^N
+		A:Name^GL Closing Balance Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Year Period^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Description^
+	CE:
+	CS:Item_END_DATE^BI^Meta Data^N^N
+		A:Name^End Date^
+	CE:
+	CS:Item_OPENING_BALANCES^BI^Meta Data^N^N
+		A:Name^GL Opening Balance^
+	CE:
+	CS:Item_OPENING_BALANCES_DESC^BI^Meta Data^N^N
+		A:Name^GL Opening Balance Description^
+	CE:
+	CS:Item_PERIOD_STATUS^BI^Meta Data^N^N
+		A:Name^GL Period Status^
+	CE:
+	CS:Item_PERIOD_STATUS_DESC^BI^Meta Data^N^N
+		A:Name^GL Period Status Description^
+	CE:
+	CS:Item_PERIOD_TYPE^BI^Meta Data^N^N
+		A:Name^Period Type^
+	CE:
+	CS:Item_PERIOD_TYPE_DESC^BI^Meta Data^N^N
+		A:Name^Period Type Description^
+	CE:
+	CS:Item_REPORT_FROM_DATE^BI^Meta Data^N^N
+		A:Name^Report From Date^
+	CE:
+	CS:Item_REPORT_UNTIL_DATE^BI^Meta Data^N^N
+		A:Name^Report Until Date^
+	CE:
+	CS:Item_START_DATE^BI^Meta Data^N^N
+		A:Name^Start Date^
+	CE:
+	CS:Item_YEAR_STATUS^BI^Meta Data^N^N
+		A:Name^GL Year Status^
+	CE:
+	CS:Item_YEAR_STATUS_DESC^BI^Meta Data^N^N
+		A:Name^GL Year Status Description^
+	CE:
+CE:
+CS:Dim_DIM_ACCOUNTING_PERIOD_LOV^BI^Meta Data^N^N
+	A:Name^Accounting Period LoV for Info Services^
+	CS:Item_ACCOUNTING_YEAR^BI^Meta Data^N^N
+		A:Name^Accounting Year^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Accounting Period^
+	CE:
+CE:
+CS:Dim_DIM_ACCOUNTING_PROCESS_CODE^BI^Meta Data^N^N
+	A:Name^Account Process Code^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Process Code^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Description^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+CE:
+CS:Dim_DIM_ACCOUNTING_YEAR_LOV^BI^Meta Data^N^N
+	A:Name^Accounting Year LoV for Info Services^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Accounting Year^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR2_ACCOUNT^BI^Meta Data^N^N
+	A:Name^Account Attribute 2^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Account^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR2_CODE_B^BI^Meta Data^N^N
+	A:Name^Code B Attribute 2^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code B^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR2_CODE_C^BI^Meta Data^N^N
+	A:Name^Code C Attribute 2^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code C^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR2_CODE_D^BI^Meta Data^N^N
+	A:Name^Code D Attribute 2^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code D^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR2_CODE_E^BI^Meta Data^N^N
+	A:Name^Code E Attribute 2^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code E^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR2_CODE_F^BI^Meta Data^N^N
+	A:Name^Code F Attribute 2^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code F^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR2_CODE_G^BI^Meta Data^N^N
+	A:Name^Code G Attribute 2^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code G^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR2_CODE_H^BI^Meta Data^N^N
+	A:Name^Code H Attribute 2^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code H^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR2_CODE_I^BI^Meta Data^N^N
+	A:Name^Code I Attribute 2^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code I^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR2_CODE_J^BI^Meta Data^N^N
+	A:Name^Code J Attribute 2^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code J^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR3_ACCOUNT^BI^Meta Data^N^N
+	A:Name^Account Attribute 3^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Account^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR3_CODE_B^BI^Meta Data^N^N
+	A:Name^Code B Attribute 3^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code B^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR3_CODE_C^BI^Meta Data^N^N
+	A:Name^Code C Attribute 3^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code C^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR3_CODE_D^BI^Meta Data^N^N
+	A:Name^Code D Attribute 3^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code D^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR3_CODE_E^BI^Meta Data^N^N
+	A:Name^Code E Attribute 3^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code E^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR3_CODE_F^BI^Meta Data^N^N
+	A:Name^Code F Attribute 3^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code F^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR3_CODE_G^BI^Meta Data^N^N
+	A:Name^Code G Attribute 3^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code G^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR3_CODE_H^BI^Meta Data^N^N
+	A:Name^Code H Attribute 3^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code H^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR3_CODE_I^BI^Meta Data^N^N
+	A:Name^Code I Attribute 3^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code I^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR3_CODE_J^BI^Meta Data^N^N
+	A:Name^Code J Attribute 3^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code J^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR4_ACCOUNT^BI^Meta Data^N^N
+	A:Name^Account Attribute 4^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Account^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR4_CODE_B^BI^Meta Data^N^N
+	A:Name^Code B Attribute 4^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code B^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR4_CODE_C^BI^Meta Data^N^N
+	A:Name^Code C Attribute 4^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code C^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR4_CODE_D^BI^Meta Data^N^N
+	A:Name^Code D Attribute 4^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code D^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR4_CODE_E^BI^Meta Data^N^N
+	A:Name^Code E Attribute 4^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code E^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR4_CODE_F^BI^Meta Data^N^N
+	A:Name^Code F Attribute 4^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code F^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR4_CODE_G^BI^Meta Data^N^N
+	A:Name^Code G Attribute 4^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code G^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR4_CODE_H^BI^Meta Data^N^N
+	A:Name^Code H Attribute 4^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code H^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR4_CODE_I^BI^Meta Data^N^N
+	A:Name^Code I Attribute 4^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code I^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR4_CODE_J^BI^Meta Data^N^N
+	A:Name^Code J Attribute 4^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code J^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR5_ACCOUNT^BI^Meta Data^N^N
+	A:Name^Account Attribute 5^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Account^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR5_CODE_B^BI^Meta Data^N^N
+	A:Name^Code B Attribute 5^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code B^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR5_CODE_C^BI^Meta Data^N^N
+	A:Name^Code C Attribute 5^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code C^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR5_CODE_D^BI^Meta Data^N^N
+	A:Name^Code D Attribute 5^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code D^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR5_CODE_E^BI^Meta Data^N^N
+	A:Name^Code E Attribute 5^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code E^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR5_CODE_F^BI^Meta Data^N^N
+	A:Name^Code F Attribute 5^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code F^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR5_CODE_G^BI^Meta Data^N^N
+	A:Name^Code G Attribute 5^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code G^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR5_CODE_H^BI^Meta Data^N^N
+	A:Name^Code H Attribute 5^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code H^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR5_CODE_I^BI^Meta Data^N^N
+	A:Name^Code I Attribute 5^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code I^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR5_CODE_J^BI^Meta Data^N^N
+	A:Name^Code J Attribute 5^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code J^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR_ACCOUNT^BI^Meta Data^N^N
+	A:Name^Account Attribute 1^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Account^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR_CODE_B^BI^Meta Data^N^N
+	A:Name^Code B Attribute 1^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code B^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR_CODE_C^BI^Meta Data^N^N
+	A:Name^Code C Attribute 1^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code C^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR_CODE_D^BI^Meta Data^N^N
+	A:Name^Code D Attribute 1^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code D^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR_CODE_E^BI^Meta Data^N^N
+	A:Name^Code E Attribute 1^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code E^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR_CODE_F^BI^Meta Data^N^N
+	A:Name^Code F Attribute 1^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code F^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR_CODE_G^BI^Meta Data^N^N
+	A:Name^Code G Attribute 1^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code G^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR_CODE_H^BI^Meta Data^N^N
+	A:Name^Code H Attribute 1^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code H^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR_CODE_I^BI^Meta Data^N^N
+	A:Name^Code I Attribute 1^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code I^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_ATTR_CODE_J^BI^Meta Data^N^N
+	A:Name^Code J Attribute 1^
+	CS:Item_ATTRIBUTE^BI^Meta Data^N^N
+		A:Name^Attribute^
+	CE:
+	CS:Item_ATTRIBUTE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Description^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE^BI^Meta Data^N^N
+		A:Name^Attribute Value^
+	CE:
+	CS:Item_ATTRIBUTE_VALUE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Attribute Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code J^
+	CE:
+CE:
+CS:Dim_DIM_ANALYTIC_COST_STR^BI^Meta Data^N^N
+	A:Name^Cost Structure^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Cost Revenue Element^
+	CE:
+	CS:Item_COST_STRUCTURE_ID^BI^Meta Data^N^N
+		A:Name^Structure ID^
+	CE:
+	CS:Item_LEVEL_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Structure Level Description^
+	CE:
+	CS:Item_LEVEL_ID^BI^Meta Data^N^N
+		A:Name^Structure Level^
+	CE:
+	CS:Item_NODE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Structure Node Description^
+	CE:
+	CS:Item_STRUCTURE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Structure Description^
+	CE:
+	CS:Item_STRUCTURE_NODE^BI^Meta Data^N^N
+		A:Name^Structure Node^
+	CE:
+CE:
+CS:Dim_DIM_CODE_B^BI^Meta Data^N^N
+	A:Name^Code B^
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_VALUE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_VALUE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_VALUE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_VALUE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_VALUE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_VALUE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_VALUE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_VALUE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_VALUE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_B_ATTRIBUTE_VALUE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_B_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_B_LEVEL_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_NODE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_B_SRI_LEVEL_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_SRI_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_SRI_NODE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_SRI_NODE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_SRI_STRUCTURE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_SRI_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_STRUCTURE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_STRUCTURE_NODE_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_B_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_BUDGET_VALUE^BI^Meta Data^N^N
+		A:Name^Budget Value^
+	CE:
+	CS:Item_BUDGET_VALUE_DESC^BI^Meta Data^N^N
+		A:Name^Budget Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code B^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code B Description^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+CE:
+CS:Dim_DIM_CODE_C^BI^Meta Data^N^N
+	A:Name^Code C^
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_VALUE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_VALUE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_VALUE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_VALUE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_VALUE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_VALUE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_VALUE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_VALUE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_VALUE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_C_ATTRIBUTE_VALUE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_C_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_C_LEVEL_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_NODE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_C_SRI_LEVEL_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_SRI_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_SRI_NODE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_SRI_NODE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_SRI_STRUCTURE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_SRI_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_STRUCTURE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_STRUCTURE_NODE_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_C_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_BUDGET_VALUE^BI^Meta Data^N^N
+		A:Name^Budget Value^
+	CE:
+	CS:Item_BUDGET_VALUE_DESC^BI^Meta Data^N^N
+		A:Name^Budget Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code C^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code C Description^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+CE:
+CS:Dim_DIM_CODE_D^BI^Meta Data^N^N
+	A:Name^Code D^
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_VALUE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_VALUE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_VALUE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_VALUE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_VALUE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_VALUE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_VALUE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_VALUE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_VALUE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_D_ATTRIBUTE_VALUE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_D_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_D_LEVEL_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_NODE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_D_SRI_LEVEL_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_SRI_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_SRI_NODE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_SRI_NODE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_SRI_STRUCTURE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_SRI_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_STRUCTURE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_STRUCTURE_NODE_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_D_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_BUDGET_VALUE^BI^Meta Data^N^N
+		A:Name^Budget Value^
+	CE:
+	CS:Item_BUDGET_VALUE_DESC^BI^Meta Data^N^N
+		A:Name^Budget Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code D^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code D Description^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+CE:
+CS:Dim_DIM_CODE_E^BI^Meta Data^N^N
+	A:Name^Code E^
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_VALUE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_VALUE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_VALUE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_VALUE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_VALUE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_VALUE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_VALUE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_VALUE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_VALUE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_E_ATTRIBUTE_VALUE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_E_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_E_LEVEL_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_NODE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_E_SRI_LEVEL_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_SRI_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_SRI_NODE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_SRI_NODE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_SRI_STRUCTURE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_SRI_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_STRUCTURE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_STRUCTURE_NODE_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_E_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_BUDGET_VALUE^BI^Meta Data^N^N
+		A:Name^Budget Value^
+	CE:
+	CS:Item_BUDGET_VALUE_DESC^BI^Meta Data^N^N
+		A:Name^Budget Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code E^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code E Description^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+CE:
+CS:Dim_DIM_CODE_F^BI^Meta Data^N^N
+	A:Name^Code F^
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_VALUE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_VALUE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_VALUE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_VALUE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_VALUE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_VALUE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_VALUE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_VALUE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_VALUE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_F_ATTRIBUTE_VALUE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_F_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_F_LEVEL_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_NODE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_F_SRI_LEVEL_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_SRI_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_SRI_NODE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_SRI_NODE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_SRI_STRUCTURE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_SRI_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_STRUCTURE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_STRUCTURE_NODE_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_F_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_BUDGET_VALUE^BI^Meta Data^N^N
+		A:Name^Budget Value^
+	CE:
+	CS:Item_BUDGET_VALUE_DESC^BI^Meta Data^N^N
+		A:Name^Budget Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code F^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code F Description^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+CE:
+CS:Dim_DIM_CODE_G^BI^Meta Data^N^N
+	A:Name^Code G^
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_VALUE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_VALUE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_VALUE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_VALUE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_VALUE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_VALUE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_VALUE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_VALUE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_VALUE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_G_ATTRIBUTE_VALUE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_G_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_G_LEVEL_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_NODE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_G_SRI_LEVEL_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_SRI_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_SRI_NODE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_SRI_NODE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_SRI_STRUCTURE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_SRI_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_STRUCTURE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_STRUCTURE_NODE_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_G_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_BUDGET_VALUE^BI^Meta Data^N^N
+		A:Name^Budget Value^
+	CE:
+	CS:Item_BUDGET_VALUE_DESC^BI^Meta Data^N^N
+		A:Name^Budget Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code G^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code G Description^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+CE:
+CS:Dim_DIM_CODE_H^BI^Meta Data^N^N
+	A:Name^Code H^
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_VALUE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_VALUE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_VALUE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_VALUE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_VALUE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_VALUE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_VALUE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_VALUE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_VALUE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_H_ATTRIBUTE_VALUE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_H_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_H_LEVEL_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_NODE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_H_SRI_LEVEL_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_SRI_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_SRI_NODE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_SRI_NODE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_SRI_STRUCTURE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_SRI_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_STRUCTURE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_STRUCTURE_NODE_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_H_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_BUDGET_VALUE^BI^Meta Data^N^N
+		A:Name^Budget Value^
+	CE:
+	CS:Item_BUDGET_VALUE_DESC^BI^Meta Data^N^N
+		A:Name^Budget Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code H^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code H Description^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+CE:
+CS:Dim_DIM_CODE_I^BI^Meta Data^N^N
+	A:Name^Code I^
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_VALUE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_VALUE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_VALUE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_VALUE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_VALUE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_VALUE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_VALUE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_VALUE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_VALUE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_I_ATTRIBUTE_VALUE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_I_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_I_LEVEL_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_NODE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_I_SRI_LEVEL_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_SRI_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_SRI_NODE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_SRI_NODE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_SRI_STRUCTURE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_SRI_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_STRUCTURE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_STRUCTURE_NODE_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_I_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_BUDGET_VALUE^BI^Meta Data^N^N
+		A:Name^Budget Value^
+	CE:
+	CS:Item_BUDGET_VALUE_DESC^BI^Meta Data^N^N
+		A:Name^Budget Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code I^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code I Description^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+CE:
+CS:Dim_DIM_CODE_J^BI^Meta Data^N^N
+	A:Name^Code J^
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_VALUE2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_VALUE3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_VALUE4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_VALUE5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_VALUE_DESCRIPTION2_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 2^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_VALUE_DESCRIPTION3_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 3^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_VALUE_DESCRIPTION4_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 4^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_VALUE_DESCRIPTION5_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 5^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_VALUE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_J_ATTRIBUTE_VALUE_Folder^BI^Meta Data^N^N
+		A:Text^\005CAccounting Attributes\005CAttribute 1^
+	CE:
+	CS:AddonItem_DIM_CODE_J_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_J_LEVEL_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_NODE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_J_SRI_LEVEL_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_SRI_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_SRI_NODE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_SRI_NODE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_SRI_STRUCTURE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_SRI_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_STRUCTURE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_STRUCTURE_NODE_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Accounting Structure Items^
+	CE:
+	CS:AddonItem_DIM_CODE_J_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_BUDGET_VALUE^BI^Meta Data^N^N
+		A:Name^Budget Value^
+	CE:
+	CS:Item_BUDGET_VALUE_DESC^BI^Meta Data^N^N
+		A:Name^Budget Value Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code J^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code J Description^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+CE:
+CS:Dim_DIM_CODE_M^BI^Meta Data^N^N
+	A:Name^Code M^
+	CS:AddonItem_DIM_CODE_M_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_M_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_M_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code M^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code M Description^
+	CE:
+CE:
+CS:Dim_DIM_CODE_N^BI^Meta Data^N^N
+	A:Name^Code N^
+	CS:AddonItem_DIM_CODE_N_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_N_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_N_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code N^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code N Description^
+	CE:
+CE:
+CS:Dim_DIM_CODE_O^BI^Meta Data^N^N
+	A:Name^Code O^
+	CS:AddonItem_DIM_CODE_O_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_O_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_O_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code O^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code O Description^
+	CE:
+CE:
+CS:Dim_DIM_CODE_P^BI^Meta Data^N^N
+	A:Name^Code P^
+	CS:AddonItem_DIM_CODE_P_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_P_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_P_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code P^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code P Description^
+	CE:
+CE:
+CS:Dim_DIM_CODE_Q^BI^Meta Data^N^N
+	A:Name^Code Q^
+	CS:AddonItem_DIM_CODE_Q_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_Q_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_Q_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code Q^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code Q Description^
+	CE:
+CE:
+CS:Dim_DIM_CODE_R^BI^Meta Data^N^N
+	A:Name^Code R^
+	CS:AddonItem_DIM_CODE_R_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_R_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_R_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code R^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code R Description^
+	CE:
+CE:
+CS:Dim_DIM_CODE_S^BI^Meta Data^N^N
+	A:Name^Code S^
+	CS:AddonItem_DIM_CODE_S_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_S_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_S_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code S^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code S Description^
+	CE:
+CE:
+CS:Dim_DIM_CODE_T^BI^Meta Data^N^N
+	A:Name^Code T^
+	CS:AddonItem_DIM_CODE_T_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_T_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_CODE_T_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Code T^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Code T Description^
+	CE:
+CE:
+CS:Dim_DIM_COMPANY^BI^Meta Data^N^N
+	A:Name^Company^
+	CS:Item_ASSOCIATION_NO^BI^Meta Data^N^N
+		A:Name^Association Number^
+	CE:
+	CS:Item_COMPANY^BI^Meta Data^N^N
+		A:Name^Company^
+	CE:
+	CS:Item_COMPANY_TAX_ID_NUMBER^BI^Meta Data^N^N
+		A:Name^Company Tax ID Number^
+	CE:
+	CS:Item_COUNTRY_CODE^BI^Meta Data^N^N
+		A:Name^Country Code^
+	CE:
+	CS:Item_COUNTRY_CODE_DESC^BI^Meta Data^N^N
+		A:Name^Country Code Description^
+	CE:
+	CS:Item_CURRENCY_CODE^BI^Meta Data^N^N
+		A:Name^Accounting Currency Code^
+	CE:
+	CS:Item_MASTER_COMPANY^BI^Meta Data^N^N
+		A:Name^Master Company for Group Consolidation^
+	CE:
+	CS:Item_MASTER_COMPANY_DESC^BI^Meta Data^N^N
+		A:Name^Master Company for Group Consolidation Description^
+	CE:
+	CS:Item_NAME^BI^Meta Data^N^N
+		A:Name^Name^
+	CE:
+	CS:Item_PARALLEL_CURRENCY_CODE^BI^Meta Data^N^N
+		A:Name^Parallel Currency Code^
+	CE:
+CE:
+CS:Dim_DIM_COST_REV_ELEMENT^BI^Meta Data^N^N
+	A:Name^Cost Revenue Element^
+	CS:AddonItem_DIM_COST_REV_ELEMENT_COST_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Project Cost Structure Items^
+	CE:
+	CS:AddonItem_DIM_COST_REV_ELEMENT_LEVEL_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Project Cost Structure Items^
+	CE:
+	CS:AddonItem_DIM_COST_REV_ELEMENT_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Project Cost Structure Items^
+	CE:
+	CS:AddonItem_DIM_COST_REV_ELEMENT_NODE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Project Cost Structure Items^
+	CE:
+	CS:AddonItem_DIM_COST_REV_ELEMENT_SRI_COST_STRUCTURE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_COST_REV_ELEMENT_SRI_LEVEL_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_COST_REV_ELEMENT_SRI_LEVEL_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_COST_REV_ELEMENT_SRI_NODE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_COST_REV_ELEMENT_SRI_NODE_ID_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_COST_REV_ELEMENT_SRI_STRUCTURE_ID_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStructure Repeater Items^
+	CE:
+	CS:AddonItem_DIM_COST_REV_ELEMENT_STRUCTURE_DESCRIPTION_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Project Cost Structure Items^
+	CE:
+	CS:AddonItem_DIM_COST_REV_ELEMENT_STRUCTURE_NODE_Folder^BI^Meta Data^N^N
+		A:Text^\005CStandard Project Cost Structure Items^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Cost Revenue Element^
+	CE:
+	CS:Item_DEFAULT_COST_ELEMENT^BI^Meta Data^N^N
+		A:Name^Default Element^
+	CE:
+	CS:Item_ELEMENT_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Element Description^
+	CE:
+	CS:Item_ELEMENT_TYPE^BI^Meta Data^N^N
+		A:Name^Element Type^
+	CE:
+	CS:Item_VALIDITY^BI^Meta Data^N^N
+		A:Name^Validity^
+	CE:
+CE:
+CS:Dim_DIM_COST_STRUCTURE^BI^Meta Data^N^N
+	A:Name^Cost Structure^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Cost Structure^
+	CE:
+	CS:Item_ITEM_TYPE^BI^Meta Data^N^N
+		A:Name^Cost Structure Item Type^
+	CE:
+	CS:Item_LEVEL_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Level Description^
+	CE:
+	CS:Item_LEVEL_ID^BI^Meta Data^N^N
+		A:Name^Level ID^
+	CE:
+	CS:Item_NODE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Node ID/ Cost/Revenue Element Description^
+	CE:
+	CS:Item_NODE_ELEMENT^BI^Meta Data^N^N
+		A:Name^Node ID/Cost/Revenue Element^
+	CE:
+	CS:Item_PARENT_NODE^BI^Meta Data^N^N
+		A:Name^Parent Node ID^
+	CE:
+	CS:Item_STRUCTURE_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Structure Description^
+	CE:
+CE:
+CS:Dim_DIM_COST_STRUC_HEAD^BI^Meta Data^N^N
+	A:Name^Cost Structures^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Structure ID^
+	CE:
+	CS:Item_COST_STRUCTURE_ID^BI^Meta Data^N^N
+		A:Name^Structure ID^
+	CE:
+	CS:Item_STRUCTURE_ID_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Structure Description^
+	CE:
+CE:
+CS:Dim_DIM_COST_STRUC_LEAF^BI^Meta Data^N^N
+	A:Name^Cost Structure Leafs^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Leaf ID^
+	CE:
+	CS:Item_NODE_ID^BI^Meta Data^N^N
+		A:Name^Node ID^
+	CE:
+CE:
+CS:Dim_DIM_COST_STRUC_LEVEL^BI^Meta Data^N^N
+	A:Name^Cost Structure Levels^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Level ID^
+	CE:
+	CS:Item_LEVEL_ID^BI^Meta Data^N^N
+		A:Name^Level ID^
+	CE:
+	CS:Item_LEVEL_ID_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Level Description^
+	CE:
+	CS:Item_PARENT_LEVEL_ID^BI^Meta Data^N^N
+		A:Name^Parent Level ID^
+	CE:
+CE:
+CS:Dim_DIM_COST_STRUC_NODE^BI^Meta Data^N^N
+	A:Name^Cost Structure Nodes^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Node ID^
+	CE:
+	CS:Item_LEVEL_ID^BI^Meta Data^N^N
+		A:Name^Level ID^
+	CE:
+	CS:Item_NODE_ID^BI^Meta Data^N^N
+		A:Name^Node ID^
+	CE:
+	CS:Item_NODE_ID_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Node Description^
+	CE:
+	CS:Item_PARENT_NODE_ID^BI^Meta Data^N^N
+		A:Name^Parent Node ID^
+	CE:
+CE:
+CS:Dim_DIM_COUNTER_PART_ONE^BI^Meta Data^N^N
+	A:Name^Counterpart One^
+	CS:AddonItem_DIM_COUNTER_PART_ONE_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_COUNTER_PART_ONE_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_COUNTER_PART_ONE_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Counterpart One^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Description^
+	CE:
+CE:
+CS:Dim_DIM_COUNTER_PART_TWO^BI^Meta Data^N^N
+	A:Name^Counterpart Two^
+	CS:AddonItem_DIM_COUNTER_PART_TWO_BUSINESS_PLAN_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_COUNTER_PART_TWO_PLANNING_UNIT_ID_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:AddonItem_DIM_COUNTER_PART_TWO_VALUE_LIST_Folder^BI^Meta Data^N^N
+		A:Text^Planning Value Lists^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Counterpart Two^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Description^
+	CE:
+CE:
+CS:Dim_DIM_CURRENCY_CODE^BI^Meta Data^N^N
+	A:Name^Currency Code^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Currency^
+	CE:
+	CS:Item_CONVERSION_FACTOR^BI^Meta Data^N^N
+		A:Name^Conversion Factor^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Description^
+	CE:
+	CS:Item_EMU_CURRENCY_FROM_DATE^BI^Meta Data^N^N
+		A:Name^Emu currency from date^
+	CE:
+	CS:Item_INVERTED^BI^Meta Data^N^N
+		A:Name^Inverted quotation when reference currency^
+	CE:
+	CS:Item_NO_OF_DECIMALS_IN_AMT^BI^Meta Data^N^N
+		A:Name^No of decimals in amount^
+	CE:
+	CS:Item_NO_OF_DECIMALS_IN_RATE^BI^Meta Data^N^N
+		A:Name^No of decimals in rate^
+	CE:
+CE:
+CS:Dim_DIM_CURRENCY_RATE_TYPE^BI^Meta Data^N^N
+	A:Name^Currency Rate Type^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Currency Rate Type^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Currency Rate Type Description^
+	CE:
+	CS:Item_REF_CURRENCY_CODE^BI^Meta Data^N^N
+		A:Name^Reference Currency Code^
+	CE:
+	CS:Item_TYPE_DEFAULT^BI^Meta Data^N^N
+		A:Name^Default Type^
+	CE:
+CE:
+CS:Dim_DIM_LEDGER_INFORMATION^BI^Meta Data^N^N
+	A:Name^IL Period Status^
+	CS:Item_CLOSING_BALANCES^BI^Meta Data^N^N
+		A:Name^IL Closing Balance^
+	CE:
+	CS:Item_CLOSING_BALANCES_DESC^BI^Meta Data^N^N
+		A:Name^IL Closing Balance Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Year Period^
+	CE:
+	CS:Item_OPENING_BALANCES^BI^Meta Data^N^N
+		A:Name^IL Opening Balance^
+	CE:
+	CS:Item_OPENING_BALANCES_DESC^BI^Meta Data^N^N
+		A:Name^IL Opening Balance Description^
+	CE:
+	CS:Item_PERIOD_STATUS^BI^Meta Data^N^N
+		A:Name^IL Period Status^
+	CE:
+	CS:Item_PERIOD_STATUS_DESC^BI^Meta Data^N^N
+		A:Name^IL Period Status Description^
+	CE:
+	CS:Item_YEAR_STATUS^BI^Meta Data^N^N
+		A:Name^IL Year Status^
+	CE:
+	CS:Item_YEAR_STATUS_DESC^BI^Meta Data^N^N
+		A:Name^IL Year Status Description^
+	CE:
+CE:
+CS:Dim_DIM_RPD_COMPANY_PERIOD^BI^Meta Data^N^N
+	A:Name^Company Reporting Period^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Reporting Date^
+	CE:
+	CS:Item_FROM_DATE^BI^Meta Data^N^N
+		A:Name^Reporting Period From Date^
+	CE:
+	CS:Item_NUMBER_ATTRIBUTE1^BI^Meta Data^N^N
+		A:Name^Number Attribute 1^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Number Attributes^
+		CE:
+	CE:
+	CS:Item_NUMBER_ATTRIBUTE2^BI^Meta Data^N^N
+		A:Name^Number Attribute 2^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Number Attributes^
+		CE:
+	CE:
+	CS:Item_NUMBER_ATTRIBUTE3^BI^Meta Data^N^N
+		A:Name^Number Attribute 3^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Number Attributes^
+		CE:
+	CE:
+	CS:Item_NUMBER_ATTRIBUTE4^BI^Meta Data^N^N
+		A:Name^Number Attribute 4^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Number Attributes^
+		CE:
+	CE:
+	CS:Item_NUMBER_ATTRIBUTE5^BI^Meta Data^N^N
+		A:Name^Number Attribute 5^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Number Attributes^
+		CE:
+	CE:
+	CS:Item_RPD_ID^BI^Meta Data^N^N
+		A:Name^Reporting Period Definition ID^
+	CE:
+	CS:Item_RPD_ID_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Reporting Period Definition Description^
+	CE:
+	CS:Item_RPD_PERIOD^BI^Meta Data^N^N
+		A:Name^Reporting Period^
+	CE:
+	CS:Item_RPD_YEAR^BI^Meta Data^N^N
+		A:Name^Reporting Year^
+	CE:
+	CS:Item_STRING_ATTRIBUTE1^BI^Meta Data^N^N
+		A:Name^String Attribute 1^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^String Attributes^
+		CE:
+	CE:
+	CS:Item_STRING_ATTRIBUTE2^BI^Meta Data^N^N
+		A:Name^String Attribute 2^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^String Attributes^
+		CE:
+	CE:
+	CS:Item_STRING_ATTRIBUTE3^BI^Meta Data^N^N
+		A:Name^String Attribute 3^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^String Attributes^
+		CE:
+	CE:
+	CS:Item_STRING_ATTRIBUTE4^BI^Meta Data^N^N
+		A:Name^String Attribute 4^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^String Attributes^
+		CE:
+	CE:
+	CS:Item_STRING_ATTRIBUTE5^BI^Meta Data^N^N
+		A:Name^String Attribute 5^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^String Attributes^
+		CE:
+	CE:
+	CS:Item_UNTIL_DATE^BI^Meta Data^N^N
+		A:Name^Reporting Period Until Date^
+	CE:
+	CS:Item_YEAR_PERIOD_STR^BI^Meta Data^N^N
+		A:Name^Reporting Year Period^
+	CE:
+CE:
+CS:Dim_DIM_RPD_PERIOD^BI^Meta Data^N^N
+	A:Name^Reporting Period^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Reporting Date^
+	CE:
+	CS:Item_FROM_DATE^BI^Meta Data^N^N
+		A:Name^Reporting Period From Date^
+	CE:
+	CS:Item_NUMBER_ATTRIBUTE1^BI^Meta Data^N^N
+		A:Name^Number Attribute 1^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Number Attributes^
+		CE:
+	CE:
+	CS:Item_NUMBER_ATTRIBUTE2^BI^Meta Data^N^N
+		A:Name^Number Attribute 2^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Number Attributes^
+		CE:
+	CE:
+	CS:Item_NUMBER_ATTRIBUTE3^BI^Meta Data^N^N
+		A:Name^Number Attribute 3^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Number Attributes^
+		CE:
+	CE:
+	CS:Item_NUMBER_ATTRIBUTE4^BI^Meta Data^N^N
+		A:Name^Number Attribute 4^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Number Attributes^
+		CE:
+	CE:
+	CS:Item_NUMBER_ATTRIBUTE5^BI^Meta Data^N^N
+		A:Name^Number Attribute 5^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^Number Attributes^
+		CE:
+	CE:
+	CS:Item_RPD_ID^BI^Meta Data^N^N
+		A:Name^Reporting Period Defintion ID^
+	CE:
+	CS:Item_RPD_ID_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Reporting Period Definition Description^
+	CE:
+	CS:Item_RPD_PERIOD^BI^Meta Data^N^N
+		A:Name^Reporting Period^
+	CE:
+	CS:Item_RPD_YEAR^BI^Meta Data^N^N
+		A:Name^Reporting Year^
+	CE:
+	CS:Item_STRING_ATTRIBUTE1^BI^Meta Data^N^N
+		A:Name^String Attribute 1^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^String Attributes^
+		CE:
+	CE:
+	CS:Item_STRING_ATTRIBUTE2^BI^Meta Data^N^N
+		A:Name^String Attribute 2^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^String Attributes^
+		CE:
+	CE:
+	CS:Item_STRING_ATTRIBUTE3^BI^Meta Data^N^N
+		A:Name^String Attribute 3^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^String Attributes^
+		CE:
+	CE:
+	CS:Item_STRING_ATTRIBUTE4^BI^Meta Data^N^N
+		A:Name^String Attribute 4^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^String Attributes^
+		CE:
+	CE:
+	CS:Item_STRING_ATTRIBUTE5^BI^Meta Data^N^N
+		A:Name^String Attribute 5^
+		CS:Folder^BI^Meta Data^N^N
+			A:Text^String Attributes^
+		CE:
+	CE:
+	CS:Item_UNTIL_DATE^BI^Meta Data^N^N
+		A:Name^Reporting Period Until Date^
+	CE:
+	CS:Item_YEAR_PERIOD_STR^BI^Meta Data^N^N
+		A:Name^Reporting Year Period^
+	CE:
+CE:
+CS:Dim_DIM_SUBSIDIARY_COMPANY^BI^Meta Data^N^N
+	A:Name^Subsidiary Company^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Subsidiary Company^
+	CE:
+	CS:Item_SUBSIDIARY_COMPANY_NAME^BI^Meta Data^N^N
+		A:Name^Subsidiary Company Name^
+	CE:
+	CS:Item_SUBSIDIARY_CURRENCY_CODE^BI^Meta Data^N^N
+		A:Name^Subsidiary Accounting Currency^
+	CE:
+	CS:Item_SUBSIDIARY_PARALLEL_CURR_CODE^BI^Meta Data^N^N
+		A:Name^Susidiary Parallel Accounting Currency^
+	CE:
+CE:
+CS:Dim_DIM_TAXCODE^BI^Meta Data^N^N
+	A:Name^Tax Code^
+	CS:Item_AMOUNT_NOT_TAXABLE^BI^Meta Data^N^N
+		A:Name^Not Taxable Amount^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Tax Code^
+	CE:
+	CS:Item_DEDUCTIBLE^BI^Meta Data^N^N
+		A:Name^Deductible (%)^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Description^
+	CE:
+	CS:Item_DIOT_TAX_CLASSIFICATION^BI^Meta Data^N^N
+		A:Name^DIOT Tax Classification^
+	CE:
+	CS:Item_DIOT_TAX_CLASSIFICATION_DESC^BI^Meta Data^N^N
+		A:Name^DIOT Tax Classification Description^
+	CE:
+	CS:Item_FEE_RATE^BI^Meta Data^N^N
+		A:Name^Tax (%)^
+	CE:
+	CS:Item_FEE_TYPE^BI^Meta Data^N^N
+		A:Name^Tax Type^
+	CE:
+	CS:Item_FEE_TYPE_DESC^BI^Meta Data^N^N
+		A:Name^Tax Type Description^
+	CE:
+	CS:Item_MINIMUM_BASE_AMOUNT^BI^Meta Data^N^N
+		A:Name^Minimum Base Amount^
+	CE:
+	CS:Item_MIN_WITHHELD_AMOUNT^BI^Meta Data^N^N
+		A:Name^Minimun Withheld Amount^
+	CE:
+	CS:Item_TAX_AMOUNT_AT_INV_PRINT^BI^Meta Data^N^N
+		A:Name^Tax Amount Method at Invoice Printout^
+	CE:
+	CS:Item_TAX_AMOUNT_AT_INV_PRINT_DESC^BI^Meta Data^N^N
+		A:Name^Tax Amount Method at Invoice Printout Description^
+	CE:
+	CS:Item_TAX_AMT_LIMIT^BI^Meta Data^N^N
+		A:Name^Tax Amount Limit in Account Currency^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+	CS:Item_VAT_DISBURSED^BI^Meta Data^N^N
+		A:Name^Tax Method Tax Disbursed^
+	CE:
+	CS:Item_VAT_DISBURSED_DESC^BI^Meta Data^N^N
+		A:Name^Tax Method Tax Disbursed Description^
+	CE:
+	CS:Item_VAT_RECEIVED^BI^Meta Data^N^N
+		A:Name^Tax Method Tax Received^
+	CE:
+	CS:Item_VAT_RECEIVED_DESC^BI^Meta Data^N^N
+		A:Name^Tax Method Tax Received Description^
+	CE:
+CE:
+CS:Dim_DIM_TAX_BOOK^BI^Meta Data^N^N
+	A:Name^Tax Book^
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Tax Book^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Description^
+	CE:
+	CS:Item_TAX_BOOK_BASE^BI^Meta Data^N^N
+		A:Name^Tax Book Base^
+	CE:
+	CS:Item_TAX_BOOK_BASE_DESC^BI^Meta Data^N^N
+		A:Name^Tax Book Base Description^
+	CE:
+	CS:Item_TAX_BOOK_BASE_VALUES^BI^Meta Data^N^N
+		A:Name^Tax Book Base Values^
+	CE:
+	CS:Item_TAX_BOOK_BASE_VALUES_DESC^BI^Meta Data^N^N
+		A:Name^Tax Book Base Values Description^
+	CE:
+	CS:Item_TAX_DIRECTION_SP^BI^Meta Data^N^N
+		A:Name^Tax Direction^
+	CE:
+	CS:Item_TAX_DIRECTION_SP_DESC^BI^Meta Data^N^N
+		A:Name^Tax Direction Description^
+	CE:
+	CS:Item_TAX_SERIES_ID^BI^Meta Data^N^N
+		A:Name^Tax Series ID^
+	CE:
+CE:
+CS:Dim_DIM_VOUCHER_TYPE^BI^Meta Data^N^N
+	A:Name^Voucher Type^
+	CS:Item_AUTOMATIC_ALLOT^BI^Meta Data^N^N
+		A:Name^Automatic Allotment^
+	CE:
+	CS:Item_AUTOMATIC_ALLOT_DESC^BI^Meta Data^N^N
+		A:Name^Automatic Allotment Description^
+	CE:
+	CS:Item_CODE^BI^Meta Data^N^N
+		A:Name^Voucher Type^
+	CE:
+	CS:Item_DESCRIPTION^BI^Meta Data^N^N
+		A:Name^Voucher Type Description^
+	CE:
+	CS:Item_LEDGER_ID^BI^Meta Data^N^N
+		A:Name^Ledger Id^
+	CE:
+	CS:Item_SIMULATION_VOUCHER^BI^Meta Data^N^N
+		A:Name^Simulation Voucher^
+	CE:
+	CS:Item_SIMULATION_VOUCHER_DESC^BI^Meta Data^N^N
+		A:Name^Simulation Voucher Description^
+	CE:
+	CS:Item_SINGLE_FUNCTION_GROUP^BI^Meta Data^N^N
+		A:Name^Single Function Group^
+	CE:
+	CS:Item_SINGLE_FUNCTION_GROUP_DESC^BI^Meta Data^N^N
+		A:Name^Single Function Group Description^
+	CE:
+	CS:Item_USE_MANUAL^BI^Meta Data^N^N
+		A:Name^Use Manual Internal Methods^
+	CE:
+	CS:Item_USE_MANUAL_DESC^BI^Meta Data^N^N
+		A:Name^Use Manual Internal Methods Description^
+	CE:
+CE:
+CS:Fact_FACT_CURRENCY_RATES^BI^Meta Data^N^N
+	A:Name^Currency Rates^
+	CS:Item_CURRENCY_RATE^BI^Meta Data^N^N
+		A:Name^Currency Rate^
+	CE:
+	CS:Item_DIRECT_CURRENCY_RATE^BI^Meta Data^N^N
+		A:Name^Direct Currency Rate^
+	CE:
+	CS:Item_DIRECT_CURRENCY_RATE_ROUND^BI^Meta Data^N^N
+		A:Name^Direct Currency Rate Round^
+	CE:
+	CS:Item_IS_MAX_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Show Only Valid Rates^
+	CE:
+	CS:Item_VALID_FROM^BI^Meta Data^N^N
+		A:Name^Valid From^
+	CE:
+	CS:Item_VALID_UNTIL^BI^Meta Data^N^N
+		A:Name^Valid Until^
+	CE:
+	CS:Url_CURRENCY_RATES_URL^BI^Meta Data^N^N
+		A:Text^Currency Rate...^
+	CE:
+CE:

@@ -1,0 +1,34 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210225_ADCOM_LMM2020R1-1708.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210228   CSarLK  LMM2020R1-1708: added index FLIGHT_DEPATURE_IX for optimize fetching departure flight
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+PROMPT Starting 210225_ADCOM_LMM2020R1-1708.cdb
+
+EXEC Installation_SYS.Log_Detail_Time_Stamp('ADCOM', '210225_ADCOM_LMM2020R1-1708.cdb', 'Timestamp_1');
+PROMPT Creating INDEX FLIGHT_DEPATURE_IX ON AV_FLIGHT_TAB.
+DECLARE
+   index_name_ VARCHAR2(30) := 'FLIGHT_DEPATURE_IX';
+   table_name_ VARCHAR2(30) := 'AV_FLIGHT_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'AIRCRAFT_ID');
+   Database_SYS.Set_Table_Column(columns_, 'DEPARTURE_AIRPORT_ID');
+   Database_SYS.Set_Table_Column(columns_, 'SHED_DEPARTURE_DATE_TIME');
+   Database_SYS.Create_Index(table_name_, index_name_, columns_, 'N', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+PROMPT Finished with 210225_ADCOM_LMM2020R1-1708.cdb
+EXEC Installation_SYS.Log_Detail_Time_Stamp('ADCOM', '210225_ADCOM_LMM2020R1-1708.cdb', 'Done');
+SET SERVEROUTPUT OFF

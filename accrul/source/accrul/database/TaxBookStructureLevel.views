@@ -1,0 +1,49 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TaxBookStructureLevel
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@Override 
+VIEW Tax_Book_Structure_Level IS
+   Prompt = 'Tax Book Structure Level'
+   CONNECT BY company      = PRIOR company
+   AND        structure_id = PRIOR structure_id
+   AND        level_above  = PRIOR level_id
+   START WITH level_above    IS NULL;
+
+--This view is to be used by Aurena
+VIEW Tax_Book_Struc_Level_Hierarchy IS
+   Prompt = 'Tax Book Structure Level Hierarchy'
+   Structure_Id.Ref = 'TaxBookStructure(company)'
+   Level_Id.Flags = 'KMIUL'
+SELECT company                        company,
+       structure_id                   structure_id,
+       level_id                       level_id,
+       description                    description,
+       bottom_level                   bottom_level,
+       level_above                    level_above,
+       LEVEL                          levl,
+       rowid                          objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                        objkey
+FROM   tax_book_structure_level_tab
+WHERE EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE tax_book_structure_level_tab.company = company)
+       CONNECT BY company      = PRIOR company
+       AND        structure_id = PRIOR structure_id
+       AND        level_above  = PRIOR level_id
+       START WITH level_above    IS NULL;

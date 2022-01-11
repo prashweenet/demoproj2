@@ -1,0 +1,542 @@
+client ExternalVouchers;
+component ACCRUL;
+layer Core;
+
+projection ExternalVouchers;
+
+include fragment CodeStringExtended;
+include fragment CodeStringAccountExtended;
+@DynamicComponentDependency PROJ
+include fragment ProjectActivityPostableSelector;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ExternalVoucherNavEntry parent AccrulNavigator.VoucherMenu at index 300 {
+      label = "External Vouchers";
+      page List home ExtTransaction;
+   }
+}
+
+condition OptionalCodeCondition = OptionalCode = null;
+-------------------------------- MAIN PAGES ---------------------------------
+page List using ExternalVouchersSet {
+   label = "External Vouchers";
+   list List;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+@Override
+command ValidateCodeStringExtendedCodeBRef {
+   variable ProjOriginRec  Structure(ProjectOriginStructure);
+
+   execute {
+      super;
+      if [context.Company.ProjCodePart = "B" and CodeB != null] {
+         set ProjectId = CodeB;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringExtendedCodeCRef {
+   variable ProjOriginRec  Structure(ProjectOriginStructure);
+
+   execute {
+      super;
+      if [context.Company.ProjCodePart = "C" and CodeC != null] {
+         set ProjectId = CodeC;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringExtendedCodeDRef {
+   variable ProjOriginRec  Structure(ProjectOriginStructure);
+
+   execute {
+      super;
+      if [context.Company.ProjCodePart = "D" and CodeD != null] {
+         set ProjectId = CodeD;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringExtendedCodeERef {
+   variable ProjOriginRec  Structure(ProjectOriginStructure);
+
+   execute {
+      super;
+      if [context.Company.ProjCodePart = "E" and CodeE != null] {
+         set ProjectId = CodeE;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringExtendedCodeFRef {
+   variable ProjOriginRec  Structure(ProjectOriginStructure);
+
+   execute {
+      super;
+      if [context.Company.ProjCodePart = "F" and CodeF != null] {
+         set ProjectId = CodeF;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringExtendedCodeGRef {
+   variable ProjOriginRec  Structure(ProjectOriginStructure);
+
+   execute {
+      super;
+      if [context.Company.ProjCodePart = "G" and CodeG != null] {
+         set ProjectId = CodeG;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringExtendedCodeHRef {
+   variable ProjOriginRec  Structure(ProjectOriginStructure);
+
+   execute {
+      super;
+      if [context.Company.ProjCodePart = "H" and CodeH != null] {
+         set ProjectId = CodeH;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringExtendedCodeIRef {
+   variable ProjOriginRec  Structure(ProjectOriginStructure);
+
+   execute {
+      super;
+      if [context.Company.ProjCodePart = "I" and CodeH != null] {
+         set ProjectId = CodeI;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+@Override
+command ValidateCodeStringExtendedCodeJRef {
+   variable ProjOriginRec  Structure(ProjectOriginStructure);
+
+   execute {
+      super;
+      if [context.Company.ProjCodePart = "J" and CodeJ != null] {
+         set ProjectId = CodeJ;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+----------------------------- VISUAL COMPONENTS -----------------------------
+list List for ExtTransactions {
+
+   field LoadId {
+      size = Small;
+   }
+   field RecordNo {
+      size = Small;
+   }
+   field Objstate;
+   field LoadGroupItem;
+   field LoadError {
+      multiline = true;
+   }
+   field TransactionDate {
+      validate command {
+         variable TransDateValidateRec Structure(TransDateValidateStructure);
+
+         execute {
+            call ValidateTransactionDate(Company, UserGroup, LoadId, TransactionDate) into TransDateValidateRec;
+
+            set AccountingPeriod = TransDateValidateRec.AccountingPeriod;
+            set VoucherDate = TransDateValidateRec.VoucherDate;
+         }
+      }
+   }
+   field VoucherType;
+   field VoucherNo;
+   field AccountingYear {
+      validate command {
+         variable TransDateValidateRec Structure(TransDateValidateStructure);
+
+         execute {
+            call ValidateTransactionDate(Company, UserGroup, LoadId, TransactionDate) into TransDateValidateRec;
+
+            set AccountingPeriod = TransDateValidateRec.AccountingPeriod;
+         }
+      }
+   }
+   field AccountingPeriod;
+   lov UserGroupRef with ReferenceUserGroupMemberFinance4Selector using FilterUserGroup {
+      search = UserGroup, Description;
+      description = UserGroupRef.Description;
+
+      validate command {
+         variable TransDateValidateRec Structure(TransDateValidateStructure);
+         execute {
+            call ValidateTransactionDate(Company, UserGroup, LoadId, TransactionDate) into TransDateValidateRec;
+
+            set AccountingPeriod = TransDateValidateRec.AccountingPeriod;
+         }
+      }
+   }
+   fieldset CodeStringAccountExtendedLovFieldSet;
+   fieldset CodeStringExtendedLovFieldSet;
+   lov CurrencyCodeRef with ReferenceCurrencyCodeSelector {
+      validate command {
+         variable TempVar Boolean;
+
+         execute {
+            call ValidateCurrencyCode(Company, LoadId, CurrencyCode, TransactionDate, CurrencyRateType) into TempVar;
+         }
+      }
+   }
+   lov CurrencyRateTypeRef with ReferenceCurrencyRate2Selector using FilterCurrRateType;
+   lov ParallelCurrRateTypeRef with ReferenceCurrencyType3Selector using FilterParallelCurrRateType;
+   field Correction {
+      validate command {
+         execute {
+            if[CurrencyCreditAmount != null] {
+               set  CurrencyCreditAmount = "#{CurrencyCreditAmount * -1}";
+            }
+            if[CurrencyDebetAmount != null] {
+               set  CurrencyDebetAmount = "#{CurrencyDebetAmount * -1}";
+            }
+            if[CurrencyAmount != null] {
+               set  CurrencyAmount = "#{CurrencyAmount * -1}";
+            }
+            if[DebetAmount != null] {
+               set  DebetAmount = "#{DebetAmount * -1}";
+            }
+            if[CreditAmount != null] {
+               set  CreditAmount = "#{CreditAmount * -1}";
+            }
+            if[Amount != null] {
+               set  Amount = "#{Amount * -1}";
+            }
+         }
+      }
+   }
+   field CurrencyDebetAmount {
+      editable = [CurrencyCreditAmount = null];
+
+      validate command {
+         variable CurrencyAmountStrcutVar Structure(CurrencyAmountStructure);
+         variable IsCredit Boolean;
+
+         execute {
+            set IsCredit = false;
+            if [CurrencyDebetAmount = null] {
+               set CurrencyAmount = null;
+            }
+            else {
+               set CurrencyAmount = "#{CurrencyDebetAmount - CurrencyCreditAmount}";
+            }
+            call ValidateCurrencyAmount(Company, LoadId, TransactionDate, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount, CurrencyRateType, ParallelCurrRateType, IsCredit) into CurrencyAmountStrcutVar;
+            copy CurrencyAmountStrcutVar into this;
+         }
+      }
+   }
+   field CurrencyCreditAmount {
+      editable = [CurrencyDebetAmount = null];
+      validate command {
+         variable CurrencyAmountStrcutVar Structure(CurrencyAmountStructure);
+         variable IsCredit Boolean;
+
+         execute {
+            set IsCredit = true;
+            if [CurrencyCreditAmount = null] {
+               set CurrencyAmount = null;
+            }
+            else {
+               set CurrencyAmount = "#{CurrencyDebetAmount - CurrencyCreditAmount}";
+            }
+            call ValidateCurrencyAmount(Company, LoadId, TransactionDate, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount, CurrencyRateType, ParallelCurrRateType, IsCredit) into CurrencyAmountStrcutVar;
+            copy CurrencyAmountStrcutVar into this;
+         }
+      }
+   }
+   field CurrencyAmount {
+      validate command {
+         variable CurrencyAmountStrcutVar Structure(CurrencyAmountStructure);
+         variable IsCredit Boolean;
+
+         execute {
+            if [Correction] {
+               if [CurrencyAmount != null and CurrencyAmount > 0] {
+                  set IsCredit = true;
+               }
+               else {
+                  if [CurrencyAmount != null and CurrencyAmount <= 0] {
+                     set IsCredit = false;
+                  }
+               }
+            }
+            else {
+               if [CurrencyAmount != null and CurrencyAmount >= 0] {
+                  set IsCredit = false;
+               }
+               else {
+                  if [CurrencyAmount != null and CurrencyAmount < 0] {
+                     set IsCredit = true;
+                  }
+               }
+            }
+            call ValidateCurrencyAmount(Company, LoadId, TransactionDate, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount, CurrencyRateType, ParallelCurrRateType, IsCredit) into CurrencyAmountStrcutVar;
+            copy CurrencyAmountStrcutVar into this;
+         }
+      }
+   }
+   field DebetAmount {
+      editable = [CreditAmount = null];
+      validate command {
+         variable CurrencyAmountStrcutVar Structure(CurrencyAmountStructure);
+         execute {
+            set IsCredit = false;
+            if [DebetAmount = null] {
+               set Amount = null;
+            }
+            else {
+               set Amount = "#{DebetAmount - CreditAmount}";
+            }
+            call ValidateAmount(Company, LoadId, TransactionDate, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount, ParallelCurrRateType, IsCredit) into CurrencyAmountStrcutVar;
+            copy CurrencyAmountStrcutVar into this;
+         }
+      }
+   }
+
+   field CreditAmount {
+      editable = [DebetAmount = null];
+      validate command {
+         variable CurrencyAmountStrcutVar Structure(CurrencyAmountStructure);
+         execute {
+            set IsCredit = true;
+            if [CreditAmount = null] {
+               set Amount = null;
+            }
+            else {
+               set Amount = "#{DebetAmount - CreditAmount}";
+            }
+            call ValidateAmount(Company, LoadId, TransactionDate, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount, ParallelCurrRateType, IsCredit) into CurrencyAmountStrcutVar;
+            copy CurrencyAmountStrcutVar into this;
+         }
+      }
+   }
+
+   field Amount {
+      validate command {
+         variable CurrencyAmountStrcutVar Structure(CurrencyAmountStructure);
+         execute {
+            set IsCredit = false;
+            if [Correction] {
+               if [Amount != null and Amount > 0] {
+                  set IsCredit = true;
+               }
+            }
+            else {
+               if [Amount != null and Amount < 0] {
+                  set IsCredit = true;
+               }
+            }
+
+            call ValidateAmount(Company, LoadId, TransactionDate, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount, ParallelCurrRateType, IsCredit) into CurrencyAmountStrcutVar;
+            copy CurrencyAmountStrcutVar into this;
+         }
+      }
+   }
+   field ThirdCurrencyDebitAmount {
+      editable = [ThirdCurrencyCreditAmount = null];
+      validate command {
+         execute {
+            if [ThirdCurrencyDebitAmount != null and ThirdCurrencyDebitAmount > 0 and Correction] {
+               set ThirdCurrencyDebitAmount = "#{-1 * ThirdCurrencyDebitAmount}";
+            }
+            else {
+               if [ThirdCurrencyDebitAmount != null and ThirdCurrencyDebitAmount < 0 and not(Correction)] {
+                  set ThirdCurrencyDebitAmount = "#{-1 * ThirdCurrencyDebitAmount}";
+               }
+            }
+            set ThirdCurrencyAmount = "#{ThirdCurrencyDebitAmount - ThirdCurrencyCreditAmount}";
+         }
+      }
+   }
+   field ThirdCurrencyCreditAmount {
+      editable = [ThirdCurrencyDebitAmount = null];
+
+      validate command {
+         execute {
+            if [ThirdCurrencyDebitAmount != null and ThirdCurrencyDebitAmount > 0 and Correction] {
+               set ThirdCurrencyDebitAmount = "#{-1 * ThirdCurrencyDebitAmount}";
+            }
+            else {
+               if [ThirdCurrencyDebitAmount != null and ThirdCurrencyDebitAmount < 0 and not(Correction)] {
+                  set ThirdCurrencyDebitAmount = "#{-1 * ThirdCurrencyDebitAmount}";
+               }
+            }
+            set ThirdCurrencyAmount = "#{ThirdCurrencyDebitAmount - ThirdCurrencyCreditAmount}";
+         }
+      }
+   }
+
+   field ThirdCurrencyAmount {
+      validate command {
+         execute {
+            if [Correction] {
+               if [ThirdCurrencyAmount != null and ThirdCurrencyAmount > 0] {
+                  set ThirdCurrencyCreditAmount = "#{-1 * ThirdCurrencyAmount}";
+                  set ThirdCurrencyDebitAmount = null;
+                  set IsCredit = true;
+               }
+               else {
+                  if [ThirdCurrencyAmount != null and ThirdCurrencyAmount <= 0] {
+                     set ThirdCurrencyDebitAmount = ThirdCurrencyAmount;
+                     set ThirdCurrencyCreditAmount = null;
+                  }
+               }
+            }
+            else {
+               if [ThirdCurrencyAmount != null and ThirdCurrencyAmount >= 0] {
+                  set ThirdCurrencyDebitAmount = ThirdCurrencyAmount;
+                  set ThirdCurrencyCreditAmount = null;
+               }
+               else {
+                  if [ThirdCurrencyAmount != null and ThirdCurrencyAmount < 0] {
+                     set ThirdCurrencyCreditAmount = "#{-1 * ThirdCurrencyAmount}";
+                     set IsCredit = true;
+                     set ThirdCurrencyDebitAmount = null;
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   field Quantity;
+   lov ProcessCodeRef with ReferenceAccountProcessCodeSelector;
+   @DynamicComponentDependency INVOIC
+   lov DelivTypeIdRef with ReferenceDeliveryTypeSelector {
+      search = DelivTypeId, Description;
+      description = DelivTypeIdRef.Description;
+   }
+   lov OptionalCodeRef with ReferenceTaxCodeRestrictedSelector using TaxCodeLov(Company, TransactionDate) {
+      search = FeeCode, Description;
+      description = OptionalCodeRef.Description;
+      validate command {
+         execute {
+            if [original.OptionalCode != OptionalCode and OptionalCode != null] {
+               call CheckTaxCode(Company, Account, OptionalCode) into TaxDirection;
+            }
+            if[condition.OptionalCodeCondition] {
+               set TaxDirection = null;
+               set TaxAmount = null;
+               set CurrencyTaxAmount = null;
+               set ThirdCurrencyAmount = null;
+            }
+         }
+      }
+   }
+   field TaxDirection {
+      editable = [condition.OptionalCodeCondition];
+   }
+   field TaxAmount {
+      editable = [condition.OptionalCodeCondition];
+   }
+   field CurrencyTaxAmount {
+      editable = [condition.OptionalCodeCondition];
+   }
+   field ThirdCurrencyTaxAmount {
+      editable = [condition.OptionalCodeCondition];
+   }
+   @DynamicComponentDependency PROJ
+   lov ProjectActivityIdRef with ReferenceProjectActivityPostableSelector {
+      editable = [ActivityIdEnabled];
+   }
+   field Text;
+   field PartyTypeId;
+   field ReferenceNumber;
+   field ReferenceSerie;
+   field TransCode;
+   field EventDate;
+   field RetroactiveDate;
+   @DynamicComponentDependency FIXASS
+   lov TransactionReasonRef with ReferenceTransactionReasonAcquisitionSelector;
+}

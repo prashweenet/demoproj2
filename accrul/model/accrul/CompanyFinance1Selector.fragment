@@ -1,0 +1,40 @@
+fragment CompanyFinance1Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view company_finance1";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCompanyFinance1Selector for CompanyFinance1 {
+   static ReferenceCurrency;
+}
+
+card CompanyFinance1Card for CompanyFinance1 {
+   label = "";
+   fieldranking ReferenceCurrency;
+   field ReferenceCurrency;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CompanyFinance1 {
+   from = "company_finance1";
+   lu = CompanyFinance;
+   keys = Company, ReferenceCurrency;
+   ludependencies = CompanyFinance;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute ReferenceCurrency Text {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      label = "description";
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

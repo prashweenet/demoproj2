@@ -1,0 +1,49 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingCtrlDetailSpec
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Component IS
+   Flags      = 'PMI--'
+   Datatype   = 'STRING(6)/UPPERCASE'
+   Prompt     = 'Component';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+VIEW Posting_Ctrl_Detail_Spec_Pub IS
+   Prompt = 'Posting Ctrl Detail Spec Pub'
+   Control_Type_Value.Flags = 'PMIU-'
+   Control_Type_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Valid_From.Flags = 'PMIU-'
+   Spec_Control_Type_Value.Datatype = 'STRING(20)/UPPERCASE'
+   No_Code_Part_Value_Db.Flags = 'AMIU-'
+   No_Code_Part_Value_Db.Datatype = 'STRING(5)'
+SELECT p.company                      company,
+       p.code_part                    code_part,
+       p.pc_valid_from                pc_valid_from,
+       p.posting_type                 posting_type,
+       p.control_type_value           control_type_value,
+       p.valid_from                   valid_from,
+       p.spec_control_type_value      spec_control_type_value,
+       p.spec_control_type            spec_control_type,
+       p.spec_module                  spec_module,
+       p.code_part_value              code_part_value,
+       pt.module                      component,
+       p.no_code_part_value           no_code_part_value_db,
+       p.rowkey                      objkey
+FROM   posting_ctrl_detail_spec_tab p, posting_ctrl_posting_type_tab pt
+WHERE  p.posting_type = pt.posting_type;
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

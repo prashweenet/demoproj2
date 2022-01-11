@@ -1,0 +1,45 @@
+projection VoucherTextsHandling;
+component ACCRUL;
+layer Core;
+description "Voucher Texts";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherTextSet for VoucherText {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity VoucherText {
+   attribute TextId Text {
+      label = "Text ID";
+   }
+   attribute Description Text {
+      label = "Text for Voucher Head and Row";
+
+   }
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

@@ -1,0 +1,52 @@
+fragment TaxAccountSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view tax_account";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceTaxAccountSelector for TaxAccount {
+   orderby = SortValue;
+   static Account;
+   static Description;
+}
+
+@Override
+list TaxAccountLovList for TaxAccount {
+   orderby = SortValue;
+}
+
+card TaxAccountCard for TaxAccount {
+   label = "";
+   fieldranking Account;
+   field Account;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query TaxAccount {
+   from = "tax_account";
+   lu = Account;
+   keys = Company, Account;
+   ludependencies = Account;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Account Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

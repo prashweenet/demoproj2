@@ -1,0 +1,17 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistWorkPackage
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+UNIQUE CONSTRAINT av_hist_work_package_uc1 IS av_hist_work_package_tab (work_package_alt_id);
+-------------------- OTHER DEFINITIONS --------------------------------------

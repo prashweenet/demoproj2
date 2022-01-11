@@ -1,0 +1,109 @@
+client AdditionalCodeParts;
+component ACCRUL;
+layer Core;
+
+projection AdditionalCodePartsHandling;
+
+include fragment CodeK;
+include fragment CodeL;
+include fragment CodeN;
+include fragment CodeO;
+include fragment CodeP;
+include fragment CodeQ;
+include fragment CodeR;
+include fragment CodeS;
+include fragment CodeT;
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AdditionalCodePartValuesMenu parent AccrulNavigator.CodeStringMenu at index 650 {
+      label = "Additional Code Part Values";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using CompanyFinanceSet {
+   label = "Additional Code Part Values";
+   singleton CompanyFinanceSingleton;
+
+   markdowntext {
+      visible = [context.Company.CodeKUsed = "N" and context.Company.CodeLUsed = "N" and context.Company.CodeNUsed = "N" and context.Company.CodeOUsed = "N" and context.Company.CodePUsed = "N" and context.Company.CodeQUsed = "N" and context.Company.CodeRUsed = "N" and context.Company.CodeSUsed = "N" and context.Company.CodeTUsed = "N"];
+      text = "Additional Code Parts are not used in Define Code String or components GROCON and BUSPLN are not active.";
+   }
+
+   tabs {
+      tab {
+         visible = [context.Company.CodeKUsed = "Y"];
+         label = "${context.Company.CodeKName}";
+         list CounterPartOne(CodeKArray);
+      }
+      tab {
+         visible = [context.Company.CodeLUsed = "Y"];
+         label = "${context.Company.CodeLName}";
+         list CounterPartTwo(CodeLArray);
+      }
+      tab {
+         visible = [context.Company.CodeNUsed = "Y"];
+         label = "${context.Company.CodeNName}";
+         list AdditionalCodeN(CodeNArray);
+      }
+      tab {
+         visible = [context.Company.CodeOUsed = "Y"];
+         label = "${context.Company.CodeOName}";
+         list AdditionalCodeO(CodeOArray);
+      }
+      tab {
+         visible = [context.Company.CodePUsed = "Y"];
+         label = "${context.Company.CodePName}";
+         list AdditionalCodeP(CodePArray);
+      }
+      tab {
+         visible = [context.Company.CodeQUsed = "Y"];
+         label = "${context.Company.CodeQName}";
+         list AdditionalCodeQ(CodeQArray);
+      }
+      tab {
+         visible = [context.Company.CodeRUsed = "Y"];
+         label = "${context.Company.CodeRName}";
+         list AdditionalCodeR(CodeRArray);
+      }
+      tab {
+         visible = [context.Company.CodeSUsed = "Y"];
+         label = "${context.Company.CodeSName}";
+         list AdditionalCodeS(CodeSArray);
+      }
+      tab {
+         visible = [context.Company.CodeTUsed = "Y"];
+         label = "${context.Company.CodeTName}";
+         list AdditionalCodeT(CodeTArray);
+      }
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+----------------------------- VISUAL COMPONENTS -----------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+
+--------------------------------- SELECTORS ---------------------------------
+singleton CompanyFinanceSingleton for CompanyFinance;
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+
+

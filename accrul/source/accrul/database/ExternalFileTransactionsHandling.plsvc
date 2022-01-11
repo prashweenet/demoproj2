@@ -1,0 +1,60 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalFileTransactionsHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Ext_File_Load_View_Name___(
+   file_type_ IN VARCHAR2) RETURN VARCHAR2
+IS   
+BEGIN
+   IF (file_type_ IS NOT NULL) THEN
+      RETURN Ext_File_Type_API.Get_View_Name(file_type_);
+   END IF;
+   RETURN NULL; 
+END Ext_File_Load_View_Name___;
+
+PROCEDURE Remove_File_Trans___ (
+   key_ IN Ext_File_Load_Key)
+IS  
+BEGIN
+   Ext_File_Trans_API.Remove_File_Trans (key_.load_file_id);
+END Remove_File_Trans___;
+
+PROCEDURE Unpack_Ext_Line___ (
+   key_               IN Ext_File_Load_Key,
+   file_type_         IN VARCHAR2,
+   file_template_id_  IN VARCHAR2,
+   company_           IN VARCHAR2)
+IS  
+BEGIN
+   External_File_Utility_API.Unpack_Ext_Line (file_type_,
+                                              file_template_id_,
+                                              key_.load_file_id,
+                                              company_);
+END Unpack_Ext_Line___;
+
+PROCEDURE Start_Api_To_Call___ (
+   key_ IN Ext_File_Load_Key)
+IS 
+   info_            VARCHAR2(32000);        
+BEGIN
+   External_File_Utility_API.Start_Api_To_Call (info_,
+                                                key_.load_file_id);
+END Start_Api_To_Call___;
+
+
+PROCEDURE Start_Api_To_Call___ (
+   key_   IN  Ext_File_Load_Key,
+	info$_ OUT VARCHAR2)
+IS
+BEGIN   
+	External_File_Utility_API.Start_Api_To_Call (info$_, key_.load_file_id);
+END Start_Api_To_Call___;

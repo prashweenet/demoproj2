@@ -1,0 +1,41 @@
+projection CodeEHandling;
+component ACCRUL;
+layer Core;
+description "Use this Page for Code E Handling";
+category Users;
+
+include fragment CodeE;
+include fragment CopyToCompaniesAssistant;
+include fragment AccountingCodePartValueLovSelector;
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CodeESet for CodeE {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

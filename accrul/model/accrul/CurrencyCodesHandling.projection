@@ -1,0 +1,95 @@
+projection CurrencyCodesHandling;
+component ACCRUL;
+layer Core;
+description "Currency Codes";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CurrencyCodeSet for CurrencyCode {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CurrencyCode {
+   supportwarnings = [true];
+
+   attribute ConvFactor Number {
+      label = "Conversion Factor";
+   }
+   attribute CurrencyRounding Number {
+      required = [false];
+   }
+   attribute CurrRounding  Enumeration(CurrencyRoundingEnum) {
+      fetch = "CURRENCY_ROUNDING";
+      label = "No of Decimals in Amount";
+   }
+   attribute DecimalsInRate Number {
+      label = "No of Decimals in Rate";
+   }
+   attribute EmuCurrencyFromDate Date {
+      label = "Valid as EMU Currency From Date";
+   }
+   attribute Inverted Boolean("TRUE", "FALSE") {
+      label = "Inverted Quotation When Reference Currency";
+   }
+
+   reference CurrencyCodeRef(CurrencyCode) to IsoCurrency(CurrencyCode) {
+      label = "Currency Code";
+   }
+   action DoSetEmuFromDate {
+      ludependencies = CurrencyCode;
+      parameter EmuCurrencyFromDate Date {
+         required = [false];
+      }
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+enumeration CurrencyRoundingEnum {
+   value = "0" {
+      identifier = "Zero";
+      label = "0";
+   }
+
+   value = "2" {
+      identifier = "Two";
+      label = "2";
+   }
+}
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function IsEmuCurr Text {
+   parameter Company Text;
+   parameter CurrencyCode Text;
+   parameter Date Date;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure IncludeEmuCurrStructure {
+   attribute EmuValidDate Date {
+      label = "";
+   }
+   attribute CurrCode Text;
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

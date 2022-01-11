@@ -1,0 +1,88 @@
+projection ApproverAssigningRuleHandling;
+component ACCRUL;
+layer Core;
+description "Approver Assigning Rule Handling";
+category Users;
+include fragment VoucherTypeForArdSelector;
+include fragment ApproverDetailGroupLovSelector;
+include fragment ApproverDetailApproverLovSelector;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ApprovalRuleDefinitionSet for ApprovalRuleDefinition {
+   context Company(Company);
+}
+
+entityset VoucherTypeForArdSet for VoucherTypeForArd {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ApprovalRuleDefinition {
+   attribute ApprovalRuleId Text {
+      label = "Assigning Rule";
+   }
+   reference VoucherTypesRef(Company, VoucherTypes) to VoucherTypeForArd(Company, VoucherType) {
+      multireference = [true];
+      label = "Voucher Type(s)";
+   }
+
+   array ApprovalRuleApproverArray(Company, ApprovalRuleId) to ApprovalRuleApprover(Company, ApprovalRuleId);
+}
+
+@Override
+entity ApprovalRuleApprover {
+   ludependencies = ApprovalRuleDefinition, ApprovalRuleApprover;
+   validate action ValidateSequenceNumber;
+
+   attribute ApprovalRuleRowId Number {
+      required = [false];
+   }
+   attribute ApprovalRuleId Text {
+      label = "Approval Rule";
+   }
+   attribute ApproverId Text {
+      label = "Approver";
+   }
+   attribute ApproverGroupId Text {
+      label = "Approver Group";
+   }
+
+   reference ApproverIdRef(Company, ApproverId) to ApproverDetailApproverLov(Company, ApproverId) {
+      label = "Approver";
+   }
+   reference ApproverGroupIdRef(Company, ApproverGroupId) to ApproverDetailGroupLov(Company, ApproverGroupId) {
+      label = "Approver Group";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+action ValidateSequenceNumber {
+   initialcheck none;
+   parameter Init Boolean;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

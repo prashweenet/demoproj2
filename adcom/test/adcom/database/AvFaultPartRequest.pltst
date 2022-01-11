@@ -1,0 +1,191 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvFaultPartRequest
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210421  rosdlk  AD-1068, Added mock table to av_exe_task
+--  210324  rosdlk  AD-1041, Updated PreSync test with alt_id.
+--  201202  aruflk  LMM2020R1-1453, Added unit test for Check_Insert___().
+--  200918  Satglk  LMM2020R1-816, Added unit test for Pre_Sync_Action.
+--  200714  LAHNLK  LMM2020R1-161, Modified Unit testing for Part Request Count
+--  200619  KAWJLK  LMM2020R1-299, Created Unit testing for Material Availability
+--  200714  LAHNLK  LMM2020R1-148, Created Unit testing for Part Request Count
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Get_Material_Availability should return the proper material availability to related Fault." FOR
+   FUNCTION Get_Material_Availability(
+      fault_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+
+   @MockTable av_fault_part_request_tab
+   VALUES
+      | availability_status | fault_id |
+      | 'Available'         | 1        |
+      | 'Issued'            | 2        |
+   END VALUES;
+
+IS
+
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | fault_id_ |
+      | 'Avail'   |  1        |
+      | 'Issued'  |  2        |
+   LOOP
+
+      return_ := Get_Material_Availability(fault_id_);
+
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Part_Request_Count should return the proper fault part requests count assigned to a particular fault without CANCELED" FOR
+   FUNCTION Get_Part_Request_Count(
+      fault_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_part_request_tab
+   VALUES
+      | fault_id | availability_status |
+      | 1        | 'ISSUED'            |
+      | 1        | 'CANCELED'          |
+      | 1        | 'OPEN'              |
+      | 1        | 'AVAILABLE'         |
+      | 1        | 'ISSUED'            |
+      | 2        | 'ISSUED'            |
+      | 3        | 'CANCELED'          |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | fault_id_ |
+      | 4         |  1        |
+      | 1         |  2        |
+      | 0         |  3        |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Part_Request_Count(fault_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_tab
+   VALUES
+      | fault_id | mx_unique_key |
+      | 2        | 'MXFAULTKEY2' |
+   END VALUES;
+
+   @MockTable av_part_number_tab
+   VALUES
+      | mx_unique_key     | part_number_id |
+      | 'MXPARTNUMBERKEY2'| 2              |
+   END VALUES;
+
+   @MockTable av_part_group_tab
+   VALUES
+      | mx_unique_key       | part_group_id |
+      | 'MXPARTGROUPKEY3'   | 8             |
+   END VALUES;
+
+   @MockTable av_exe_task_tab
+   VALUES
+      | task_id       | fault_id |
+      | 2             | 2        |
+   END VALUES;
+IS
+   --Insert your test variables here
+   output1_     VARCHAR2(2000);
+   expected1_   VARCHAR2(2000);
+   expected2_   VARCHAR2(2000);
+   expected3_   VARCHAR2(2000);
+   expected4_   VARCHAR2(2000);
+   expected5_   VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'FAULT_UNIQUE_KEY'||chr(31)||'MXFAULTKEY2'||chr(30)||'WITH_FAULT_UNIQUE_KEY'|
+      | 'PART_NUMBER_UNIQUE_KEY'||chr(31)||'MXPARTNUMBERKEY2'||chr(30)||'WITH_PART_NUMBER_UNIQUE_KEY'|
+      | 'PART_GROUP_UNIQUE_KEY'||chr(31)||'MXPARTGROUPKEY3'||chr(30)||'WITH_PART_GROUP_UNIQUE_KEY'|
+      | 'ALT_ID'||chr(31)||'71D12BE042604195938B84E5A2B2267B'||chr(30)||'WITH_ALT_ID'|
+      | 'FAULT_ID'||chr(31)||'2'||chr(30)||'WITH_FAULT_ID'|
+   LOOP
+      expected1_ := 'WITH_FAULT_UNIQUE_KEY'||'FAULT_ID'||chr(31)||'2'||chr(30);
+      expected2_ := 'WITH_PART_NUMBER_UNIQUE_KEY'||'PART_NUMBER_ID'||chr(31)||'2'||chr(30);
+      expected3_ := 'WITH_PART_GROUP_UNIQUE_KEY'||'PART_GROUP_ID'||chr(31)||'8'||chr(30);
+      expected4_ := 'ALT_ID'||chr(31)||'71D12BE042604195938B84E5A2B2267B'||chr(30)||'WITH_ALT_ID'||'NATURAL_KEY'||chr(31)||'71D12BE042604195938B84E5A2B2267B'||chr(30);
+      expected5_ := 'FAULT_ID'||chr(31)||'2'||chr(30)||'WITH_FAULT_ID';
+
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_FAULT_UNIQUE_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_PART_NUMBER_UNIQUE_KEY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_PART_GROUP_UNIQUE_KEY%' THEN
+         ASSERT output1_ = expected3_ MESSAGE 'Expected '||expected3_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_ALT_ID%' THEN
+         ASSERT output1_ = expected4_ MESSAGE 'Expected '||expected4_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_FAULT_ID%' THEN
+         ASSERT output1_ = expected5_ MESSAGE 'Expected '||expected5_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Check_Insert___ should ... when ..." FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_fault_part_request_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   @MockPackage Av_Exe_Task_Part_Request_API
+   FUNCTION Get_Next_Seq  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN av_exe_task_part_request_seq.NEXTVAL;
+   END Get_Next_Seq;
+
+IS
+   test_rec1_  av_fault_part_request_tab%ROWTYPE;
+   test_rec2_  av_fault_part_request_tab%ROWTYPE;
+   output_  Indicator_Rec;
+BEGIN
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.fault_part_request_id IS NULL THEN
+         newrec_.fault_part_request_id := Get_Next_Seq();
+         ASSERT newrec_.fault_part_request_id IS NOT NULL MESSAGE 'Returned '||newrec_.fault_part_request_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+

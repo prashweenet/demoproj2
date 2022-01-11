@@ -1,0 +1,498 @@
+-----------------------------------------------------------------------------
+--
+--  Filename      : CreateCompanyRegACCRUL.ins
+--
+--  Module        : ACCRUL
+--
+--  Purpose       : Registers Create Company data for ACCRUL
+--                  
+--  Localization  : NOT Needed!
+--
+--  Date     Sign   History
+--  ------   ----   -----------------------------------------------------------
+--  010406   LiSv   Created
+--  020110   LiSv   IID 10001. NOTE This is only used by companies in Norway.
+--  020213   LaLi   Modified, 2002-2 project
+--  020228   Thsrlk Changes in Insert remove table detail information
+--  021008   Gawilk Added missing LUs, CombControlType, PseudoCodes and AccountProcessCode
+--  021107   Dagalk IIDITFI103N - Added period_status_int_db. 
+--  021120   samblk IID ITFI107E - Added PaymentTermDetails.
+--  021120   ovjose Glob06. Added registration component detail info and using new interface.
+--  021211   ISJALK IIDESFI109E, added multiple_tax.
+--  021217   Ravilk IIDBEFI126E, added TaxCodeTexts.
+--  021224   ISJALK SP3 merge, Bug 33112.
+--  030113   Ravilk BEFI138N.Added a column "Exclude_Credit_Limit' to Payment_Term.
+--  030124   ovjose Changed version to 8.9.0
+--  030318   Thsrlk Changes in Lu CodeC - CodeJ
+--  030326   Bmekse ITFI127N. Added columns to StatutoryFee
+--  030424   NiKaLK DEFI162N - Removal of Base_For_Disc_Date from Payment Term
+--  030428   TiUkLk DEFI162N - Added columns to Payment Term Details
+--  030529   LoKrLK DEFI162N - Added columns to PaymentTermDetails
+--  030902   lalise Modified with respect to template differences
+--  030917   GaWiLK Set Description as second column for LU PaymentTerm.    
+--  031217   Thsrlk FIPR300A1: Add translation supprt functionality for Voucher Texts
+--  040323   Gepelk 2004 SP1 Merge
+--  040921   Ingulk FITH337A - Added N4(Period) entry for the VoucherNoSerial Lu
+--  050411   Nsillk Added C40(Sort Value) for the Account Lu
+--  060919   Lokrlk FIPL602A, Added LU TaxLiabilityDateCtrl
+--  061123   Hawalk FIPL602A, Added LU TaxLiabltyDateException.
+--  070130   ovjose Moved LUs AccountingAttributeCon,AccountingAttribute and AccountingAttributeValue from Genled to Accrul
+--  070427   Chhulk Added ROW_GROUP_VALIDATION and REFERENCE_MANDATORY to VoucherTypeDetail.
+--  070517   Shsalk LCS Merge 64903. Wrong registration info for some LUs, if Account Related or not.
+--  070628   Vohelk B146394 Modified mapping id to CCD_EXTLOADIDSTORAGE for LU ExtLoadIdStorage in Reg_Add_Component_Detail method 
+--  070802   Marulk Bug 65158 Corrected. Added new methods to facilitate
+--                  the addition of this LU to the Create Company concept  
+--  080308   NiFelk Bug 71668, Corrected. Registered PROJ_C_COST_EL_CODE_P_DEM_TAB. 
+--  090630   WAPELK Bug 83342. Corrected in TAX_CODE_TEXTS_ECT view registration.
+--  090720   Marulk bug 83876. Added new LU AccountingCodestrCompl to the company template.  
+--  091218   Samwlk Bug 87939, Corrected. 
+-------------------- SIZZLER ---------------------------------------------
+--  110909   NaSalk Added EXCLUDE_PERIODICAL_CAP into ACCOUNT_PCT.
+--  100116   Nsillk EAFH-1517 Changed the execution order of some modules.
+--  100122   Makrlk TWIN PEAKS Merge.
+             --  090303   Ersruk Added EXCLUDE_PROJ_FOLLOWUP into ACCOUNT_PCT.
+             --  090306   Makrlk Added VALID_FROM in to COST_ELEMENT_TO_ACCOUNT_PCT
+             --  090306   Makrlk Added BASE_FOR_PFE in to ACCOUNTING_CODE_PARTS_PCT 
+--  100311   ovjose Change the execution order, placed UserFinance first
+--  100419   Nsillk EAFH-2620 Added CompanyFinance to be executed
+--  101108   jofise Added LU TaxClass.              
+--  110405   Nsillk RAVEN-1954 Added client mapping for FinSelObjTempl and FinSelObjTemplDet, also removed navigator entries
+--  110509   THPELK EASTONE-14692 LCS Merge(Bug 96385) Removed mapping id CCD_CURRENCYRATE for LU CurrencyRate.
+--  110921   ovjose Added LU StatutoryFeeDetail
+--  120308   Sacalk Added attribute Default_No_Base to LU ProjectCostElement
+--  120822   ovjose Added FooterField and FooterDefinition
+--  130603   Mawelk Added Added suppress_amount in to PAYMENT_TERM_PCT
+--  130606   Clstlk Bug 110457 Added LU ExtParameters.
+--  130711   SALIDE EDEL-2186, Added CASH_DISC_FIXASS_ACQ_VALUE to PaymentTerm
+--  140620   Shdilk Changed version to 9.1.0
+--  151217   MalLlk FINHR-461. Added new LU CompanyTaxControl to the company template.
+--  160718   reanpl FINHR-2559, Added new LUs: TaxCalcStructure, TaxStructureItem, TaxStructureItemRef
+--  161130   Hiralk FINHR-4694, Removed entries for Statutory_Fee_Detail_API.
+--  170511   Shdilk STRFI-6133, Added new entries with latest tables to support remove company. 
+--  200506   Smallk GESPRING20-3980, Added SAT_ACCOUNT_GROUP_TAB.
+--  200924   Alwolk FISPRING20-7467, Changed version to 20.1.0
+--  201123   supwlk FISPRING20-8338, Changed version to 21.1.0
+--  201202   Lakhlk FISPRING20-8360, Added missing tables.
+-----------------------------------------------------------------------------
+SET SERVEROUT ON
+
+DEFINE MODULE = 'ACCRUL'
+--
+-- This section defines the component as a Create Company component
+-- Arguments:
+-- No1:  Component
+-- No2:  Logical Unit
+-- No3:  Parent Component
+-- No4:  Active
+--
+PROMPT Inserting Create Company data for &MODULE
+BEGIN
+    Enterp_Comp_Connect_V170_API.Reg_Add_Component('&MODULE', '21.1.0', 'ENTERP','TRUE');   
+END;
+/
+COMMIT;
+--
+-- This section deletes data from Remove_Company_Tab and Remove_Company_Detail_Tab
+--
+-- Arguments:
+-- No1:  Component. Identity of the component in upper case
+-- No2:  Remove standard only. (String TRUE/FALSE). TRUE used within RD release
+PROMPT Remove standard remove table information for Create Company
+BEGIN
+   Enterp_Comp_Connect_V170_API.Delete_Remove_Company_Info('&MODULE',TRUE);
+END;
+/ 
+COMMIT;
+
+--
+-- This section defines Create Company detail data for the Component and its Logical Units stored in
+-- crecomp_component_lu_tab.
+-- At the same time (when calling Xxx_API.Create_Company_Reg__) it defines the table, owned by the LU, 
+-- that should be used when removing a company (stored in Remove_Company_Tab and Remove_Company_Detail_Tab).
+--
+-- Arguments for Xxx_API.Create_Company_Reg__:
+-- No1:  Execution Order (IN/OUT NUMBER) 
+-- No2:  Create and Export. (String TRUE/FALSE Default TRUE).
+--       This parameter is used to define if the template should 
+--       be created when creating a template and exported when exporting the template. 
+-- No3:  Active. (String TRUE/FALSE Default TRUE). If the LU should be active (used) when creating a company
+-- No4:  Account Related Lu. (String TRUE/FALSE Default FALSE). An account related LU is a LU that stores and handles data 
+--       related to the accounting code string
+-- No5:  Standard table (TRUE when released from RD Default TRUE)
+--
+--
+-- Note: In the end Create Company detail data for Posting Control Logical Units which are handled in a special way are defined. 
+--
+-- Arguments for Posting_Ctrl_Crecomp_API.Comp_Reg_Xxx_Gen__ (where Xxx is the different Posting Ctrl levels):
+-- No1:  Execution Order (IN/OUT NUMBER)
+-- No2:  Component. Identity of the component in upper case
+-- No3:  Logical Unit. The identity of the logical unit
+-- No4:  Package. The identity of database package for the logical unit.
+-- No5:  Create and Export. (String TRUE/FALSE Default TRUE).
+--       This parameter is used to define if the template should 
+--       be created when creating a template and exported when exporting the template. 
+-- No6:  Active. (String TRUE/FALSE Default TRUE). If the LU should be active (used) when creating a company
+PROMPT Inserting default meta data to Create Company Tables
+DECLARE
+   execution_order_ NUMBER := 1; 
+BEGIN
+   -- Note LU UserFinance should be first in execution order. 
+   -- If Company Finance is added that might be first, needs to checked with regards to Company Security.
+   Company_Finance_API.Create_Company_Reg__(execution_order_); 
+   User_Finance_API.Create_Company_Reg__(execution_order_); 
+   Currency_Code_API.Create_Company_Reg__(execution_order_); 
+   Currency_Type_API.Create_Company_Reg__(execution_order_, FALSE); 
+   Currency_Rate_API.Create_Company_Reg__(execution_order_, FALSE); 
+   Accounting_Code_Parts_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Account_Group_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Account_Type_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   User_Group_Finance_API.Create_Company_Reg__(execution_order_);
+   Voucher_Type_API.Create_Company_Reg__(execution_order_);
+   Voucher_Type_Detail_API.Create_Company_Reg__(execution_order_);
+   User_Group_Member_Finance_API.Create_Company_Reg__(execution_order_);
+   Accounting_Year_API.Create_Company_Reg__(execution_order_);
+   Accounting_Period_API.Create_Company_Reg__(execution_order_);
+   All_Ledger_API.Create_Company_Reg__(execution_order_);   
+   Acc_Year_Ledger_Info_API.Create_Company_Reg__(execution_order_);
+   Acc_Period_Ledger_Info_API.Create_Company_Reg__(execution_order_);
+   User_Group_Period_API.Create_Company_Reg__(execution_order_);
+   Voucher_Type_User_Group_API.Create_Company_Reg__(execution_order_);
+   Voucher_No_Serial_API.Create_Company_Reg__(execution_order_);
+   Account_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE);  
+   Code_B_API.Create_Company_Reg__(execution_order_,TRUE ,FALSE ); 
+   Code_C_API.Create_Company_Reg__(execution_order_,TRUE ,FALSE ); 
+   Code_D_API.Create_Company_Reg__(execution_order_,TRUE ,FALSE ); 
+   Code_E_API.Create_Company_Reg__(execution_order_,TRUE ,FALSE );  
+   Code_F_API.Create_Company_Reg__(execution_order_,TRUE ,FALSE );  
+   Code_G_API.Create_Company_Reg__(execution_order_,TRUE ,FALSE ); 
+   Code_H_API.Create_Company_Reg__(execution_order_,TRUE ,FALSE ); 
+   Code_I_API.Create_Company_Reg__(execution_order_,TRUE ,FALSE ); 
+   Code_J_API.Create_Company_Reg__(execution_order_,TRUE ,FALSE ); 
+   Accounting_Codestr_Comb_api.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Statutory_Fee_api.Create_Company_Reg__(execution_order_);
+   Payment_Term_API.Create_Company_Reg__(execution_order_);
+   Ext_Load_Id_Storage_API.Create_Company_Reg__(execution_order_);
+   Posting_Ctrl_Crecomp_API.Comp_Reg_Master_Gen__(execution_order_, '&MODULE', 'AccrulPostingCtrl', 'ACCRUL_POSTING_CTRL_API');  
+   Posting_Ctrl_Crecomp_API.Comp_Reg_Detail_Gen__(execution_order_, '&MODULE', 'AccrulPostingCtrlDetail', 'ACCRUL_POSTING_CTRL_DETAIL_API');
+   Comb_Control_Type_API.Create_Company_Reg__(execution_order_);
+   Pseudo_Codes_API.Create_Company_Reg__(execution_order_);
+   Account_Process_Code_API.Create_Company_Reg__(execution_order_);
+   Payment_Vacation_Period_API.Create_Company_Reg__(execution_order_);
+   Payment_Term_Details_API.Create_Company_Reg__(execution_order_);
+   Tax_Code_Texts_API.Create_Company_Reg__(execution_order_);
+   Tax_Book_API.Create_Company_Reg__(execution_order_);
+   Voucher_Text_API.Create_Company_Reg__(execution_order_);  
+   Posting_Ctrl_Crecomp_API.Comp_Reg_Comb_Detail_Gen__(execution_order_, '&MODULE', 'AccrulPostingCtrlCombDet', 'ACCRUL_POST_CTRL_COMB_DET_API'); 
+   Posting_Ctrl_Crecomp_API.Comp_Reg_Detail_Spec_Gen__(execution_order_, '&MODULE', 'AccrulPostingCtrlDetSpec', 'ACCRUL_POST_CTRL_DET_SPEC_API');  
+   Posting_Ctrl_Crecomp_API.Comp_Reg_Comb_Det_Spec_Gen__(execution_order_, '&MODULE', 'AccrulPostingCtrlCDetSpec', 'ACCRUL_POST_CTRL_CDET_SPEC_API');
+   Tax_Liability_Date_Ctrl_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Tax_Liablty_Date_Exception_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Accounting_Attribute_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Accounting_Attribute_Value_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Accounting_Attribute_Con_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Ext_File_Company_Default_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Project_Cost_Element_API.Create_Company_Reg__(execution_order_);
+   Cost_Element_To_Account_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Account_Tax_Code_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Accounting_Codestr_Compl_API.Create_Company_Reg__(execution_order_,TRUE ,TRUE ,TRUE); 
+   Tax_Class_API.Create_Company_Reg__(execution_order_);
+   Sat_Account_Group_API.Create_Company_Reg__(execution_order_);
+   -- Financial Selection Object Template concept section, special handling same as Posting Ctrl 
+   Fin_Sel_Obj_Templ_API.Create_Company_Reg_Gen__(execution_order_, '&MODULE', 'AccrulFinSelTempl', 'ACCRUL_FIN_SEL_TEMPL_API');
+   Fin_Sel_Obj_Templ_Det_API.Create_Company_Reg_Gen__(execution_order_, '&MODULE', 'AccrulFinSelTemplDet', 'ACCRUL_FIN_SEL_TEMPL_DET_API');
+   Fin_Sel_Templ_Values_API.Create_Company_Reg_Gen__(execution_order_, '&MODULE', 'AccrulFinSelTemplVal', 'ACCRUL_FIN_SEL_TEMPL_VAL_API');
+   Tax_Codes_Per_Tax_Class_API.Create_Company_Reg__(execution_order_);
+   Footer_Field_API.Comp_Reg_Ft_Field_Gen__(execution_order_, '&MODULE', 'AccrulFooterField', 'ACCRUL_FOOTER_FIELD_API');
+   Footer_Definition_API.Create_Company_Reg__(execution_order_);
+   Ext_Parameters_API.Create_Company_Reg__(execution_order_);  
+   Company_Tax_Control_API.Create_Company_Reg__(execution_order_);
+   Tax_Calc_Structure_API.Create_Company_Reg__(execution_order_);
+   Tax_Structure_Item_API.Create_Company_Reg__(execution_order_);
+   Tax_Structure_Item_Ref_API.Create_Company_Reg__(execution_order_);
+END;
+/
+
+-- The following section defines special LU data used by the template
+-- difference concept.
+PROMPT Register special LU related data
+BEGIN
+   Enterp_Comp_Connect_V170_API.Reg_Special_Lu( 
+   'AccountingCodestrComb', 'DIFF', 'C1^C2^C3^C4^C5^C6^C7^C8^C9^C10^C11^C12'); 
+END;
+/
+COMMIT;
+
+--
+-- The following two sections defines tables in the component that should be used when removing a company. 
+-- This is done in this section if the table is not a part of the Create Company concept. 
+-- If it is a part of the Create Company concept the tables are registered already in the above section
+-- when calling Xxx_API.Create_Company_Reg__ method.
+--
+-- Arguments:
+-- No1:  Component. Identity of the component in upper case
+-- No2:  Table name, name of the table containing company data
+-- No3:  Standard table (TRUE when released from RD)
+PROMPT Inserting default data to Remove_Company_Tab
+BEGIN
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','AC_AM_STR','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','AC_AM_STR_ROW','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','ACCOUNT_TAX_CODE_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','ALL_LEDGER_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','APPROVER_COMB_RULE_DETAIL_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','APPROVER_COMB_RULE_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','APPROVER_DETAIL_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','APPROVER_GROUP_DETAIL_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','APPROVER_GROUP_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','APPROVAL_RULE_APPROVER_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','APPROVAL_RULE_DEFINITION_TAB','TRUE');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','AUDIT_BASIC_DATA_MASTER_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','AUDIT_CONTACT_PERSON_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','AUDIT_FORMAT_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','AUDIT_SELECTION_CRITERIA_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','COMB_RULE_ID_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','COMPANY_FINANCE_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','COST_ELE_TO_ACCNT_SECMAP_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','COST_STRUCTURE_DET_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','COST_STRUCTURE_ITEM_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','COST_STRUCTURE_LEVEL_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','COST_STRUCTURE_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','CURRENCY_TYPE_BASIC_DATA_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','EXT_CURRENCY_TASK_DETAIL_TAB','TRUE');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','EXT_LOAD_INFO_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','EXT_TRANSACTIONS_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','EXT_VOUCHER_ROW_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','EXT_VOUCHER_TAB','TRUE');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','FIN_OBJ_SELECTION_VALUES_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','FIN_OBJECT_SELECTION_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','FIN_SEL_OBJ_TEMPL_DET_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','FIN_SEL_OBJ_TEMPL_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','FIN_SEL_TEMPL_VALUES_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','FOOTER_CONNECTION_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','FOOTER_FIELD_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','INTERNAL_POSTINGS_ACCRUL_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','INVOICE_TYPES_PER_TAX_BOOK_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','INV_SERIES_PER_TAX_BOOK_TAB','TRUE');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','PERIOD_ALLOCATION_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','POSTING_CTRL_COMB_DET_SPEC_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','POSTING_CTRL_COMB_DETAIL_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','POSTING_CTRL_DETAIL_SPEC_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','POSTING_CTRL_DETAIL_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','POSTING_CTRL_DETAIL_TEMP_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','POSTING_CTRL_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','RPD_COMPANY_PERIOD_DET_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','RPD_COMPANY_PERIOD_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','RPD_COMPANY_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','SAT_ACCOUNT_GROUP_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','SOURCE_TAX_ITEM_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','STANDARD_AUDIT_TAX_CODES_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','STANDARD_TAX_CODE_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','SUPPLIER_DELIVERY_TAX_CODE_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','SUPPLIER_TAX_INFO_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','TAX_ACCOUNTING_BASIS_INFO_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','TAX_BOOK_STRUCTURE_ITEM_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','TAX_BOOK_STRUCTURE_LEVEL_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','TAX_BOOK_STRUCTURE_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','TAX_CODE_PER_TAX_BOOK_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','TAX_EXEMPTION_REASON_INFO_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','TRANSFERRED_VOUCHER_ROW_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','TRANSFERRED_VOUCHER_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','UUID_INFORMATION_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','VOUCHER_CANDIDATE_APPROVER_TAB','TRUE');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','VOUCHER_NOTE_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','VOUCHER_ROW_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','VOUCHER_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','VOUCHER_TEMPLATE_ROW_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','VOUCHER_TEMPLATE_TAB','TRUE');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table('&MODULE','VOUCHER_TRANSFER_HIST_TAB','TRUE');   
+END;
+/
+COMMIT;
+
+-- Arguments:
+-- No1:  Component. Identity of the component in upper case
+-- No2:  Table name. Name of the table containing company data
+-- No3:  Column name. Normally the name of the column containing the company identity but if the column can contain other
+--       data than company identities then several registration lines are needed to define the company rows in the table and 
+--       in such case define column name for each extra column (together with Arg 4) to identify the company rows in the table.
+-- No4:  Column value. Set <COMPANY> if the column (Arg 3) only holds company identities, if not only companies are 
+--       stored in the column, then set value, per column, to identify the company rows. 
+-- Note: Normally one row is enough to define the company lines for a specifict company in the table. 
+--       For example:
+--       Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','COMPANY_TAB','COMPANY','<COMPANY>');
+--       
+--       For tables where not only one column is enough to define the company rows it means that several calls to 
+--       Reg_Add_Table_Detail is needed to define which rows in the table that contains company data for a specific company
+--       For example:
+--       Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','KEY_LU_TRANSLATION_TAB','KEY_VALUE','<COMPANY>');
+--       Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','KEY_LU_TRANSLATION_TAB','KEY_NAME', 'CompanyKeyLu');
+PROMPT Inserting remove Create Company detail data for &MODULE
+BEGIN
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','AC_AM_STR','COMPANY','<COMPANY>');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','AC_AM_STR_ROW','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','ACCOUNT_TAX_CODE_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','ALL_LEDGER_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','APPROVER_COMB_RULE_DETAIL_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','APPROVER_COMB_RULE_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','APPROVER_DETAIL_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','APPROVER_GROUP_DETAIL_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','APPROVER_GROUP_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','APPROVAL_RULE_APPROVER_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','APPROVAL_RULE_DEFINITION_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','AUDIT_BASIC_DATA_MASTER_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','AUDIT_CONTACT_PERSON_TAB','COMPANY','<COMPANY>');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','AUDIT_FORMAT_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','AUDIT_SELECTION_CRITERIA_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','COMB_RULE_ID_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','COMPANY_FINANCE_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','COST_ELE_TO_ACCNT_SECMAP_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','COST_STRUCTURE_DET_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','COST_STRUCTURE_ITEM_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','COST_STRUCTURE_LEVEL_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','COST_STRUCTURE_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','CURRENCY_TYPE_BASIC_DATA_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','EXT_CURRENCY_TASK_DETAIL_TAB','COMPANY','<COMPANY>');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','EXT_LOAD_INFO_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','EXT_TRANSACTIONS_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','EXT_VOUCHER_ROW_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','EXT_VOUCHER_TAB','COMPANY','<COMPANY>');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','FIN_OBJ_SELECTION_VALUES_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','FIN_OBJECT_SELECTION_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','FIN_SEL_OBJ_TEMPL_DET_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','FIN_SEL_OBJ_TEMPL_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','FIN_SEL_TEMPL_VALUES_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','FOOTER_CONNECTION_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','FOOTER_FIELD_TAB','COMPANY','<COMPANY>');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','INTERNAL_POSTINGS_ACCRUL_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','INVOICE_TYPES_PER_TAX_BOOK_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','INV_SERIES_PER_TAX_BOOK_TAB','COMPANY','<COMPANY>');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','PERIOD_ALLOCATION_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','POSTING_CTRL_COMB_DET_SPEC_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','POSTING_CTRL_COMB_DETAIL_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','POSTING_CTRL_DETAIL_SPEC_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','POSTING_CTRL_DETAIL_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','POSTING_CTRL_DETAIL_TEMP_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','POSTING_CTRL_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','RPD_COMPANY_PERIOD_DET_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','RPD_COMPANY_PERIOD_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','RPD_COMPANY_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','SAT_ACCOUNT_GROUP_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','SOURCE_TAX_ITEM_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','STANDARD_AUDIT_TAX_CODES_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','STANDARD_TAX_CODE_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','SUPPLIER_DELIVERY_TAX_CODE_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','SUPPLIER_TAX_INFO_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','TAX_ACCOUNTING_BASIS_INFO_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','TAX_BOOK_STRUCTURE_ITEM_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','TAX_BOOK_STRUCTURE_LEVEL_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','TAX_BOOK_STRUCTURE_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','TAX_CODE_PER_TAX_BOOK_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','TAX_EXEMPTION_REASON_INFO_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','TRANSFERRED_VOUCHER_ROW_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','TRANSFERRED_VOUCHER_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','UUID_INFORMATION_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','VOUCHER_CANDIDATE_APPROVER_TAB','COMPANY','<COMPANY>');   
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','VOUCHER_NOTE_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','VOUCHER_ROW_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','VOUCHER_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','VOUCHER_TEMPLATE_ROW_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','VOUCHER_TEMPLATE_TAB','COMPANY','<COMPANY>');
+   Enterp_Comp_Connect_V170_API.Reg_Add_Table_Detail('&MODULE','VOUCHER_TRANSFER_HIST_TAB','COMPANY','<COMPANY>');     
+END;
+/
+COMMIT;
+
+--
+-- This section defines so called client mapping, i.e. a definition of the anonymous columns that
+-- are linked to a specific Component and Logical Unit. The definition is used in runtime to
+-- "redesign" the Create Company Template detail window, only showing columns used by the LU with 
+-- the proper column label for each column.
+-- The mapping_id is an unique identity for a Component and Lu, previously defined
+-- when adding data for Create Company Detail data (crecomp_component_lu_tab).
+-- The mapping_id is constructed in the following way: CCD_ || UPPER(LU)
+--
+-- Arguments for Xxx_API.Create_Client_Mapping__:
+-- No1:  Client Window. Defaults to "frmCreateCompanyTemDetail" (which should always be used)
+--
+-- Note: In the end Client Mapping data for Posting Control Logical Units which are handled in a special way are defined.
+--
+-- Arguments for Posting_Ctrl_Crecomp_API.Client_Map_Xxx_Gen__ (where Xxx is the different Posting Ctrl levels):
+-- No1:  Component. Identity of the component in upper case
+-- No2:  Logical Unit. The identity of the logical unit
+PROMPT Define Client Mapping for &MODULE
+DECLARE
+BEGIN
+   Company_Finance_API.Create_Client_Mapping__;
+   Currency_Code_API.Create_Client_Mapping__;
+   Accounting_Code_Parts_API.Create_Client_Mapping__;
+   Account_Group_API.Create_Client_Mapping__;
+   Account_Type_API.Create_Client_Mapping__;
+   User_Group_Finance_API.Create_Client_Mapping__;
+   User_Finance_API.Create_Client_Mapping__;
+   Voucher_Type_API.Create_Client_Mapping__;
+   Voucher_Type_Detail_API.Create_Client_Mapping__;
+   User_Group_Member_Finance_API.Create_Client_Mapping__;
+   User_Group_Period_API.Create_Client_Mapping__;
+   Voucher_Type_User_Group_API.Create_Client_Mapping__;
+   Accounting_Period_API.Create_Client_Mapping__;
+   Accounting_Year_API.Create_Client_Mapping__;
+   Acc_Year_Ledger_Info_API.Create_Client_Mapping__;
+   Acc_Period_Ledger_Info_API.Create_Client_Mapping__;
+   Voucher_No_Serial_API.Create_Client_Mapping__;
+   Account_API.Create_Client_Mapping__;
+   Code_B_API.Create_Client_Mapping__;
+   Code_C_API.Create_Client_Mapping__;
+   Code_D_API.Create_Client_Mapping__;
+   Code_E_API.Create_Client_Mapping__;
+   Code_F_API.Create_Client_Mapping__;
+   Code_G_API.Create_Client_Mapping__;
+   Code_H_API.Create_Client_Mapping__;
+   Code_I_API.Create_Client_Mapping__;
+   Code_J_API.Create_Client_Mapping__;
+   Accounting_Codestr_Comb_API.Create_Client_Mapping__;
+   Accounting_Codestr_Compl_API.Create_Client_Mapping__;
+   Statutory_Fee_API.Create_Client_Mapping__;
+   Payment_Term_API.Create_Client_Mapping__;
+   Ext_Load_Id_Storage_API.Create_Client_Mapping__;
+   -- Posting Ctrl section, special handling see note above 
+   Posting_Ctrl_Crecomp_API.Client_Map_Master_Gen__('&MODULE','AccrulPostingCtrl');
+   Posting_Ctrl_Crecomp_API.Client_Map_Detail_Gen__('&MODULE','AccrulPostingCtrlDetail');
+   Posting_Ctrl_Crecomp_API.Client_Map_Detail_Spec_Gen__('&MODULE','AccrulPostingCtrlDetSpec');   
+   Posting_Ctrl_Crecomp_API.Client_Map_Comb_Detail_Gen__('&MODULE','AccrulPostingCtrlCombDet');
+   Posting_Ctrl_Crecomp_API.Client_Map_Comb_Det_Spec_Gen__('&MODULE','AccrulPostingCtrlCDetSpec');
+   Comb_Control_Type_API.Create_Client_Mapping__;
+   Pseudo_Codes_API.Create_Client_Mapping__;
+   Account_Process_Code_API.Create_Client_Mapping__;
+   Payment_Vacation_Period_API.Create_Client_Mapping__;
+   Payment_Term_Details_API.Create_Client_Mapping__;  
+   Tax_Code_Texts_API.Create_Client_Mapping__;
+   Tax_Book_API.Create_Client_Mapping__;
+   Voucher_Text_API.Create_Client_Mapping__;      
+   Tax_Liability_Date_Ctrl_API.Create_Client_Mapping__;
+   Tax_Liablty_Date_Exception_API.Create_Client_Mapping__;    
+   Accounting_Attribute_Con_API.Create_Client_Mapping__;
+   Accounting_Attribute_API.Create_Client_Mapping__;
+   Accounting_Attribute_Value_API.Create_Client_Mapping__;
+   Ext_File_Company_Default_API.Create_Client_Mapping__;
+   Project_Cost_Element_API.Create_Client_Mapping__;
+   Cost_Element_To_Account_API.Create_Client_Mapping__; 
+   Account_Tax_Code_API.Create_Client_Mapping__;
+   Tax_Class_API.Create_Client_Mapping__;
+   Tax_Codes_Per_Tax_Class_API.Create_Client_Mapping__;
+   Sat_Account_Group_API.Create_Client_Mapping__;
+   -- Financial Selection Object Template concept section, special handling same as Posting Ctrl 
+   Fin_Sel_Obj_Templ_API.Create_Client_Mapping_Gen__('&MODULE', 'AccrulFinSelTempl');
+   Fin_Sel_Obj_Templ_Det_API.Create_Client_Mapping_Gen__('&MODULE', 'AccrulFinSelTemplDet');
+   Fin_Sel_Templ_Values_API.Create_Client_Mapping_Gen__('&MODULE', 'AccrulFinSelTemplVal');
+   Footer_Field_API.Client_Map_Ft_Field_Gen__( '&MODULE','AccrulFooterField' );
+   Footer_Definition_API.Create_Client_Mapping__;
+   Ext_Parameters_API.Create_Client_Mapping__;
+   Company_Tax_Control_API.Create_Client_Mapping__;
+   Tax_Calc_Structure_API.Create_Client_Mapping__;
+   Tax_Structure_Item_API.Create_Client_Mapping__;
+   Tax_Structure_Item_Ref_API.Create_Client_Mapping__;
+   All_Ledger_API.Create_Client_Mapping__;
+END;
+/
+COMMIT;
+
+UNDEFINE MODULE

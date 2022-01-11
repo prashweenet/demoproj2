@@ -1,0 +1,84 @@
+projection ConnectAttributeHandling;
+component ACCRUL;
+layer Core;
+description "Connect Attribute";
+category Users;
+
+include fragment CopyToCompaniesAssistant;
+include fragment BudgetAccCodePartValueSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountingAttributeSet for AccountingAttribute {
+   context Company(Company);
+}
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountingAttribute {
+   crud = Read;
+
+   attribute CodePart Text {
+      format = uppercase;
+   }
+   reference AttributeRef(Company, Attribute) to AccountingAttribute(Company, Attribute) {
+      label = "Attribute";
+   }
+   reference CodePartRef(Company, CodePart) to AccountingCodeParts(Company, CodePart) {
+      label = "Code Part Name";
+   }
+   array AccountingAttributeCon2Array(Company, Attribute) to AccountingAttributeCon2(Company, Attribute);
+}
+
+@Override
+entity AccountingAttributeCon2 using AccountingAttributeCon {
+   ludependencies = AccountingAttributeCon2;
+   from = "accounting_attribute_con2";
+   keys = Company, Attribute, CodePart, CodePartValue;
+   attribute AttributeValue Text {
+      format = uppercase;
+      required = [false];
+   }
+   reference AttributeRef(Company, Attribute) to AccountingAttribute(Company, Attribute) {
+      label = "Attribute";
+   }
+   reference CodePartValueRef(Company, CodePart, CodePartValue) to BudgetAccCodePartValue(Company, CodePart, CodePartValue) {
+      label = "Code Part Value";
+   }
+   reference AttributeValueRef(Company, Attribute, AttributeValue) to AccountingAttributeValue(Company, Attribute, AttributeValue) {
+      label = "Attribute Value";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query AccountingCodePartValueLovQuery {
+   from = "accounting_code_part_value_lov";
+   lu = AccountingCodePartValue;
+   keys = Company, CodePart, CodePartValue;
+   attribute Company Text;
+   attribute CodePart Text;
+   attribute CodePartValue Text;
+   attribute Description Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

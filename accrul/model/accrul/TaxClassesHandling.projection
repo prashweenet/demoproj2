@@ -1,0 +1,69 @@
+projection TaxClassesHandling;
+component ACCRUL;
+layer Core;
+description "Tax Classes";
+category Users;
+
+include fragment TaxLiabilityLovSelector;
+include fragment TaxCodeRestrictedSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset TaxClassSet for TaxClass {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity TaxClass {
+   attribute TaxClassId Text {
+      label = "Tax Class";
+   }
+
+   array TaxCodesPerTaxClassArray(Company, TaxClassId) to TaxCodesPerTaxClass(Company, TaxClassId);
+}
+
+@Override
+entity TaxCodesPerTaxClass {
+   crud = Create, Read, Delete;
+   attribute CurrentDate Date {
+      fetch = "trunc(sysdate)";
+      default = "trunc(sysdate)";
+   }
+   reference TaxLiabilityRef(TaxLiability) to TaxLiabilityLov(TaxLiability) {
+      label = "Tax Liability";
+   }
+   reference TaxCodeRef(Company, FeeCode) to TaxCodeRestricted(Company, FeeCode) {
+      label = "Tax Code";
+      copy ValidFrom to ValidFrom;
+   }
+   reference CountryCodeRef(CountryCode) to IsoCountry(CountryCode) {
+      label = "Delivery Country";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

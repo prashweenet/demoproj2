@@ -1,0 +1,42 @@
+fragment ApproverDetailGroupLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view approver_detail_group_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceApproverDetailGroupLovSelector for ApproverDetailGroupLov {
+   static ApproverGroupId;
+   static ApproverGroupDesc;
+}
+
+card ApproverDetailGroupLovCard for ApproverDetailGroupLov {
+   label = "";
+   fieldranking ApproverGroupId;
+   field ApproverGroupId;
+   field ApproverGroupDesc;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query ApproverDetailGroupLov {
+   from = "approver_detail_group_lov";
+   lu = ApproverDetail;
+   keys = Company, ApproverGroupId;
+   ludependencies = ApproverDetail;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute ApproverGroupId Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute ApproverGroupDesc Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

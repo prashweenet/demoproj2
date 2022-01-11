@@ -1,0 +1,102 @@
+client TaxWithholding;
+component ACCRUL;
+layer Core;
+projection TaxWithholdingHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using TaxWithholdingCodeSet {
+   label = "Tax Withholding";
+   crudactions {
+      duplicate {
+         enabled = [false];
+      }
+   }
+
+   list TaxWithholdingCodeList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list TaxWithholdingCodeList for StatutoryFee {
+   orderby = FeeCode;
+
+   lov FeeCodeRef with ReferenceStatutoryFeeSelector {
+      search = FeeCode, Description;
+      description = FeeCodeRef.Description;
+   }
+   field AmountNotTaxable {
+      preserveprecision = [true];
+      validate command {
+         execute {
+            call RoundAccCurrencyAmount(Company, AmountNotTaxable) into AmountNotTaxable;
+         }
+      }
+   }
+   field MinWithheldAmount {
+      preserveprecision = [true];
+      validate command {
+         execute {
+            call RoundAccCurrencyAmount(Company, MinWithheldAmount) into MinWithheldAmount;
+         }
+      }
+   }
+   field MinimumBaseAmount {
+      preserveprecision = [true];
+      validate command {
+         execute {
+            call RoundAccCurrencyAmount(Company, MinimumBaseAmount) into MinimumBaseAmount;
+         }
+      }
+   }
+   field UseWithholdAmountTable {
+      size = Small;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+
+
+
+
+

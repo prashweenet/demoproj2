@@ -1,0 +1,70 @@
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200808  DILDLK  LMM2020R1-516, Modified navigation.
+--  200729  TAJALK  LMM2020R1-537, Created.
+-----------------------------------------------------------------------------
+client EngineeringUnits;
+component ADCOM;
+layer Core;
+projection EngineeringUnitsHandling;
+description "Engineering Units List";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TaskMeasurementsNavEntry parent AdcomNavigator.MeasurementBasicData at index 300 {
+      label = "Engineering Units";
+      page List home AvEngineeringUnit;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AvEngineeringUnitSet {
+   label = "Engineering Units";
+   list EngineeringUnitList;
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list EngineeringUnitList for AvEngineeringUnit {
+   field EngineeringUnitCode;
+   field EngineeringUnitDesc {
+      label = "Engineering Unit Description";
+   }
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

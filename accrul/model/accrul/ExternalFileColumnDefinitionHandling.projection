@@ -1,0 +1,72 @@
+projection ExternalFileColumnDefinitionHandling;
+component ACCRUL;
+layer Core;
+description "External File Column Definition";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtFileTypeRecSet for ExtFileTypeRec;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileTypeRec {
+   crud = Read;
+   attribute RecordTypeId Text {
+      format = uppercase;
+   }
+   attribute RecordSetId Text {
+      label = "Record Set Identity";
+   }
+   attribute FirstInRecordSet Boolean("TRUE", "FALSE");
+   attribute LastInRecordSet Boolean("TRUE", "FALSE");
+   attribute RecordTypeDescription Text {
+      fetch = "record_type_id||' - '||description";
+      label = "Record Type";
+   }
+
+   reference ExtFileTypeRef(FileType) to ExtFileType(FileType);
+
+   array ExtFileTypeRecColumnArray(FileType, RecordTypeId) to ExtFileTypeRecColumn(FileType, RecordTypeId);
+}
+
+@Override
+entity ExtFileTypeRecColumn {
+   attribute ColumnId Text {
+      format = uppercase;
+   }
+   attribute Mandatory Boolean("TRUE", "FALSE");
+   attribute DestinationColumn Text {
+      format = uppercase;
+   }
+}
+
+@Override
+entity ExtFileType {
+   attribute SystemDefined Boolean("TRUE", "FALSE");
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

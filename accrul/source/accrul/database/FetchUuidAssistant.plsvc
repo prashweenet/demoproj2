@@ -1,0 +1,235 @@
+-------------------------------------------------------------------------------------------------------------
+--
+--  Fragment:     FetchUuidAssistant
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  -----------------------------------------------------------------------------------------
+--  200612  Smallk  gelr: Added to support Global Extension Functionalities.
+--  200619  Smallk  GESPRING20-4849, Added validations for missing UUID attribute or having null value in it.
+--  200629  Smallk  GESPRING20-4840, Added UUID Date fectching, restructured code.
+--  200710  Smallk  GESPRING20-4971, Moved UUID Information to new entity.
+-------------------------------------------------------------------------------------------------------------
+
+layer Core;
+
+-- gelr:accounting_xml_data, begin
+FUNCTION Fetch_Uuid_Info___ (
+   key_           IN  Fetch_Uuid_Virtual_Key,
+   xml_file_name_ IN  VARCHAR2,
+   fetch_date_    IN  BOOLEAN,
+   info$_         OUT VARCHAR2 ) RETURN Uuid_Info_Rec
+IS
+   virt_rec_      Fetch_Uuid_Virtual_Rec;
+   src_clob_      CLOB;
+   xml_attr_list_ DBMS_XMLDOM.DOMNamedNodeMap;
+   struct_rec_    Uuid_Info_Rec;
+BEGIN
+   Client_SYS.Clear_Info;
+   virt_rec_               := Get_Record___(key_);
+   src_clob_               := Convert_To_Clob___(virt_rec_.xml_file_data);
+   xml_attr_list_          := Get_Xml_Attribute_List___(src_clob_, xml_file_name_);
+   struct_rec_.uuid_number := Get_Uuid_Number___(xml_attr_list_);
+   IF (fetch_date_) THEN
+      struct_rec_.uuid_date := Get_Uuid_Date___(xml_attr_list_);
+   END IF;
+   info$_ := Client_SYS.Get_All_Info;
+   RETURN struct_rec_;
+END Fetch_Uuid_Info___;
+
+
+FUNCTION Convert_To_Clob___ (
+   blob_ IN BLOB ) RETURN CLOB
+IS
+   temp_clob_     CLOB;
+   amount_char_   NUMBER := DBMS_LOB.LobMaxSize;
+   dest_offset_   NUMBER := 1;
+   src_offset_    NUMBER := 1;
+   csid_          NUMBER := DBMS_LOB.Default_CSID;
+   lang_context_  NUMBER := DBMS_LOB.Default_Lang_Ctx;
+   warning_       NUMBER := 1;
+BEGIN
+   DBMS_LOB.CreateTemporary(temp_clob_, TRUE);
+   DBMS_LOB.ConvertToClob(temp_clob_, blob_, amount_char_, dest_offset_, src_offset_, csid_, lang_context_, warning_);
+   RETURN temp_clob_;
+END Convert_To_Clob___;
+
+
+FUNCTION Get_Xml_Attribute_List___ (
+   src_clob_      IN CLOB,
+   xml_file_name_ IN VARCHAR2 ) RETURN DBMS_XMLDOM.DOMNamedNodeMap
+IS
+   src_dom_doc_         DBMS_XMLDOM.DOMDocument;
+   xml_attr_list_       DBMS_XMLDOM.DOMNamedNodeMap;
+   xml_parsing_ex_      EXCEPTION;
+   PRAGMA exception_init(xml_parsing_ex_, -31011);
+BEGIN
+   src_dom_doc_      := DBMS_XMLDOM.NewDOMDocument(src_clob_);
+   Validate_Xml_Format___(src_dom_doc_, xml_attr_list_, xml_file_name_);
+   RETURN xml_attr_list_;
+EXCEPTION
+   WHEN xml_parsing_ex_ THEN
+      Raise_Parsing_Err___(xml_file_name_);
+END Get_Xml_Attribute_List___;
+
+
+PROCEDURE Validate_Xml_Format___ (
+   dom_document_      IN     DBMS_XMLDOM.DOMDocument,
+   tfd_dom_attr_list_ IN OUT DBMS_XMLDOM.DOMNamedNodeMap,
+   xml_file_name_     IN     VARCHAR2 )
+IS
+   root_elem_        DBMS_XMLDOM.DOMElement;
+   cmpl_dom_nodes_   DBMS_XMLDOM.DOMNodeList;
+   cmpl_dom_node_    DBMS_XMLDOM.DOMNode;
+   tfd_dom_nodes_    DBMS_XMLDOM.DOMNodeList;
+   tfd_dom_node_     DBMS_XMLDOM.DOMNode;
+   uuid_dom_node_    DBMS_XMLDOM.DOMNode;
+BEGIN
+   root_elem_ := DBMS_XMLDOM.GetDocumentElement(dom_document_);
+   -- using regex to omit the namespace, no method available for only getting the tag name
+   IF (REGEXP_SUBSTR(DBMS_XMLDOM.GetTagName(root_elem_), '[^:]+$', 1, 1) = 'Comprobante') THEN
+      cmpl_dom_nodes_   := DBMS_XMLDOM.GetChildrenByTagName(root_elem_, 'Complemento');
+      IF (DBMS_XMLDOM.GetLength(cmpl_dom_nodes_) > 0) THEN
+         -- selects the first Complemento child, in case there's multiple
+         cmpl_dom_node_ := DBMS_XMLDOM.Item(cmpl_dom_nodes_, 0);
+         tfd_dom_nodes_ := DBMS_XMLDOM.GetChildrenByTagName(DBMS_XMLDOM.MakeElement(cmpl_dom_node_), 'TimbreFiscalDigital');
+         IF (DBMS_XMLDOM.GetLength(tfd_dom_nodes_) > 0) THEN
+            -- selects the first TimbreFiscalDigital child, in case there's multiple
+            tfd_dom_node_        := DBMS_XMLDOM.Item(tfd_dom_nodes_, 0);
+            tfd_dom_attr_list_   := DBMS_XMLDOM.GetAttributes(tfd_dom_node_);
+            uuid_dom_node_       := DBMS_XMLDOM.GetNamedItem(tfd_dom_attr_list_, 'UUID');
+            IF (DBMS_XMLDOM.IsNull(uuid_dom_node_)) THEN
+               Raise_Invalid_Format_Err___(xml_file_name_);
+            END IF;
+         ELSE
+            Raise_Invalid_Format_Err___(xml_file_name_);
+         END IF;
+      ELSE
+         Raise_Invalid_Format_Err___(xml_file_name_);
+      END IF;
+   ELSE
+      Raise_Invalid_Format_Err___(xml_file_name_);
+   END IF;
+END Validate_Xml_Format___;
+
+
+FUNCTION Get_Uuid_Number___ (
+   tfd_dom_attr_list_ IN DBMS_XMLDOM.DOMNamedNodeMap ) RETURN VARCHAR2
+IS
+   uuid_value_       VARCHAR2(36);
+   uuid_dom_node_    DBMS_XMLDOM.DOMNode;
+   char_buffer_ex_   EXCEPTION;
+   PRAGMA exception_init(char_buffer_ex_, -6502);
+BEGIN
+   uuid_dom_node_ := DBMS_XMLDOM.GetNamedItem(tfd_dom_attr_list_, 'UUID');
+   BEGIN
+      uuid_value_    := DBMS_XMLDOM.GetNodeValue(uuid_dom_node_);
+   EXCEPTION
+      WHEN char_buffer_ex_ THEN
+         Raise_Invalid_Uuid_Err___(uuid_value_, 'LENGTH');
+   END;
+   IF (Uuid_Information_API.Is_Invalid_Uuid(uuid_value_)) THEN
+      Raise_Invalid_Uuid_Err___(uuid_value_, 'FORMAT');
+   END IF;
+   RETURN uuid_value_;
+END Get_Uuid_Number___;
+
+
+FUNCTION Get_Uuid_Date___ (
+   xml_attr_list_ IN DBMS_XMLDOM.DOMNamedNodeMap ) RETURN DATE
+IS
+   uuid_date_           DATE;
+   uuid_date_dom_node_  DBMS_XMLDOM.DOMNode;
+BEGIN
+   uuid_date_dom_node_ := DBMS_XMLDOM.GetNamedItem(xml_attr_list_, 'FechaTimbrado');
+   IF (DBMS_XMLDOM.IsNull(uuid_date_dom_node_)) THEN
+      Client_SYS.Add_Info(lu_name_, 'MXNOUUIDDATE: UUID Date attribute was not found in XML.');
+      uuid_date_ := NULL;
+   ELSE
+      Validate_Uuid_Date___(DBMS_XMLDOM.GetNodeValue(uuid_date_dom_node_), uuid_date_);
+   END IF;
+	RETURN uuid_date_;
+END Get_Uuid_Date___;
+
+
+PROCEDURE Validate_Uuid_Date___ (
+   uuid_date_text_ IN     VARCHAR2,
+   uuid_date_      IN OUT DATE )
+IS
+BEGIN 
+   IF (REGEXP_LIKE(uuid_date_text_, '^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$', 'i')) THEN
+      BEGIN
+         uuid_date_ := TO_DATE(REGEXP_SUBSTR(uuid_date_text_, '[^T]+', 1, 1, 'i'), 'YYYY-MM-DD', 'NLS_CALENDAR=GREGORIAN');
+      EXCEPTION
+         WHEN OTHERS THEN
+            Client_SYS.Add_Info(lu_name_, 'MXWROUUIDDATE: Invalid UUID Date, :P1.', REGEXP_SUBSTR(SQLERRM, '[^:]+$', 1, 1));
+      END;
+   ELSE
+      Client_SYS.Add_Info(lu_name_, 'MXINVUUIDDATE: Invalid UUID Date.');
+      uuid_date_ := NULL;
+   END IF;
+END Validate_Uuid_Date___;
+
+
+PROCEDURE Raise_Invalid_Format_Err___ (
+   xml_file_name_ VARCHAR2 )
+IS
+BEGIN
+   Error_SYS.Record_General(lu_name_, 'MXXMLFORINV: XML format of '':P1'' is invalid.', xml_file_name_);
+END Raise_Invalid_Format_Err___;
+
+
+PROCEDURE Raise_Parsing_Err___ (
+   xml_file_name_ VARCHAR2 )
+IS
+BEGIN
+   Error_SYS.Record_General(lu_name_, 'MXXMLPARERR: XML syntax error in '':P1''.', xml_file_name_);
+END Raise_Parsing_Err___;
+
+
+PROCEDURE Raise_Invalid_Uuid_Err___ (
+   uuid_    VARCHAR2,
+   cause_   VARCHAR2 )
+IS
+BEGIN
+   IF (cause_ = 'LENGTH') THEN
+      Error_SYS.Record_General(lu_name_, 'MXXMLINUIDL: UUID Number exceeds 36 characters.');
+   ELSIF (cause_ = 'FORMAT') THEN
+      Error_SYS.Record_General(lu_name_, 'MXXMLINUIDF: UUID Number ":P1" is invalid.', uuid_);
+   END IF;
+END Raise_Invalid_Uuid_Err___;
+
+
+PROCEDURE Update_Uuid_Info___ (
+   company_             IN VARCHAR2,
+   source_ref1_         IN VARCHAR2,
+   source_ref2_         IN VARCHAR2,
+   source_ref3_         IN VARCHAR2,
+   source_ref_type_db_  IN VARCHAR2,
+   uuid_number_         IN VARCHAR2,
+   uuid_date_           IN DATE,
+   info$_               OUT VARCHAR2 )
+IS
+   uuid_info_rec_ uuid_information_tab%ROWTYPE;
+BEGIN
+   uuid_info_rec_.company           := company_;
+   uuid_info_rec_.source_ref1       := source_ref1_;
+   uuid_info_rec_.source_ref2       := source_ref2_;
+   uuid_info_rec_.source_ref3       := source_ref3_;
+   uuid_info_rec_.source_ref_type   := source_ref_type_db_;
+   uuid_info_rec_.uuid_number       := uuid_number_;
+   IF (uuid_date_ IS NOT NULL) THEN
+      uuid_info_rec_.uuid_date := uuid_date_;
+   END IF;
+   Client_SYS.Clear_Info;
+   Uuid_Information_API.New_Modify(uuid_info_rec_);
+   IF (uuid_info_rec_.uuid_date IS NULL) THEN
+      Client_SYS.Add_Info(lu_name_, 'MXUUIDNUMUPD: UUID Number is fetched successfully.');
+   ELSE
+      Client_SYS.Add_Info(lu_name_, 'MXUUIDDATUPD: UUID Number and UUID Date are fetched successfully.');
+   END IF;
+   info$_ := Client_SYS.Get_All_Info;
+END Update_Uuid_Info___;
+-- gelr:accounting_xml_data, end

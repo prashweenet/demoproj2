@@ -1,0 +1,81 @@
+client AuditFileTaxInfo;
+component ACCRUL;
+layer Core;
+projection AuditFileTaxInfoHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using CompanyFinanceSet {
+   label = "Audit File Tax Information";
+   singleton CompanyFinanceSingleton;
+   list TaxExemptionReasonInfoList(TaxExemptionReasonInfoArray) {
+      label = "Tax Exemption Reasons";
+   }
+   arrange {
+      list StandardTaxCodeList(StandardTaxCodeArray) {
+         label = "Standard Tax Codes";
+      }
+      list TaxAccountingBasisInfoList(TaxAccountingBasisInfoArray) {
+         label = "Tax Accounting Basis";
+      }
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+singleton CompanyFinanceSingleton for CompanyFinance;
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list StandardTaxCodeList for StandardTaxCode {
+   field StandardTaxCode;
+   field Description;
+}
+
+list TaxExemptionReasonInfoList for TaxExemptionReasonInfo {
+   field TaxExemptionReasonId;
+   field Description;
+}
+
+list TaxAccountingBasisInfoList for TaxAccountingBasisInfo {
+   field TaxAccountingBasisId;
+   field Description;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

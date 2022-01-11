@@ -1,0 +1,81 @@
+projection AccountGroupsHandling;
+component ACCRUL;
+layer Core;
+description "Account Groups Handling";
+category Users;
+include fragment CopyToCompaniesAssistant;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountGroupSet for AccountGroup {
+   context Company(Company);
+}
+
+entityset AccountGroupsMultiCompanySet for AccountGroup {
+   where = "company IN (SELECT company FROM user_finance_auth_pub)";
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountGroup {
+   contexttodefault = Company(Company);
+   attribute Description Text {
+      label = "Account Group Description";
+   }
+   attribute DefCurrencyBalance Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference DefMasterCompanyAccntRef(MasterCompany, DefMasterCompanyAccnt) to Account(Company, Account) {
+      label = "Default Group Account";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+enumeration UpdateAccountsAccountTypeEnum {
+   value = "AccountsWithoutDefaultGroupAccount" {
+      label = "Accounts without default group account.";
+   }
+   value = "AllAccounts" {
+      label = "All accounts.";
+   }
+}
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+action DoUpdateAccountsWithDefaultGroupAccount {
+   initialcheck implementation;
+   parameter FullSelection Text;
+   parameter UpdateAccountsTypeSelection Enumeration(UpdateAccountsAccountTypeEnum);
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetSelectedCompany Text {
+   parameter FullSelection Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure UpdateAccountsWithDefaultGroupAccountsStructure {
+   attribute AccountTypeSelection Enumeration(UpdateAccountsAccountTypeEnum);
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

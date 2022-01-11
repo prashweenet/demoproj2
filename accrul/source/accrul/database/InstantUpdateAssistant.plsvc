@@ -1,0 +1,218 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     InstantUpdateAssistant
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@DynamicComponentDependency GENLED
+FUNCTION Preliminary_Year_End_Allowed___(
+	company_    IN VARCHAR2,
+   journal_no_ IN NUMBER ) RETURN Return_Voucher_Year_Structure_Rec
+IS
+   from_year_     VARCHAR2(4);
+   acc_year_list_ VARCHAR2(200);
+   rec_           Return_Voucher_Year_Structure_Rec;
+BEGIN
+	Gen_Led_Voucher_API.Get_Preliminary_Acc_Year_(acc_year_list_, company_, journal_no_);
+   
+   IF (acc_year_list_ != ',') THEN
+      from_year_ := trim((SUBSTR(acc_year_list_, INSTR(acc_year_list_,',',-1,2)+1, 4)));  
+      rec_.from_year := TO_NUMBER(from_year_);
+      rec_.to_year := rec_.from_year + 1;
+   END IF;
+   RETURN rec_;
+  
+END Preliminary_Year_End_Allowed___;
+
+@DynamicComponentDependency GENLED
+FUNCTION Vou_Instant_Update___ (
+   selection_        IN VARCHAR2 ) RETURN Return_Structure_Rec
+IS   
+   keyref_                 VARCHAR2(32000);
+   ptr_                    NUMBER := 1;
+   print_journal_          BOOLEAN;
+   detailed_journal_       BOOLEAN;
+   action_                 VARCHAR2(10):= 'EXEC';
+   detailed_journal_param_ VARCHAR2(5);
+   print_journal_param_    VARCHAR2(5);
+   userid_                 VARCHAR2(30);
+   voucher_selection_      VARCHAR2(32000);
+   company_                VARCHAR2(20);  
+   accounting_year_        NUMBER; 
+   voucher_type_           VARCHAR2(30);  
+   voucher_no_             NUMBER;
+   return_structure_rec_   Return_Structure_Rec;
+BEGIN
+   return_structure_rec_.post_to_queue := Accrul_Attribute_API.Get_Attribute_Value('GL_UPDATE_BATCH_QUEUE'); 
+      
+   IF (print_journal_) THEN
+      print_journal_param_ := 'Y';
+   ELSE
+      print_journal_param_ := 'N';
+   END IF;
+   
+   IF (detailed_journal_) THEN
+      detailed_journal_param_ := 'Y';
+   ELSE
+      detailed_journal_param_ := 'N';
+   END IF;
+   
+   IF ( print_journal_ IS NULL OR print_journal_param_ != 'Y') THEN
+      detailed_journal_param_ := 'N';
+   END IF;
+   
+   WHILE (Finance_Lib_API.Get_Next_From_Selection_Keyref(selection_, ptr_, keyref_)) LOOP 
+      company_           := Client_SYS.Get_Key_Reference_Value(keyref_, 'COMPANY');
+      accounting_year_   := Client_SYS.Get_Key_Reference_Value(keyref_, 'ACCOUNTING_YEAR');
+      voucher_type_      := Client_SYS.Get_Key_Reference_Value(keyref_, 'VOUCHER_TYPE');
+      voucher_no_        := Client_SYS.Get_Key_Reference_Value(keyref_, 'VOUCHER_NO');
+
+      voucher_selection_ := voucher_selection_ || company_ || '^' || accounting_year_ || '^' || voucher_type_ || '^' || voucher_no_ || '^' || '$';
+   END LOOP;
+   
+   Gen_Led_Voucher_Update_API.Instant_Update(return_structure_rec_.jou_no, return_structure_rec_.int_seq_no, return_structure_rec_.forecast_value, return_structure_rec_.error_count, voucher_selection_, action_, company_, print_journal_param_, detailed_journal_param_, return_structure_rec_.post_to_queue);
+   userid_        := Voucher_API.Get_Userid(company_, accounting_year_, voucher_type_, voucher_no_);
+   RETURN return_structure_rec_;
+END Vou_Instant_Update___;
+
+FUNCTION Get_Search_Context_Defaults___ RETURN Populate_All_Structure_Rec
+IS
+   search_context_struct_ Populate_All_Structure_Rec;
+BEGIN
+   search_context_struct_.populate_all := false;
+   RETURN search_context_struct_;
+END Get_Search_Context_Defaults___;
+
+FUNCTION Fetch_Selected_Records___ (
+   selection_    IN VARCHAR2,
+   populate_all_ IN BOOLEAN) RETURN Objid_Arr
+IS
+   keyref_            VARCHAR2(32000);
+   ptr_               NUMBER := 1;
+   base_collection_   Objid_Arr := Objid_Arr();
+   company_           VARCHAR2(20);
+   accounting_year_   NUMBER;
+   accounting_period_ NUMBER;
+   voucher_type_      VARCHAR2(20);
+   voucher_no_        NUMBER;
+   userid_            VARCHAR2(30);
+   CURSOR get_selected_records IS
+      SELECT *
+      FROM   voucher
+      WHERE  company = company_
+      AND    voucher_status_db IN ('Confirmed', 'Cancelled')
+      AND    voucher_updated_db = 'N'
+      AND    Voucher_API.Is_Pca_Update_Blocked(company, function_group) = 'FALSE'
+      AND    accounting_year = accounting_year_
+      AND    voucher_type = voucher_type_
+      AND    voucher_no = voucher_no_
+      ORDER BY voucher_type, voucher_no;
+      
+   CURSOR get_all IS
+      SELECT *
+      FROM   voucher
+      WHERE  company = company_
+      AND    voucher_status_db IN ('Confirmed', 'Cancelled')
+      AND    voucher_updated_db = 'N'
+      AND    Voucher_API.Is_Pca_Update_Blocked(company, function_group) = 'FALSE'
+      ORDER BY voucher_type, voucher_no;
+BEGIN
+   WHILE (Finance_Lib_API.Get_Next_From_Selection_Keyref(selection_, ptr_, keyref_)) LOOP
+      company_           := Client_SYS.Get_Key_Reference_Value(keyref_, 'COMPANY');
+      accounting_year_   := to_number(Client_SYS.Get_Key_Reference_Value(keyref_, 'ACCOUNTING_YEAR'));
+      voucher_type_      := Client_SYS.Get_Key_Reference_Value(keyref_, 'VOUCHER_TYPE');
+      voucher_no_        := to_number(Client_SYS.Get_Key_Reference_Value(keyref_, 'VOUCHER_NO'));
+      accounting_period_ := Voucher_API.Get_Accounting_Period (company_, accounting_year_, voucher_type_, voucher_no_);
+      userid_            := Voucher_API.Get_Userid(company_, voucher_type_, accounting_year_, voucher_no_);
+      
+      IF (populate_all_ = true) THEN
+         FOR rec_ IN get_all LOOP
+            base_collection_.extend;
+            base_collection_(base_collection_.last) := rec_.objid;
+         END LOOP;
+      ELSE
+         FOR rec_ IN get_selected_records LOOP
+            base_collection_.extend;
+            base_collection_(base_collection_.last) := rec_.objid;
+         END LOOP;
+      END IF;
+   END LOOP;
+   RETURN base_collection_;
+END Fetch_Selected_Records___;
+
+
+FUNCTION Vouchr_Approval___ (
+   company_         IN VARCHAR2, 
+   accounting_year_ IN NUMBER,
+   voucher_type_    IN VARCHAR2,
+   voucher_no_      IN NUMBER ) RETURN VARCHAR2
+IS
+   accounting_period_  NUMBER;
+   amount_             NUMBER;
+   sum_debit_amount_   NUMBER;
+   sum_credit_amount_  NUMBER; 
+   approver_           VARCHAR2(100);
+   user_               VARCHAR2(100);
+   userid_             VARCHAR2(20);
+   approved_           BOOLEAN := FALSE;
+   app_vou_exist_      BOOLEAN := FALSE;
+   vou_status_         VARCHAR2(100);
+   all_info_           VARCHAR2(1000);
+   temp_param_         VARCHAR2(5000);
+   user_group_         VARCHAR2(30);
+   app_vou_count_      NUMBER := 0;
+   app_info_           VARCHAR2(2000);
+BEGIN
+   accounting_period_ := Voucher_API.Get_Accounting_Period (company_, accounting_year_, voucher_type_, voucher_no_);
+   
+   sum_debit_amount_  := Voucher_API.Get_Sum(company_, accounting_year_, voucher_type_, voucher_no_,'debit');
+   sum_credit_amount_ := Voucher_API.Get_Sum(company_, accounting_year_, voucher_type_, voucher_no_, 'credit');
+   amount_            := nvl(sum_debit_amount_, 0) -  nvl(sum_credit_amount_,0);
+   user_              := Fnd_Session_API.Get_Fnd_User;
+   userid_            := Voucher_API.Get_Userid(company_, accounting_year_, voucher_type_, voucher_no_);
+   user_group_        := Voucher_API.Get_User_Group(company_, voucher_type_, accounting_year_, voucher_no_);
+
+      IF (amount_ != 0) THEN 
+         temp_param_ := temp_param_ || voucher_no_ || ',';
+      ELSE 
+         Voucher_Type_API.Check_Access_Privilege(approver_, company_, voucher_type_);
+         IF (((approver_ = 'TRUE') AND (user_ != userid_)) OR approver_ = 'FALSE') THEN
+            all_info_   := CLIENT_SYS.Get_All_Info;   
+            Client_SYS.clear_Info;
+            vou_status_ := Voucher_API.Get_Objstate(company_, accounting_year_, voucher_type_, voucher_no_);
+         
+            app_info_ := TO_NUMBER(SUBSTR(all_info_, 5, 1));
+            approved_ := TRUE;
+            IF (app_info_ = 'N') THEN 
+               approved_ := FALSE;
+            END IF;   
+            IF (approved_) THEN 
+               IF ((NOT app_vou_exist_) AND vou_status_ = 'Confirmed') THEN
+                  app_vou_exist_ := TRUE;
+               END IF;
+            END IF;
+         ELSE 
+            app_vou_count_ := app_vou_count_ + 1;
+         END IF;
+      END IF;
+      
+   IF (app_vou_count_ = 1) THEN 
+      Error_SYS.Record_General(lu_name_,'ENTERPERM: The voucher cannot be approved by :P1 user as :P2 voucher type is defined with the option Separate User Approval.', userid_, voucher_type_);
+   ELSIF (app_vou_count_ > 1) THEN 
+      Error_SYS.Record_General(lu_name_,'ENTERPERMS: There are voucher(s) that cannot be approved by :P1 user since the connected voucher type(s) is defined with the option Separate User Approval.', userid_);
+   END IF; 
+   IF (temp_param_ IS NOT NULL) THEN 
+      Error_SYS.Record_General(lu_name_,'VOUNOTBAL: Some of the vouchers are not in balance. They cannot be approved for update.');
+   END IF;
+   IF (app_info_ = 'N') THEN 
+      Error_SYS.Record_General(lu_name_,'NOTAPPADD: Vouchers created outside financials are not possible to be approved before manual postings are added.');
+   END IF;
+   RETURN 'TRUE';
+END Vouchr_Approval___;

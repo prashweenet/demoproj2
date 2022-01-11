@@ -1,0 +1,88 @@
+client TaxCodePerTaxBook;
+component ACCRUL;
+layer Core;
+projection TaxCodePerTaxBookHandling;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using TaxBookSet {
+   label = "Tax Code Per Tax Book";
+
+   selector TaxCodeTaxBookIdSelector;
+   list TaxCodePerTaxBookList(TaxCodePerTaxBookArray);
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector TaxCodeTaxBookIdSelector for TaxBook {
+   label = "${TaxBookId} - ${Description}";
+   static TaxBookId;
+   static Description;
+   static TaxBookBase;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list TaxCodePerTaxBookList for TaxCodePerTaxBook {
+   label = "";
+
+   crudactions {
+      new {
+         enabled = [parent.TaxBookBase = "TaxCode" and parent.TaxBookBaseValues != "All"];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [parent.TaxBookBase = "TaxCode" and parent.TaxBookBaseValues != "All"];
+      }
+   }
+
+
+   lov FeeCodeRef with ReferenceStatutoryFeeSelector {
+      search = FeeCode, Description;
+      description = FeeCodeRef.Description;
+      size = Large;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

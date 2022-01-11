@@ -1,0 +1,87 @@
+client ExternalFileIdentities;
+component ACCRUL;
+layer Core;
+projection ExternalFileIdentitiesHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ExternalFileIdentityNavEntry parent AccrulNavigator.MonitorExternalFilesMenu at index 300 {
+      label = "External File Identities";
+      page List home ExtFileIdentity;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using ExtFileIdentitySet {
+   label = "External File Identities";
+
+   list ExtFileIdentityList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileIdentityList for ExtFileIdentity {
+   field Identity {
+      size = Large;
+   }
+   field LoadDate {
+      size = Large;
+   }
+   field FileName {
+      size = Large;
+   }
+   field UserId {
+      size = Small;
+   }
+   field ParameterString {
+      size = Large;
+   }
+   field FileTemplateId {
+      size = Small;
+   }
+   field FileType {
+      size = Small;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

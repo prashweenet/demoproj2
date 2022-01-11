@@ -1,0 +1,61 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  AnalyticAttr3CodeE
+--  Component:  ACCRUL
+--  LU:         DimAccountingAttribute
+--
+--  File     :  DimAnalyticAttribute3CodeEDm.api
+--  Purpose  :  Create DATA MART dimension view DIM_ANALYTIC_ATTR3_CODE_E_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_ANALYTIC_ATTR3_CODE_E
+DEFINE VIEW       = DIM_ANALYTIC_ATTR3_CODE_E_DM
+DEFINE MV         = ANALYTIC_ATTR_CODE_E_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimAccountingAttribute
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT id                                    id,
+       company                               company,
+       code                                  code,
+       attribute                             attribute,
+       attribute_description                 attribute_description,
+       attribute_value                       attribute_value,
+       attribute_value_description           attribute_value_description
+FROM &MV 
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Code E Attribute 3^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Code E^';
+COMMENT ON COLUMN &VIEW..ATTRIBUTE
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(20)^PROMPT=Attribute^';
+   COMMENT ON COLUMN &VIEW..ATTRIBUTE_DESCRIPTION
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Attribute Description^';
+   COMMENT ON COLUMN &VIEW..ATTRIBUTE_VALUE
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Attribute Value^';
+   COMMENT ON COLUMN &VIEW..ATTRIBUTE_VALUE_DESCRIPTION
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Attribute Value Description^';
+   
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

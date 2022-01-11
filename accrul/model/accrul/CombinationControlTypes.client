@@ -1,0 +1,165 @@
+client CombinationControlTypes;
+component ACCRUL;
+layer Core;
+projection CombinationControlTypesHandling;
+
+include fragment AllowedControlTypeSelector;
+include fragment CopyToCompaniesAssistant;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CombinationControlTypesNavEntry parent AccrulNavigator.PostingRulesMenu at index 300 {
+      label = "Combination Control Types";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using CombControlTypeSet {
+   label = "Combination Control Types";
+
+   list CombControlTypeList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command CopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "CombControlType", "MANUAL", Selection, "Comb_Control_Type_API") {
+         when OK {
+            exit;
+
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "CombControlType") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "CombControlType", "AUTOMATIC", SelectionVar, "Comb_Control_Type_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ReferencePostingCtrlPostingTypeSelector for PostingCtrlPostingType {
+   orderby = Module, SortOrder;
+   label = "";
+   static PostingType;
+   static Description;
+   static Module;
+   static LedgFlag;
+   static TaxFlag;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list CombControlTypeList for CombControlType {
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+   lov PostingTypeRef with ReferencePostingCtrlPostingTypeSelector {
+      search = PostingType, Description;
+      size = Large;
+      description = PostingTypeRef.Description;
+      validate command {
+         execute {
+            call GetCctEnabled(PostingType);
+         }
+      }
+   }
+   field CombControlType {
+      size = Small;
+   }
+   field CombControlTypeDesc {
+      size = Large;
+   }
+   lov ControlType1Ref with ReferenceAllowedControlTypeSelector {
+      search = ControlType, Description;
+      size = Large;
+      description = ControlType1Ref.Description;
+   }
+   lov ControlType2Ref with ReferenceAllowedControlTypeSelector {
+      search = ControlType, Description;
+      size = Large;
+      description = ControlType2Ref.Description;
+   }
+
+   command CopyToCompaniesCommand;
+}
+
+@Override
+list PostingCtrlPostingTypeLovList for PostingCtrlPostingType {
+   orderby = Module, SortOrder;
+   label = "";
+   static PostingType;
+   static Description;
+   static Module;
+   static LedgFlag;
+   static TaxFlag;
+   static AllowPrepostDet;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

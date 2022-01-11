@@ -1,0 +1,54 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CostStructure
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Cost_Structure_Active IS
+   Prompt = 'Cost Structure Active'
+   Company.Flags = 'PMI--'
+SELECT company                        company,
+       cost_structure_id              cost_structure_id,
+       description                    description,
+       copied_from                    copied_from,
+       single_project              single_project,
+       rowid                         objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowstate                      objstate,
+       COST_STRUCTURE_API.Finite_State_Events__(rowstate)                     objevents,
+       COST_STRUCTURE_API.Finite_State_Decode__(rowstate)                         state,
+       rowkey                        objkey
+FROM   cost_structure_tab
+WHERE  ROWSTATE IN ('Active')
+AND   (Cost_Structure_API.Is_Valid_CBS(company, cost_structure_id,single_project) = 'TRUE') 
+AND    nvl(template, 'FALSE') = 'FALSE';
+
+VIEW Cbs_Template_Active IS
+   Prompt = 'CBS Template Active'
+   Company.Flags = 'PMI--'
+SELECT company                        company,
+       cost_structure_id              cost_structure_id,
+       description                    description,
+       copied_from                    copied_from,
+       single_project              single_project,
+       rowid                         objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowstate                      objstate,
+       COST_STRUCTURE_API.Finite_State_Events__(rowstate)                     objevents,
+       COST_STRUCTURE_API.Finite_State_Decode__(rowstate)                         state,
+       rowkey                        objkey
+FROM   cost_structure_tab
+WHERE  ROWSTATE IN ('Active')
+AND    nvl(template, 'FALSE') = 'TRUE';

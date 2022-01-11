@@ -1,0 +1,93 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: FinSelObject
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Company IS
+   Flags      = 'P----'
+   Datatype   = 'STRING(20)'
+   Prompt     = 'Company';
+
+COLUMN Object_Group_Id IS
+   Flags      = 'P----'
+   Datatype   = 'STRING(30)'
+   Prompt     = 'Object Group Id';
+
+COLUMN Sort_Order IS
+   Flags      = 'A----'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Sort Order';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Fin_Sel_Object_Company IS
+   Prompt = 'Fin Sel Object Company'
+   Sort = 'SORT_ORDER'
+   Selection_Object_Id.Flags = 'K---L'
+   Description.Flags = 'A---L'
+   Is_Code_Part.Flags = 'A----'
+   Code_Part.Flags = 'A----'
+   Data_Type.Flags = 'A----'
+SELECT company                        company,
+       frgso.object_group_id          object_group_id,
+       fso.selection_object_id        selection_object_id,
+       DECODE(is_code_part,'TRUE',
+              Decode(code_part, 'CODE_A',Accounting_Code_Parts_API.Get_Name(company,'A'),
+              'CODE_B',Accounting_Code_Parts_API.Get_Name(company,'B'),
+              'CODE_C',Accounting_Code_Parts_API.Get_Name(company,'C'),
+              'CODE_D',Accounting_Code_Parts_API.Get_Name(company,'D'),
+              'CODE_E',Accounting_Code_Parts_API.Get_Name(company,'E'),
+              'CODE_F',Accounting_Code_Parts_API.Get_Name(company,'F'),
+              'CODE_G',Accounting_Code_Parts_API.Get_Name(company,'G'),
+              'CODE_H',Accounting_Code_Parts_API.Get_Name(company,'H'),
+              'CODE_I',Accounting_Code_Parts_API.Get_Name(company,'I'),
+              'CODE_J',Accounting_Code_Parts_API.Get_Name(company,'J')),
+              nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(module, lu, fso.selection_object_id ), description )) 
+                                      description,
+       is_code_part                   is_code_part,
+       code_part                      code_part,
+       frgso.sort_order               sort_order,
+       data_type                      data_type_db,
+       Fnd_Data_Type_API.Decode(fso.data_type)  data_type,
+       lov_reference                  lov_reference,
+       zoom_window                    zoom_window,
+       zoom_window_col_key            zoom_window_col_key,
+       zoom_window_parent_col_key     zoom_window_parent_col_key,
+       object_col_id                  object_col_id,
+       object_col_desc                object_col_desc,
+       manual_input                   manual_input_db,
+       rowkey                        objkey
+FROM   fin_sel_object_tab fso, company_finance_auth1 c, fin_obj_grp_sel_object frgso
+WHERE  fso.selection_object_id = frgso.selection_object_id
+AND    Fin_Sel_Object_API.Is_Valid_Object__(company, fso.selection_object_id, is_code_part, code_part) = 'TRUE';
+
+@DynamicComponentDependency PROJ
+VIEW Proj_Activity_Seltemp_Text_Lov IS
+Prompt = 'Project Activity Text'
+Company.Flags = 'P---L'
+Company.Datatype = 'STRING(20)'
+Company.Prompt = 'Company'
+Activity_Seq.Flags = 'K---L'
+Activity_Seq.Datatype = 'NUMBER'
+Activity_Seq.Prompt = 'Activity Seq'
+Short_Name.Flags = 'A---L'
+Short_Name.Datatype = 'STRING(50)/UPPERCASE'
+Short_Name.Prompt = 'Short Name'
+SELECT DISTINCT company               company,
+       TO_CHAR(a.activity_seq)        activity_seq,
+       a.short_name                   short_name
+FROM   activity_tab a, project_tab p
+WHERE  a.project_id = p.project_id;

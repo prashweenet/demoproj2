@@ -1,0 +1,19 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvAirport
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200618  SatGlk  Created
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+SEQUENCE AIRPORT_ID_SEQ IS INCREMENT BY 1 START WITH 1000 NOCACHE;

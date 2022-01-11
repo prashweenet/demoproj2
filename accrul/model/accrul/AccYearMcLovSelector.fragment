@@ -1,0 +1,32 @@
+fragment AccYearMcLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view acc_year_mc_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccYearMcLovSelector for AccYearMcLov {
+   static AccountingYear;
+}
+
+card AccYearMcLovCard for AccYearMcLov {
+   label = "";
+   fieldranking AccountingYear;
+   field AccountingYear;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccYearMcLov {
+   from = "acc_year_mc_lov";
+   lu = AccountingYear;
+   keys = AccountingYear;
+   ludependencies = AccountingYear;
+   attribute AccountingYear Number {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

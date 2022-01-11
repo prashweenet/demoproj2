@@ -1,0 +1,57 @@
+fragment YearEndVoucherTypeLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view year_end_voucher_type_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceYearEndVoucherTypeLovSelector for YearEndVoucherTypeLov {
+   static VoucherType;
+   static VtDescription;
+}
+
+card YearEndVoucherTypeLovCard for YearEndVoucherTypeLov {
+   label = "";
+   fieldranking VoucherType;
+   field VoucherType;
+   field VtDescription;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query YearEndVoucherTypeLov {
+   from = "year_end_voucher_type_lov";
+   lu = VoucherTypeDetail;
+   keys = Company, FunctionGroup, UserGroup, Userid, VoucherType;
+   ludependencies = VoucherTypeDetail;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute FunctionGroup Text {
+      lovcolumn = [false];
+   }
+   attribute UserGroup Text {
+      lovcolumn = [false];
+   }
+   attribute Userid Text {
+      label = "User Id";
+      lovcolumn = [false];
+   }
+   attribute LedgerId Text {
+      label = "Ledger id";
+      lovcolumn = [false];
+   }
+   attribute VoucherType Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute VtDescription Text {
+      label = "Description";
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

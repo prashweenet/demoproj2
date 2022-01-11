@@ -1,0 +1,168 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: FinanceLib
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+--  150806  Chwilk  Bug 122320, Made accrul_session_pid_tab a temporary table.
+--  170328  thaslk  STRFI-5489  rename table accrul_session_pid_tab
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+TABLE accounting_seq_no_tab IS
+      ( pkg_name                        VARCHAR2(100)    NOT NULL,
+        seq_no                          NUMBER           NOT NULL,
+        instance                        VARCHAR2(100)    NOT NULL,
+        prefix                          VARCHAR2(10)     NULL,
+        rowversion                      DATE             NOT NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+PRIMARY KEY accounting_seq_no_pk IS accounting_seq_no_tab (pkg_name, seq_no, instance);
+
+
+UNIQUE CONSTRAINT accounting_seq_no_rk IS accounting_seq_no_tab (rowkey);
+
+TABLE accounting_text_tab IS
+      ( accounting_text_id              VARCHAR2(200)    NOT NULL,
+        text                            VARCHAR2(2000)   NULL,
+        rowversion                      DATE             NOT NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+PRIMARY KEY accounting_text_pk IS accounting_text_tab (accounting_text_id);
+
+
+UNIQUE CONSTRAINT accounting_text_rk IS accounting_text_tab (rowkey);
+
+   
+TEMPORARY TABLE accrul_session_pid_tmp IS
+      ( session_id                      NUMBER           NOT NULL,
+        posting_combination_id          NUMBER           NOT NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+PRIMARY KEY accrul_session_pid_pk IS accrul_session_pid_tmp (session_id, posting_combination_id);
+
+
+UNIQUE CONSTRAINT accrul_session_pid_rk IS accrul_session_pid_tmp (rowkey);
+
+
+TABLE ac_am_str IS
+      ( company                         VARCHAR2(20)     NOT NULL,
+        str_code                        VARCHAR2(10)     NOT NULL,
+        str_code_prod                   VARCHAR2(10)     NOT NULL,
+        code_part                       VARCHAR2(1)      NOT NULL,
+        control_type                    VARCHAR2(10)     NULL,
+        control_type_prod               VARCHAR2(10)     NULL,
+        override                        VARCHAR2(1)      NULL,
+        default_value                   VARCHAR2(10)     NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+PRIMARY KEY ac_am_str_pk IS ac_am_str (company, str_code, str_code_prod, code_part);
+
+
+UNIQUE CONSTRAINT ac_am_str_rk IS ac_am_str (rowkey);
+
+
+TABLE ac_am_str_allowed_comb IS
+      ( str_code                        VARCHAR2(10)     NOT NULL,
+        str_code_prod                   VARCHAR2(10)     NOT NULL,
+        control_type                    VARCHAR2(10)     NOT NULL,
+        control_type_prod               VARCHAR2(10)     NOT NULL,
+        allowed_code_part               VARCHAR2(1)      NOT NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+PRIMARY KEY ac_am_str_allowed_comb_pk IS ac_am_str_allowed_comb (str_code, str_code_prod, control_type, control_type_prod, allowed_code_part);
+
+
+UNIQUE CONSTRAINT ac_am_str_allowed_comb_rk IS ac_am_str_allowed_comb (rowkey);
+
+
+TABLE ac_am_str_code IS
+      ( str_code                        VARCHAR2(10)     NOT NULL,
+        product_code                    VARCHAR2(10)     NOT NULL,
+        name                            VARCHAR2(10)     NOT NULL,
+        description                     VARCHAR2(35)     NULL,
+        module                          VARCHAR2(20)     NULL,
+        ledg_flag                       VARCHAR2(1)      NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+PRIMARY KEY ac_am_str_code_pk IS ac_am_str_code (str_code, product_code);
+
+
+UNIQUE CONSTRAINT ac_am_str_code_rk IS ac_am_str_code (rowkey);
+
+
+TABLE ac_am_str_control_type IS
+      ( control_type                    VARCHAR2(10)     NOT NULL,
+        product_code                    VARCHAR2(10)     NOT NULL,
+        name                            VARCHAR2(10)     NULL,
+        description                     VARCHAR2(35)     NULL,
+        allowed_default                 VARCHAR2(1)      NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+PRIMARY KEY ac_am_str_control_type_pk IS ac_am_str_control_type (control_type, product_code);
+
+
+UNIQUE CONSTRAINT ac_am_str_control_type_rk IS ac_am_str_control_type (rowkey);
+
+
+TABLE ac_am_str_row IS
+      ( company                         VARCHAR2(20)     NOT NULL,
+        str_code                        VARCHAR2(10)     NOT NULL,
+        str_code_prod                   VARCHAR2(10)     NOT NULL,
+        code_part                       VARCHAR2(1)      NOT NULL,
+        control_type_value              VARCHAR2(100)    NOT NULL,
+        valid_from                      DATE             NOT NULL,
+        control_type                    VARCHAR2(10)     NOT NULL,
+        control_type_prod               VARCHAR2(10)     NOT NULL,
+        code_part_value                 VARCHAR2(10)     NULL,
+        valid_until                     DATE             NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+PRIMARY KEY ac_am_str_row_pk IS ac_am_str_row (company, str_code, str_code_prod, code_part, control_type_value, valid_from);
+
+
+UNIQUE CONSTRAINT ac_am_str_row_rk IS ac_am_str_row (rowkey);
+
+
+TABLE posting_ctrl_detail_temp_tab IS
+      ( company                         VARCHAR2(20)     NOT NULL,
+        posting_type                    VARCHAR2(10)     NOT NULL,
+        code_part                       VARCHAR2(1)      NOT NULL,
+        control_type_value              VARCHAR2(100)    NOT NULL,
+        valid_from                      DATE             NOT NULL,
+        control_type                    VARCHAR2(10)     NOT NULL,
+        code_part_value                 VARCHAR2(20)     NULL,
+        module                          VARCHAR2(20)     NULL,
+        valid_until                     DATE             NOT NULL,
+        rowversion                      DATE             NOT NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+UNIQUE CONSTRAINT posting_ctrl_detail_temp_rk IS posting_ctrl_detail_temp_tab (rowkey);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+
+
+SEQUENCE USERENV_SESSION_SEQ IS INCREMENT BY 1 START WITH 1  ORDER;
+
+SEQUENCE ACRRUL_EXT_PROCESS_SEQUENCE IS INCREMENT BY 1 START WITH 1  ORDER;
+
+SEQUENCE INTERNAL_MANUAL_POST_SEQ IS INCREMENT BY -1 START WITH -1  ORDER;
+
+SEQUENCE VOUCHER_TRANSFER_HIST_SEQ IS INCREMENT BY 1 START WITH 1;

@@ -1,0 +1,85 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingControlDetailsHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+FUNCTION Get_Control_Type_Description___(
+   company_             IN VARCHAR2,
+   control_type_        IN VARCHAR2,
+   control_type_value_  IN VARCHAR2,
+   module_              IN VARCHAR2,
+   valid_from_          IN DATE ) RETURN VARCHAR2
+IS
+BEGIN   
+  RETURN Posting_Ctrl_Control_Type_API.Get_Control_Type_Value_Desc(company_,control_type_,control_type_value_,module_,valid_from_);
+END Get_Control_Type_Description___;
+
+
+FUNCTION Get_Ctrl_Type_Allowed_Value___(
+   company_            IN VARCHAR2,
+   code_part_          IN VARCHAR2,
+   posting_type_       IN VARCHAR2,
+   spec_control_type_       IN VARCHAR2,
+   spec_ctrl_type_category_ IN VARCHAR2 ) RETURN Ctrl_Type_Allowed_Value_Struct_Rec
+IS
+   rec_                          Ctrl_Type_Allowed_Value_Struct_Rec;
+   dummy_control_type_category_  VARCHAR2(100);
+BEGIN
+   Ctrl_Type_Allowed_Value_API.Get_Allowed_Info__(rec_.module,
+                                                         dummy_control_type_category_,
+                                                         rec_.spec_ctrl_type_category,
+                                                         rec_.spec_control_type_desc,
+                                                         company_,
+                                                         code_part_,
+                                                         posting_type_,
+                                                         spec_control_type_,
+                                                         Ctrl_Type_Category_API.Decode(spec_ctrl_type_category_));  
+   RETURN rec_;
+END Get_Ctrl_Type_Allowed_Value___;
+
+PROCEDURE Get_ControlTypeValueRef_Info_ (
+   attr_ IN OUT VARCHAR2 )
+IS
+   CURSOR get_lov_views IS
+      SELECT control_type, replace(CASE WHEN instr(view_name,'TO_CHAR(PC_VALID_FROM, ''YYYY-MM'')')>0 THEN replace(view_name,'TO_CHAR(PC_VALID_FROM, ''YYYY-MM'')','PERIOD_CHAR_PC_VALID_FROM')
+                             ELSE view_name END , ' ')   view_name                               
+      FROM   posting_ctrl_control_type_tab
+      WHERE view_name != '**NoView**';
+BEGIN
+   FOR rec_ IN get_lov_views LOOP
+      Client_SYS.Add_To_Attr(rec_.control_type, rec_.view_name, attr_);
+   END LOOP;
+END Get_ControlTypeValueRef_Info_;
+
+@Override
+PROCEDURE CRUD_Default___ (
+   key_  IN  Posting_Ctrl_Detail_Key,
+   attr_ IN OUT VARCHAR2,
+   info_ OUT VARCHAR2 )
+IS
+   valid_from_ VARCHAR2(100);
+BEGIN
+   valid_from_ := Client_SYS.Get_Item_Value('PC_VALID_FROM', attr_);
+   super(key_, attr_, info_);
+   IF (valid_from_ IS NOT NULL ) then
+      Client_SYS.Add_To_Attr('VALID_FROM', valid_from_, attr_);
+   END IF;
+END CRUD_Default___;
+
+FUNCTION Fetch_Page_Search_Context_Defaults___(
+   control_type_value_          IN VARCHAR2)  RETURN Page_Search_Context_Structure_Rec
+IS
+   page_search_context_struct_ Page_Search_Context_Structure_Rec;
+BEGIN
+   page_search_context_struct_.control_type_value :=  control_type_value_;
+   RETURN page_search_context_struct_;
+END Fetch_Page_Search_Context_Defaults___;

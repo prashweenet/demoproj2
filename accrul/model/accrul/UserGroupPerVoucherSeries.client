@@ -1,0 +1,127 @@
+client UserGroupPerVoucherSeries;
+component ACCRUL;
+layer Core;
+projection UserGroupPerVoucherSeriesHandling;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using VoucherNoSerialYearSet {
+   label = "User Group per Voucher Series";
+   selector VoucherNoSerialYrQueryCustomSelector;
+   group VouTyUGGroup bind VoucherNoSerialYrQueryCustomSelector;
+   list VoucherTypeUserGroupList(VoucherTypeUserGroupArray) bind VoucherNoSerialYrQueryCustomSelector;
+   command TranslationCommand;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand for VoucherNoSerialYrQuery {
+   label = "Translation";
+   execute {
+      navigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'VoucherType' and AttributeKey eq $[VoucherType]";
+   }
+}
+
+command SetDefaultCommand for VoucherTypeUserGroup {
+   label = "Set Default Type";
+
+   execute {
+      call DoSetDefault();
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector VoucherNoSerialYrQuerySelector for VoucherNoSerialYrQuery {
+   label = "${AccountingYear}";
+   static AccountingYear;
+   static Period;
+
+}
+
+selector VoucherNoSerialYrQueryCustomSelector for VoucherNoSerialYrQuery {
+   label = "${AccountingYear}";
+   static AccountingYear;
+   static Period {
+      visible = [CompanyFinanceRef.UseVouNoPeriod = "TRUE"];
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group VouTyUGGroup for VoucherNoSerialYrQuery {
+   label = "";
+   lov VoucherTypeRef with ReferenceVoucherTypeSelector {
+      search = VoucherType, Description;
+      description = VoucherTypeRef.Description;
+   }
+   field AccountingYear {
+      size = Small;
+   }
+
+   field Period {
+      visible = [CompanyFinanceRef.UseVouNoPeriod = "TRUE"];
+      size = Small;
+
+   }
+   field SerieFrom;
+   field SerieUntil;
+
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list VoucherTypeUserGroupList for VoucherTypeUserGroup {
+   label = "User Groups per Voucher Series";
+
+   lov UserGroupRef with ReferenceUserGroupFinanceSelector {
+      search = UserGroup, Description;
+      description = UserGroupRef.Description;
+   }
+   field AuthorizeLevel {
+      size = Large;
+   }
+   field DefaultTypeDb;
+
+   lov FunctionGroupRef with ReferenceVoucherTypeDetailLovQuerySelector {
+      size = Small;
+   }
+
+   command SetDefaultCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

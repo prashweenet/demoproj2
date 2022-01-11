@@ -1,0 +1,84 @@
+projection PaymentTermsHandling;
+component ACCRUL;
+layer Core;
+description "Payment Terms";
+category Users;
+
+include fragment CopyToCompaniesAssistant;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PaymentTermSet for PaymentTerm {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity PaymentTerm {
+   attribute PayTermId Text {
+      label = "Payment Terms";
+   }
+   attribute Description Text {
+      label = "Payment Terms Description";
+   }
+   attribute UseCommercialYear Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute VatDistribution Enumeration(VatDistribution) {
+      label = "Tax Distribution";
+   }
+   attribute ConsiderPayVacPeriod Boolean("TRUE", "FALSE") {
+      label = "Consider Payment Vacation Periods";
+      required = [true];
+   }
+   attribute BlockForDirectDebiting Boolean("TRUE", "FALSE") {
+      label = "Blocked Direct Debiting";
+      format = uppercase;
+   }
+   attribute ExcludeCreditLimit Boolean("TRUE", "FALSE") {
+      label = "Exclude From Credit Limit Control";
+      format = uppercase;
+   }
+   attribute SuppressAmount Boolean("TRUE", "FALSE") {
+      format = uppercase;
+   }
+   @DynamicComponentDependency FIXASS
+   attribute CashDiscFixassAcqValue Boolean("TRUE", "FALSE") {
+      label = "Apply Cash Discount to Fixed Assets Acquisition Values";
+   }
+   @DynamicComponentDependency FIXASS
+   attribute ReductCashDisc Text {
+      fetch = "Fa_Company_API.Get_Reduction_Cash_Discount_Db(Company)";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+@DynamicComponentDependency FIXASS
+function GetReductCashDisc Text {
+   parameter Company Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

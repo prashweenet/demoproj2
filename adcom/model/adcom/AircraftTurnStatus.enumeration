@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <COMMENTS>
+      <COMMENT>
+         <POSITION>4</POSITION>
+         <COMMENT_TEXT>//For a Aircraft wihin a given turn location has follwong status. 
+</COMMENT_TEXT>
+      </COMMENT>
+   </COMMENTS>
+   <NAME>AircraftTurnStatus</NAME>
+   <COMPONENT>ADCOM</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <NAME>Inbound</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>Arrived</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>InMaintenance</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>Released</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>Departed</NAME>
+      </VALUE>
+   </VALUES>
+</ENUMERATION>

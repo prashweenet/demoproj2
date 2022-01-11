@@ -1,0 +1,40 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CurrencyRate
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+PRIMARY KEY currency_rate_pk IS currency_rate_tab (company, valid_from, currency_type, currency_code);
+
+INDEX currency_rate_ix1 IS currency_rate_tab (ref_currency_code, currency_code, company);
+
+
+TABLE currency_rate_def_tab IS
+      ( currency_type                   VARCHAR2(3)      NOT NULL,
+        currency_code                   VARCHAR2(3)      NOT NULL,
+        ref_currency_code               VARCHAR2(3)      NOT NULL,
+        currency_rate                   NUMBER           NULL,
+        conv_factor                     NUMBER           NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+PRIMARY KEY currency_rate_def_pk IS currency_rate_def_tab (currency_type, currency_code);
+
+
+UNIQUE CONSTRAINT currency_rate_def_rk IS currency_rate_def_tab (rowkey);
+
+
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------

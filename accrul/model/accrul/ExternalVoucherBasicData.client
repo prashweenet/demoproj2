@@ -1,0 +1,97 @@
+client ExternalVoucherBasicData;
+component ACCRUL;
+layer Core;
+projection ExternalVoucherBasicDataHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ExternalVoucherBasicDataNavEntry parent AccrulNavigator.ExternalVoucherMenu at index 400 {
+      label = "External Voucher Basic Data";
+      page List home ExtParameters;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using ExtParametersSet {
+   label = "External Voucher Basic Data";
+   list ExtParametersList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command SetDefaultCommand for ExtParameters {
+   label = "Set Default";
+   enabled = [DefType != true];
+   execute {
+      call DoSetDefault();
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtParametersList for ExtParameters {
+   field LoadType {
+      size = Small;
+      format = uppercase;
+   }
+   lov VoucherTypeRef with  ReferenceVoucherTypeSelector {
+      size = Small;
+   }
+   field DefType {
+      editable = [false];
+   }
+   field ExtVoucherNoAlloc;
+   field ExtVoucherDiff;
+   field ExtGroupItem;
+   field ExtVoucherDate;
+   field ExtAlterTrans;
+   field Correction;
+   field ValidateCodeString;
+   field UseCodestrCompl;
+   field AutoTaxCalcDb;
+   field CalculateRate;
+   field CheckWhenLoaded;
+   field CreateWhenChecked;
+   field AllowPartialCreate;
+
+   command SetDefaultCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

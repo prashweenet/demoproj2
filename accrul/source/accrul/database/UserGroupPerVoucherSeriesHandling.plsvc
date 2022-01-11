@@ -1,0 +1,25 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: UserGroupPerVoucherSeriesHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+PROCEDURE Do_Set_Default___ (
+   key_ IN Voucher_Type_User_Group_Key ) 
+IS
+   info_          VARCHAR2(100);
+   attr_          VARCHAR2(50);
+   objid_         voucher_type_user_group.objid%TYPE;
+   objversion_    voucher_type_user_group.objversion%TYPE;
+BEGIN
+   Get_Objid_Objversion___(objid_, objversion_, key_);
+   Client_SYS.Add_To_Attr('DEFAULT_TYPE', Finance_Yes_No_API.Decode('Y'), attr_);
+   Voucher_Type_User_Group_API.Modify__(info_ , objid_, objversion_, attr_, 'DO');
+END Do_Set_Default___;

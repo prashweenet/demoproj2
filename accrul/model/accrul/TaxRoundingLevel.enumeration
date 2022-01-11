@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>TaxRoundingLevel</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <NAME>LineLevel</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>TotalLevel</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>SPEC_ON_COMPANY</DB_VALUE>
+               <CLIENT_VALUE>Specified on company</CLIENT_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>SpecifiedOnCompany</NAME>
+      </VALUE>
+   </VALUES>
+   <SUBSETS>
+      <SUBSET>
+         <NAME>WithoutCompany</NAME>
+         <VALUES>
+            <SUBSET_VALUE>
+               <NAME>LineLevel</NAME>
+            </SUBSET_VALUE>
+            <SUBSET_VALUE>
+               <NAME>TotalLevel</NAME>
+            </SUBSET_VALUE>
+         </VALUES>
+      </SUBSET>
+   </SUBSETS>
+</ENUMERATION>

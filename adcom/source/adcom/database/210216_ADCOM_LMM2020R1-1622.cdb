@@ -1,0 +1,31 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210216_ADCOM_LMM2020R1-1622.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210216   upiwlk  Created. Added DESCRIPTION column to AV_FLIGHT_TAB
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','210216_ADCOM_LMM2020R1-1622.cdb','Timestamp_1');
+PROMPT Adding COLUMN DESCRIPTION COLUMN TO AV_FLIGHT_TAB
+
+DECLARE
+   table_name_    VARCHAR2(30)   := 'AV_FLIGHT_TAB';
+   column_name_   VARCHAR2(30)   := 'DESCRIPTION';
+   column_        Database_SYS.ColRec;
+BEGIN
+   IF NOT(Database_Sys.Column_Exist(table_name_, column_name_)) THEN
+      column_ := Database_SYS.Set_Column_Values(column_name_, 'VARCHAR2(2000)', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'A', column_ , TRUE );
+   END IF;
+END;
+/
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','210216_ADCOM_LMM2020R1-1622.cdb','Done');
+SET SERVEROUTPUT OFF

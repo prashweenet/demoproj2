@@ -1,0 +1,144 @@
+client CodePartAttributes;
+component ACCRUL;
+layer Core;
+
+projection CodePartAttributesHandling;
+
+include fragment AccountingCodePartsUsed2Selector;
+include fragment CopyToCompaniesAssistant;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CodePartAttributeNavEntry parent AccrulNavigator.CodeStringMenu at index 1400 {
+      label = "Code Part Attributes";
+      page List home AccountingAttribute;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AccountingAttributeSet {
+   label = "Code Part Attributes";
+   list AccountingAttributeList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command AttributeValueCommand {
+   label = "Attribute Value";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/AttributeValue/Form?$contexts=Company:$[Company]&$filter=Attribute eq $[Attribute]";
+   }
+}
+
+command ConnectAttributeCommand {
+   label = "Connect Attribute";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/ConnectAttribute/Form?$contexts=Company:$[Company]&$filter=Attribute eq $[Attribute]";
+   }
+}
+
+command CopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "AccountingAttribute", "MANUAL", Selection, "Accounting_Attribute_API") {
+         when OK {
+            exit;
+
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "AccountingAttribute") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "AccountingAttribute", "AUTOMATIC", SelectionVar, "Accounting_Attribute_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountingAttributeList for AccountingAttribute {
+   label = "Code Part Attributes";
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+   field Attribute;
+   field Description;
+   lov CodePartRef with ReferenceAccountingCodePartsUsed2Selector {
+      search = CodePart, CodeName;
+      hidekey = [true];
+      description = CodePartRef.CodeName;
+   }
+
+   command AttributeValueCommand;
+   command ConnectAttributeCommand;
+   command CopyToCompaniesCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

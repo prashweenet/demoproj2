@@ -1,0 +1,114 @@
+----------------------------------------------------------------------------------------------
+--
+--  Logical unit: CodeStringCompletionHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  --------------------------------------------------------------------------
+--  201111  Chaulk  Modified CRUD_Update___ method to support code part 'P' as 'ProcessCode'.
+----------------------------------------------------------------------------------------------
+
+layer Core;
+
+PROCEDURE Create_Code_Str_Comp_Det___ (
+   company_         IN VARCHAR2,
+   code_part_       IN VARCHAR2,
+   code_part_value_ IN VARCHAR2 ) 
+IS
+BEGIN
+   Accounting_Codestr_Compl_API.Create_Code_Str_Comp_Det__(company_, code_part_, code_part_value_);
+END Create_Code_Str_Comp_Det___;
+
+
+PROCEDURE Delete_Code_Str_Comp_Det___ (
+   company_         IN VARCHAR2,
+   code_part_       IN VARCHAR2,
+   code_part_value_ IN VARCHAR2 ) 
+IS
+BEGIN
+   Accounting_Codestr_Compl_API.Delete_Code_Str_Comp_Det__(company_, code_part_, code_part_value_);
+END Delete_Code_Str_Comp_Det___;
+
+@Override
+PROCEDURE CRUD_Update___ (
+   etag_     IN OUT VARCHAR2,
+   key_      IN OUT Accounting_Codestr_Compl_Key,
+   attr_     IN OUT VARCHAR2,
+   info_     OUT VARCHAR2,
+   action_   IN VARCHAR2 )
+IS
+   unpack_rec_          Accounting_Codestr_Compl_Rec;
+   codepart_block_info_ VARCHAR2(1);
+   codepart_demand_     VARCHAR2(2000) := NULL;
+   modify_attr_         VARCHAR2(2000);
+   modify_info_         VARCHAR2(50);
+   objid_               VARCHAR2(100);
+   objversion_          VARCHAR2(50);
+   account_             VARCHAR2(50);
+   check_codefill_      BOOLEAN := FALSE;
+
+   CURSOR get_other_codestr_compl_records IS
+      SELECT *
+        FROM Accounting_Codestr_Compl a
+       WHERE a.company            = key_.company
+         AND a.code_part          = key_.code_part
+         AND a.code_part_value    = key_.code_part_value
+         AND (a.codefill_code_part != 'A' OR a.codefill_code_part != a.code_part)
+         AND a.codefill_value IS NOT NULL;
+
+   CURSOR get_account IS
+      SELECT a.codefill_value
+        FROM Accounting_Codestr_Compl_Tab a
+       WHERE a.company = key_.company
+         AND a.code_part = key_.code_part
+         AND a.code_part_value = key_.code_part_value
+         AND a.codefill_code_part = 'A';
+         
+BEGIN
+   Add_To_Rec_From_Attr___(attr_, unpack_rec_);
+   IF unpack_rec_.codefill_value IS NOT NULL THEN
+      IF(key_.codefill_code_part = 'P')THEN
+         Account_Process_Code_API.Exist(key_.company, unpack_rec_.codefill_value );
+      ELSE
+         Accounting_Code_Part_Value_API.Exist(key_.company, key_.codefill_code_part, unpack_rec_.codefill_value);      
+      END IF;
+      codepart_block_info_ := Accounting_Codestr_Compl_API.Get_Code_Part_Block_Info(key_.company,key_.code_part,key_.code_part_value,key_.codefill_code_part);
+      IF (codepart_block_info_ = 'S') THEN
+         IF (key_.code_part = 'A') THEN
+            account_ := key_.code_part_value;
+         ELSE
+            OPEN get_account;
+            FETCH get_account INTO account_;
+            CLOSE get_account;
+         END IF;
+         Error_SYS.Appl_General(lu_name_, 'CODEPARTBLOCKED: The codepart :P1 is blocked for Account :P2.', key_.codefill_code_part, account_);
+      END IF;
+   END IF;
+   
+   super(etag_, key_, attr_, info_, action_);
+   
+   IF key_.codefill_code_part = 'A' THEN
+      Accounting_Code_Part_A_API.Get_Required_Code_Part(codepart_demand_, key_.company, unpack_rec_.codefill_value);
+      FOR rec_ IN get_other_codestr_compl_records LOOP
+         check_codefill_ := FALSE;
+         IF (rec_.codefill_code_part = 'P') THEN
+            IF (SUBSTR(codepart_demand_, INSTR(codepart_demand_, 'PROCESS_CODE') + 13, 1) = 'S') THEN
+               check_codefill_ := TRUE;
+            END IF;
+         ELSE
+            IF (SUBSTR(codepart_demand_, INSTR(codepart_demand_, 'CODE_'|| rec_.codefill_code_part) + 7, 1) = 'S') THEN
+               check_codefill_ := TRUE;
+            END IF;
+         END IF;
+         IF check_codefill_ THEN
+            modify_attr_   := NULL;
+            objid_         := rec_.objid;
+            objversion_    := rec_.objversion;
+            Client_SYS.Add_To_Attr('CODEFILL_VALUE', '', modify_attr_);
+            Accounting_Codestr_Compl_API.Modify__(modify_info_, objid_, objversion_, modify_attr_, 'DO');
+         END IF;
+      END LOOP;
+   END IF;
+END CRUD_Update___;

@@ -1,0 +1,53 @@
+--  Date    Sign    History
+--  ------  ------  --------------------------------------------------------
+--  200629  ARUFLK  LMM2020R1-116, Created.
+----------------------------------------------------------------------------
+
+projection FaultDeferralRequestHandling;
+component ADCOM;
+layer Core;
+description "Handle fault deferral requests";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AvFaultDeferralRequestSet for AvFaultDeferralRequest;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvFaultDeferralRequest {
+   attribute DeferralRequestId Number {
+      required = [false];
+   }
+
+   reference DeferralReferenceIdRef(DeferralReferenceId) to AvDeferralReference(DeferralReferenceId);
+   reference DeferralReqReasonCodeRef(DeferralReqReasonCode) to AvDeferralReqReason(DeferralReqReasonCode);
+   reference FaultIdRef(FaultId) to AvFault(FaultId);
+
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

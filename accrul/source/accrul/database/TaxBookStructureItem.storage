@@ -1,0 +1,27 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TaxBookStructureItem
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+
+
+INDEX tax_book_structure_item_ix1 IS tax_book_structure_item_tab (company, structure_id, item_above);
+
+
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------

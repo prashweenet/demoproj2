@@ -1,0 +1,239 @@
+client ApproveVouchers;
+component ACCRUL;
+layer Core;
+projection ApproveVouchersHandling;
+
+include fragment AccountingYearSelector;
+include fragment FinNotesDialog;
+include fragment InstantUpdateAssistant;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ApproveVouchersNavEntry parent AccrulNavigator.VoucherMenu at index 100 {
+      label = "Approve Vouchers";
+      page List;
+   }
+   @DynamicComponentDependency GENLED
+   entry GeneralLedgerApproveVouchersNavEntry parent GenledNavigator.GeneralLedgerMenu at index 200 {
+      label = "Approve Vouchers";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using VoucherApprovalSet {
+   label = "Approve Vouchers";
+   initcontext PageInitContext;
+   list VoucherApprovalList {
+      searchcontext ListSearchContext {
+         defaults = GetDefaultVals(context.Company);
+      }
+      filter = [UserGroup = ListSearchContext.UserGroup];
+   }
+   attachments {
+      enabled = [true];
+   }
+}
+
+searchcontext ListSearchContext for VouInfoStructure {
+   label = "";
+   lov UserGroupMemberFinanceRef with ReferenceUserGroupMemberFinanceMainSelector using UserGroupWhere(Userid) {
+      advancedview UserGroupMemberFinanceMainLovList;
+   }
+}
+
+
+initcontext PageInitContext {
+   parameter IsGenledActive Boolean;
+   init command {
+      execute {
+         call IsGenledActive() into IsGenledActive;
+      }
+   }
+}
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command VoucherEntryCommand for VoucherApproval {
+   label = "Voucher Entry";
+   enabled = [true];
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/Voucher/Form?$filter=VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+   }
+}
+
+command ApproveVoucherCommand for VoucherApproval {
+   label = "Approve Voucher";
+   enabled = [true];
+   mode = SelectedRecords;
+   bulkexecute {
+      bulkcall VouchApproval(Company, AccountingYear, VoucherType, VoucherNo, UserGroup) {
+         continueonerror = [true];
+
+         when SUCCESS {
+            if [initcontext.IsGenledActive] {
+               messagebox("Question", question, "Should the approved Vouchers be updated via Instant Update General Ledger ?") {
+                  when "Yes" {
+                     assistant InstantUpdateAssistant(Selection) {
+                        when OK {
+                           exit OK;
+                        }
+                     }
+                  }
+                  when "No" {
+                     exit OK;
+                  }
+               }
+            }
+            else {
+               exit OK;
+            }
+         }
+         when FAIL {
+            error("${error.Message} ");
+            if [initcontext.IsGenledActive] {
+               if [component.VoucherApprovalList.SelectionCount > "${error.Count}"] {
+                  messagebox("Question", question, "Should the approved Vouchers be updated via Instant Update General Ledger") {
+
+                     when YES {
+                        assistant InstantUpdateAssistant(Selection) {
+                           when OK {
+                              exit;
+                           }
+                        }
+                     }
+                     when NO {
+                        exit;
+                     }
+                  }
+               }
+            }
+            else {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+
+command NotesCommand for VoucherApproval {
+   label = "Notes";
+   enabled = [true];
+   variable NoteIdNumVar {
+      type = Number;
+   }
+   execute {
+      set PackageNameStr = "VOUCHER_NOTE_API";
+      set CallingProjectionNameStr = "ApproveVouchersHandling";
+      assistant NotesAssistant(PackageNameStr, CallingProjectionNameStr, keyref, luname, "") into(NoteIdNumVar) {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector ReferenceUserGroupMemberFinanceMainSelector for UserGroupMemberFinance {
+   static UserGroup;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list VoucherApprovalList for VoucherApproval {
+   label = "";
+   badge Objstate {
+      style = TextOnly;
+      emphasis StateError = [Objstate = "Error"];
+      emphasis StateCancelled = [Objstate = "Cancelled"];
+      emphasis Progress5 = [Objstate = "AwaitingApproval"];
+      emphasis Progress9 = [Objstate = "PartiallyApproved"];
+      emphasis Progress2 = [Objstate = "Waiting"];
+   }
+   field VoucherTypeRef {
+      size = Small;
+   }
+   field VoucherNo;
+   field VoucherDate;
+   lov AccountingYearRef with ReferenceAccountingYearSelector {
+      size = Small;
+   }
+   lov AccountingPeriodRef with ReferenceAccountingPeriodSelector {
+      size = Small;
+   }
+   field DateReg;
+   lov EnteredByUserGroupRef with ReferenceUserGroupFinanceSelector {
+      size = Small;
+   }
+   lov UseridRef with ReferenceUserFinanceSelector {
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field SumDebitAmount;
+   field SumCreditAmount;
+   field AmountInAccCurr;
+   field SumThirdCurrDebitAmount;
+   field SumThirdCurrCreditAmount;
+   field AmountInEU;
+   field VoucherText2;
+   field Notes {
+      size = Small;
+   }
+   field InterimVoucher {
+      size = Small;
+   }
+   field MultiCompanyVoucher {
+      size = Small;
+   }
+
+   fieldranking VoucherNo, SumDebitAmount, SumCreditAmount;
+
+   command VoucherEntryCommand;
+   command ApproveVoucherCommand;
+   command NotesCommand;
+}
+
+list UserGroupMemberFinanceMainLovList for UserGroupMemberFinance {
+   label = "";
+   static UserGroup;
+}
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

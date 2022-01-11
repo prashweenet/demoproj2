@@ -1,0 +1,716 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     PeriodAllocationAssistant
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@ApproveGlobalVariable
+company_          VARCHAR2(20);
+@ApproveGlobalVariable
+accounting_year_  NUMBER;
+@ApproveGlobalVariable
+voucher_type_     VARCHAR2(3);
+@ApproveGlobalVariable
+voucher_no_       NUMBER(10);
+
+FUNCTION Check_Edit_Enable___ (
+   company_           IN VARCHAR2,
+   voucher_type_      IN VARCHAR2,
+   accounting_year_   IN NUMBER,
+   voucher_no_        IN NUMBER,
+   row_no_            IN NUMBER,
+   cancellation_      IN VARCHAR2,
+   function_group_    IN VARCHAR2) RETURN Period_Alloc_Control_Structure_Rec
+IS
+   invoice_id_       NUMBER;
+   inv_creator_      VARCHAR2(100);
+   party_type_       VARCHAR2(20);
+   rec_              Period_Alloc_Control_Structure_Rec;
+   user_group_       VARCHAR2(20);
+   alloc_vou_type_   VARCHAR2(20);
+   from_date_        DATE;
+   until_date_       DATE;
+BEGIN
+	$IF Component_Invoic_SYS.INSTALLED $THEN
+      IF (cancellation_ != 'TRUE' AND function_group_ = 'F')THEN
+         invoice_id_ := Voucher_Row_API.Get_Inv_Id_From_Inv_Acc_Row(company_,voucher_type_,voucher_no_,accounting_year_,row_no_);         
+         inv_creator_ := Invoice_API.Get_Creator(company_,invoice_id_);
+      END IF;
+   $END   
+   party_type_ := Voucher_Row_API.Get_Party_Type(company_, voucher_type_, accounting_year_, voucher_no_, row_no_);
+   
+   IF (NVL(Voucher_API.Get_Interim_Voucher(company_, accounting_year_, voucher_type_, voucher_no_),  'N') = 'Y') THEN
+      rec_.enable_edit := 'FALSE';
+   ELSE      
+      IF (function_group_ = 'I' OR function_group_ = 'J' OR (function_group_ = 'F' AND inv_creator_ != 'MAN_CUST_INVOICE_API') OR function_group_ = 'N' OR (function_group_ ='K' AND party_type_ = 'SUPPLIER')) THEN
+         rec_.enable_edit := 'FALSE';
+      ELSE
+         rec_.enable_edit := 'TRUE';
+      END IF;   
+   END IF;
+   
+   Period_Allocation_API.Get_Allocation_Info(user_group_, alloc_vou_type_, from_date_, until_date_, company_, voucher_type_, accounting_year_, voucher_no_, row_no_);
+   
+   IF (from_date_ IS NOT NULL AND until_date_ IS NOT NULL)THEN
+      rec_.period_alloc_exists := 'TRUE';
+   ELSE
+      rec_.period_alloc_exists := 'FALSE';
+   END IF;
+   
+   RETURN rec_;
+END Check_Edit_Enable___;
+
+FUNCTION Validate_Alloc_Amount___ (
+   parent_objkey_    IN VARCHAR2,
+   alloc_amount_     IN NUMBER ) RETURN NUMBER
+IS
+   alloc_percentage_     NUMBER;
+   key_                  Voucher_Period_Allocation_Virtual_Key;
+   vou_period_alloc_rec_ Voucher_Period_Allocation_Virtual_Rec;
+BEGIN
+   key_.objkey := parent_objkey_;
+   vou_period_alloc_rec_ := Get_Record___(key_);
+   
+   alloc_percentage_ := alloc_amount_ / vou_period_alloc_rec_.amount;   
+   RETURN alloc_percentage_;
+END Validate_Alloc_Amount___;
+
+FUNCTION Validate_Alloc_Percentage___ (
+   parent_objkey_    IN VARCHAR2,
+   alloc_percentage_ IN NUMBER ) RETURN NUMBER
+IS
+   alloc_amount_         NUMBER;
+   key_                  Voucher_Period_Allocation_Virtual_Key;
+   vou_period_alloc_rec_ Voucher_Period_Allocation_Virtual_Rec;
+BEGIN
+   key_.objkey := parent_objkey_;
+   vou_period_alloc_rec_ := Get_Record___(key_);
+   
+   alloc_amount_ := vou_period_alloc_rec_.amount * alloc_percentage_;   
+   RETURN alloc_amount_;
+END Validate_Alloc_Percentage___;
+
+
+PROCEDURE Save_Period_Allocation___ (
+   objkey_ IN VARCHAR2 ) 
+IS
+   vou_period_alloc_rec_       Voucher_Period_Allocation_Virtual_Rec;
+   key_                        Voucher_Period_Allocation_Virtual_Key;
+   newrec_                     period_allocation_tab%ROWTYPE;
+   allow_edit_                 BOOLEAN;
+   auth_level_                 VARCHAR2(50);
+   check_period_alloc_         VARCHAR2(5);
+
+BEGIN
+   key_.objkey := objkey_;
+   vou_period_alloc_rec_ := Get_Record___(key_);
+   
+   User_Finance_API.Exist_Current_User(vou_period_alloc_rec_.company);
+   
+   IF (vou_period_alloc_rec_.from_date IS NULL OR vou_period_alloc_rec_.until_date IS NULL OR vou_period_alloc_rec_.user_group IS NULL OR 
+       vou_period_alloc_rec_.alloc_vou_type IS NULL OR vou_period_alloc_rec_.allocation_source IS NULL) THEN
+       Error_SYS.Check_Not_Null(lu_name_, 'From Date', vou_period_alloc_rec_.from_date);
+       Error_SYS.Check_Not_Null(lu_name_, 'Until Date', vou_period_alloc_rec_.until_date);
+       Error_SYS.Check_Not_Null(lu_name_, 'User Group', vou_period_alloc_rec_.user_group);
+       Error_SYS.Check_Not_Null(lu_name_, 'Allocation Voucher Type', vou_period_alloc_rec_.alloc_vou_type);
+       Error_SYS.Check_Not_Null(lu_name_, 'Allocation Source', vou_period_alloc_rec_.allocation_source);
+   END IF;
+   IF (vou_period_alloc_rec_.allocation_edited AND vou_period_alloc_rec_.enable_edit = 'TRUE') THEN
+      auth_level_ := Authorize_Level_API.Encode(Voucher_Type_User_Group_API.Get_Authorize_Level(vou_period_alloc_rec_.company, 
+                                                                                                vou_period_alloc_rec_.accounting_year,
+                                                                                                vou_period_alloc_rec_.user_group,
+                                                                                                vou_period_alloc_rec_.alloc_vou_type));
+      IF (auth_level_ = 'Not Approved') THEN
+         Error_SYS.Appl_General(lu_name_, 'NOPERMISSION: User Group entered must have authority to Enter and Approve.');
+      END IF;
+      
+      allow_edit_ := Allow_Edit___(objkey_,vou_period_alloc_rec_.cancellation,vou_period_alloc_rec_.function_group);
+                                    
+      IF (NOT allow_edit_ AND vou_period_alloc_rec_.enable_edit = 'TRUE')THEN
+         Error_SYS.Appl_General(lu_name_, 'EDITNOTALLOW: Can not modify, when the origin of the current period allocation is not from the voucher.');
+      END IF;  
+      
+      check_period_alloc_ := Check_Period_Alloc_Avail___(vou_period_alloc_rec_.company, 
+                                                         vou_period_alloc_rec_.account, 
+                                                         vou_period_alloc_rec_.cancellation, 
+                                                         vou_period_alloc_rec_.period_allocation, 
+                                                         vou_period_alloc_rec_.simulation_voucher, 
+                                                         vou_period_alloc_rec_.function_group, 
+                                                         vou_period_alloc_rec_.revenue_cost_clear_voucher, 
+                                                         vou_period_alloc_rec_.currency_amount, 
+                                                         vou_period_alloc_rec_.amount);
+                                    
+      IF (vou_period_alloc_rec_.from_date = vou_period_alloc_rec_.until_date) THEN
+         Error_SYS.Record_General(lu_name_, 'PERIODRANGEINVALID: Period range is same as the Basic Period. Period Allocation will not be created.');
+      ELSIF ((NVL(vou_period_alloc_rec_.total_allocation_amount, 0) != NVL(vou_period_alloc_rec_.amount, 0)) AND Exist_Period_Allocation___(objkey_)) THEN
+         Error_SYS.Record_General(lu_name_, 'TOTALAMOUNT: Total Amount of Period Allocation must be equal to the Amount from Voucher Row.');         
+      ELSE
+            DELETE 
+               FROM  period_allocation_tab
+               WHERE company           = vou_period_alloc_rec_.company
+               AND   accounting_year   = vou_period_alloc_rec_.accounting_year
+               AND   row_no            = vou_period_alloc_rec_.row_no
+               AND   voucher_type      = vou_period_alloc_rec_.voucher_type
+               AND   voucher_no        = vou_period_alloc_rec_.voucher_no;
+                  
+         newrec_.company            := vou_period_alloc_rec_.company; 
+         newrec_.voucher_type       := vou_period_alloc_rec_.voucher_type;   
+         newrec_.alloc_vou_type     := vou_period_alloc_rec_.alloc_vou_type;
+         newrec_.user_group         := vou_period_alloc_rec_.user_group;      
+         newrec_.from_date          := vou_period_alloc_rec_.from_date;
+         newrec_.until_date         := vou_period_alloc_rec_.until_date;   
+         newrec_.distr_type         := vou_period_alloc_rec_.allocation_method;
+         
+         FOR rec_ IN Get_Period_Allocation_Virtuals___(key_) LOOP            
+               DELETE 
+               FROM  period_allocation_tab
+               WHERE company           = rec_.company
+               AND   voucher_type      = rec_.voucher_type
+               AND   accounting_year   = rec_.accounting_year
+               AND   row_no            = rec_.row_no
+               AND   voucher_no        = rec_.voucher_no
+               AND   alloc_year        = rec_.allocation_year
+               AND   alloc_period      = rec_.allocation_period;
+            
+            newrec_.company         := rec_.company;
+            newrec_.voucher_type    := rec_.voucher_type;
+            newrec_.accounting_year := rec_.accounting_year;
+            newrec_.row_no          := rec_.row_no;
+            newrec_.voucher_no      := rec_.voucher_no;
+            newrec_.until_period    := rec_.until_period;
+            newrec_.until_year      := rec_.until_year;
+            newrec_.alloc_year      := rec_.allocation_year;
+            newrec_.alloc_period    := rec_.allocation_period;
+            newrec_.alloc_amount    := rec_.allocation_amount;
+          
+            newrec_.alloc_percent   := rec_.allocation_percentage; 
+      
+            Period_Allocation_API.New_Record(newrec_);
+         END LOOP;         
+      END IF;        
+   END IF;   
+END Save_Period_Allocation___;
+
+PROCEDURE Distribute_Lines___ (
+   objkey_         IN VARCHAR2 ) 
+IS
+   period_alloc_virtual_rec_   Period_Allocation_Virtual_Rec; 
+   vou_period_alloc_rec_       Voucher_Period_Allocation_Virtual_Rec;
+   new_vou_period_alloc_rec_   Voucher_Period_Allocation_Virtual_Rec;
+   key_                        Voucher_Period_Allocation_Virtual_Key;
+   alloc_tab_                  Period_Allocation_Rule_API.public_allocation_tab;  
+   from_year_                  NUMBER;
+   from_period_                NUMBER;
+   until_year_                 NUMBER;
+   until_period_               NUMBER;   
+   no_of_actual_periods_       NUMBER;
+   from_year_period_           NUMBER;
+   until_year_period_          NUMBER;
+   total_allocation_amount_    NUMBER := 0;
+   total_allocation_percent_   NUMBER := 0;
+   until_per_from_date_        DATE;
+   until_per_until_date_       DATE;
+   from_per_until_date_        DATE;
+   from_per_from_date_         DATE;
+
+   CURSOR count_accperiod_actual(company_ IN VARCHAR2, 
+                                 user_group_ IN VARCHAR2, 
+                                 alloc_vou_type_ IN VARCHAR2,
+                                 from_year_period_ IN NUMBER,
+                                 until_year_period_ IN NUMBER) IS
+         SELECT 1
+         FROM   accounting_period_tab
+         WHERE  company             = company_
+         AND    ((accounting_year * 100) + accounting_period) BETWEEN from_year_period_ AND until_year_period_
+         AND    year_end_period     = 'ORDINARY'
+         AND    User_Group_Period_API.Is_Period_Open_GL_IL(company, 
+                                                           accounting_year, 
+                                                           accounting_period, 
+                                                           user_group_, 
+                                                           Voucher_Type_API.Get_Ledger_Id(company_, alloc_vou_type_)) = 'FALSE';   
+BEGIN
+   key_.objkey := objkey_;
+   vou_period_alloc_rec_ := Get_Record___(key_);
+ 
+   User_Finance_API.Exist_Current_User(vou_period_alloc_rec_.company);
+   IF (vou_period_alloc_rec_.from_date = vou_period_alloc_rec_.until_date )THEN
+      Error_SYS.Appl_General(lu_name_, 'PERIODRANGEINVALID: Period range is same as the Basic Period. Period Allocation will not be created.');
+   END IF;
+   
+   DELETE 
+   FROM ${PROJECTION}_PERIOD_ALLOCATION_VIRTUAL_VRT
+   WHERE parent_objkey = objkey_;
+   
+   Accounting_Period_API.Get_Period_Info( from_year_, 
+                                          from_period_, 
+                                          from_per_from_date_, 
+                                          from_per_until_date_, 
+                                          vou_period_alloc_rec_.company, 
+                                          vou_period_alloc_rec_.from_date);
+                                          
+   Accounting_Period_API.Get_Period_Info( until_year_, 
+                                          until_period_, 
+                                          until_per_from_date_, 
+                                          until_per_until_date_, 
+                                          vou_period_alloc_rec_.company, 
+                                          vou_period_alloc_rec_.until_date);
+   
+   from_year_period_    := (from_year_)*100 + from_period_;
+   until_year_period_   := (until_year_)*100 + until_period_;
+   
+   OPEN count_accperiod_actual(  vou_period_alloc_rec_.company, 
+                                 vou_period_alloc_rec_.user_group, 
+                                 vou_period_alloc_rec_.alloc_vou_type,
+                                 from_year_period_, 
+                                 until_year_period_);                              
+                                 
+   FETCH count_accperiod_actual INTO no_of_actual_periods_;
+   IF (count_accperiod_actual%FOUND) THEN
+      CLOSE count_accperiod_actual;         
+      Error_SYS.Record_General(lu_name_, 'PERIODCLOSED: One or more Period(s) in the interval are closed for user group :P1.', vou_period_alloc_rec_.user_group);         
+   END IF;
+   CLOSE count_accperiod_actual;  
+   alloc_tab_ := Period_Allocation_Rule_API.Distribute_Allocations(  vou_period_alloc_rec_.company, 
+                                                                     vou_period_alloc_rec_.from_date, 
+                                                                     vou_period_alloc_rec_.until_date, 
+                                                                     vou_period_alloc_rec_.amount, 
+                                                                     NVL(vou_period_alloc_rec_.allocation_method,'E'), 
+                                                                     vou_period_alloc_rec_.currency_code);  
+
+   period_alloc_virtual_rec_.company         := vou_period_alloc_rec_.company;
+   period_alloc_virtual_rec_.voucher_type    := vou_period_alloc_rec_.voucher_type;
+   period_alloc_virtual_rec_.voucher_no      := vou_period_alloc_rec_.voucher_no;
+   period_alloc_virtual_rec_.accounting_year := vou_period_alloc_rec_.accounting_year;
+   period_alloc_virtual_rec_.row_no          := vou_period_alloc_rec_.row_no;
+   period_alloc_virtual_rec_.until_period    := from_period_;
+   period_alloc_virtual_rec_.until_year      := until_year_;
+   period_alloc_virtual_rec_.user_group      := vou_period_alloc_rec_.user_group;
+   period_alloc_virtual_rec_.alloc_vou_type  := vou_period_alloc_rec_.alloc_vou_type;
+   
+   FOR i_ IN alloc_tab_.FIRST.. alloc_tab_.LAST LOOP
+      period_alloc_virtual_rec_.allocation_year       := alloc_tab_(i_).accounting_year;
+      period_alloc_virtual_rec_.allocation_period     := alloc_tab_(i_).accounting_period;
+      period_alloc_virtual_rec_.period                := period_alloc_virtual_rec_.allocation_year ||' '|| LPAD(period_alloc_virtual_rec_.allocation_period, 2, '0');
+      period_alloc_virtual_rec_.allocation_amount     := alloc_tab_(i_).amount;
+      period_alloc_virtual_rec_.allocation_percentage := alloc_tab_(i_).percentage/100;
+      
+     
+      New_Detail___(key_, period_alloc_virtual_rec_);
+      total_allocation_amount_ := total_allocation_amount_ + alloc_tab_(i_).amount;
+      total_allocation_percent_ := total_allocation_percent_ + alloc_tab_(i_).percentage/100;
+   END LOOP;
+   
+   new_vou_period_alloc_rec_                             := vou_period_alloc_rec_;
+   new_vou_period_alloc_rec_.total_allocation_amount     := total_allocation_amount_;
+   new_vou_period_alloc_rec_.total_allocation_percentage := total_allocation_percent_;
+   new_vou_period_alloc_rec_.modified_parameters         := false;
+   new_vou_period_alloc_rec_.allocation_edited           := true;
+   CRUD_Update___(vou_period_alloc_rec_, new_vou_period_alloc_rec_);   
+END Distribute_Lines___;
+
+--PROCEDURE Rollback_Period_Allocation___ (
+--   objkey_ IN VARCHAR2 ) 
+--IS 
+--   vou_alloc_rec_    Voucher_Period_Allocation_Virtual_Rec;
+--   vou_key_          Voucher_Period_Allocation_Virtual_Key;
+--BEGIN 
+--   DELETE 
+   --FROM ${PROJECTION}_PERIOD_ALLOCATION_VIRTUAL_VRT
+  -- WHERE parent_objkey = objkey_--; 
+--   
+--   vou_key_.objkey   := objkey_; 
+--   vou_alloc_rec_    := Get_Record___(vou_key_);  
+--   CRUD_Delete___(vou_alloc_rec_);
+--END Rollback_Period_Allocation___;
+
+PROCEDURE Update_Allocation_Info___ (
+   company_         IN VARCHAR2,
+   voucher_type_    IN VARCHAR2,
+   voucher_no_      IN NUMBER,
+   row_no_          IN NUMBER,
+   accounting_year_ IN NUMBER,
+   user_group_      IN VARCHAR2,
+   alloc_vou_type_  IN VARCHAR2 ) 
+IS
+   
+BEGIN
+   Period_Allocation_API.Update_Alloc_Vou_Type(company_,
+                                                voucher_type_,
+                                                voucher_no_,
+                                                row_no_,
+                                                accounting_year_,
+                                                user_group_,
+                                                alloc_vou_type_);
+END Update_Allocation_Info___;
+
+FUNCTION Check_Period_Alloc_Avail___(
+   company_            IN VARCHAR2,
+   account_            IN VARCHAR2,
+   cancellation_       IN VARCHAR2,
+   period_allocation_  IN BOOLEAN,
+   simulation_voucher_ IN VARCHAR2,
+   function_group_     IN VARCHAR2,
+   cost_rev_clear_vou_ IN VARCHAR2,
+   currency_amount_    IN NUMBER,
+   amount_             IN NUMBER ) RETURN VARCHAR2
+IS
+   logical_acc_type_    VARCHAR2(1);
+   is_ledger_acc_       VARCHAR2(5);
+   is_tax_acc_          VARCHAR2(5);
+BEGIN   
+   IF (cancellation_ = 'TRUE' AND NOT period_allocation_ )THEN
+      Error_SYS.Appl_General(lu_name_, 'CANCELNOTALLOWED: Period allocation cannot be done for cancellation voucher rows.');
+   END IF;
+   
+   IF (function_group_ = 'Z' OR (cost_rev_clear_vou_ IS NOT NULL AND cost_rev_clear_vou_='TRUE') )THEN
+      Error_SYS.Appl_General(lu_name_, 'FUNCTYPENOTALLOWED: Period allocation is not allowed for periodical cost allocation vouchers and vouchers created to clear revenue/cost balances.');
+   END IF;   
+   
+   IF (simulation_voucher_ = 'TRUE')THEN
+      Error_SYS.Appl_General(lu_name_, 'SIMULATIONNOTALLOWED: Period allocation cannot be done for simulation vouchers.');
+   END IF;
+   
+   logical_acc_type_ := Account_API.Get_Logical_Account_Type_Db(company_, account_);
+   Account_API.Is_ledger_Account(is_ledger_acc_,company_,account_);
+   Account_API.Is_Tax_Account(is_tax_acc_,company_,account_);
+   
+   IF (logical_acc_type_ NOT IN ('C','R') OR  (is_ledger_acc_ = 'TRUE' OR is_tax_acc_ ='TRUE'))THEN
+      Error_SYS.Appl_General(lu_name_, 'ACCTYPENOTALLOWED: Period Allocation can be done for accounts of type Cost, Revenues and Statistics which are not set as ledger accounts and/or tax accounts.');
+   END IF;
+   
+   IF ((currency_amount_ IS NULL OR currency_amount_ = 0) OR (amount_ IS NULL OR amount_ = 0))THEN
+      Error_SYS.Appl_General(lu_name_, 'AMOUNTNOTALLOWED: Period allocation is not allowed if the currency amount is zero.');
+   END IF; 
+   RETURN 'TRUE';
+END Check_Period_Alloc_Avail___;
+
+FUNCTION Validate_User_Group___ (
+   company_     IN VARCHAR2,
+   user_group_  IN VARCHAR2,
+   from_date_   IN DATE ) RETURN Vou_Period_Alloc_Structure_Rec
+IS
+   rec_        Vou_Period_Alloc_Structure_Rec;
+BEGIN  
+   User_Group_Member_Finance_API.Check_Valid_User(company_, user_group_);
+   rec_ := Set_Alloc_User_Grp_Vou_Type___(company_, user_group_, from_date_);
+   RETURN rec_;
+END Validate_User_Group___;
+
+FUNCTION Validate_Voucher_Type___ (
+   company_       IN VARCHAR2,
+   from_date_     IN DATE,
+   user_group_    IN VARCHAR2,
+   voucher_type_  IN VARCHAR2 ) RETURN VARCHAR2
+IS
+BEGIN
+   Period_Allocation_API.Validate_UserGrp_Vou_Type(company_, from_date_, user_group_, voucher_type_);
+   RETURN NULL;
+END Validate_Voucher_Type___;
+
+@Override
+PROCEDURE CRUD_Create___ (
+   rec_ IN OUT Voucher_Period_Allocation_Virtual_Rec )
+IS
+   total_allocation_amount_   NUMBER;
+   total_alloc_percentage_    NUMBER;
+   old_rec_                   Voucher_Period_Allocation_Virtual_Rec;
+   new_rec_                   Voucher_Period_Allocation_Virtual_Rec;
+   key_                       Voucher_Period_Allocation_Virtual_Key;
+   def_val_rec_               Vou_Period_Alloc_Structure_Rec;
+BEGIN    
+   def_val_rec_ := Fetch_Voucher_Info___( rec_.company, 
+                                          rec_.voucher_type, 
+                                          rec_.accounting_year, 
+                                          rec_.voucher_no, 
+                                          rec_.row_no, 
+                                          rec_.enable_edit);
+   
+   rec_.period             := def_val_rec_.period;
+   rec_.currency_code      := def_val_rec_.currency_code;
+   rec_.from_date          := def_val_rec_.from_date;
+   rec_.until_date         := def_val_rec_.until_date;
+   rec_.user_group         := def_val_rec_.user_group;
+   rec_.alloc_vou_type     := def_val_rec_.alloc_vou_type;
+   rec_.allocation_source  := def_val_rec_.allocation_source;
+   rec_.allocation_method  := def_val_rec_.allocation_method;
+   rec_.currency_amount    := def_val_rec_.currency_amount;
+   rec_.amount             := def_val_rec_.amount;
+   rec_.allocation_edited  := false;   
+   
+   super(rec_);
+   Populate_Period_Allocation___(total_allocation_amount_,
+                                 total_alloc_percentage_,
+                                 rec_.objkey, 
+                                 rec_.company, 
+                                 rec_.accounting_year, 
+                                 rec_.row_no, 
+                                 rec_.voucher_type,
+                                 rec_.voucher_no);
+   key_.objkey := rec_.objkey;
+   old_rec_    := Get_Record___(key_);
+   new_rec_    := old_rec_;
+   new_rec_.total_allocation_amount     := total_allocation_amount_;
+   new_rec_.total_allocation_percentage := total_alloc_percentage_;
+   CRUD_Update___(old_rec_, new_rec_);
+END CRUD_Create___;
+
+PROCEDURE Populate_Period_Allocation___ (
+   total_alloc_amount_     OUT NUMBER,
+   total_alloc_percentage_ OUT NUMBER,
+   parent_objkey_          IN  VARCHAR2,
+   company_                IN  VARCHAR2,
+   accounting_year_        IN  NUMBER,
+   row_no_                 IN  NUMBER,
+   voucher_type_           IN  VARCHAR2,
+   voucher_no_             IN  NUMBER)
+IS
+   period_alloc_virtual_rec_   Period_Allocation_Virtual_Rec;
+   key_                        Period_Allocation_Virtual_Key;
+   old_rec_                    Period_Allocation_Virtual_Rec;   
+   last_row_percentage_        NUMBER;
+   
+   CURSOR get_period_allocation IS
+      SELECT *
+      FROM   period_allocation
+      WHERE  company          = company_
+      AND    accounting_year  = accounting_year_
+      AND    row_no           = row_no_
+      AND    voucher_type     = voucher_type_
+      AND    voucher_no       = voucher_no_;
+BEGIN
+   total_alloc_amount_ := 0;
+   total_alloc_percentage_ := 0;
+   FOR rec_ IN get_period_allocation LOOP
+      period_alloc_virtual_rec_.objkey             := sys_guid();
+      period_alloc_virtual_rec_.parent_objkey      := parent_objkey_;
+      period_alloc_virtual_rec_.company            := company_;
+      period_alloc_virtual_rec_.accounting_year    := accounting_year_;
+      period_alloc_virtual_rec_.row_no             := row_no_;
+      period_alloc_virtual_rec_.voucher_type       := voucher_type_;
+      period_alloc_virtual_rec_.voucher_no         := voucher_no_;
+      period_alloc_virtual_rec_.allocation_period  := rec_.alloc_period;
+      period_alloc_virtual_rec_.allocation_year    := rec_.alloc_year;
+      period_alloc_virtual_rec_.period             := rec_.alloc_year ||' '|| LPAD(rec_.alloc_period, 2, '0');
+      
+      period_alloc_virtual_rec_.allocation_percentage := rec_.alloc_percent*100;
+      -- temporary correction done to overcome from the IEE issue.
+      IF (period_alloc_virtual_rec_.allocation_percentage > 1 ) THEN
+         period_alloc_virtual_rec_.allocation_percentage := rec_.alloc_percent;
+      END IF;
+      period_alloc_virtual_rec_.allocation_amount  := rec_.alloc_amount;
+      period_alloc_virtual_rec_.until_year         := rec_.until_year;
+      period_alloc_virtual_rec_.until_period       := rec_.until_period;
+      period_alloc_virtual_rec_.user_group         := rec_.user_group;
+      period_alloc_virtual_rec_.alloc_vou_type     := rec_.alloc_vou_type;
+      
+      Crud_Create___(period_alloc_virtual_rec_);
+      total_alloc_amount_     := total_alloc_amount_ + period_alloc_virtual_rec_.allocation_amount;
+      total_alloc_percentage_ := total_alloc_percentage_ + period_alloc_virtual_rec_.allocation_percentage;
+   END LOOP;
+   -- Adjusting the last row to fit with total 100 allocation percentage.
+   IF (total_alloc_percentage_ > 0 AND total_alloc_percentage_ != 1) THEN
+      last_row_percentage_ := period_alloc_virtual_rec_.allocation_percentage + (1 - total_alloc_percentage_);
+      key_.objkey          := period_alloc_virtual_rec_.objkey;
+      old_rec_             := Get_Record___(key_);
+      period_alloc_virtual_rec_ := old_rec_;
+      period_alloc_virtual_rec_.allocation_percentage := last_row_percentage_;
+      
+      CRUD_Update___(old_rec_, period_alloc_virtual_rec_);
+      total_alloc_percentage_ := 1;
+   END IF;
+   total_alloc_percentage_ := total_alloc_percentage_ * 100;
+END Populate_Period_Allocation___;
+
+@Override
+PROCEDURE CRUD_Delete___ (
+   rec_ IN Period_Allocation_Virtual_Rec )
+IS
+   old_header_rec_          Voucher_Period_Allocation_Virtual_Rec;
+   new_header_rec_          Voucher_Period_Allocation_Virtual_Rec;
+   key_                     Voucher_Period_Allocation_Virtual_Key;
+BEGIN
+   key_.objkey := rec_.parent_objkey;
+   old_header_rec_ := Get_Record___(key_);
+   new_header_rec_ := old_header_rec_;
+   new_header_rec_.total_allocation_amount     := new_header_rec_.total_allocation_amount - rec_.allocation_amount;
+   new_header_rec_.total_allocation_percentage := new_header_rec_.total_allocation_percentage - rec_.allocation_percentage;
+   new_header_rec_.allocation_edited           := true;
+   super(rec_);  
+   CRUD_Update___(old_header_rec_, new_header_rec_);
+END CRUD_Delete___;
+
+@Override 
+PROCEDURE CRUD_Update___ (
+   old_ IN Period_Allocation_Virtual_Rec,
+   new_ IN Period_Allocation_Virtual_Rec )
+IS
+   old_header_rec_          Voucher_Period_Allocation_Virtual_Rec;
+   new_header_rec_          Voucher_Period_Allocation_Virtual_Rec;
+   new_rec_                 Period_Allocation_Virtual_Rec;
+   key_                     Voucher_Period_Allocation_Virtual_Key;
+BEGIN
+   key_.objkey := old_.parent_objkey;
+   old_header_rec_ := Get_Record___(key_);
+   IF (new_.allocation_amount IS NOT NULL) THEN
+      new_rec_ := new_;
+      new_rec_.allocation_amount := Currency_Amount_API.Get_Rounded_Amount(new_rec_.company, old_header_rec_.currency_code, new_rec_.allocation_amount);
+   END IF;
+   super(old_, new_rec_);   
+   new_header_rec_ := old_header_rec_;
+   new_header_rec_.total_allocation_amount     := new_header_rec_.total_allocation_amount + new_rec_.allocation_amount - old_.allocation_amount;
+   new_header_rec_.total_allocation_percentage := new_header_rec_.total_allocation_percentage + new_rec_.allocation_percentage - old_.allocation_percentage;
+   new_header_rec_.allocation_edited           := TRUE;
+   CRUD_Update___(old_header_rec_, new_header_rec_);
+END CRUD_Update___;
+
+@Override 
+PROCEDURE CRUD_Update___ (
+   old_rec_ IN OUT Voucher_Period_Allocation_Virtual_Rec,
+   new_rec_ IN OUT Voucher_Period_Allocation_Virtual_Rec )
+IS
+BEGIN
+   IF (old_rec_.alloc_vou_type != new_rec_.alloc_vou_type OR old_rec_.user_group != new_rec_.user_group) THEN
+      new_rec_.allocation_edited := TRUE;
+   END IF; 
+ 
+   super(old_rec_, new_rec_);   
+END CRUD_Update___;
+
+FUNCTION Allow_Edit___(
+   objkey_           VARCHAR2,
+   cancellation_     VARCHAR2,
+   function_group_   VARCHAR2) RETURN BOOLEAN
+IS   
+   vou_type_         VARCHAR2(20);
+   vou_no_           NUMBER;
+   acc_year_         NUMBER;
+   row_no_           NUMBER;
+   inv_creator_      VARCHAR2(20);
+   party_type_       VARCHAR2(20);   
+   invoice_id_       NUMBER;
+   
+   CURSOR get_allocation_info IS 
+      SELECT company,voucher_type,voucher_no,accounting_year,row_no
+      FROM ${PROJECTION}_PERIOD_ALLOCATION_VIRTUAL_VRT
+      WHERE parent_objkey = objkey_
+      AND rownum = 1;
+BEGIN   
+   OPEN get_allocation_info;
+   FETCH get_allocation_info INTO company_,vou_type_,voucher_no_,acc_year_,row_no_;
+   CLOSE get_allocation_info;
+   
+   $IF Component_Invoic_SYS.INSTALLED $THEN
+      IF (cancellation_ != 'TRUE' AND function_group_ = 'F')THEN
+         invoice_id_ := Voucher_Row_API.Get_Inv_Id_From_Inv_Acc_Row(company_,vou_type_,vou_no_,acc_year_,row_no_);         
+         inv_creator_ := Invoice_API.Get_Creator(company_,invoice_id_);
+      END IF;
+   $END   
+   party_type_ := Voucher_Row_API.Get_Party_Type(company_, vou_type_, acc_year_, vou_no_, row_no_);
+   
+   IF (function_group_ = 'I' OR function_group_ = 'J' OR (function_group_ = 'F' AND inv_creator_ = 'MAN_CUST_INVOICE_API') OR function_group_ = 'N' OR (function_group_ ='K' AND party_type_ = 'SUPPLIER')) THEN
+      RETURN FALSE;
+   END IF;
+   RETURN TRUE;
+END Allow_Edit___;
+
+FUNCTION Exist_Period_Allocation___ (
+   parent_objkey_   IN VARCHAR2 ) RETURN BOOLEAN
+IS
+   dummy_  NUMBER;
+   CURSOR exist_period_allocation IS 
+      SELECT 1
+      FROM ${PROJECTION}_PERIOD_ALLOCATION_VIRTUAL_VRT
+      WHERE parent_objkey = parent_objkey_;
+BEGIN
+  
+   OPEN exist_period_allocation;
+   FETCH exist_period_allocation INTO dummy_;
+   IF (exist_period_allocation%FOUND) THEN
+      CLOSE exist_period_allocation;
+      RETURN TRUE;
+   END IF;
+   CLOSE exist_period_allocation;
+   RETURN FALSE;
+END Exist_Period_Allocation___;
+
+FUNCTION Set_Alloc_User_Grp_Vou_Type___ (
+   company_     IN VARCHAR2,
+   user_group_  IN VARCHAR2,
+   from_date_   IN DATE) RETURN Vou_Period_Alloc_Structure_Rec  
+IS
+   user_id_    VARCHAR2(30);
+   rec_        Vou_Period_Alloc_Structure_Rec;
+BEGIN
+   user_id_          := Fnd_Session_API.Get_Fnd_User;
+   rec_.user_group   := user_group_;
+   
+   IF (user_group_ IS NULL) THEN
+      rec_.user_group := User_Group_Member_Finance_API.Get_Default_Group(company_, user_id_);                                             
+   END IF;        
+   rec_.alloc_vou_type := Period_Allocation_API.Get_Default_Voucher_Type(company_, from_date_, rec_.user_group);
+   RETURN rec_;
+END Set_Alloc_User_Grp_Vou_Type___;
+
+FUNCTION Fetch_Voucher_Info___ (
+   company_         IN VARCHAR2,
+   voucher_type_    IN VARCHAR2,
+   accounting_year_ IN NUMBER,
+   voucher_no_      IN NUMBER,
+   row_no_          IN NUMBER,
+   enable_edit_     IN VARCHAR2) RETURN Vou_Period_Alloc_Structure_Rec
+IS
+   rec_                   Vou_Period_Alloc_Structure_Rec;
+   rec2_                  Vou_Period_Alloc_Structure_Rec;
+   voucher_date_          DATE;
+   from_date_             DATE;
+   until_date_            DATE;   
+   user_group_            VARCHAR2(30);
+   alloc_vou_type_        VARCHAR2(3); 
+   voucher_head_          Voucher_API.Public_Rec;
+   voucher_row_           VOUCHER_ROW_TAB%ROWTYPE;
+BEGIN
+   rec_.user_id   := Fnd_Session_API.Get_Fnd_User;   
+   voucher_head_  := Voucher_API.Get(company_, accounting_year_, voucher_type_, voucher_no_);   
+   voucher_row_   := Voucher_Row_API.Get_Row(company_, voucher_type_,accounting_year_, voucher_no_, row_no_);
+     
+   Period_Allocation_API.Get_Allocation_Info(user_group_,
+                                             alloc_vou_type_,
+                                             from_date_,
+                                             until_date_,
+                                             company_,
+                                             voucher_type_,
+                                             accounting_year_,
+                                             voucher_no_,
+                                             row_no_);                                                                                    
+                                             
+   rec_.period             := RPAD(TO_CHAR(voucher_head_.accounting_year), 5, ' ') ||  LPAD(TO_CHAR(voucher_head_.accounting_period), 2, '0');                                          
+   voucher_date_           := voucher_head_.voucher_date;
+   rec_.currency_amount    := NVL(voucher_row_.currency_debet_amount,0) - NVL(voucher_row_.currency_credit_amount,0);
+   rec_.amount             := NVL(voucher_row_.debet_amount,0) - NVL(voucher_row_.credit_amount,0);
+   rec_.currency_code      := voucher_row_.currency_code;
+   rec_.allocation_method  := NVL(Period_Allocation_API.Get_Alloc_Distr_Type_Db(company_,voucher_type_,voucher_no_,row_no_,accounting_year_),'E');
+   
+   IF (until_date_ IS NOT NULL) THEN
+      rec_.from_date          := from_date_;
+      rec_.until_date         := until_date_;						
+      rec_.user_group         := user_group_;
+      rec_.alloc_vou_type     := alloc_vou_type_;      
+      rec_.allocation_source  := Period_Allocation_API.Get_Creator_Desc (company_, accounting_year_, voucher_type_, voucher_no_, row_no_);
+   ELSIF (enable_edit_ = 'FALSE')  THEN 
+      rec_.from_date         := voucher_date_;
+   ELSIF ((rec_.from_date IS NULL OR rec_.until_date IS NULL)) THEN 
+      rec_.from_date         := voucher_date_;
+	   rec2_ := Set_Alloc_User_Grp_Vou_Type___(company_, rec_.user_group, rec_.from_date);
+      rec_.user_group         := rec2_.user_group;
+      rec_.alloc_vou_type     := rec2_.alloc_vou_type;
+      rec_.allocation_source  := NVL(rec_.allocation_source,Period_Allocation_Rule_API.Get_Creator_Desc('ManualVoucher'));
+   END IF; 
+   RETURN rec_;
+END Fetch_Voucher_Info___;

@@ -1,0 +1,30 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: UserFinance
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+VIEW User_Finance_Auth_Pub IS
+SELECT c.company                            company,
+       rowkey                             objkey
+FROM   company_finance_tab c
+WHERE  EXISTS (SELECT 1 
+               FROM user_finance_tab u 
+               WHERE u.company = c.company
+               AND u.userid = Fnd_Session_API.Get_Fnd_User)
+OR     ('TRUE' = (SELECT User_Finance_API.Has_Finance_Company_Adm_Priv(c.company) FROM DUAL)) ;
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

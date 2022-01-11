@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>UuidSourceRefType</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <NAME>Invoice</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>ExpenseDetail</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>EntExpDetail</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>PaymentTransaction</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>PaymentReceipt</NAME>
+      </VALUE>
+   </VALUES>
+</ENUMERATION>

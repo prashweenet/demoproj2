@@ -1,0 +1,126 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CombControlType
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Comb_Control_Type_Value IS
+   Prompt = 'CombControlTypeValue'
+   Posting_Type.Flags = 'PMI--'
+   Code_Part.Flags = 'PMIU-'
+   Code_Part.Datatype = 'STRING(1)'
+   Code_Part.Prompt = 'Code Part'
+   Module.Flags = 'AMI-L'
+   Module.Datatype = 'STRING(20)'
+   Module.Prompt = 'Module'
+   Control_Type.Flags = 'KMI-L'
+   Control_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Control_Type.Prompt = 'Control Type'
+   Control_Type_Desc.Flags = 'A-I-L'
+   Control_Type_Desc.Datatype = 'STRING(35)'
+   Control_Type_Desc.Prompt = 'Description'
+SELECT company                                  company,
+       posting_type                             posting_type,
+       'A'                                      code_part,
+       comb_module                              module,
+       comb_control_type                        control_type,
+       comb_control_type_desc                   control_type_desc,
+       rowkey                                  objkey
+FROM   COMB_CONTROL_TYPE_TAB
+UNION
+SELECT company                                  company,
+       posting_type                             posting_type,
+       'B'                                      code_part,
+       comb_module                              module,
+       comb_control_type                        control_type,
+       comb_control_type_desc                   control_type_desc,
+       rowkey                                  objkey
+FROM   COMB_CONTROL_TYPE_TAB
+UNION
+SELECT company                                  company,
+       posting_type                             posting_type,
+       'C'                                      code_part,
+       comb_module                              module,
+       comb_control_type                        control_type,
+       comb_control_type_desc                   control_type_desc,
+       rowkey                                  objkey
+FROM   COMB_CONTROL_TYPE_TAB
+UNION
+SELECT company                                  company,
+       posting_type                             posting_type,
+       'D'                                      code_part,
+       comb_module                              module,
+       comb_control_type                        control_type,
+       comb_control_type_desc                   control_type_desc,
+       rowkey                                  objkey
+FROM   COMB_CONTROL_TYPE_TAB
+UNION
+SELECT company                                  company,
+       posting_type                             posting_type,
+       'E'                                      code_part,
+       comb_module                              module,
+       comb_control_type                        control_type,
+       comb_control_type_desc                   control_type_desc,
+       rowkey                                  objkey
+FROM   COMB_CONTROL_TYPE_TAB
+UNION
+SELECT company                                  company,
+       posting_type                             posting_type,
+       'F'                                      code_part,
+       comb_module                              module,
+       comb_control_type                        control_type,
+       comb_control_type_desc                   control_type_desc,
+       rowkey                                  objkey
+FROM   COMB_CONTROL_TYPE_TAB
+UNION
+SELECT company                                  company,
+       posting_type                             posting_type,
+       'G'                                      code_part,
+       comb_module                              module,
+       comb_control_type                        control_type,
+       comb_control_type_desc                   control_type_desc,
+       rowkey                                  objkey
+FROM   COMB_CONTROL_TYPE_TAB
+UNION
+SELECT company                                  company,
+       posting_type                             posting_type,
+       'H'                                      code_part,
+       comb_module                              module,
+       comb_control_type                        control_type,
+       comb_control_type_desc                   control_type_desc,
+       rowkey                                  objkey
+FROM   COMB_CONTROL_TYPE_TAB
+UNION
+SELECT company                                  company,
+       posting_type                             posting_type,
+       'I'                                      code_part,
+       comb_module                              module,
+       comb_control_type                        control_type,
+       comb_control_type_desc                   control_type_desc,
+       rowkey                                  objkey
+FROM   COMB_CONTROL_TYPE_TAB
+UNION
+SELECT company                                  company,
+       posting_type                             posting_type,
+       'J'                                      code_part,
+       comb_module                              module,
+       comb_control_type                        control_type,
+       comb_control_type_desc                   control_type_desc,
+       rowkey                                  objkey
+FROM   COMB_CONTROL_TYPE_TAB;
+
+

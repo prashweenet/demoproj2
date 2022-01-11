@@ -1,0 +1,69 @@
+projection ApprovalCombinationRuleHandling;
+component ACCRUL;
+layer Core;
+description "Approval Combination Rule";
+category Users;
+
+include fragment CodeStringAllBasic;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ApproverCombRuleSet for ApproverCombRule {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ApproverCombRule {
+   attribute CombinationRuleId Text {
+      label = "Combination Rule";
+   }
+
+   array ApproverCombRuleDetailArray(Company, CombinationRuleId) to ApproverCombRuleDetail(Company, CombinationRuleId);
+}
+
+
+@Override
+entity ApproverCombRuleDetail {
+   attribute PostingCombinationId Number {
+      editable = [true];
+      updatable = [true];
+   }
+
+   reference AccountRef(Company, Account) to Account(Company, Account);
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

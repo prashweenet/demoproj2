@@ -1,0 +1,88 @@
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200702  DILDLK  LMM2020R1-260, Modified navigation.
+--  200702  TAJALK  LMM2020R1-270, Bug fixes
+--  200625  LAHNLK  LMM2020R1-84: created.
+-----------------------------------------------------------------------------
+client AircraftSubSystem;
+component ADCOM;
+layer Core;
+projection AircraftSubSystemHandling;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+entry AircraftSubSystemsNavEntry parent AdcomNavigator.AircraftBasicData  at index 400 {
+   label = "Aircraft Subsystems";
+   page AircraftSubSystems home AvAircraftSubSystem;
+}
+-------------------------------- MAIN PAGES ---------------------------------
+page AircraftSubSystems using AvAircraftSubSystemSet {
+   label = "Aircraft Subsystems";
+   list AircraftSubSystemList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AircraftSystemNewSelector for AvAircraftSystem {
+   label = "${SystemCode} - ${SystemName} - ${AircraftTypeCode}";
+   static SystemCode;
+   static SystemName;
+   static AircraftTypeCode;
+}
+selector AvAircraftTypeNewSelector for AvAircraftType {
+   label = "${AircraftTypeCode}";
+   static AircraftTypeCode;
+   static AircraftTypeName;
+}
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AircraftSubSystemList for AvAircraftSubSystem {
+   lov AvAircraftTypeRef with AvAircraftTypeNewSelector {
+      label = "Aircraft Type";
+      description = AvAircraftTypeRef.AircraftTypeName;
+   }
+   lov AvAircraftSystemRef with AircraftSystemNewSelector {
+      label = "Aircraft System";
+      description = AvAircraftSystemRef.SystemName;
+      hidekey = [true];
+   }
+   field SubSystemCode {
+      label = "Sub System Code";
+   }
+   field SubSystemName {
+      label = "Sub System Name";
+   }
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

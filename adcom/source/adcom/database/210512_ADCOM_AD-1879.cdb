@@ -1,0 +1,109 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210512_ADCOM_AD-1879.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210512   dhaslk  Remove obsolete table and add new table
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','210512_ADCOM_AD-1879.cdb','Timestamp_1');
+
+-- ***** Av_Hist_Usg_Snapshot_Rec_Tab, Av_Hist_Usg_Snapshot_Data_Tab Start *****
+PROMPT Renaming Table AV_HIST_USG_SNAPSHOT_REC_TAB and AV_HIST_USG_SNAPSHOT_DATA_TAB
+BEGIN
+   Database_SYS.Rename_Table('AV_HIST_USG_SNAPSHOT_REC_TAB', 'AV_HIST_USG_SNAPSHOT_REC_2113', FALSE, TRUE, TRUE, TRUE, TRUE);
+   Database_SYS.Rename_Table('AV_HIST_USG_SNAPSHOT_DATA_TAB', 'AV_HIST_USG_SNAPSHOT_DATA_2113', FALSE, TRUE, TRUE, TRUE, TRUE);
+END;
+/
+
+PROMPT Removing API AV_HIST_USG_SNAPSHOT_REC_API, AV_HIST_USG_SNAPSHOT_DATA_API 
+BEGIN
+   Database_SYS.Remove_Package('Av_Hist_Usg_Snapshot_Rec_API', TRUE);
+   Database_SYS.Remove_Package('Av_Hist_Usg_Snapshot_Data_API', TRUE);
+END;
+/
+
+PROMPT Removing view AV_HIST_USG_SNAPSHOT_REC, AV_HIST_USG_SNAPSHOT_DATA Views
+BEGIN
+   Database_SYS.Remove_View('Av_Hist_Usg_Snapshot_Rec', TRUE);
+   Database_SYS.Remove_View('Av_Hist_Usg_Snapshot_Data', TRUE);
+END;
+/
+
+PROMPT Removing Sequences AV_HIST_USG_SNAPSHOT_REC, AV_HIST_USG_SNAPSHOT_DATA 
+BEGIN
+   Database_SYS.Remove_Sequence('av_hist_usg_snapshot_rec_seq', FALSE);
+   Database_SYS.Remove_Sequence('av_hist_usg_snapshot_data_seq', FALSE);
+END;
+/
+-- ***** Av_Hist_Usg_Snapshot_Rec_Tab, Av_Hist_Usg_Snapshot_Data_Tab Start *****
+
+-- ***** Av_Hist_Usg_Snapshot_Tab Start *****
+PROMPT Create AV_HIST_USG_SNAPSHOT_TAB
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_HIST_USG_SNAPSHOT_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'USAGE_SNAPSHOT_ID', 'NUMBER', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'INVENTORY_ID', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'WP_BARCODE', 'VARCHAR2(80)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'PT_BARCODE', 'VARCHAR2(80)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ET_BARCODE', 'VARCHAR2(80)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'FAULT_BARCODE', 'VARCHAR2(80)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'COMPOENENT_CHANGE_ID', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'DATA_TYPE_CODE', 'VARCHAR2(80)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'TIME_SINCE_NEW', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'TIME_SINCE_OVER_HAUL', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'TIME_SINCE_INSTALL', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'MODIFIED_DATE', 'DATE', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'MX_UNIQUE_KEY', 'VARCHAR2(100)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+PROMPT Create AV_HIST_USG_SNAPSHOT_PK, AV_HIST_USG_SNAPSHOT_RK
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_HIST_USG_SNAPSHOT_PK';
+   table_name_ VARCHAR2(30) := 'AV_HIST_USG_SNAPSHOT_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'USAGE_SNAPSHOT_ID');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_HIST_USG_SNAPSHOT_RK';
+   table_name_ VARCHAR2(30) := 'AV_HIST_USG_SNAPSHOT_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+PROMPT Create AV_HIST_USG_SNAPSHOT_SEQ
+DECLARE
+   sequence_name_ VARCHAR2(30) := 'AV_HIST_USG_SNAPSHOT_SEQ';
+BEGIN
+   Database_SYS.Create_Sequence(sequence_name_, 'MAXVALUE 999999999999999 INCREMENT BY 1 START WITH 1 NOCACHE', TRUE);
+END;
+/
+-- ***** Av_Hist_Usg_Snapshot_Tab End *****
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','210512_ADCOM_AD-1879.cdb','Done');
+
+SET SERVEROUTPUT OFF

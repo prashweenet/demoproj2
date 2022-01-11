@@ -1,0 +1,31 @@
+--------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  ---------------------------------------------------------------
+-- 2020-06-19  SatGlk  LMM2020R1-72, Changed AirportId to required false since it is sequentially generated.
+-- 2020-06-16  SatGlk  LMM2020R1-72, Implemented
+--------------------------------------------------------------------------------------
+
+projection AirportsHandling;
+component ADCOM;
+layer Core;
+description "Use this API to manage Airports";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AirportSet for AvAirport;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvAirport {
+   crud = Create, Read, Update, Delete;
+   attribute IataCode Text {
+      label = "IATA Code";
+      required = [true];
+   }
+   attribute IcaoCode Text {
+      label = "ICAO Code";
+   }
+   attribute AirportId Number {
+      required = [false];
+   }
+}

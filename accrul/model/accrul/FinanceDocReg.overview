@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENTITY_OVERVIEW xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:entity_overview_entity_overview">
+   <DIAGRAMS>
+      <DIAGRAM>
+         <NAME>Main</NAME>
+         <DIAGRAM_TYPE>ENTITY_OVERVIEW</DIAGRAM_TYPE>
+         <NODES>
+            <DIAGRAM_NODE>
+               <ID>d1a8acf0-db2c-11de-139e-ddc301921a53</ID>
+               <NODE_TYPE>ENTITY</NODE_TYPE>
+               <MINIMIZED>1</MINIMIZED>
+               <PROPERTIES>
+                  <PROPERTY>
+                     <NAME>EntityName</NAME>
+                     <VALUE>FinanceDocReg</VALUE>
+                  </PROPERTY>
+               </PROPERTIES>
+               <LOCATION>
+                  <POINT>
+                     <X>84</X>
+                     <Y>89</Y>
+                  </POINT>
+               </LOCATION>
+               <SIZE>
+                  <POINT>
+                     <X>130</X>
+                     <Y>89</Y>
+                  </POINT>
+               </SIZE>
+            </DIAGRAM_NODE>
+         </NODES>
+      </DIAGRAM>
+   </DIAGRAMS>
+</ENTITY_OVERVIEW>

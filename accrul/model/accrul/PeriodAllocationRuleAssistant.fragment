@@ -1,0 +1,434 @@
+fragment PeriodAllocationRuleAssistant;
+component ACCRUL;
+layer Core;
+description "Manage PeriodAllocationRule";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+group PeriodAllocationRuleGroup for PeriodAllocationRuleVirtual {
+   label = "";
+   field CurrencyCode {
+      size = Small;
+   }
+   field TotalAmount {
+      size = Small;
+      editable = [false];
+   }
+   field AllocationSource;
+}
+
+
+group PeriodAllocationRuleSelectionGroup for PeriodAllocationRuleVirtual {
+   label = "Allocation Parameters";
+
+   field FromDate {
+      size = Small;
+      editable = [StateQ != "TRUE" and Analysis = "FALSE"];
+      validate command {
+         execute {
+            set ModifiedAllocParameters = true;
+            set AllocationDetailsEdited = false;
+         }
+      }
+   }
+   field UntilDate {
+      size = Small;
+      editable = [StateQ != "TRUE" and Analysis = "FALSE"];
+      validate command {
+         execute {
+            set ModifiedAllocParameters = true;
+            set AllocationDetailsEdited = false;
+         }
+      }
+   }
+   field AllocationMethod {
+      size = Small;
+      editable = [StateQ != "TRUE" and Analysis = "FALSE"];
+      validate command {
+
+         execute {
+            set ModifiedAllocParameters = true;
+            set AllocationDetailsEdited = false;
+         }
+      }
+   }
+}
+
+
+group SummaryPeriodAllocationGroup for PeriodAllocationRuleVirtual {
+   label = "Allocation Total";
+
+   field TotalAllocationAmount {
+      editable = [false];
+      visible = [false];
+   }
+   field TotalAllocationPercentage {
+      editable = [false];
+      visible = [false];
+   }
+   computedfield TotalAllocPercentage {
+      label = "Total Allocation Percentage";
+      value = "#{PeriodAllocationRuleVirtuals.sum(AllocationPercentage) * 100}";
+
+   }
+   computedfield TotalAllocAmount {
+      label = "Total Allocation Amount";
+      value = "#{PeriodAllocationRuleVirtuals.sum(AllocationAmount)}";
+      type = Number;
+      format = ifscurrency;
+      preserveprecision = [true];
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list PeriodAllocationRuleVirtualList for PeriodAllocationRuleLineVirtual {
+   label = "Allocation Details";
+   crudactions {
+      edit {
+         enabled = [parent.StateQ != "TRUE" and Analysis != "TRUE"];
+      }
+      delete {
+         enabled = [parent.StateQ != "TRUE" and Analysis != "TRUE"];
+      }
+   }
+
+   field Period {
+      editable = [false];
+   }
+   field AllocationPercentage {
+      format = percentage;
+      preserveprecision = [true];
+      editable = [StateQ != "TRUE" and Analysis != "TRUE"];
+      validate command {
+         variable AllocAmountVar {
+            type = Number;
+         }
+         execute {
+            set AllocAmountVar = 0;
+            call ValidateAllocationPercentage(ParentObjkey, AllocationPercentage, AllocationAmount) into AllocAmountVar;
+            set AllocationAmount = AllocAmountVar;
+         }
+      }
+   }
+   field AllocationAmount {
+      preserveprecision = [true];
+      editable = [StateQ != "TRUE" and Analysis != "TRUE"];
+      validate command {
+         variable AllocPercentVar {
+            type = Number;
+         }
+         execute {
+            set AllocPercentVar = 0;
+            call ValidateAllocationAmount(ParentObjkey, AllocationPercentage, AllocationAmount) into AllocPercentVar;
+            set AllocationPercentage = AllocPercentVar;
+         }
+      }
+   }
+   field AllocationDiff {
+      label = "Period Closed at Voucher Creation";
+   }
+   command DistributeCommand {
+      enabled = [StateQ != "TRUE" and Analysis != "TRUE"];
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+assistant PeriodAllocRuleAssistant using PeriodAllocationRuleVirtualSet {
+   label = "Period Allocation Rule";
+   savemode = OnLostFocus;
+
+   input(Company, Site, Creator, FromDate, UntilDate, TotalAmount, CurrencyCode, OpenState, InAllocId, Analysis);
+   output(AllocationId);
+
+   init command {
+      variable PeriodAllocRuleStructVar {
+         type = Structure(PeriodAllocRuleStructure);
+      }
+      variable AllocRuleHeadStructVar {
+         type = Structure(PeriodAllocHeadStructure);
+      }
+      variable AllocationStatus {
+         type = Text;
+      }
+      variable StateQ {
+         type = Text;
+      }
+      variable AllocId {
+         type = Number;
+      }
+      execute {
+
+         if [OpenState = "Q"] {
+            set StateQ = "TRUE";
+         }
+         else {
+            set StateQ = "FALSE";
+         }
+         if [Analysis = "TRUE"] {
+            set Analysis = "TRUE";
+         }
+         else {
+            set Analysis = "FALSE";
+         }
+         set AllocId = InAllocId;
+         call FetchDefaultInfo(Company, VoucherType, AccountingYear, VoucherNo, RowNo, Creator, AllocId) into PeriodAllocRuleStructVar;
+
+         set AllocationSource = PeriodAllocRuleStructVar.AllocationSource;
+         set AllocationMethod = PeriodAllocRuleStructVar.AllocationMethod;
+
+         if [AllocId != null] {
+            set FromDate = PeriodAllocRuleStructVar.FromDate;
+            set UntilDate = PeriodAllocRuleStructVar.UntilDate;
+         }
+         if [AllocId = null or AllocId = 0] {
+            call CreateNewAllocation(AllocationId, Company, Site, Creator, FromDate, UntilDate, TotalAmount, CurrencyCode, AllocationMethod) into AllocRuleHeadStructVar;
+            set AllocationId = AllocRuleHeadStructVar.AllocationId;
+            set Company = AllocRuleHeadStructVar.Company;
+         }
+         else {
+            set AllocationId = AllocId;
+            if [OpenState = "M"] {
+               call GetAllocationStatus(AllocationId, Creator) into AllocationStatus;
+               if [AllocationStatus = "Q"] {
+                  set StateQ = "TRUE";
+               }
+            }
+         }
+      }
+   }
+
+   steps {
+      step {
+         group PeriodAllocationRuleGroup;
+         group PeriodAllocationRuleSelectionGroup;
+         group SummaryPeriodAllocationGroup;
+         list PeriodAllocationRuleVirtualList(PeriodAllocationRuleVirtuals);
+      }
+      final step {
+      }
+   }
+
+   finish command {
+      enabled = [ModifiedAllocParameters = false or AllocationDetailsEdited];
+      execute {
+         call SavePeriodAllocationRule(Objkey);
+         exit OK;
+      }
+   }
+
+   cancel command {
+      enabled = [StateQ != "TRUE" and Analysis != "TRUE"];
+      execute {
+         --call RollbackPeriodAllocationRule(Objkey);
+         exit CANCEL;
+      }
+   }
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+command DistributeCommand for PeriodAllocationRuleLineVirtual {
+   label = "Distribute";
+   mode = Global;
+   enabled = [FromDate != null and UntilDate != null and FromDate < UntilDate];
+   execute {
+      if [parent.StateQ != "TRUE" and Analysis != "TRUE"] {
+         call DistributeAllocLines(Objkey);
+      }
+   }
+}
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PeriodAllocationRuleVirtualSet for PeriodAllocationRuleVirtual {
+   context Company(Company);
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+-- Added User_Finance_API.Exist_Current_User in plsvc.
+action DistributeAllocLines {
+   initialcheck implementation;
+   ludependencies = PeriodAllocationRuleLineVirtual, PeriodAllocationRuleVirtual;
+   parameter Objkey Text;
+}
+
+--Added security annotation to Period_Allocation_Rule_API.Create_New_Allocation_Head.
+action CreateNewAllocation Structure(PeriodAllocHeadStructure) {
+   initialcheck implementation;
+   parameter AllocationId Number;
+   parameter Company Text;
+   parameter Site Text;
+   parameter Creator Text;
+   parameter FromDate Date;
+   parameter UntilDate Date;
+   parameter TotalAmount Number;
+   parameter CurrencyCode Text;
+   parameter AllocationMethod Enumeration(PeriodAllocPerDistr);
+}
+
+
+//action CompareAllocationDistribution {
+//   parameter TotalAmount Number;
+//   parameter AllocationId Number;
+//}
+
+-- Added User_Finance_API.Exist_Current_User in plsvc.
+action SavePeriodAllocationRule {
+   initialcheck implementation;
+   ludependencies = PeriodAllocationRuleVirtual, InstantInvoiceItem;
+   parameter Objkey Text;
+}
+
+
+//action RollbackPeriodAllocationRule {
+//   ludependencies = PeriodAllocationRuleLineVirtual;
+//   parameter Objkey Text;
+//}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function FetchDefaultInfo Structure(PeriodAllocRuleStructure) {
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter AccountingYear Number;
+   parameter VoucherNo Number;
+   parameter RowNo Number;
+   parameter Creator Text;
+   parameter AllocId Number;
+}
+
+
+function GetAllocationStatus Text {
+   parameter AllocationId Number;
+   parameter Creator Text;
+}
+
+
+function ValidateAllocationPercentage Number {
+   parameter ParentObjkey Text;
+   parameter AllocPercentage Number;
+   parameter AllocAmount Number;
+}
+
+
+function ValidateAllocationAmount Number {
+   parameter ParentObjkey Text;
+   parameter AllocPercentage Number;
+   parameter AllocAmount Number;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure PeriodAllocRuleStructure {
+   attribute Company Text;
+   attribute AllocationId Number;
+   attribute DefVoucherType Text;
+   attribute CurrencyCode Text;
+   attribute AllocationSource Text;
+   attribute AllocationMethod Enumeration(PeriodAllocPerDistr);
+   attribute AuthMode Text;
+   attribute Creator Text;
+   attribute IsCancellation Text;
+   attribute Amount Number {
+      format = ifscurrency;
+   }
+   attribute FromDate Date;
+   attribute UntilDate Date;
+   attribute Site Text;
+   attribute OpenState Text;
+}
+
+
+structure PeriodAllocHeadStructure {
+   attribute AllocationId Number;
+   attribute Company Text;
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+virtual PeriodAllocationRuleVirtual {
+   ludependencies = PeriodAllocationRuleLineVirtual;
+
+   attribute AllocationId Number;
+   attribute Company Text;
+   attribute FromDate Date;
+   attribute UntilDate Date;
+   attribute Status Text;
+   attribute TotalAmount Number {
+      format = ifscurrency;
+   }
+   attribute Creator Text;
+   attribute DistrType Text;
+   attribute CurrencyCode Text {
+      editable = [false];
+   }
+   attribute Site Text;
+   attribute OpenState Text;
+
+   attribute VoucherType Text {
+      editable = [false];
+   }
+   attribute AccountingYear Number;
+   attribute VoucherNo Number {
+      editable = [false];
+   }
+   attribute RowNo Number;
+
+   attribute AllocVouType Text;
+   attribute AllocationSource Text {
+      editable = [false];
+   }
+   attribute AllocationYear Number;
+   attribute AllocationPeriod Number;
+   attribute TotalAllocationAmount Number;
+   attribute TotalAllocationPercentage Number;
+   attribute AllocationMethod Enumeration(PeriodAllocPerDistr) {
+      required = [true];
+   }
+   attribute Cancellation Text;
+   attribute VoucherDate Date;
+   attribute StateQ Text;
+   attribute Analysis Text;
+   attribute AllocationDetailsEdited Boolean;
+   attribute ModifiedAllocParameters Boolean;
+
+   array PeriodAllocationRuleVirtuals(AllocationId) to PeriodAllocationRuleLineVirtual(AllocationId);
+}
+
+
+virtual PeriodAllocationRuleLineVirtual {
+   crud = Read, Update, Delete;
+
+   attribute Company Text;
+   attribute AllocationId Number;
+   attribute AllocLineId Number;
+   attribute AccountingYear Number;
+   attribute AccountingPeriod Number;
+   attribute AllocationPercentage Number {
+      label = "Percentage";
+   }
+   attribute AllocationAmount Number {
+      label = "Amount";
+      format = ifscurrency;
+   }
+   attribute AllocationDiff Boolean("TRUE", "FALSE") {
+      editable = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   attribute Period Text;
+   attribute AllocationPeriod Number;
+   attribute AllocationYear Number;
+   attribute UntilYear Number;
+   attribute UntilPeriod Number;
+}

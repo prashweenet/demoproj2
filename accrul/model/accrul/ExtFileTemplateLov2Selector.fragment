@@ -1,0 +1,60 @@
+fragment ExtFileTemplateLov2Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ext_file_template_lov2";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceExtFileTemplateLov2Selector for ExtFileTemplateLov2 {
+   static FileTemplateId;
+   static Description;
+}
+
+card ExtFileTemplateLov2Card for ExtFileTemplateLov2 {
+   label = "";
+   fieldranking FileTemplateId;
+   field FileTemplateId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query ExtFileTemplateLov2 {
+   from = "ext_file_template_lov2";
+   lu = ExtFileTemplate;
+   keys = FileType, FileTemplateId;
+   ludependencies = ExtFileTemplate;
+   attribute FileType Text {
+      lovcolumn = [false];
+   }
+   attribute FileTemplateId Text {
+      label = "File Template ID";
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute Separated Text {
+      lovcolumn = [true];
+   }
+   attribute FileFormat Enumeration(ExtFileFormat) {
+      lovcolumn = [true];
+      fetch = "file_format_db";
+   }
+   attribute FileTemplateIdx Text {
+      label = "File Template ID";
+      lovcolumn = [true];
+   }
+   attribute FileTypex Text {
+      label = "File Type ID";
+      lovcolumn = [true];
+   }
+   attribute SystemDefinedx Text {
+      label = "System Defined";
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

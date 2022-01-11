@@ -1,0 +1,54 @@
+--  Date    Sign    History
+--  ------  ------  -------------------------------------------------------
+--  200820  SWiclk  LMM2020R1-870, Replaced AircraftTypeId by AircraftTypeCode due to key change.
+--  200625  ARUFLK  LMM2020R1-83, Created.
+-----------------------------------------------------------------------------
+
+projection AircraftSystemHandling;
+component ADCOM;
+layer Core;
+description "Aircraft System Handling";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AvAircraftSystemSet for AvAircraftSystem;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvAircraftSystem {
+   attribute SystemId Number {
+      required = [false];
+   }
+   attribute SystemCode Text {
+      required = [false];
+   }
+
+   reference AircraftTypeRef(AircraftTypeCode) to AvAircraftType(AircraftTypeCode);
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

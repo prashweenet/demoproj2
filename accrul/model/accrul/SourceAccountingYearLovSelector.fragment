@@ -1,0 +1,39 @@
+fragment SourceAccountingYearLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view source_accounting_year_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceSourceAccountingYearLovSelector for SourceAccountingYearLov {
+   static SourceYear;
+}
+
+card SourceAccountingYearLovCard for SourceAccountingYearLov {
+   label = "";
+   fieldranking SourceYear;
+   field SourceYear;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query SourceAccountingYearLov {
+   from = "source_accounting_year_lov";
+   lu = AccountingYear;
+   keys = Company, SourceYear;
+   ludependencies = AccountingYear;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Name Text {
+      lovcolumn = [false];
+   }
+   attribute SourceYear Number {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

@@ -1,0 +1,394 @@
+fragment PeriodAllocationAssistant;
+component ACCRUL;
+layer Core;
+description "Period Allocation Functionality";
+
+include fragment VoucherTypeUserGrpAllGlSelector;
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+assistant PeriodAllocAssistant using VoucherPeriodAllocationVirtualSet {
+   label = "Period Allocation";
+   savemode = OnLostFocus;
+
+   input(Company, VoucherType, AccountingYear, VoucherNo, RowNo, Cancellation, FunctionGroup, EnableEdit, PeriodAllocExists, Account, PeriodAllocation, SimulationVoucher, CurrencyAmount, Amount);
+   output(UserGroup, AllocVouType);
+
+   steps {
+      step {
+         group VoucherPeriodAllocationGroup;
+         group PeriodAllocationSelectionGroup;
+         list PeriodAllocationVirtualList(PeriodAllocationVirtuals);
+      }
+      final step {
+      }
+   }
+
+   finish command {
+      enabled = [ModifiedParameters = false or AllocationEdited or EnableEdit = "FALSE"];
+      execute {
+         call SavePeriodAllocation(Objkey);
+         exit OK;
+      }
+   }
+
+   cancel command {
+      execute {
+         exit CANCEL;
+      }
+   }
+}
+
+group VoucherPeriodAllocationGroup for VoucherPeriodAllocationVirtual {
+   label = "";
+   field VoucherType {
+      size = Small;
+   }
+   field VoucherNo;
+   field Period {
+      size = Small;
+   }
+   field CurrencyCode {
+      size = Small;
+   }
+   field Amount {
+      size = Small;
+   }
+}
+
+group PeriodAllocationSelectionGroup for VoucherPeriodAllocationVirtual {
+   label = "Allocation Parameters";
+
+   field FromDate {
+      size = Small;
+      editable = [EnableEdit = "TRUE"];
+      validate command {
+         execute {
+            set ModifiedParameters = true;
+            set AllocationEdited = false;
+         }
+      }
+   }
+   field UntilDate {
+      size = Small;
+      editable = [EnableEdit = "TRUE"];
+      validate command {
+         execute {
+            set ModifiedParameters = true;
+            set AllocationEdited = false;
+         }
+      }
+   }
+   lov UserGroupRef with ReferenceUserGroupMemberFinance4Selector using AllocationUserGroupsLovFilter {
+      size = Small;
+      editable = [EnableEdit = "TRUE" or PeriodAllocExists = "TRUE"];
+      format = uppercase;
+      validate command {
+         variable VouPeriodAllocStructure {
+            type = VouPeriodAllocStructure;
+         }
+         execute {
+            set ModifiedParameters = true;
+            set AllocationEdited = false;
+            if [UserGroup != null] {
+               call ValidateUserGroup(Company, UserGroup, FromDate) into VouPeriodAllocStructure;
+               set UserGroup = "${VouPeriodAllocStructure.UserGroup}";
+               set AllocVouType = "${VouPeriodAllocStructure.AllocVouType}";
+            }
+         }
+      }
+   }
+   lov AllocVouTypeRef with ReferenceVoucherTypeUserGrpAllGlSelector using VoucherTypesLovFilter(Company, FromDate, UserGroup) {
+      size = Small;
+      editable = [EnableEdit = "TRUE" or PeriodAllocExists = "TRUE"];
+      format = uppercase;
+      validate command {
+         execute {
+            set ModifiedParameters = true;
+            set AllocationEdited = false;
+            if [AllocVouType != null] {
+               call ValidateVoucherType(Company, FromDate, UserGroup, AllocVouType);
+            }
+         }
+      }
+   }
+   field AllocationSource;
+   field AllocationMethod {
+      size = Small;
+      editable = [EnableEdit = "TRUE"];
+      validate command {
+         execute {
+            set ModifiedParameters = true;
+            set AllocationEdited = false;
+         }
+      }
+   }
+}
+
+list PeriodAllocationVirtualList for PeriodAllocationVirtual {
+   label = "Allocation Details";
+
+   crudactions {
+      edit {
+         enabled = [parent.EnableEdit = "TRUE"];
+      }
+      delete {
+         enabled = [parent.EnableEdit = "TRUE"];
+      }
+      
+   }
+
+
+   field Period {
+      editable = [false];
+   }
+   field AllocationPercentage {
+      format = percentage;
+      preserveprecision = [true];
+      editable = [parent.EnableEdit = "TRUE"];
+
+      validate command {
+         variable AllocAmountVar Number;
+         execute {
+            call ValidateAllocPercentage(ParentObjkey, AllocationPercentage) into AllocAmountVar;
+            set AllocationAmount = AllocAmountVar;
+         }
+      }
+   }
+   field AllocationAmount {
+      preserveprecision = [true];
+      editable = [parent.EnableEdit = "TRUE"];
+      validate command {
+         variable AllocPercentVar Number;
+         execute {
+            call ValidateAllocAmount(ParentObjkey, AllocationAmount) into AllocPercentVar;
+            set AllocationPercentage = AllocPercentVar;
+         }
+      }
+   }
+   summary = AllocationPercentage, AllocationAmount;
+
+   command DistributeCommand;
+}
+
+
+command DistributeCommand for PeriodAllocationVirtual {
+   label = "Distribute";
+   mode = Global;
+   enabled = [FromDate != null and UntilDate != null and UserGroup != null and AllocVouType != null and FromDate < UntilDate and(ModifiedParameters or TotalAllocationAmount < Amount) and IsCancellation != "TRUE" and EnableEdit = "TRUE"];
+   execute {
+      call DistributeLines(Objkey);
+   }
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+entityset VoucherPeriodAllocationVirtualSet for VoucherPeriodAllocationVirtual {
+   context Company(Company);
+}
+
+virtual VoucherPeriodAllocationVirtual {
+   ludependencies = PeriodAllocationVirtual;
+
+   attribute Company Text;
+   attribute VoucherType Text {
+      editable = [false];
+   }
+   attribute AccountingYear Number;
+   attribute VoucherNo Number {
+      editable = [false];
+   }
+   attribute RowNo Number;
+   attribute Period Text {
+      label = "Base Period";
+      editable = [false];
+   }
+   attribute CurrencyCode Text {
+      editable = [false];
+   }
+   attribute UserId Text;
+   attribute Amount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute FromDate Date;
+   attribute UntilDate Date;
+   attribute UserGroup Text {
+      format = uppercase;
+   }
+   attribute AllocVouType Text {
+      format = uppercase;
+   }
+   attribute AllocationSource Text {
+      editable = [false];
+   }
+   attribute AllocationYear Number;
+   attribute AllocationPeriod Number;
+   attribute TotalAllocationAmount Number;
+   attribute TotalAllocationPercentage Number;
+   attribute AllocationMethod Enumeration(PeriodAllocPerDistr) {
+      required = [true];
+   }
+   attribute FunctionGroup Text;
+   attribute Cancellation Text;
+   attribute DistributionType Text;
+   attribute VoucherDate Date;
+   attribute AllocationEdited Boolean;
+   attribute ModifiedParameters Boolean;
+   attribute EnableEdit Text;
+   attribute PeriodAllocExists Text;
+   attribute Account Text;
+   attribute PeriodAllocation Boolean;
+   attribute SimulationVoucher Text;
+   attribute CurrencyAmount Number;
+   attribute RevenueCostClearVoucher Text;
+
+   reference UserGroupRef(Company, UserId, UserGroup) to UserGroupMemberFinance4(Company, Userid, UserGroup) {
+      label = "User Group";
+   }
+   reference AllocVouTypeRef(Company, AllocVouType) to VoucherTypeUserGrpAllGl(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+
+   array PeriodAllocationVirtuals(Company, VoucherType, AccountingYear, VoucherNo, RowNo) to PeriodAllocationVirtual(Company, VoucherType, AccountingYear, VoucherNo, RowNo);
+}
+
+virtual PeriodAllocationVirtual {
+   crud = Read, Update, Delete;
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute AccountingYear Number;
+   attribute VoucherNo Number;
+   attribute RowNo Number;
+   attribute AllocationPeriod Number;
+   attribute AllocationYear Number;
+   attribute Period Text;
+   attribute AllocationPercentage Number {
+      label = "Percentage";
+   }
+   attribute AllocationAmount Number {
+      label = "Amount";
+      format = ifscurrency;
+   }
+   attribute UntilYear Number;
+   attribute UntilPeriod Number;
+   attribute UserGroup Text;
+   attribute AllocVouType Text;
+}
+
+
+structure PeriodAllocControlStructure {
+   attribute EnableEdit Text;
+   attribute PeriodAllocExists Text;
+}
+
+structure VouPeriodAllocStructure {
+   attribute Company Text;
+   attribute DefVoucherType Text;
+   attribute Period Text;
+   attribute CurrencyCode Text;
+   attribute UserId Text;
+   attribute UserGroup Text;
+   attribute AllocVouType Text;
+   attribute AllocationSource Text;
+   attribute AllocationMethod Text;
+   attribute AuthMode Text;
+   attribute Creator Text;
+   attribute IsCancellation Text;
+   attribute CurrencyAmount Number {
+      format = ifscurrency;
+   }
+   attribute Amount Number {
+      format = ifscurrency;
+   }
+   attribute FromDate Date;
+   attribute UntilDate Date;
+}
+-- Added User_Finance_API.Exist_Current_User
+action SavePeriodAllocation {
+   initialcheck implementation;
+   ludependencies = VoucherRow;
+   parameter Objkey Text;
+}
+-- Added User_Finance_API.Exist_Current_User
+action DistributeLines {
+   initialcheck implementation;
+   ludependencies = PeriodAllocationVirtual, VoucherPeriodAllocationVirtual;
+   parameter Objkey Text;
+}
+
+//action RollbackPeriodAllocation {
+//   ludependencies = PeriodAllocationVirtual;
+//   parameter Objkey Text;
+//}
+
+-- Security annotation was added to Period_Allocation_API.Update_Alloc_Vou_Type
+action UpdateAllocationInfo {
+   initialcheck implementation;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter VoucherNo Number;
+   parameter RowNo Number;
+   parameter AccountingYear Number;
+   parameter UserGroup Text;
+   parameter AllocVouType Text;
+}
+
+function CheckPeriodAllocAvail Text {
+   parameter Company Text;
+   parameter Account Text;
+   parameter Cancellation Text;
+   parameter PeriodAllocation Boolean;
+   parameter SimulationVoucher Text;
+   parameter FunctionGroup Text;
+   parameter CostRevClearVou Text;
+   parameter CurrencyAmount Number;
+   parameter Amount Number;
+}
+
+
+
+function CheckEditEnable Structure(PeriodAllocControlStructure) {
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter AccountingYear Number;
+   parameter VoucherNo Number;
+   parameter RowNo Number;
+   parameter Cancellation Text;
+   parameter FunctionGroup Text;
+}
+
+function ValidateAllocAmount Number {
+   parameter ParentObjkey Text;
+   parameter AllocAmount Number;
+}
+
+function ValidateAllocPercentage Number {
+   parameter ParentObjkey Text;
+   parameter AllocPercentage Number;
+}
+
+function AllocationUserGroupsLovFilter List < Entity(UserGroupMemberFinance4) > {
+   where = "userid = Fnd_Session_API.Get_Fnd_User and allowed_acc_period_db = '1'";
+}
+
+function VoucherTypesLovFilter List < Entity(VoucherTypeUserGrpAllGl) > {
+   parameter Company Text;
+   parameter FromDate Date;
+   parameter UserGroup Text;
+
+   where = "accounting_year = Accounting_Period_API.Get_Ordinary_Accounting_Year(:Company , :FromDate) AND user_group = :UserGroup";
+}
+
+function ValidateUserGroup Structure(VouPeriodAllocStructure) {
+   parameter Company Text;
+   parameter UserGroup Text;
+   parameter FromDate Date;
+}
+
+function ValidateVoucherType Text {
+   parameter Company Text;
+   parameter FromDate Date;
+   parameter UserGroup Text;
+   parameter VoucherType Text;
+}
+

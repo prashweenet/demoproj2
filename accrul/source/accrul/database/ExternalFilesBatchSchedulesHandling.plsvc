@@ -1,0 +1,20 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalFilesBatchSchedulesHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+PROCEDURE Do_Remove_Batch_Schedule___ (
+   key_ IN Ext_File_Batch_Jobs_Key )
+IS
+BEGIN
+   Ext_File_Batch_Param_API.Remove_Param(key_.schedule_id);
+   Batch_SYS.Remove_Batch_Schedule(key_.schedule_id);
+END Do_Remove_Batch_Schedule___;

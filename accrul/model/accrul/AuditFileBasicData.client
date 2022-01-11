@@ -1,0 +1,281 @@
+client AuditFileBasicData;
+component ACCRUL;
+layer Core;
+projection AuditFileBasicDataHandling;
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+-- gelr:saft_poland, begin
+@DynamicComponentDependency EREP
+include fragment AuditFileBasicDataPl;
+@DynamicComponentDependency EREP
+include fragment JpkInvoiceSeriesLovSelector;
+-- gelr:saft_poland, end
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AuditFormatSet {
+   label = "Audit File Basic Data";
+
+   initcontext PageInitContext;
+   singleton AuditFormatSingleton;
+   singleton AuditBasicDataMasterSingleton(AuditBasicDataMasterArray) bind AuditFormatSingleton;
+   tabs {
+      tab {
+         label = "Header";
+         arrange {
+
+            group AuditFileGroup bind AuditBasicDataMasterSingleton;
+            group SoftwareDetailsGroup bind AuditBasicDataMasterSingleton;
+         }
+         group OtherDetailsGroup bind AuditBasicDataMasterSingleton;
+         list AuditContactPersonList(AuditContactPersonArray) bind AuditBasicDataMasterSingleton;
+      }
+      tab {
+         label = "Standard Audit Code Mappings";
+         group StandardAccountsGroup bind AuditBasicDataMasterSingleton;
+         list StandardAuditTaxCodesList(StandardAuditTaxCodesArray) bind AuditBasicDataMasterSingleton;
+      }
+      @DynamicComponentDependency EREP
+      tab {
+         -- gelr:audit_file_france, begin
+         label = "FEC France Setup";
+         visible = [initcontext.AuditFileFranceEnabled];
+
+         singleton FecGeneralSingleton(FecGeneralParameterSet) bind AuditBasicDataMasterSingleton;
+         group FecGenParameterGroup bind FecGeneralSingleton;
+         list FecExcludeVoucherTypeList(FecExcludeVoucherTypeArray) bind FecGeneralSingleton;
+         -- gelr:audit_file_france, end
+      }
+      @DynamicComponentDependency EREP
+      tab {
+         -- gelr:saft_poland, begin
+         label = "SAF-T Poland Setup";
+         visible = [initcontext.SaftPolandEnabled];
+
+         singleton JpkParametersSingleton(JpkGeneralParametersSet) bind AuditBasicDataMasterSingleton;
+         group JpkGeneralInfoGroup bind JpkParametersSingleton;
+         group JpkMiscParametersGroup bind JpkParametersSingleton;
+         group JpkVoucherDocTypeGroup bind JpkParametersSingleton;
+         group JpkDelTypeSpecificProcGroup bind JpkParametersSingleton;
+         group JpkGoodsAndServicesGroup bind JpkParametersSingleton;
+         group JpkSpecificProcGroup bind JpkParametersSingleton;
+         list JpkInvoiceConfigurationList(JpkInvoiceConfigurationArray) bind JpkParametersSingleton;
+         list JpkInventReportTypesList(JpkInventReportTypesArray) bind JpkParametersSingleton;
+         list JpkInventConfigurationList(JpkInventConfigurationArray) bind JpkParametersSingleton;
+         -- gelr:saft_poland, end
+      }
+   }
+}
+
+initcontext PageInitContext {
+   parameter AuditFileFranceEnabled Boolean;
+   parameter SaftPolandEnabled Boolean;
+   init command {
+      execute {
+         -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set AuditFileFranceEnabled = LocalizationFunctionalityStructure.AuditFileFrance;
+         set SaftPolandEnabled = LocalizationFunctionalityStructure.SaftPoland;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+singleton AuditFormatSingleton for AuditFormat;
+
+-- gelr:audit_file_france, begin
+@DynamicComponentDependency EREP
+singleton FecGeneralSingleton for FecGeneralParameter {
+   crudactions {
+      new {
+         enabled = [true];
+      }
+      edit {
+         enabled = [true];
+      }
+      delete {
+         enabled = [true];
+      }
+   }
+}
+-- gelr:audit_file_france, end
+
+singleton AuditBasicDataMasterSingleton for AuditBasicDataMaster {
+   crudactions {
+      new {
+         enabled = [true];
+      }
+      edit {
+         enabled = [true];
+      }
+      delete {
+         enabled = [true];
+      }
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group AuditFileGroup for AuditBasicDataMaster {
+   label = "Audit File";
+   field AuditFileVersion;
+   field AuditFileCountry {
+      editable = [false];
+   }
+   field AuditFileRegion;
+}
+
+group SoftwareDetailsGroup for AuditBasicDataMaster {
+   label = "Software Details";
+   field SoftwareCompanyName;
+   field SoftwareVersion;
+   field SoftwareID {
+      editable = [false];
+   }
+}
+
+group OtherDetailsGroup for AuditBasicDataMaster {
+   label = "Other Details";
+   lov TaxAccountingBasisRef with ReferenceTaxAccountingBasisInfoSelector;
+   field TaxEntity;
+   field ReportingCurrency {
+      editable = [context.Company.ParCurr != null];
+      validate command {
+         variable CurCodeVar {
+            type = Text;
+         }
+         execute {
+            if [ReportingCurrency = "AccountingCurrency"] {
+               call GetAccCurrencyCode(Company) into CurCodeVar;
+            }
+            else {
+               set CurCodeVar = context.Company.ParCurr;
+            }
+            set DefaultCurrencyCode = CurCodeVar;
+
+         }
+      }
+   }
+   field DefaultCurrencyCode {
+      editable = [false];
+   }
+   field HeaderComment {
+      size = Large;
+   }
+   field IncludeSourceDoc;
+}
+
+group StandardAccountsGroup for AuditBasicDataMaster {
+   label = "Standard Accounts";
+   lov CodePartAttrRef with  ReferenceAccountingAttributeSelector {
+      search = Attribute, Description;
+      description = CodePartAttrRef.Description;
+   }
+}
+
+-- gelr:audit_file_france, begin
+@DynamicComponentDependency EREP
+group FecGenParameterGroup for FecGeneralParameter {
+   label = "General Parameters";
+   field StatisticalAccount;
+   field CodePartRef;
+}
+-- gelr:audit_file_france, end
+----------------------------------- LISTS -----------------------------------
+list AuditContactPersonList for AuditContactPerson {
+   label = "Audit Contact Person";
+   field Company {
+      size = Small;
+      searchable = false;
+   }
+   lov CountryRef with ReferenceIsoCountrySelector {
+      search = CountryCode, Description;
+      hidekey = [true];
+      description = CountryRef.Description;
+      searchable = false;
+   }
+   field ReportType {
+      searchable = false;
+   }
+   lov PersonIdRef with ReferencePersonInfoAllSelector {
+      search = PersonId, Name;
+      contactwidget {
+         enabled = [true];
+         source = Person;
+      }
+      description = PersonIdRef.Name;
+      searchable = false;
+   }
+
+   fieldranking Company, Country, ReportTypeRef, PersonIdRef;
+}
+
+list StandardAuditTaxCodesList for StandardAuditTaxCodes {
+   label = "Standard Tax Codes";
+   lov TaxIdRef with ReferenceStandardAuditTaxCodesSelector {
+      search = TaxId, TaxIdDescription;
+      editable = [false];
+      description = TaxIdRef.TaxIdDescription;
+      searchable = false;
+   }
+   lov  StandardTaxIdRef with ReferenceStandardTaxCodeSelector {
+      search = StandardTaxCode, Description;
+      description = StandardTaxIdRef.Description;
+      searchable = false;
+   }
+   lov TaxExemptionReasonIdRef with ReferenceTaxExemptionReasonInfoSelector {
+      search = TaxExemptionReasonId, Description;
+      description = TaxExemptionReasonIdRef.Description;
+      searchable = false;
+   }
+
+   fieldranking TaxId, TaxIdDescription, StandardTaxIdRef, StandardTaxCodeDescription, TaxExemptionReasonIdRef, TaxExemptionReasonDescription;
+}
+
+-- gelr:audit_file_france, begin
+@DynamicComponentDependency EREP
+list FecExcludeVoucherTypeList for FecExcludeVoucherType {
+   label = "Exclude Voucher Types";
+   field VoucherTypeRef;
+   field Description;
+}
+-- gelr:audit_file_france, end
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+
+-------------------------------- INITCONTEXT --------------------------------

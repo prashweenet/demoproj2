@@ -1,0 +1,182 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtTransactions
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140826  Samllk  PRFI-229, Added view Ext_Vouchers_Not_Created_Lobby, and
+--                            added column ext_voucher_date_db Ext_Transactions_New
+--  140903  Samllk  PRFI-2095, Moved Ext_Vouchers_Not_Created_Lobby to Private View Definitions
+--  150127  AjPelk  PRFI-4905, Merged bug 106820
+--  150202  Samllk  PRFI-4269, Remove view Ext_Vouchers_Not_Created_Lobby
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Code_A_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Account Description';
+
+COLUMN Code_B_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code B Description';
+
+COLUMN Code_C_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code C Description';
+
+COLUMN Code_D_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code D Description';
+
+COLUMN Code_E_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code E Description';
+
+COLUMN Code_F_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code F Description';
+
+COLUMN Code_G_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code G Description';
+
+COLUMN Code_H_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code H Description';
+
+COLUMN Code_I_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code I Description';
+
+COLUMN Code_J_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code J Description';
+
+COLUMN Correction_Param IS
+   Flags      = 'A-IU-'
+   Datatype   = 'STRING(5)'
+   Prompt     = 'Correction Param';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Ext_Transactions_New IS
+   Prompt = 'Ext Transactions'
+   Load_Id.Prompt = 'Load Id'
+   Load_Id.Ref = 'ExtLoadInfo(company)'
+   Voucher_Date.Flags = 'A-IU-'
+   Load_Type.Datatype = 'STRING(20)/UPPERCASE'
+   Currency_Amount.Flags = 'A-IU-'
+   Debet_Amount.Prompt = 'Debet amount'
+   Credit_Amount.Prompt = 'Credit amount'
+   Amount.Flags = 'A-IU-'
+   Demand_String.Datatype = 'STRING(100)'
+   Tax_Direction.Datatype = 'STRING(20)'
+   Tax_Direction_Db.Datatype = 'STRING(20)'
+   Correction.Flags = 'A-IU-'
+   Modify_Codestr_Cmpl.Flags = 'AMIU-'
+   Third_Currency_Amount.Flags = 'A-IU-'
+   Ext_Voucher_Date_Db.Flags      = 'A----'
+   Ext_Voucher_Date_Db.Prompt     = 'Ext Voucher Date'
+SELECT a.company                      company,
+       load_id                        load_id,
+       record_no                      record_no,
+       load_group_item                load_group_item,
+       load_error                     load_error,
+       transaction_date               transaction_date,
+       Ext_Transactions_API.Get_Voucher_Date(a.company, a.load_id, a.transaction_date) 
+                                      voucher_date,
+       a.load_type                    load_type,
+       a.voucher_type                 voucher_type,
+       voucher_no                     voucher_no,
+       accounting_year                accounting_year,
+       Accounting_Period_API.Get_Accounting_Period_Ext(a.company, user_group, transaction_date) accounting_period,       
+       account                        account,
+       Decode(account, NULL, NULL, Text_Field_Translation_API.Get_Text(a.company, 'CODEA', account)) code_a_desc,
+       code_b                         code_b,
+       Decode(code_b, NULL, NULL, Text_Field_Translation_API.Get_Text(a.company, 'CODEB', code_b)) code_b_desc,
+       code_c                         code_c,
+       Decode(code_c, NULL, NULL, Text_Field_Translation_API.Get_Text(a.company, 'CODEC', code_c)) code_c_desc,
+       code_d                         code_d,
+       Decode(code_d, NULL, NULL, Text_Field_Translation_API.Get_Text(a.company, 'CODED', code_d)) code_d_desc,
+       code_e                         code_e,
+       Decode(code_e, NULL, NULL, Text_Field_Translation_API.Get_Text(a.company, 'CODEE', code_e)) code_e_desc,
+       code_f                         code_f,
+       Decode(code_f, NULL, NULL, Text_Field_Translation_API.Get_Text(a.company, 'CODEF', code_f)) code_f_desc,
+       code_g                         code_g,
+       Decode(code_g, NULL, NULL, Text_Field_Translation_API.Get_Text(a.company, 'CODEG', code_g)) code_g_desc,
+       code_h                         code_h,
+       Decode(code_h, NULL, NULL, Text_Field_Translation_API.Get_Text(a.company, 'CODEH', code_h)) code_h_desc,
+       code_i                         code_i,
+       Decode(code_i, NULL, NULL, Text_Field_Translation_API.Get_Text(a.company, 'CODEI', code_i)) code_i_desc,
+       code_j                         code_j,
+       Decode(code_j, NULL, NULL, Text_Field_Translation_API.Get_Text(a.company, 'CODEJ', code_j)) code_j_desc,
+       currency_debet_amount          currency_debet_amount,
+       currency_credit_amount         currency_credit_amount,
+       nvl(currency_debet_amount,-currency_credit_amount)   currency_amount,
+       debet_amount                   debet_amount,
+       credit_amount                  credit_amount,
+       nvl(debet_amount,-credit_amount)                     amount,
+       a.currency_code                currency_code,
+       quantity                       quantity,
+       process_code                   process_code,
+       optional_code                  optional_code,
+       text                           text,
+       party_type_id                  party_type_id,
+       reference_number               reference_number,
+       reference_serie                reference_serie,
+       trans_code                     trans_code,
+       Ext_Transactions_API.Get_Alter_Trans(a.company, load_id) ext_alter_trans,
+       Ext_Transactions_API.Get_Demand_String_(a.company, a.account) demand_string,
+       ''                             code_part,
+       third_currency_debit_amount    third_currency_debit_amount,
+       third_currency_credit_amount   third_currency_credit_amount,
+       project_activity_id            project_activity_id,
+       a.ROWID                        objid,
+       to_char(a.rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowstate                      objstate,
+       EXT_TRANSACTIONS_API.Finite_State_Events__(rowstate)                     objevents,
+       EXT_TRANSACTIONS_API.Finite_State_Decode__(rowstate)                         state,
+       Tax_Direction_API.Decode(tax_direction) tax_direction,
+       tax_direction                  tax_direction_db,
+       tax_amount                     tax_amount,
+       currency_tax_amount            currency_tax_amount,
+       tax_base_amount                tax_base_amount,
+       currency_tax_base_amount       currency_tax_base_amount,
+       user_group                     user_group,
+       user_id                        user_id,
+       a.correction                   correction,
+       b.correction                   correction_param,
+       modify_codestr_cmpl            modify_codestr_cmpl,
+       a.event_date                   event_date,
+       a.retroactive_date             retroactive_date,
+       a.transaction_reason           transaction_reason,
+       nvl(third_currency_debit_amount,-third_currency_credit_amount)          third_currency_amount,
+       third_currency_tax_amount      third_currency_tax_amount,
+       third_curr_tax_base_amount     third_curr_tax_base_amount,
+       deliv_type_id                  deliv_type_id,
+       b.ext_voucher_date             ext_voucher_date_db,
+       currency_rate_type             currency_rate_type,
+       parallel_curr_rate_type        parallel_curr_rate_type,
+       a.rowkey                       objkey
+FROM   ext_transactions_tab a , ext_parameters_tab b
+WHERE  a.company   = b.company
+AND    a.load_type = b.load_type;

@@ -1,0 +1,118 @@
+projection UserRelatedData;
+component ACCRUL;
+layer Core;
+description "User Related Data";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+entityset CompanyFinances for CompanyFinance;
+entityset UserGroupFinances for UserGroupFinance {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+@Override
+entity CompanyFinance {
+   crud = Read;
+
+   attribute Description Text {
+      required = [true];
+      label = "Company Name";
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+
+   array UserFinanceArray(Company) to UserFinance(Company);
+}
+
+@Override
+entity UserFinance {
+   crud = Read, Create, Delete;
+
+   attribute Userid Text {
+      label = "User ID";
+   }
+   attribute DefaultCompany Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+
+   reference UseridRef(Userid) to FndUser(Identity) {
+      label = "User";
+   }
+
+   action DoSetDefault {
+      ludependencies = UserFinance;
+   }
+}
+
+@Override
+entity FndUser {
+   attribute Identity Text {
+      label = "ID";
+   }
+}
+
+@Override
+entity UserGroupFinance {
+   supportwarnings = [true];
+
+   attribute UserGroup Text {
+      format = uppercase;
+   }
+   attribute Description Text {
+      label = "User Group Description";
+   }
+   attribute AllowedAccountingPeriod Enumeration(AllowedAccountingPeriods) {
+      label = "Allowed Accounting Periods";
+   }
+
+   array UserGroupMemberFinanceArray(Company, UserGroup) to UserGroupMemberFinance(Company, UserGroup);
+}
+
+@Override
+entity UserGroupMemberFinance {
+   crud = Create, Read, Delete;
+   supportwarnings = [true];
+
+   attribute Company Text {
+      editable = [false];
+   }
+   attribute Userid Text {
+      format = uppercase;
+   }
+   attribute DefaultGroup Enumeration(FinanceYesNo) {
+      required = [false];
+   }
+   attribute DefaultGroupDb Boolean("Y", "N") {
+      label = "Default Group";
+      maxlength = 20;
+      required = [true];
+   }
+
+   reference UseridRef(Company, Userid) to UserFinance(Company, Userid) {
+      label = "User";
+   }
+
+   action DoSetDefault {
+      ludependencies = UserGroupMemberFinance;
+   }
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+-------------------------------- STRUCTURES ---------------------------------
+
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+

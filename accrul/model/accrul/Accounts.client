@@ -1,0 +1,381 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 201112      Sacnlk  GESPRING20-5995, Added SatParentAccount for accounting_xml_data functionality.
+----------------------------------------------------------------------------------------------------
+
+client Accounts;
+component ACCRUL;
+layer Core;
+projection AccountsHandling;
+include fragment AccountsFieldSet;
+include fragment CopyToCompaniesAssistant;
+--gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+--gelr:localization_control_center, end
+warningsenabled = Account;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AccountOverviewNavEntry parent AccrulNavigator.CodeStringMenu at index 200 {
+      label = "Accounts";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AccountSet {
+   label = "Accounts";
+   initcontext PageInitContext;
+   list AccountOverviewList using AccountSet {
+      details = "page/Account/Form?$contexts=Company:$[Company]&$filter=Account eq $[Account]";
+   }
+   defaultsearchfields = AccSearchRef, AccntTypeRef, AccountGroupRef;
+
+
+}
+
+page MultiCompanyList using MultiCompanyAccountSet {
+   label = "Accounts";
+   list MultiCompanyAccountList using MultiCompanyAccountSet {
+      details = "page/Account/Form?contexts=Company:$[Company]&$filter=Account eq $[Account]";
+   }
+   defaultsearchfields = CompanyRef, AccSearchRef, AccntTypeRef;
+}
+
+initcontext PageInitContext {
+   parameter AccountingXmlDataEnabled Boolean;
+   init command {
+      execute {
+         -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set AccountingXmlDataEnabled = LocalizationFunctionalityStructure.AccountingXmlData;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command MultiCompanyCommand for Account {
+   mode = Global;
+   label = "Multi Company";
+   execute {
+      navigate MultiCompanyList;
+   }
+}
+
+command SingleCompanyCommand for Account {
+   mode = Global;
+   label = "Multi Company";
+   execute {
+      navigate List;
+   }
+}
+
+command CodeStringCompletionCommand for Account {
+   label = "Code String Completion";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate  "page/CodeStringCompletion/Form?contexts=Company:$[Company]&$filter=CodePartValue eq $[Account] and CodePart eq 'A'";
+   }
+}
+
+command TaxCodesperAccountCommand for Account {
+   label = "Tax Codes per Account";
+   enabled = [TaxHandlingValue != "Blocked"];
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/TaxCodesPerAccount/Form?contexts=Company:$[Company]&$filter=Account eq $[Account]";
+   }
+}
+
+command CodePartAttributeConnectionCommand for Account {
+   label = "Code Part Attribute Connection";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   bulkexecute {
+      call GetSelectedCompany(Selection) into CurrentCompanyVar;
+      if [CurrentCompanyVar = null] {
+         alert("All the selected records must be from the same company");
+      }
+      else {
+         bulknavigate "page/CodePartAttributeConnection/List?contexts=Company:$[Company]&$filter=CodePartValue eq $[Account] and CodePart eq 'A'";
+      }
+   }
+}
+
+command ProjectCostRevenueElementpeCommand for Account {
+   label = "Cost/Revenue Element per Code Part Value";
+   enabled = [BaseForFollowUpElementRef.BaseForPfe = "TRUE"];
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   bulkexecute {
+      call GetSelectedCompany(Selection) into CurrentCompanyVar;
+      if [CurrentCompanyVar = null] {
+         alert("All the selected records must be from the same company");
+      }
+      else {
+         bulknavigate  "page/CostRevenueElementPerCodePartValue/List?contexts=Company:$[Company]&$filter=Account eq $[Account]";
+      }
+   }
+}
+
+command CopyToCompaniesCommand for Account {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   bulkexecute {
+      call GetSelectedCompany(Selection) into CurrentCompanyVar;
+      if [CurrentCompanyVar = null] {
+         alert("All the selected records must be from the same company");
+      }
+      else {
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "Account", "MANUAL", Selection, "Account_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+
+command AutoCopyToCompaniesCommand for Account {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      if [CurrentCompanyVar = null] {
+         alert("All the selected records must be from the same company");
+      }
+      else {
+         call IsActiveLuExist(CurrentCompanyVar, "AccountingCodestrComb") into StateVar;
+         if [StateVar = "TRUE"] {
+            if[CreateCount > 0] {
+               set SelectionVar = CreateList;
+            }
+            if[UpdateCount > 0] {
+               set SelectionVar = UpdateList;
+            }
+            if[DeleteCount > 0] {
+               set SelectionVar = DeleteList;
+            }
+            assistant CopyToCompaniesAssistant(CurrentCompanyVar, "Account", "AUTOMATIC", SelectionVar, "Account_API") {
+               when OK {
+                  exit;
+               }
+            }
+         }
+      }
+   }
+}
+
+
+command TranslationCommand for Account {
+   label = "Translation";
+   enabled = [true];
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   bulkexecute {
+      call GetSelectedCompany(Selection) into CurrentCompanyVar;
+      if [CurrentCompanyVar = null] {
+         alert("All the selected records must be from the same company");
+      }
+      else {
+         bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'Account' and AttributeKey eq $[Account]";
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AccountTypeCustomSelector for AccountType {
+   static AccntType;
+   static Description;
+   static LogicalAccountType;
+   static Company {
+      visible = [false];
+      searchable = false;
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountOverviewList for Account {
+   orderby = SortValue;
+
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+   fieldset AccountsGeneralFieldSet;
+   fieldset AccountsTaxFieldSet;
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid Period";
+   }
+   fieldset AccountsOtherFieldSet;
+    -- gelr:accounting_xml_data, begin
+   field SatAccountType {
+      columnexclude = [not initcontext.AccountingXmlDataEnabled];
+      when [initcontext.AccountingXmlDataEnabled] use subset MxSatAccType;
+      size = Small;
+   }
+   lov SatAccountGroupRef with ReferenceSatAccountGroupSelector {
+      columnexclude = [not initcontext.AccountingXmlDataEnabled];
+      description = SatAccountGroupRef.Description;
+      validate command {
+         variable SatLevelVar Text;
+         execute {
+            call ValidateSatAccountGroup(Company, SatAccountGroup) into SatLevelVar;
+            --set SatLevel = SatLevelVar;
+         }
+      }
+   }
+   field SatLevel {
+      columnexclude = [not initcontext.AccountingXmlDataEnabled];
+      size = Small;
+      validate command {
+         execute {
+            if [SatLevel in("None", "One") or SatLevel = null] {
+               set SatParentAccount = null;
+            }
+         }
+      }
+   }
+   lov SatParentAccountRef with ReferenceAccountSelector {
+      columnexclude = [not initcontext.AccountingXmlDataEnabled];
+      description = SatParentAccountRef.Description;
+      editable = [SatLevel = "Two"];
+   }
+   -- gelr:accounting_xml_data, end
+   command MultiCompanyCommand;
+   commandgroup CommandGroup2CmdGroup {
+
+      command CodeStringCompletionCommand;
+      command TaxCodesperAccountCommand;
+   }
+
+   commandgroup CommandGroup3CmdGroup {
+
+      command CodePartAttributeConnectionCommand;
+      command ProjectCostRevenueElementpeCommand;
+   }
+
+   commandgroup CommandGroup4CmdGroup {
+
+      command CopyToCompaniesCommand;
+      command TranslationCommand;
+   }
+}
+
+list MultiCompanyAccountList for Account {
+   orderby = SortValue;
+   lov CompanyRef with ReferenceCompanyFinanceSelector {
+      search = Company, Description;
+      description = CompanyRef.Description;
+   }
+   fieldset AccountsGeneralFieldSet;
+   fieldset AccountsTaxFieldSet;
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid Period";
+   }
+   fieldset AccountsOtherFieldSet;
+   -- gelr:accounting_xml_data, begin
+   field SatAccountType {
+      size = Small;
+      editable = [AccountingXmlDataEnabled];
+      when [initcontext.AccountingXmlDataEnabled] use subset MxSatAccType;
+   }
+   lov SatAccountGroupRef with ReferenceSatAccountGroupSelector {
+      description = SatAccountGroupRef.Description;
+      editable = [AccountingXmlDataEnabled];
+      validate command {
+         variable SatLevelVar Text;
+         execute {
+            call ValidateSatAccountGroup(Company, SatAccountGroup) into SatLevelVar;
+            --set SatLevel = SatLevelVar;
+         }
+      }
+   }
+   field SatLevel {
+      editable = [AccountingXmlDataEnabled];
+      size = Small;
+      validate command {
+         execute {
+            if [SatLevel in("None", "One") or SatLevel = null] {
+               set SatParentAccount = null;
+            }
+         }
+      }
+   }
+   lov SatParentAccountRef with ReferenceAccountSelector {
+      editable = [AccountingXmlDataEnabled];
+      description = SatParentAccountRef.Description;
+      editable = [SatLevel = "Two"];
+   }
+   -- gelr:accounting_xml_data, end
+   command SingleCompanyCommand {
+      icon = "check";
+      emphasis Info = [true];
+   }
+
+   commandgroup CommandGroup2CmdGroup {
+
+      command CodeStringCompletionCommand;
+      command TaxCodesperAccountCommand;
+   }
+
+   commandgroup CommandGroup3CmdGroup {
+
+      command CodePartAttributeConnectionCommand;
+      command ProjectCostRevenueElementpeCommand;
+   }
+
+   commandgroup CommandGroup4CmdGroup {
+
+      command CopyToCompaniesCommand;
+      command TranslationCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

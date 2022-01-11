@@ -1,0 +1,150 @@
+client ConnectAttribute;
+component ACCRUL;
+layer Core;
+projection ConnectAttributeHandling;
+
+include fragment CopyToCompaniesAssistant;
+include fragment BudgetAccCodePartValueSelector;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AccountingAttributeSet {
+   label = "Connect Attribute";
+   selector AccountingAttributeNewSelector;
+   group AccountingAttributeGroup;
+   list AccountingAttributeCon2List(AccountingAttributeCon2Array);
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command CopyToCompaniesCommand for AccountingAttributeCon2 {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "AccountingAttributeCon", "MANUAL", Selection, "Accounting_Attribute_Con_API") {
+         when OK {
+            exit;
+
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand for AccountingAttributeCon2 {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "AccountingAttributeCon") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "AccountingAttributeCon", "AUTOMATIC", SelectionVar, "Accounting_Attribute_Con_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector AccountingAttributeNewSelector for AccountingAttribute {
+   label = "${Attribute} - ${Description}";
+   static Attribute;
+   static Description;
+   static CodePartRef.CodeName;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group AccountingAttributeGroup for AccountingAttribute {
+   label = "";
+   lov AttributeRef with ReferenceAccountingAttributeSelector {
+      search = Attribute, Description;
+      size = Large;
+      description = AttributeRef.Description;
+   }
+   lov CodePartRef with ReferenceAccountingCodePartsSelector {
+      search = CodePart, CodeName;
+      hidekey = [true];
+      description = CodePartRef.CodeName;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountingAttributeCon2List for AccountingAttributeCon2 {
+   label = "Connect Attribute";
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+      new {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+
+   lov CodePartValueRef with ReferenceBudgetAccCodePartValueSelector {
+      search = CodePartValue, Description;
+      size = Large;
+      description = CodePartValueRef.Description;
+   }
+   lov AttributeValueRef with ReferenceAccountingAttributeValueSelector {
+      search = AttributeValue, Description;
+      size = Large;
+      description = AttributeValueRef.Description;
+   }
+
+   command CopyToCompaniesCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

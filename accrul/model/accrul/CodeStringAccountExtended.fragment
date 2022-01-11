@@ -1,0 +1,164 @@
+fragment CodeStringAccountExtended;
+component ACCRUL;
+layer Core;
+description "Fragment with a fieldset, CodeStringAccountExtendedLovFieldSet, for Account using the ReferenceAccountSelector of the entity Account. Also support Codestring Completion and Pseudo codes and code part demands";
+// Note:
+// Fieldsets:
+// 1. CodeStringAccountExtendedLovFieldSet
+//    Support for codestring completion, pseudo codes and code part demands
+// 2. CodeStringAccountExtended2LovFieldSet
+//    Same as above but Account is named CodeA. To be used when Account is named CodeA in the projection/client
+// The page using this fieldset must be Company Context dependent
+// The fragment should be used together with a fragment that handles CodeB-J, such as CodeStringExtended
+// The reference in the projection must be named AccountRef and CodeB-JRef (e.g. CodeBRef) and the attributes needs to be called Account and CodeB-J.
+// The projection also needs an attribute named RequiredString defined as:
+// attribute RequiredString Text {
+//    fetch = "Account_API.Get_Required_Code_Part_List(company, account)";
+//    editable = [true];
+// }
+// The fragment has support for codepart handling which means that it will display the correct label and if the code part is visible or not
+// If also has support for Codestring completion, Pseudo codes and code part demands.
+// If there is a need for specific Validate Command handling then override the command
+// named ValidateCodeStringAccountExtendedAccountRef.
+// named ValidateCodeStringAccountExtended2AccountRef.
+
+include fragment CodestringHandling;
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+--------------------------------- SELECTOR ----------------------------------
+
+--------------------------------- LOV LISTS ---------------------------------
+
+
+-------------------------------- FIELD SETS ---------------------------------
+fieldset CodeStringAccountExtendedLovFieldSet {
+   lov AccountRef with ReferenceAccountSelector {
+      label = "${context.Company.CodeAName}";
+      description = AccountRef.Description;
+      search = Account, Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAccountExtendedAccountRef;
+   }
+}
+
+fieldset CodeStringAccountExtended2LovFieldSet clone CodeStringAccountExtendedLovFieldSet {
+   lov AccountRef with ReferenceAccountSelector {
+      search = Account, Description;
+      validate command ValidateCodeStringAccountExtended2AccountRef;
+   }
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ValidateCodeStringAccountExtendedAccountRef {
+   variable ModifiedCodeString {
+      type = Text;
+   }
+   variable CurrentCodePart {
+      type = Text;
+   }
+   variable CodestringHandlingRec {
+      type = Structure(CodestringHandlingStructure);
+   }
+   execute {
+      set CurrentCodePart = "A";
+      // To support pages where Account is named CodeA
+      if [AccountFieldName = "CodeA"] {
+         set AccountValue = CodeA;
+      }
+      else {
+         set AccountValue = Account;
+      }
+
+      //Only call super when field has a value, to avoid db-calls
+      if [AccountValue = null] {
+         set AccountValue = null;
+      }
+      else {
+         call CodestringHandling(Company, CurrentCodePart, AccountValue, CodeB, CodeC, CodeD, CodeE, CodeF, CodeG, CodeH, CodeI, CodeJ, ProcessCode, Quantity, Text, ProjectActivityId, RequiredString, "TRUE"
+         ) into CodestringHandlingRec;
+         set ModifiedCodeString = "${CodestringHandlingRec.ModifiedCodeString}";
+         if [ModifiedCodeString = "TRUE"] {
+            confirm("Existing code part information will be modified.") {
+               when OK {
+                  if [AccountFieldName = "CodeA"] {
+                     set CodeA = CodestringHandlingRec.ModifiedCodeA;
+                  }
+                  else {
+                     set Account = CodestringHandlingRec.ModifiedCodeA;
+                  }
+                  set CodeB = CodestringHandlingRec.ModifiedCodeB;
+                  set CodeC = CodestringHandlingRec.ModifiedCodeC;
+                  set CodeD = CodestringHandlingRec.ModifiedCodeD;
+                  set CodeE = CodestringHandlingRec.ModifiedCodeE;
+                  set CodeF = CodestringHandlingRec.ModifiedCodeF;
+                  set CodeG = CodestringHandlingRec.ModifiedCodeG;
+                  set CodeH = CodestringHandlingRec.ModifiedCodeH;
+                  set CodeI = CodestringHandlingRec.ModifiedCodeI;
+                  set CodeJ = CodestringHandlingRec.ModifiedCodeJ;
+                  set ProcessCode = CodestringHandlingRec.ModifiedProcessCode;
+                  set Quantity = CodestringHandlingRec.ModifiedQuantity;
+                  set Text = CodestringHandlingRec.ModifiedText;
+                  set ProjectActivityId = CodestringHandlingRec.ModifiedProjectActivityId;
+
+                  set ProjectId = CodestringHandlingRec.ModifiedProjectId;
+                  if [CurrentCodePart != "A"] {
+                     set RequiredString = CodestringHandlingRec.ModifiedRequiredString;
+                  }
+               }
+            }
+            if [CurrentCodePart = "A"] {
+               set RequiredString = CodestringHandlingRec.RequiredString;
+            }
+         }
+         else {
+            if [AccountFieldName = "CodeA"] {
+               set CodeA = CodestringHandlingRec.CodeA;
+            }
+            else {
+               set Account = CodestringHandlingRec.CodeA;
+            }
+            set CodeB = CodestringHandlingRec.CodeB;
+            set CodeC = CodestringHandlingRec.CodeC;
+            set CodeD = CodestringHandlingRec.CodeD;
+            set CodeE = CodestringHandlingRec.CodeE;
+            set CodeF = CodestringHandlingRec.CodeF;
+            set CodeG = CodestringHandlingRec.CodeG;
+            set CodeH = CodestringHandlingRec.CodeH;
+            set CodeI = CodestringHandlingRec.CodeI;
+            set CodeJ = CodestringHandlingRec.CodeJ;
+            set ProcessCode = CodestringHandlingRec.ProcessCode;
+            set Quantity = CodestringHandlingRec.Quantity;
+            set Text = CodestringHandlingRec.Text;
+            set ProjectActivityId = CodestringHandlingRec.ProjectActivityId;
+            set ProjectId = CodestringHandlingRec.ProjectId;
+            set RequiredString = CodestringHandlingRec.RequiredString;
+         }
+      }
+   }
+}
+
+
+// Commands for fieldset CodeStringAccountExtended2LovFieldSet
+---------- COMMAND FOR CODE STRING ACCOUNT EXTENDED2 LOV FIELD SET ----------
+command ValidateCodeStringAccountExtended2AccountRef clone ValidateCodeStringAccountExtendedAccountRef {
+   execute {
+      set AccountFieldName = "CodeA";
+      super;
+   }
+}
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+@Override
+entity Account {
+   attribute Account Text {
+      label = "${context.Company.CodeAName}";
+   }
+   attribute AccntGroup Text {
+      lovcolumn = [true];
+   }
+   attribute AccntType Text {
+      lovcolumn = [true];
+   }
+}

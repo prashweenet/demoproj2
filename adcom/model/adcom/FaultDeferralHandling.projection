@@ -1,0 +1,58 @@
+--  Date    Sign    History
+--  ------  ------  ------------------------------------------------------
+--  201231  ROSDLK  LMM2020R1-1474, Filter 'ACTV' deferral references.
+--  200625  ARUFLK  LMM2020R1-99, Created.
+----------------------------------------------------------------------------
+
+projection FaultDeferralHandling;
+component ADCOM;
+layer Core;
+description "Fault Deferral Handling";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AvFaultDeferralSet for AvFaultDeferral;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvFaultDeferral {
+
+   attribute DeferralId Number {
+      required = [false];
+   }
+
+   reference FaultSeverityRef(FaultSeverityCd) to AvFaultSeverity(FaultSeverityCode);
+   reference DeferralReferenceRef(DeferralReferenceId) to AvDeferralReference(DeferralReferenceId);
+   reference FaultIdRef(FaultId) to AvFault(FaultId);
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetActvDeferralReference List<Entity(AvDeferralReference)> {
+   syncpolicy Online;
+   where = "deferral_ref_status_code != 'INACTV'";
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

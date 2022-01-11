@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>PartUseType</NAME>
+   <COMPONENT>ADCOM</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <NAME>Tools</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>Ae</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>Consum</NAME>
+      </VALUE>
+   </VALUES>
+</ENUMERATION>

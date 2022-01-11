@@ -1,0 +1,205 @@
+fragment AccountsFieldSet;
+component ACCRUL;
+layer Core;
+description "Accounts FieldSet";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+fieldset AccountsGeneralFieldSet for Account {
+   field Account {
+      searchable = false;
+   }
+   lov AccSearchRef with ReferenceAccountsConsolidationSelector {
+      columnvisible = [false];
+   }
+   field Description;
+   lov AccntTypeRef with AccountTypeCustomSelector {
+      search = AccntType, Description;
+      description = AccntTypeRef.Description;
+      validate command {
+         variable DefaultCodePartDemands;
+         variable CompanyVar;
+         execute {
+            set LogicalAccountType = AccntTypeRef.LogicalAccountType;
+            if [context.Company = null] {
+               set CompanyVar = Company;
+            }
+            else {
+               set CompanyVar = context.Company;
+            }
+            call DefaultCodePartDemands(CompanyVar, AccntType) into DefaultCodePartDemands;
+            set ReqCodeB = DefaultCodePartDemands.ReqCodeBDefault;
+            set ReqCodeC = DefaultCodePartDemands.ReqCodeCDefault;
+            set ReqCodeD = DefaultCodePartDemands.ReqCodeDDefault;
+            set ReqCodeE = DefaultCodePartDemands.ReqCodeEDefault;
+            set ReqCodeF = DefaultCodePartDemands.ReqCodeFDefault;
+            set ReqCodeG = DefaultCodePartDemands.ReqCodeGDefault;
+            set ReqCodeH = DefaultCodePartDemands.ReqCodeHDefault;
+            set ReqCodeI = DefaultCodePartDemands.ReqCodeIDefault;
+            set ReqCodeJ = DefaultCodePartDemands.ReqCodeJDefault;
+            set ReqQuantity = DefaultCodePartDemands.ReqQuantityDefault;
+            set ReqProcessCode = DefaultCodePartDemands.ProcessCodeDefault;
+            set ReqText = DefaultCodePartDemands.TextDefault;
+            set ReqBudgetCodeB = DefaultCodePartDemands.ReqBudCodeBDefault;
+            set ReqBudgetCodeC = DefaultCodePartDemands.ReqBudCodeCDefault;
+            set ReqBudgetCodeD = DefaultCodePartDemands.ReqBudCodeDDefault;
+            set ReqBudgetCodeE = DefaultCodePartDemands.ReqBudCodeEDefault;
+            set ReqBudgetCodeF = DefaultCodePartDemands.ReqBudCodeFDefault;
+            set ReqBudgetCodeG = DefaultCodePartDemands.ReqBudCodeGDefault;
+            set ReqBudgetCodeH = DefaultCodePartDemands.ReqBudCodeHDefault;
+            set ReqBudgetCodeI = DefaultCodePartDemands.ReqBudCodeIDefault;
+            set ReqBudgetCodeJ = DefaultCodePartDemands.ReqBudCodeJDefault;
+            set ReqBudgetQuantity = DefaultCodePartDemands.ReqBudQuantityDefault;
+         }
+      }
+   }
+   lov AccountGroupRef with ReferenceAccountGroupSelector {
+      search = AccntGroup, Description;
+      description = AccountGroupRef.Description;
+   }
+}
+fieldset AccountsTaxFieldSet for Account {
+   field TaxHandlingValue {
+      size = Small;
+   }
+   field TaxCodeMandatory {
+      size = Small;
+   }
+}
+
+fieldset AccountsOtherFieldSet for Account {
+   field LogicalAccountType {
+      columnvisible = [false];
+      searchable = false;
+   }
+   field CurrBalanceDb {
+      size = Small;
+   }
+   field BudAccountDb {
+      size = Small;
+   }
+   field LedgFlagDb {
+      size = Small;
+   }
+   field TaxFlagDb {
+      size = Small;
+      validate command {
+         execute {
+            if [TaxFlagDb] {
+               set LedgFlagDb = true;
+            }
+         }
+      }
+   }
+   field StatAccountDb {
+      size = Small;
+   }
+   field ExcludeFromCurrTrans {
+      size = Small;
+   }
+   field ExcludePeriodicalCap {
+      size = Small;
+   }
+   field ExcludeProjFollowup {
+      size = Small;
+   }
+   field IncludeInRevRec {
+      size = Small;
+   }
+   field ArchivingTransValue {
+      size = Small;
+   }
+   field ReqCodeB {
+      size = Small;
+   }
+   field ReqCodeC {
+      size = Small;
+   }
+   field ReqCodeD {
+      size = Small;
+   }
+   field ReqCodeE {
+      size = Small;
+   }
+   field ReqCodeF {
+      size = Small;
+   }
+   field ReqCodeG {
+      size = Small;
+   }
+   field ReqCodeH {
+      size = Small;
+   }
+   field ReqCodeI {
+      size = Small;
+   }
+   field ReqCodeJ {
+      size = Small;
+   }
+   field ReqQuantity {
+      size = Small;
+   }
+   field ReqProcessCode {
+      size = Small;
+   }
+   field ReqText {
+      size = Small;
+   }
+   field CodeStringCompletionExists;
+   field AttributeExists {
+      size = Small;
+   }
+   field Text {
+      label = "Notes";
+      multiline = true;
+      height = small;
+   }
+   field ReqBudgetCodeB {
+      size = Small;
+   }
+   field ReqBudgetCodeC {
+      size = Small;
+   }
+   field ReqBudgetCodeD {
+      size = Small;
+   }
+   field ReqBudgetCodeE {
+      size = Small;
+   }
+   field ReqBudgetCodeF {
+      size = Small;
+   }
+   field ReqBudgetCodeG {
+      size = Small;
+   }
+   field ReqBudgetCodeH {
+      size = Small;
+   }
+   field ReqBudgetCodeI {
+      size = Small;
+   }
+   field ReqBudgetCodeJ {
+      size = Small;
+   }
+   field ReqBudgetQuantity {
+      size = Small;
+   }
+   lov MasterComCodePartValueRef with ReferenceAccountSelector using GetGroupAccounts(Company) {
+      search = Account, Description;
+      description = MasterComCodePartValueRef.Description;
+   }
+
+   field KeepRepCurrencyDb {
+      editable = [not ExchangeDifference];
+      size = Small;
+   }
+   field KeepReportingEntityDb {
+      editable = [not ExchangeDifference];
+      size = Small;
+   }
+   field ExchangeDifferenceDb {
+      size = Small;
+   }
+
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------

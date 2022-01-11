@@ -1,0 +1,47 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CostElementToAccount
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Cost_Element_To_Account_All IS
+   Prompt = 'Cost Element To Account'
+   Sort = 'SORT_VALUE'
+   Account.Ref = 'Account(company)/NOCHECK'
+   Project_Cost_Element.Ref = 'ProjectCostElement(company)/NOCHECK'
+   Code_Part.Datatype = 'STRING(1)/UPPERCASE'
+   Code_Part_Value_Desc.Flags = 'A---L'
+   Code_Part_Value_Desc.Datatype = 'STRING(20)'
+   Code_Part_Value_Desc.Prompt = 'Code Part Value Description'
+   Sort_Value.Flags = 'A----'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Sort_Value.Prompt = 'Sort Value'
+SELECT b.company                      company,
+       b.code_part_value              account,
+       b.code_part                    code_part,
+       ACCOUNTING_CODE_PART_VALUE_API.Get_Desc_For_Code_Part(b.company, b.code_part, b.code_part_value) code_part_value_desc,
+       a.project_cost_element         project_cost_element,
+       a.valid_from                   valid_from,
+       b.sort_value                   sort_value,
+       a.rowid                        objid,
+       to_char(a.rowversion,'YYYYMMDDHH24MISS')
+                                      objversion,
+       a.rowkey                      objkey
+FROM   cost_element_to_account_tab a, accounting_code_part_value_tab b
+WHERE  a.company (+) = b.company
+AND    a.account (+) = b.code_part_value;
+

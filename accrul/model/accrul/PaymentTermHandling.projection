@@ -1,0 +1,254 @@
+projection PaymentTermHandling;
+component ACCRUL;
+layer Core;
+description "Payment Term";
+category Users;
+
+include fragment CopyToCompaniesAssistant;
+include fragment LocalizationControlCenterHandler;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PaymentTermSet for PaymentTerm {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity PaymentTerm {
+   ludependencies = PaymentTermDetails, PaymentTerm;
+
+   attribute Company Text;
+   attribute PayTermId Text {
+      label = "Payment Term";
+   }
+   attribute Description Text {
+      editable = [ETag = null];
+   }
+   attribute VatDistribution Enumeration(VatDistribution) {
+      label = "Tax Distribution";
+   }
+   attribute UseCommercialYear Boolean("TRUE", "FALSE") {
+      label = "Use Commercial Year";
+      required = [true];
+   }
+   attribute SuppressAmount Boolean("TRUE", "FALSE") {
+      label = "Suppress Amount";
+      required = [true];
+   }
+   attribute BlockForDirectDebiting Boolean("TRUE", "FALSE") {
+      label = "Blocked Direct Debiting";
+   }
+   attribute ConsiderPayVacPeriod Boolean("TRUE", "FALSE") {
+      label = "Consider Payment Vacation Periods";
+      required = [true];
+   }
+   attribute ExcludeCreditLimit Boolean("TRUE", "FALSE") {
+      label = "Exclude From Credit Limit Control";
+   }
+   @DynamicComponentDependency FIXASS
+   attribute CashDiscFixassAcqValue Boolean("TRUE", "FALSE") {
+      label = "Apply Cash Discount to Fixed Assets Acquisition Values";
+   }
+   attribute VatDist Text {
+      fetch = "Vat_Distribution_API.Decode('FIRSTINSTONLYTAX')";
+   }
+   attribute PrintSwissQRCode  Boolean("TRUE", "FALSE") {
+      label = "Print QR bill";
+   }
+
+   array PaymentTermDetailsArray(Company, PayTermId) to PaymentTermDetails(Company, PayTermId);
+}
+
+@Override
+entity PaymentTermDetails {
+   ludependencies = PaymentTerm, PaymentTermDetails;
+   validate action NetAmntPercentageValidate;
+
+   attribute PayTermId Text;
+   attribute InstallmentNumber Number {
+      label = "Installment ID";
+   }
+   attribute DayFrom Number {
+      required = [true];
+   }
+   attribute FreeDeliveryMonths Number {
+      label = "Number of Free Delivery Months";
+   }
+   attribute EndOfMonth Boolean("TRUE", "FALSE") {
+      label = "End of Month - Due Date";
+      required = [true];
+   }
+   attribute DueDate1 Number {
+      label = "Specific Due Day 1";
+   }
+   attribute DueDate2 Number {
+      label = "Specific Due Day 2";
+   }
+   attribute DueDate3 Number {
+      label = "Specific Due Day 3";
+   }
+   attribute InstituteId Text {
+      format = uppercase;
+   }
+   attribute WayId Text {
+      format = uppercase;
+   }
+   attribute DiscountSpecified Boolean("TRUE", "FALSE") {
+      label = "Disc Spec on Pay Term";
+      editable = [ETag = null];
+      required = [true];
+   }
+   attribute CollectiveRiba Boolean("TRUE", "FALSE") {
+      label = "Collective RIBA";
+   }
+   attribute DummyInstallmentNum Number;
+
+   reference PayTermIdRef(Company, PayTermId) to PaymentTerm(Company, PayTermId) {
+      label = "Payment Terms";
+   }
+   @DynamicComponentDependency PAYLED
+   reference WayIdRef(Company, WayId) to PaymentWay(Company, WayId) {
+      label = "Payment Method";
+   }
+   @DynamicComponentDependency PAYLED
+   reference InstituteIdRef(Company, InstituteId) to PaymentInstitute(Company, InstituteId) {
+      label = "Payment Institute";
+   }
+   @DynamicComponentDependency PAYLED
+   reference WayIdPerInstituteRef(Company, InstituteId, WayId) to PaymentWayPerInstitute3(Company, InstituteId, WayId) {
+      label = "Payment Method";
+   }
+   @DynamicComponentDependency PAYLED
+   reference InstituteIdPerWayRef(Company, WayId, InstituteId) to PaymentInstitutePerWayId(Company, WayId, InstituteId) {
+      label = "Payment Institute";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+@DynamicComponentDependency PAYLED
+query PaymentWayPerInstitute3 {
+   from = "payment_way_per_institute3";
+   lu = PaymentWayPerInstitute;
+   keys = Company, InstituteId, WayId;
+
+   attribute Company Text;
+   attribute InstituteId Text;
+   attribute WayId Text;
+   attribute Description Text;
+}
+
+@DynamicComponentDependency PAYLED
+query PaymentInstitutePerWayId {
+   from = "payment_institute_per_way_id";
+   lu = PaymentWayPerInstitute;
+   keys = Company, WayId, InstituteId;
+
+   attribute Company Text;
+   attribute WayId Text;
+   attribute InstituteId Text;
+   attribute Description Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+action CreateAutomaticPaymentPlan {
+   initialcheck implementation;
+   parameter Company Text;
+   parameter PayTermId Text;
+   parameter NoOfInstallments Number;
+   parameter NoOfFreeDelivMonths Number;
+   parameter DaysToDueDate Number;
+   parameter InstituteId Text;
+   parameter WayId Text;
+   parameter EndOfMonth Boolean;
+   parameter DueDay1 Number;
+   parameter DueDay2 Number;
+   parameter DueDay3 Number;
+
+   ludependencies = PaymentTermDetails;
+}
+
+action NetAmntPercentageValidate {
+   initialcheck none;
+   parameter Init Boolean;
+   ludependencies = PaymentTermDetails;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+@DynamicComponentDependency FIXASS
+function GetReductCashDisc Text {
+   parameter Company Text;
+   parameter CashDiscFixassAcqValue Boolean;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+structure PaymentTermDetailsStructure {
+   attribute Company Text;
+   attribute PayTermId Text;
+   attribute NoOfInstallments Number {
+      label = "No of Installments";
+      required = [true];
+   }
+   attribute NoOfFreeDelivMonths Number {
+      label = "No of Free Delivery Month";
+   }
+   attribute DaysToDueDate Number {
+      label = "Days to Due Date";
+   }
+   attribute EndOfMonth Boolean("TRUE", "FALSE") {
+      label = "End of Month - Due Date";
+      required = [true];
+   }
+   attribute DueDay1 Number {
+      label = "Specific Due Day 1";
+   }
+   attribute DueDay2 Number {
+      label = "Specific Due Day 2";
+   }
+   attribute DueDay3 Number {
+      label = "Specific Due Day 3";
+   }
+   attribute VatDist Text;
+   attribute InstituteId Text {
+      format = uppercase;
+   }
+   attribute WayId Text {
+      format = uppercase;
+   }
+   reference CompanyRef(Company) to CompanyFinance(Company);
+   reference PayTermIdRef(Company, PayTermId) to PaymentTerm(Company, PayTermId) {
+      label = "Payment Terms";
+   }
+   @DynamicComponentDependency PAYLED
+   reference WayIdRef(Company, WayId) to PaymentWay(Company, WayId) {
+      label = "Payment Method";
+   }
+   @DynamicComponentDependency PAYLED
+   reference InstituteIdRef(Company, InstituteId) to PaymentInstitute(Company, InstituteId) {
+      label = "Payment Institute";
+   }
+   @DynamicComponentDependency PAYLED
+   reference WayIdPerInstituteRef(Company, InstituteId, WayId) to PaymentWayPerInstitute3(Company, InstituteId, WayId) {
+      label = "Payment Method";
+   }
+   @DynamicComponentDependency PAYLED
+   reference InstituteIdPerWayRef(Company, WayId, InstituteId) to PaymentInstitutePerWayId(Company, WayId, InstituteId) {
+      label = "Payment Institute";
+   }
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

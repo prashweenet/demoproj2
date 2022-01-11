@@ -1,0 +1,398 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CostRevenueBreakdownStructureHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  230919  jadulk  FIXTEND-66 Removed function Fetch_Page_Search_Context_Defaults___.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Convert_To_Text_True_False___(
+   param_ IN BOOLEAN) RETURN VARCHAR2
+IS
+BEGIN
+   IF (param_ = TRUE ) THEN
+      RETURN 'TRUE';
+   END IF;
+   RETURN 'FALSE';
+END Convert_To_Text_True_False___;
+
+
+
+PROCEDURE Create_New_Cost_Structure___ (
+   company_             IN VARCHAR2,
+   cost_structure_id_   IN VARCHAR2,
+   description_         IN VARCHAR2,
+   template_            IN BOOLEAN,
+   single_project_      IN BOOLEAN,
+   note_                IN VARCHAR2) 
+IS
+   structure_rec_    cost_structure_tab%ROWTYPE; 
+BEGIN  
+   structure_rec_.company := company_;
+   structure_rec_.cost_structure_id := cost_structure_id_;
+   structure_rec_.description := description_;
+   structure_rec_.template := Convert_To_Text_True_False___(template_);
+   structure_rec_.single_project := Convert_To_Text_True_False___(single_project_);
+   structure_rec_.note := note_;
+   
+   Cost_Structure_API.Create_New_Structure(structure_rec_);
+   
+END Create_New_Cost_Structure___;
+
+
+PROCEDURE Copy_Structure___ (
+   company_            IN VARCHAR2,
+   structure_id_       IN VARCHAR2,
+   new_structure_id_   IN VARCHAR2,
+   new_description_    IN VARCHAR2)
+IS 
+BEGIN
+   Cost_Structure_API.Copy__(company_, structure_id_, new_structure_id_, new_description_);
+END Copy_Structure___;
+
+
+PROCEDURE Create_New_Top_Node___ (
+   company_             IN VARCHAR2,
+   structure_id_        IN VARCHAR2,
+   node_id_             IN VARCHAR2,
+   description_         IN VARCHAR2,
+   structure_item_type_ IN VARCHAR2,
+   level_no_            IN NUMBER)
+IS
+BEGIN
+   IF (structure_item_type_ = 'NODE' AND level_no_ = 1) THEN
+      Cost_Structure_Item_API.New_Top_Node__(company_, structure_id_, node_id_, description_);
+   END IF;   
+END Create_New_Top_Node___;
+
+
+PROCEDURE Change_Parent_Node___ (
+   company_              IN VARCHAR2,
+   structure_id_         IN VARCHAR2,
+   current_node_         IN VARCHAR2,
+   structure_item_type_  IN VARCHAR2,
+   current_level_no_     IN NUMBER,
+   node_above_           IN VARCHAR2)
+IS
+   node_above_level_no_  NUMBER;
+BEGIN
+   IF (current_level_no_ > 1) THEN
+      node_above_level_no_ := Cost_Structure_Item_API.Get_Level_No__(company_, structure_id_, node_above_);      
+      IF (node_above_level_no_ IS NULL)THEN
+         Error_SYS.Record_General(lu_name_, 'INVALIDNODEABOVE: The "Node Above" value [:P1] does not exist in the structure as a Node' , node_above_);
+      END IF; 
+      Cost_Structure_Item_API.Move_Branch(company_, structure_id_, current_node_, structure_item_type_, node_above_, 'NODE');   
+   END IF;
+END Change_Parent_Node___;
+
+
+@Override
+PROCEDURE CRUD_Create___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Cost_Structure_Item_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   Error_SYS.Record_General(lu_name_,'COSTSTRUCTITEMCANNOTINSERT: You cannot insert items in to this group.');
+   super(etag_, key_, attr_, info_, action_);
+END CRUD_Create___;
+--
+@Override
+PROCEDURE CRUD_Delete___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Cost_Structure_Item_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   Error_SYS.Record_General(lu_name_,'COSTSTRUCTITEMCANNOTMODIFY: You cannot delete items in this group.');
+   super(etag_, key_, info_, action_);
+END CRUD_Delete___;
+--
+@Override 
+PROCEDURE CRUD_Update___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Cost_Structure_Item_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   Error_SYS.Record_General(lu_name_,'COSTSTRUCTITEMCANNOTDELETE: You cannot modify items in this group.');
+   super(etag_, key_, attr_, info_, action_);
+END CRUD_Update___;
+
+
+PROCEDURE Create_New_Node___ (
+   company_      IN VARCHAR2,
+   structure_id_ IN VARCHAR2,
+   node_id_      IN VARCHAR2,
+   description_  IN VARCHAR2,
+   item_above_   IN VARCHAR2,
+   level_no_     IN NUMBER ) 
+IS
+BEGIN
+   Cost_Structure_Item_API.New_Node__(company_, structure_id_, node_id_, description_, item_above_, level_no_);
+END Create_New_Node___;
+
+
+PROCEDURE Delete_Node___ (
+   company_             IN VARCHAR2,
+   structure_id_        IN VARCHAR2,
+   node_id_             IN VARCHAR2,
+   structure_item_type_ IN VARCHAR2,
+   level_no_            IN NUMBER,
+   info$_               OUT VARCHAR2) 
+IS
+   key_         Cost_Structure_Item_Key;
+   objid_       VARCHAR2(2000);
+   objversion_  VARCHAR2(2000);
+BEGIN
+   IF (structure_item_type_ = 'NODE' AND level_no_ > 1) THEN
+      key_.company := company_;
+      key_.cost_structure_id := structure_id_ ;
+      key_.name_value := node_id_; 
+      key_.cost_struct_item_type := structure_item_type_;
+      IF (level_no_ = 1) THEN
+         Error_SYS.Record_General(lu_name_, 'DELETENOTALLOWED: You are not allowed to delete the top node');
+      ELSE
+         Client_SYS.Add_Warning(lu_name_, 'DELETEWARNING: Selected node will be deleted along with connected nodes/values.');
+         Get_Objid_Objversion___(objid_, objversion_, key_);
+         Cost_Structure_Item_API.Delete_Node__(company_, structure_id_, objid_, objversion_);
+      END IF;
+   ELSE
+      Error_SYS.Record_General(lu_name_, 'CANTDELETENODE: You cannot delete this node if it is the root node or the Cost Structure Item Type is a Cost Element.'); 
+   END IF;
+   info$_ :=  Client_SYS.Get_All_Info();
+END Delete_Node___;
+
+
+PROCEDURE Move_Items___ (
+   company_               IN VARCHAR2,
+   structure_id_          IN VARCHAR2,
+   structure_item_type_   IN VARCHAR2,
+   current_item_          IN VARCHAR2,
+   item_above_            IN VARCHAR2,
+   destination_node_id_   IN VARCHAR2,
+   dest_struct_item_type_ IN VARCHAR2) 
+IS
+BEGIN  
+   IF (item_above_ IS NOT NULL) THEN
+      Cost_Structure_Item_API.Move_Branch(company_, structure_id_, current_item_, structure_item_type_, destination_node_id_,dest_struct_item_type_);
+   ELSE
+      Error_SYS.Record_General(lu_name_, 'CANTMOVEITEM: Cannot move or copy to a subitem of the source item.'); 
+   END IF;
+END Move_Items___;
+
+
+PROCEDURE Rename_Level___ (
+   company_           IN VARCHAR2,
+   structure_id_      IN VARCHAR2,
+   old_level_id_      IN VARCHAR2,
+   level_id_          IN VARCHAR2,
+   level_description_ IN VARCHAR2) 
+IS  
+   level_rec_    cost_structure_level_tab%ROWTYPE; 
+   
+   CURSOR get_structure_level IS
+      SELECT *
+      FROM   cost_structure_level_tab
+      WHERE  company           = company_
+      AND    cost_structure_id = structure_id_
+      AND    level_id          = old_level_id_;
+BEGIN   
+   OPEN  get_structure_level;
+   FETCH get_structure_level INTO level_rec_;
+   CLOSE get_structure_level;
+   
+   level_rec_.level_id    := level_id_;
+   level_rec_.description := level_description_;
+
+   Cost_Structure_Level_API.Modify_Structure_Level(level_rec_);
+END Rename_Level___;
+
+
+PROCEDURE Rename_Node___ (
+   company_             IN VARCHAR2,
+   structure_id_        IN VARCHAR2,
+   old_node_id_         IN VARCHAR2,
+   node_id_             IN VARCHAR2,
+   description_         IN VARCHAR2) 
+IS  
+   info_                VARCHAR2(4000); 
+   attr_                VARCHAR2(4000);
+   objid_               VARCHAR2(4000);
+   objversion_          VARCHAR2(4000);
+   desc_                VARCHAR2(4000);   
+BEGIN
+   -- Note: [jadulk] Modify with rec_ cannot be used here as this functionality tries to update the key value, name_value
+   Cost_Structure_Item_API.Get_Item_Info__(desc_, objid_, objversion_, company_, structure_id_, old_node_id_);
+   Client_SYS.Add_To_Attr('NAME_VALUE', node_id_, attr_);
+   Client_SYS.Add_To_Attr('DESCRIPTION', description_, attr_);
+   Client_SYS.Add_To_Attr('REORDER', 'TRUE', attr_);
+   
+   Cost_Structure_Item_API.Modify__(info_, objid_, objversion_, attr_, 'DO');
+END Rename_Node___;
+
+
+@DynamicComponentDependency PROJ
+FUNCTION Is_Connected___(
+   company_       IN VARCHAR2,
+   structure_id_  IN VARCHAR2) RETURN VARCHAR2
+IS   
+BEGIN
+   RETURN Project_API.Is_Structure_Connected(company_, structure_id_);
+END Is_Connected___; 
+
+FUNCTION Fetch_Cost_Structure_Levels___(
+   company_             IN VARCHAR2,
+   cost_structure_id_   IN VARCHAR2,
+   node_id_             IN VARCHAR2,
+   structure_item_type_ IN VARCHAR2) RETURN Objid_Arr
+IS
+   base_collection_       Objid_Arr := Objid_Arr();
+   parent_plus_level_id_  cost_structure_item.level_id%TYPE;
+
+   CURSOR get_structure_levels IS
+      SELECT *
+      FROM   cost_structure_level
+      WHERE  company           = company_
+      AND    cost_structure_id = cost_structure_id_
+      START WITH level_id      = parent_plus_level_id_
+      AND company              = company_
+      AND cost_structure_id    = cost_structure_id_
+      CONNECT BY company          = PRIOR company
+      AND       cost_structure_id = PRIOR cost_structure_id
+      AND       level_above       = PRIOR level_id;
+
+BEGIN  
+   parent_plus_level_id_ := Cost_Structure_Item_API.Get_Parent_Plus_Level_Id(company_, cost_structure_id_, node_id_, structure_item_type_);
+   FOR rec_ IN get_structure_levels LOOP
+      base_collection_.extend;
+      base_collection_(base_collection_.last) := rec_.objid;
+   END LOOP;  
+   RETURN base_collection_;
+END Fetch_Cost_Structure_Levels___;  
+
+
+PROCEDURE Change_Level_Id___ (
+   company_             IN VARCHAR2,
+   structure_id_        IN VARCHAR2,
+   node_id_             IN VARCHAR2,
+   structure_item_type_ IN VARCHAR2,
+   level_id_            IN VARCHAR2)
+IS
+BEGIN
+   IF (Cost_Structure_Level_API.Check_Level_Id_Exist(company_, structure_id_, level_id_) = 'FALSE') THEN
+      Error_SYS.Record_General(lu_name_, 'LEVELNOTEXIST: The Level ID [:P1] does not exist in the structure [:P2]', level_id_, structure_id_);
+   END IF; 
+   Cost_Structure_Item_API.Change_Level_Id(company_, structure_id_, node_id_, structure_item_type_, level_id_);
+END Change_Level_Id___;
+
+
+PROCEDURE Connect_Disconnect_Elements___ (
+   company_             IN VARCHAR2,
+   structure_id_        IN VARCHAR2,
+   item_above_          IN VARCHAR2,
+   selection_           IN VARCHAR2,
+   action_              IN VARCHAR2,
+   structure_item_type_ IN VARCHAR2) 
+IS
+   struct_id_              VARCHAR2(20);
+   structure_status_       VARCHAR2(20);
+   cost_element_list_      Utility_SYS.STRING_TABLE;
+   index_                  NUMBER := 0;
+   count_                  NUMBER := 0;
+   del_item_               VARCHAR2(20);
+   from_index_             NUMBER;
+   to_index_               NUMBER;
+   temp_from_index_        NUMBER;
+   temp_to_index_          NUMBER;
+BEGIN
+   IF (structure_item_type_ = 'NODE') THEN
+      IF (action_ = 'DISCONNECT') THEN
+         temp_from_index_      := INSTR(selection_, '^COST_STRUCTURE_ID=', 1, 1) + 19 ;
+         temp_to_index_        := INSTR(selection_, '^NAME_VALUE', 1, 1) - 1;
+         struct_id_            := substr(selection_, temp_from_index_, (temp_to_index_ - (temp_from_index_ - 1)));
+         structure_status_     := Cost_Structure_API.Get_Objstate(company_, struct_id_);
+      ELSE
+         structure_status_ := Cost_Structure_API.Get_Objstate(company_, structure_id_);
+      END IF;
+
+      IF (structure_status_ != 'In Progress') THEN
+         Error_SYS.Record_General(lu_name_, 'INVALIDSTATE: The cost breakdown structure cannot be modified when it has status :P1', structure_status_); 
+      ELSE
+         IF (action_ = 'DISCONNECT') THEN
+            Utility_SYS.Tokenize(selection_, ';', cost_element_list_, count_);
+            WHILE (index_ < count_)LOOP
+               index_ := index_+ 1;
+               from_index_ := 0;
+               to_index_   := 0;            
+               from_index_ := INSTR(cost_element_list_(index_), '^NAME_VALUE=', 1, 1) + 12;
+               to_index_   := INSTR(cost_element_list_(index_), '^', 1, 4) - 1;
+               del_item_   := substr(cost_element_list_(index_), from_index_, (to_index_ - (from_index_ - 1)));
+               Cost_Structure_Item_API.Del_Branch(company_, struct_id_, del_item_, 'COST_ELEMENT');
+            END LOOP;
+         ELSE
+            Cost_Structure_Item_API.Add_Branch(company_, structure_id_, item_above_, selection_);
+         END IF;
+      END IF;
+   ELSE
+      Error_SYS.Record_General(lu_name_, 'ERRORINCONDITION: Cannot connect a Cost Element to another Cost Element');
+   END IF;
+END Connect_Disconnect_Elements___;
+
+
+PROCEDURE Connect_Disconnect_All_Elements___ (
+   company_      IN VARCHAR2,
+   structure_id_ IN VARCHAR2,
+   item_above_   IN VARCHAR2,
+   action_       IN VARCHAR2) 
+IS
+   structure_status_       VARCHAR2(20);
+   
+   CURSOR get_unused_cost_elements IS
+      SELECT *
+      FROM   project_cost_element
+      WHERE  company  = company_
+      AND    objstate = 'Active'
+      AND NOT EXISTS (SELECT 1
+                      FROM cost_structure_item a
+                      WHERE a.company = company_ 
+                      AND a.name_value = item_above_ 
+                      AND a.cost_structure_id = structure_id_ 
+                      AND a.cost_struct_item_type_db = 'COST_ELEMENT');
+      
+   CURSOR get_used_cost_elements IS
+      SELECT *
+      FROM   cost_structure_item
+      WHERE  company = company_
+      AND    cost_structure_id = structure_id_
+      AND    cost_struct_item_type_db = 'COST_ELEMENT'
+      AND    item_above = item_above_;   
+      
+BEGIN
+   structure_status_ := Cost_Structure_API.Get_Objstate(company_, structure_id_);
+   
+   IF (structure_status_ != 'In Progress') THEN
+      Error_SYS.Record_General(lu_name_, 'INVALIDSTATE: The cost breakdown structure cannot be modified when it has status :P1', structure_status_); 
+   ELSE
+      IF (action_ = 'DISCONNECT') THEN
+         FOR rec_ IN get_used_cost_elements LOOP
+            Cost_Structure_Item_API.Del_Branch(company_, rec_.cost_structure_id, rec_.name_value, 'COST_ELEMENT');
+         END LOOP;
+      ELSE
+         FOR rec_ IN get_unused_cost_elements LOOP
+            Cost_Structure_Item_API.Add_Branch(company_, structure_id_, item_above_, rec_.project_cost_element);
+         END LOOP;
+      END IF;
+   END IF;
+END Connect_Disconnect_All_Elements___;

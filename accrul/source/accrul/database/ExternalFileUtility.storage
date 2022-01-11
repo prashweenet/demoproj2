@@ -1,0 +1,27 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalFileUtility
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+TABLE EXT_FILE_XML_FILE_TAB IS
+(
+LOAD_FILE_ID   NUMBER,
+CLOB_FILE      CLOB
+);
+-------------------- OTHER DEFINITIONS --------------------------------------
+
+
+SEQUENCE EXT_FILE_SEQUENCE IS INCREMENT BY 1 START WITH 1  ORDER;

@@ -1,0 +1,76 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  CodeI
+--  Component:  ACCRUL
+--  LU:         DimCodeI
+--
+--  File     :  DimCodeIDm.api
+--  Purpose  :  Create DATA MART dimension view DIM_CODE_I_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   -------------------------------------------------
+--  090715  RORALK Created for 75 core version of IFS BA
+--  150507  Umdolk Reverse Engineering.
+--------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_CODE_I
+DEFINE VIEW       = &DIM._DM
+DEFINE MV         = CODE_I_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = BIDimCodeI
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.id                                                         id,
+       a.company                                                    company,
+       a.code                                                       code,
+       SUBSTR(NVL( (SELECT description
+      FROM CODE_I_TRANSLATION_MV b
+      WHERE b.company         = a.company
+      AND   b.translation_key = a.code
+      AND   b.lu              = 'CodeI'
+      AND   b.language_code   =
+      (SELECT language
+      FROM FND_SESSION)), a.description),1,100)                     description,
+       a.valid_from                                                 valid_from,
+       a.valid_until                                                valid_until,
+       a.budget_value                                               budget_value,
+       SUBSTR(Budget_Account_Flag_API.Decode(a.budget_value),1,100) budget_value_desc
+FROM &MV a
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Code I^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Code I^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Code I Description^';
+   COMMENT ON COLUMN &VIEW..VALID_FROM
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Valid From^';
+COMMENT ON COLUMN &VIEW..VALID_UNTIL
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Valid Until^';
+COMMENT ON COLUMN &VIEW..BUDGET_VALUE
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Budget Value^';
+COMMENT ON COLUMN &VIEW..BUDGET_VALUE_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Budget Value Description^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

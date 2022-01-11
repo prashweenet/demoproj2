@@ -1,0 +1,257 @@
+client  ExternalFileTemplates;
+component ACCRUL;
+layer Core;
+projection ExternalFileTemplatesHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ExternalFileTemplates parent AccrulNavigator.ExternalFileBasicDataMenu at index 400 {
+      page ExternalFileTemplate home ExtFileTemplate;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page ExternalFileTemplate using ExternalFileTemplateSet {
+   label = "External File Templates";
+
+   list ExternalFileTemplateList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command DetailsCommand for ExtFileTemplate {
+   icon = "popup";
+   style = IconOnly;
+   label = "Details";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/ExternalFileTemplate/Form?$filter=FileTemplateId eq $[FileTemplateId]";
+   }
+}
+
+command CopyFileTemplateCommand for ExtFileTemplate {
+   label = "Copy File Template";
+   execute {
+      dialog ExtFileCopyFileTemplateDialog(FileTemplateId, FileType) into(StrNewKeyRef) {
+         when OK {
+            select(ExternalFileTemplateList, StrNewKeyRef);
+            exit;
+         }
+      }
+   }
+}
+
+command CreateFileTemplateFromFileTypeCommand {
+   label = "New File Template From File Type";
+   mode = Global;
+
+   execute {
+      dialog CreateTemplateFromTypeDialog(FileType) into(StrNewKeyRef) {
+         when OK {
+            select(ExternalFileTemplateList, StrNewKeyRef);
+            exit;
+         }
+      }
+   }
+}
+
+command Ok for ExtFileCopyFileTemplateStructure {
+   enabled = [FileId != null and FileType != null and FileTemplate != null and Description != null];
+   execute {
+      call CopyDefFromFileDef(FileTemplate, Description, FileId) into NewKeyRef;
+      //      success("External file template ${FileTemplate} successfully created.");
+      navigate "page/ExternalFileTemplates/ExternalFileTemplate;$filter=FileTemplateId eq $[FileTemplate]";
+      exit OK;
+   }
+}
+
+
+command Ok for CreateTemplateFromTypeStructure {
+   enabled = [FileType != null and FileTemplate != null and Description != null];
+   execute {
+      call CopyDefFromFileType(FileTemplate, Description, FileType, Mandatory) into NewKeyRef;
+      success("External file template ${FileTemplate} successfully created.");
+      exit OK;
+   }
+}
+
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ReferenceExtFileTemplateSelector for ExtFileTemplate {
+   label = "";
+   static FileTemplateId;
+   static Description;
+   static ActiveDefinition {
+      visible = [false];
+   }
+   static ValidDefinition {
+      visible = [false];
+   }
+   static Separated {
+      visible = [false];
+   }
+}
+
+---------------------------------- GROUPS -----------------------------------
+group CopySourceGroup for ExtFileCopyFileTemplateStructure {
+   label = "Source";
+   
+   lov FileTemplateRef with ReferenceExtFileTemplateSelector {
+      search = FileTemplateId, Description;
+      description = FileTemplateRef.Description;
+      size = Large;
+   }
+   lov FileTypeRef with ReferenceExtFileTypeSelector {
+      search = FileType, Description;
+      description = FileTypeRef.Description;
+      editable = [false];
+      size = Large;
+   }
+}
+
+group CopyDestinationGroup for ExtFileCopyFileTemplateStructure {
+   label = "Destination";
+   field FileTemplate {
+      size = Medium;
+   }
+   field Description {
+      size = Medium;
+   }
+}
+
+
+group CreateSourceGroup for CreateTemplateFromTypeStructure {
+   label = "Source";
+   lov FileTypeRef with ReferenceExtFileTypeSelector {
+      search = FileType, Description;
+      description = FileTypeRef.Description;
+      size = Large;
+   }
+   field Mandatory;
+}
+
+group CreateDestinationGroup for CreateTemplateFromTypeStructure {
+   label = "Destination";
+   field FileTemplate {
+      size = Medium;
+   }
+   field Description {
+      size = Medium;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExternalFileTemplateList for ExtFileTemplate {
+   orderby = FileTemplateId;
+
+   crudactions {
+      delete {
+         enabled = [SystemDefined != true];
+      }
+   }
+
+   lov FileTemplateIdRef with ReferenceExtFileTemplateSelector {
+      search = FileTemplateId, Description;
+      description = FileTemplateIdRef.Description;
+      size = Large;
+   }
+   field SystemDefined {
+      size = Small;
+   }
+   field ActiveDefinition {
+      size = Small;
+   }
+   field ValidDefinition {
+      size = Small;
+   }
+   field FileFormat {
+      size = Small;
+   }
+   field DecimalSymbol {
+      size = Small;
+   }
+   field DateFormat {
+      size = Small;
+   }
+   field Denominator {
+      size = Small;
+   }
+   lov FileTypeRef with ReferenceExtFileTypeSelector {
+      search = FileType, Description;
+      description = FileTypeRef.Description;
+   }
+
+   command DetailsCommand;
+   command CopyFileTemplateCommand;
+   command CreateFileTemplateFromFileTypeCommand;
+}
+
+
+@Override
+list ExtFileTemplateLovList for ExtFileTemplate {
+   static Separated {
+      columnexclude = [true];
+   }
+   static FileFormat {
+      columnexclude = [true];
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+dialog ExtFileCopyFileTemplateDialog for ExtFileCopyFileTemplateStructure {
+   label = "Copy File Template";
+   input(FileId, FileType);
+   output(NewKeyRef);
+
+   group CopySourceGroup;
+   group CopyDestinationGroup;
+
+   command Ok;
+   command Cancel;
+}
+
+
+dialog CreateTemplateFromTypeDialog for CreateTemplateFromTypeStructure {
+   label = "New File Template From File Type";
+   input(FileType);
+   output(FileTemplate);
+
+   group CreateSourceGroup;
+   group CreateDestinationGroup;
+
+   command Ok;
+   command Cancel;
+}
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+

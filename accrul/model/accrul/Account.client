@@ -1,0 +1,439 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 200423      Rifalk  GESPRING20-4003, Added SAT Information tab, Added SAT Type field.
+-- 200608      Sacnlk  GESPRING20-4734, Added SatAccountGroup and SatLevel for accounting_xml_data functionality.
+-- 201112      Sacnlk  GESPRING20-5995, Added SatParentAccount for accounting_xml_data functionality.
+----------------------------------------------------------------------------------------------------
+client Account;
+component ACCRUL;
+layer Core;
+projection AccountHandling;
+
+include fragment AccountsConsolidationSelector;
+include fragment CopyToCompaniesAssistant;
+--gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+--gelr:localization_control_center, end
+
+warningsenabled = Account;
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AccountNavEntry parent AccrulNavigator.CodeStringMenu at index 100 {
+      label = "Account";
+      page Form home Account;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AccountSet {
+   label = "Account";
+   startupmode = search;
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+
+   selector AccountCustomSelector;
+   initcontext PageInitContext;
+   group AccountGroup bind AccountCustomSelector;
+   arrange {
+      arrange {
+         group TaxOptionsGroup bind AccountCustomSelector;
+         group ProjectsGroup bind AccountCustomSelector;
+      }
+      group OptionsGroup bind AccountCustomSelector;
+   }
+   tabs {
+      tab {
+         label = "Code Part Demands";
+         group CodePartDemandsGroup;
+      }
+      @DynamicComponentDependency GENLED
+      tab {
+         label = "Budget Code Part Demands";
+         group BudgetCodePartDemandsGroup;
+      }
+      tab {
+         label = "Consolidation";
+         arrange {
+            @DynamicComponentDependency GROCON
+            group ConsolidationAccountMappingGroup;
+            @DynamicComponentDependency GROCON
+            group ConsolidationOptionsGroup;
+         }
+      }
+      tab {
+         -- gelr:accounting_xml_data, begin
+         visible = [initcontext.AccountingXmlDataEnabled];
+         label = "Sat Information";
+         group SatInformationGroup;
+         -- gelr:accounting_xml_data, end
+      }
+   }
+   defaultsearchfields = AccSearchRef, AccntTypeRef, AccountGroupRef;
+   commandgroup CommandGroupCmdGroup {
+
+      command CodeStringCompletionCommand;
+      command TaxCodesperAccountCommand;
+   }
+
+   commandgroup CommandGroup2CmdGroup {
+
+      command CodePartAttributeConnectionCommand;
+      command ProjectCostRevenueElementpeCommand;
+   }
+
+   commandgroup CommandGroup3CmdGroup {
+
+      command CopyToCompaniesCommand;
+   }
+
+   commandgroup CommandGroup4CmdGroup {
+
+      command TranslationCommand;
+   }
+}
+
+initcontext PageInitContext {
+   parameter AccountingXmlDataEnabled Boolean;
+   init command {
+      execute {
+         -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set AccountingXmlDataEnabled = LocalizationFunctionalityStructure.AccountingXmlData;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+--------------------------------- COMMANDS ----------------------------------
+command CodeStringCompletionCommand for Account {
+   label = "Code String Completion";
+   execute {
+      navigate "page/CodeStringCompletion/Form?contexts=Company:$[Company]&$filter=CodePartValue eq $[Account] and CodePart eq 'A'";
+   }
+}
+command TaxCodesperAccountCommand for Account {
+   label = "Tax Codes per Account";
+   enabled = [TaxHandlingValue != "Blocked"];
+   execute {
+      navigate "page/TaxCodesPerAccount/Form?contexts=Company:$[Company]&$filter=Account eq $[Account]";
+   }
+}
+command CodePartAttributeConnectionCommand for Account {
+   label = "Code Part Attribute Connection";
+   execute {
+      navigate "page/CodePartAttributeConnection/List?contexts=Company:$[Company]&$filter=CodePart eq 'A' and CodePartValue eq $[Account]";
+   }
+}
+command ProjectCostRevenueElementpeCommand for Account {
+   label = "Cost/Revenue Element per Code Part Value";
+   enabled = [BaseForFollowUpElementRef.BaseForPfe = "TRUE"];
+   execute {
+      navigate "page/CostRevenueElementPerCodePartValue/List?$filter=Company eq $[Company] and Account eq $[Account]";
+   }
+}
+command CopyToCompaniesCommand for Account {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "Account", "MANUAL", Selection, "Account_API") {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand for Account {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "Account") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "Account", "AUTOMATIC", SelectionVar, "Account_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+command TranslationCommand for Account {
+   label = "Translation";
+   enabled = [true];
+   execute {
+      navigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'Account' and AttributeKey eq $[Account]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AccountCustomSelector for Account {
+   orderby = SortValue;
+   label = "${Account} - ${Description}";
+   static Account;
+   static Description;
+}
+
+selector AccountTypeCustomSelector for AccountType {
+   static AccntType;
+   static Description;
+   static LogicalAccountType;
+   static Company {
+      visible = [false];
+      searchable = false;
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group AccountGroup for Account {
+   label = "";
+   field Account {
+      searchable = false;
+   }
+   lov AccSearchRef with ReferenceAccountsConsolidationSelector {
+      visible = [false];
+   }
+   field Description;
+   lov AccntTypeRef with AccountTypeCustomSelector {
+      search = AccntType, Description;
+      description = AccntTypeRef.Description;
+      validate command {
+         variable DefaultCodePartDemands;
+         execute {
+            set LogicalAccountType = AccntTypeRef.LogicalAccountType;
+            call DefaultCodePartDemands(context.Company, AccntType) into DefaultCodePartDemands;
+            set ReqCodeB = DefaultCodePartDemands.ReqCodeBDefault;
+            set ReqCodeC = DefaultCodePartDemands.ReqCodeCDefault;
+            set ReqCodeD = DefaultCodePartDemands.ReqCodeDDefault;
+            set ReqCodeE = DefaultCodePartDemands.ReqCodeEDefault;
+            set ReqCodeF = DefaultCodePartDemands.ReqCodeFDefault;
+            set ReqCodeG = DefaultCodePartDemands.ReqCodeGDefault;
+            set ReqCodeH = DefaultCodePartDemands.ReqCodeHDefault;
+            set ReqCodeI = DefaultCodePartDemands.ReqCodeIDefault;
+            set ReqCodeJ = DefaultCodePartDemands.ReqCodeJDefault;
+            set ReqQuantity = DefaultCodePartDemands.ReqQuantityDefault;
+            set ReqProcessCode = DefaultCodePartDemands.ProcessCodeDefault;
+            set ReqText = DefaultCodePartDemands.TextDefault;
+            set ReqBudgetCodeB = DefaultCodePartDemands.ReqBudCodeBDefault;
+            set ReqBudgetCodeC = DefaultCodePartDemands.ReqBudCodeCDefault;
+            set ReqBudgetCodeD = DefaultCodePartDemands.ReqBudCodeDDefault;
+            set ReqBudgetCodeE = DefaultCodePartDemands.ReqBudCodeEDefault;
+            set ReqBudgetCodeF = DefaultCodePartDemands.ReqBudCodeFDefault;
+            set ReqBudgetCodeG = DefaultCodePartDemands.ReqBudCodeGDefault;
+            set ReqBudgetCodeH = DefaultCodePartDemands.ReqBudCodeHDefault;
+            set ReqBudgetCodeI = DefaultCodePartDemands.ReqBudCodeIDefault;
+            set ReqBudgetCodeJ = DefaultCodePartDemands.ReqBudCodeJDefault;
+            set ReqBudgetQuantity = DefaultCodePartDemands.ReqBudQuantityDefault;
+         }
+      }
+   }
+   lov AccountGroupRef with ReferenceAccountGroupSelector {
+      search = AccntGroup, Description;
+      description = AccountGroupRef.Description;
+      validate command {
+         variable AccountingGroupDefaults;
+         execute {
+            call ValidateAccountGroup(context.Company, Account, AccntGroup, ReqCodeB, ReqCodeC, ReqCodeD, ReqCodeE, ReqCodeF, ReqCodeG, ReqCodeH, ReqCodeI, ReqCodeJ, CurrBalanceDb) into AccountingGroupDefaults;
+            set ReqCodeB = AccountingGroupDefaults.ReqCodeB;
+            set ReqCodeC = AccountingGroupDefaults.ReqCodeC;
+            set ReqCodeD = AccountingGroupDefaults.ReqCodeD;
+            set ReqCodeE = AccountingGroupDefaults.ReqCodeE;
+            set ReqCodeF = AccountingGroupDefaults.ReqCodeF;
+            set ReqCodeG = AccountingGroupDefaults.ReqCodeG;
+            set ReqCodeH = AccountingGroupDefaults.ReqCodeH;
+            set ReqCodeI = AccountingGroupDefaults.ReqCodeI;
+            set ReqCodeJ = AccountingGroupDefaults.ReqCodeJ;
+            set CurrBalanceDb = AccountingGroupDefaults.CurrBalance;
+            set MasterComCodePartValue = AccountingGroupDefaults.MasterComCodePartValue;
+         }
+      }
+   }
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid Period";
+   }
+   field LogicalAccountType {
+      visible = [false];
+      searchable = false;
+   }
+   field CodeStringCompletionExists;
+   field AttributeExists {
+      size = Small;
+   }
+   field Text {
+      label = "Notes";
+      multiline = true;
+      height = small;
+   }
+}
+
+group TaxOptionsGroup for Account {
+   label = "Tax Options";
+
+   field TaxHandlingValue;
+   field TaxCodeMandatory {
+      size = Large;
+   }
+}
+
+group ProjectsGroup for Account {
+   label = "Project";
+   field ExcludePeriodicalCap;
+   field ExcludeProjFollowup;
+   field IncludeInRevRec;
+}
+
+group OptionsGroup for Account {
+   label = "Options";
+   field LedgFlagDb {
+      size = Small;
+   }
+   field CurrBalanceDb {
+      size = Small;
+   }
+   field TaxFlagDb {
+      size = Small;
+      validate command {
+         execute {
+            if [TaxFlagDb] {
+               set LedgFlagDb = true;
+            }
+         }
+      }
+   }
+   field BudAccountDb;
+   field StatAccountDb;
+   field ExcludeFromCurrTrans;
+   field ArchivingTransValue;
+}
+
+group CodePartDemandsGroup for Account {
+   label = "";
+   field ReqCodeB;
+   field ReqCodeC;
+   field ReqCodeD;
+   field ReqCodeE;
+   field ReqCodeF;
+   field ReqCodeG;
+   field ReqCodeH;
+   field ReqCodeI;
+   field ReqCodeJ;
+   field ReqQuantity;
+   field ReqProcessCode;
+   field ReqText;
+}
+
+group BudgetCodePartDemandsGroup for Account {
+   label = "";
+   field ReqBudgetCodeB;
+   field ReqBudgetCodeC;
+   field ReqBudgetCodeD;
+   field ReqBudgetCodeE;
+   field ReqBudgetCodeF;
+   field ReqBudgetCodeG;
+   field ReqBudgetCodeH;
+   field ReqBudgetCodeI;
+   field ReqBudgetCodeJ;
+   field ReqBudgetQuantity;
+}
+
+group ConsolidationAccountMappingGroup for Account {
+   label = "Group Consolidation - Account Mapping";
+
+   lov MasterComCodePartValueRef with ReferenceAccountSelector using GetGroupAccounts(Company) {
+      search = Account, Description;
+      size = Large;
+      description = MasterComCodePartValueRef.Description;
+   }
+}
+
+group ConsolidationOptionsGroup for Account {
+   label = "Group Consolidation - Consolidation Options";
+   field KeepRepCurrencyDb;
+
+   field KeepReportingEntityDb;
+   field ExchangeDifferenceDb {
+      size = Small;
+   }
+}
+
+-- gelr:accounting_xml_data, begin
+group SatInformationGroup for Account {
+   visible = [initcontext.AccountingXmlDataEnabled];
+   label = "";
+
+   lov SatAccountGroupRef with ReferenceSatAccountGroupSelector {
+      visible = [initcontext.AccountingXmlDataEnabled];
+      description = SatAccountGroupRef.Description;
+      validate command {
+         variable SatLevelVar Text;
+         execute {
+            call ValidateSatAccountGroup(Company, SatAccountGroup) into SatLevelVar;
+          -- set SatLevel = SatLevelVar;
+         }
+      }
+   }
+   field SatAccountType {
+      visible = [initcontext.AccountingXmlDataEnabled];
+      when [initcontext.AccountingXmlDataEnabled] use subset MxSatAccType;
+   }
+   field SatLevel {
+      visible = [initcontext.AccountingXmlDataEnabled];
+      validate command {
+         execute {
+            if [SatLevel in("None", "One") or SatLevel = null] {
+               set SatParentAccount = null;
+            }
+         }
+      }
+   }
+   lov SatParentAccountRef with ReferenceAccountSelector {
+      visible = [initcontext.AccountingXmlDataEnabled];
+      description = SatParentAccountRef.Description;
+      editable = [SatLevel = "Two"];
+   }
+}
+-- gelr:accounting_xml_data, end
+
+----------------------------------- LISTS -----------------------------------
+
+----------------------------------- CARDS -----------------------------------
+
+---------------------------------- DIALOGS ----------------------------------
+
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+
+----------------------------------- TREES -----------------------------------
+
+---------------------------------- PLUGINS ----------------------------------
+
+------------------------------- IMAGE VIEWERS -------------------------------

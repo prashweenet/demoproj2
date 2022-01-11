@@ -1,0 +1,29 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210423_ADCOM_AD-1074.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210423   supklk  Added LABOUR_STATUS column to AV_FAULT_LABOUR_TAB
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_FAULT_LABOUR_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+    IF NOT(Database_SYS.Column_Exist(table_name_, 'LABOUR_STATUS')) THEN
+      column_ := Database_SYS.Set_Column_Values('LABOUR_STATUS', 'VARCHAR2(20)', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'A', column_ , TRUE );
+   END IF;
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+SET SERVEROUTPUT OFF

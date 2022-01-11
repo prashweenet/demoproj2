@@ -1,0 +1,50 @@
+fragment AllowedControlTypeSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view allowed_control_type";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAllowedControlTypeSelector for AllowedControlType {
+   static ControlType;
+   static Description;
+}
+
+card AllowedControlTypeCard for AllowedControlType {
+   label = "";
+   fieldranking ControlType;
+   field ControlType;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AllowedControlType {
+   from = "allowed_control_type";
+   lu = PostingCtrlControlType;
+   keys = Company, PostingType, ControlType;
+   ludependencies = PostingCtrlControlType;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute PostingType Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute ControlType Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute Module Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

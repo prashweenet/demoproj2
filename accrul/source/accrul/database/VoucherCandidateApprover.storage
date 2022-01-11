@@ -1,0 +1,21 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherCandidateApprover
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+
+
+UNIQUE CONSTRAINT voucher_candidate_approver_uc1 IS voucher_candidate_approver_tab (company,voucher_type,accounting_year,voucher_no,approver_id,approver_group_id);

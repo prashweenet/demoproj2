@@ -1,0 +1,50 @@
+projection CodePartAttributesHandling;
+component ACCRUL;
+layer Core;
+description "Code Part Attributes";
+
+category Users;
+include fragment AccountingCodePartsUsed2Selector;
+include fragment CopyToCompaniesAssistant;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountingAttributeSet for AccountingAttribute {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountingAttribute {
+   reference AttributeRef(Company, Attribute) to AccountingAttribute(Company, Attribute) {
+      label = "Attribute";
+   }
+   reference CodePartRef(Company, CodePart) to AccountingCodePartsUsed2(Company, CodePart) {
+      label = "Code Part Name";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

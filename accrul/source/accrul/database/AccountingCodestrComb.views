@@ -1,0 +1,186 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingCodestrComb
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+@Override
+COLUMN Account IS
+   Flags      = 'K-IUL';
+
+@Override
+COLUMN Code_B IS
+   Flags      = 'K-IUL';
+
+@Override
+COLUMN Code_C IS
+   Flags      = 'K-IUL';
+
+@Override
+COLUMN Code_D IS
+   Flags      = 'A-IUL';
+
+@Override
+COLUMN Code_E IS
+   Flags      = 'K-IUL';
+
+@Override
+COLUMN Code_F IS
+   Flags      = 'K-IUL';
+
+@Override
+COLUMN Code_G IS
+   Flags      = 'K-IUL';
+
+@Override
+COLUMN Code_H IS
+   Flags      = 'K-IUL';
+
+@Override
+COLUMN Code_I IS
+   Flags      = 'K-IUL';
+
+@Override
+COLUMN Code_J IS
+   Flags      = 'K-IUL';   
+ 
+
+@Override
+COLUMN Process_Code IS
+   Column     = 'decode(a.process_code,''>NU#LL<'','''',a.process_code)';
+   
+COLUMN Account_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Account Desc';
+
+COLUMN Code_B_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code B Desc';
+
+COLUMN Code_C_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code C Desc';
+
+COLUMN Code_D_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code D Desc';
+
+COLUMN Code_E_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code E Desc';
+
+COLUMN Code_F_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code F Desc';
+
+COLUMN Code_G_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code G Desc';
+
+COLUMN Code_H_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code H Desc';
+
+COLUMN Code_I_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code I Desc';
+
+COLUMN Code_J_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Code J Desc';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Accounting_Codestr_Comb_Uiv IS
+   Prompt = 'Accounting Codestr Comb'
+   Allowed_Db.Flags = 'AM---'
+   Allowed_Db.Datatype = 'STRING(20)'
+   Comb_Rule_Id.Flags = 'AMI--'
+SELECT a.company                                  company,
+       a.user_group                               user_group,
+       b.account                                  account,
+       b.code_b                                   code_b,
+       b.code_c                                   code_c,
+       b.code_d                                   code_d,
+       b.code_e                                   code_e,
+       b.code_f                                   code_f,
+       b.code_g                                   code_g,
+       b.code_h                                   code_h,
+       b.code_i                                   code_i,
+       b.code_j                                   code_j,
+       decode(a.process_code,'>NU#LL<','',a.process_code)
+                                                  process_code,
+       comb_rule_id                               comb_rule_id,
+       Fin_Allowed_API.Decode(allowed)            allowed,
+       allowed                                    allowed_db,
+       a.company                                  code_part,
+       Decode(account, NULL, NULL, Text_Field_Translation_API.Get_Text(company,
+                                                                       'CODEA',
+                                                                       account))
+                                      account_desc,
+       Decode(code_b, NULL, NULL, Text_Field_Translation_API.Get_Text(company,
+                                                                      'CODEB',
+                                                                      code_b))
+                                      code_b_desc,
+       Decode(code_c, NULL, NULL, Text_Field_Translation_API.Get_Text(company,
+                                                                      'CODEC',
+                                                                      code_c))
+                                      code_c_desc,
+       Decode(code_d, NULL, NULL, Text_Field_Translation_API.Get_Text(company,
+                                                                      'CODED',
+                                                                      code_d))
+                                      code_d_desc,
+       Decode(code_e, NULL, NULL, Text_Field_Translation_API.Get_Text(company,
+                                                                      'CODEE',
+                                                                      code_e))
+                                      code_e_desc,
+       Decode(code_f, NULL, NULL, Text_Field_Translation_API.Get_Text(company,
+                                                                      'CODEF',
+                                                                      code_f))
+                                      code_f_desc,
+       Decode(code_g, NULL, NULL, Text_Field_Translation_API.Get_Text(company,
+                                                                      'CODEG',
+                                                                      code_g))
+                                      code_g_desc,
+       Decode(code_h, NULL, NULL, Text_Field_Translation_API.Get_Text(company,
+                                                                      'CODEH',
+                                                                      code_h))
+                                      code_h_desc,
+       Decode(code_i, NULL, NULL, Text_Field_Translation_API.Get_Text(company,
+                                                                      'CODEI',
+                                                                      code_i))
+                                      code_i_desc,
+       Decode(code_j, NULL, NULL, Text_Field_Translation_API.Get_Text(company,
+                                                                      'CODEJ',
+                                                                      code_j))
+                                      code_j_desc,
+       a.posting_combination_id       posting_combination_id,                     
+       A.rowid                                   objid,
+       to_char(A.rowversion,'YYYYMMDDHH24MISS')   objversion,
+       A.rowkey                                    objkey
+FROM   accounting_codestr_comb_tab A, codestring_comb_tab B
+WHERE  A.posting_combination_id = B.posting_combination_id;
+

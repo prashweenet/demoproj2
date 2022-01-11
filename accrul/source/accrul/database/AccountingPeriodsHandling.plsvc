@@ -1,0 +1,959 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingPeriodsHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200922  Jadulk  FISPRING20-6694, Removed CONACC related obsolete component logic.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@ApproveGlobalVariable
+company_ VARCHAR2(20);
+@ApproveGlobalVariable
+accounting_year_  NUMBER;
+
+TYPE ErrorRec IS RECORD (
+   voucher_trans_exist_                   VARCHAR2(2000),
+   period_alloc_trans_exist_              VARCHAR2(2000),
+   pca_trans_exist_                       VARCHAR2(2000),
+   curr_rev_trans_exist_                  VARCHAR2(2000),
+   revenue_trans_exist_                   VARCHAR2(2000),
+   fa_change_net_trans_exist_             VARCHAR2(2000),
+   fa_depr_proposal_trans_exist_          VARCHAR2(2000),
+   ext_vou_trans_exist_                   VARCHAR2(2000),
+   mpccom_posting_trans_exist_            VARCHAR2(2000),  
+   pcm_posting_trans_exist_               VARCHAR2(2000),
+   pcm_posting_trans_warning_exist_       VARCHAR2(2000),
+   prj_post_error_exist_                  VARCHAR2(2000),
+   post_err_inv_trans_exist_              VARCHAR2(2000),
+   prelim_invs_exist_                     VARCHAR2(2000),
+   prel_pay_trans_exist_                  VARCHAR2(2000),
+   mix_pay_trans_exist_                   VARCHAR2(2000),
+   cash_box_trans_exist_                  VARCHAR2(2000),
+   fa_imp_trans_exist_                    VARCHAR2(2000),
+   fa_change_acq_trans_exist_             VARCHAR2(2000),
+   non_posted_lease_prop_trans_exist_     VARCHAR2(2000),
+   non_posted_lease_pay_prop_trans_exist_ VARCHAR2(2000),
+   ext_inc_inv_trans_exist_               VARCHAR2(2000),
+   ext_out_inv_trans_exist_               VARCHAR2(2000),
+   ext_pay_trans_exist_                   VARCHAR2(2000));
+
+@Override
+PROCEDURE CRUD_Create___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Accounting_Period_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   --Add pre-processing code here
+   super(etag_, key_, attr_, info_, action_);
+   --Add post-processing code here
+   company_          := key_.company;
+   accounting_year_  := key_.accounting_year;
+END CRUD_Create___;
+
+@Override
+PROCEDURE CRUD_Update___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Accounting_Period_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   --Add pre-processing code here
+   super(etag_, key_, attr_, info_, action_);
+   --Add post-processing code here
+   company_          := key_.company;
+   accounting_year_  := key_.accounting_year;
+END CRUD_Update___;
+
+@Override
+PROCEDURE CRUD_Delete___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Accounting_Year_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   --Add pre-processing code here
+   super(etag_, key_, info_, action_);
+   --Add post-processing code here
+   company_          := key_.company;
+   accounting_year_  := key_.accounting_year;
+END CRUD_Delete___;   
+
+PROCEDURE Open_Up_Closed___ (
+   company_   IN VARCHAR2,
+   year_      IN NUMBER,
+   ledger_id_ IN VARCHAR2 ) 
+IS   
+BEGIN
+   Acc_Year_Ledger_Info_API.Open_Up_Closed_Year(company_, year_ , ledger_id_ );
+END Open_Up_Closed___;
+
+FUNCTION Period_Finally_Closed___(
+   company_   IN VARCHAR2,
+   year_      IN NUMBER,
+   ledger_id_ IN VARCHAR2 ) RETURN BOOLEAN
+IS
+   exist_ VARCHAR2(5);
+BEGIN
+   exist_:= Acc_Period_Ledger_Info_API.Period_Finally_Closed_Exist(company_ , year_ , ledger_id_ );
+   IF (exist_ = 'TRUE') THEN
+      Error_SYS.Record_General(lu_name_, 'CLOSEDYEAR: All Periods for the Accounting Year must be closed ');
+   END IF;
+   RETURN TRUE;
+   
+END Period_Finally_Closed___;
+
+@DynamicComponentDependency GENLED
+FUNCTION Get_Info_Year_End_Vou___(
+   company_   IN VARCHAR2,
+   year_      IN NUMBER,
+   ledger_id_ IN VARCHAR2 ) RETURN Year_End_Voucher_Info_Structure_Rec
+IS
+   rec_ Year_End_Voucher_Info_Structure_Rec;
+   
+BEGIN
+   rec_.vou_year_or_cl := year_;
+   Year_End_Routine_Util_API.Get_Year_End_Voucher_Info__(rec_.vou_year_or_cl , rec_.vou_period_or_cl , rec_.vou_type_or_cl , rec_.user_group_or_cl , rec_.vou_year_or_op ,
+                                                         rec_.vou_period_or_op , rec_.vou_type_or_op  , rec_.User_Group_Or_Op , rec_.user_id , company_ , ledger_id_);
+   
+   RETURN rec_;
+END Get_Info_Year_End_Vou___;
+
+
+@DynamicComponentDependency GENLED
+FUNCTION Rollback_Year_End___ (
+   company_          IN VARCHAR2,
+   vou_year_or_cl_   IN NUMBER,
+   vou_period_or_cl_ IN NUMBER,
+   ledger_id_        IN VARCHAR2,
+   vou_year_roll_cl_ IN NUMBER,
+   vou_year_or_op_   IN NUMBER) RETURN Rollback_Voucher_Info_Structure_Rec
+IS
+   rec_ Rollback_Voucher_Info_Structure_Rec;   
+BEGIN     
+   Year_End_Routine_Util_API.Rollback(rec_.close_vou_no , rec_.open_vou_no , company_ , vou_year_or_cl_ ,vou_period_or_cl_ ,ledger_id_  );
+   Open_Up_Closed___(company_ , vou_year_roll_cl_ ,  ledger_id_);
+   rec_.year_period_cl := TO_CHAR(vou_year_or_cl_)||'-'||TO_CHAR(vou_period_or_cl_);
+   rec_.year_period_op := TO_CHAR(vou_year_or_op_)||'-'||TO_CHAR(0);
+   
+   RETURN rec_ ;   
+END Rollback_Year_End___;
+
+PROCEDURE Create_Periods_For_User_Groups___ (
+   selection_          IN VARCHAR2,
+   usergroup_          IN VARCHAR2,
+   create_all_ledgers_ IN BOOLEAN,
+   user_period_status_ IN VARCHAR2) 
+IS
+   keyref_                    VARCHAR2(32000);
+   ptr_                       NUMBER := 1;
+   company_value_             VARCHAR2(20);
+   acc_year_                  NUMBER;
+   accounting_period_         NUMBER;
+   ledger_id_                 VARCHAR2(10);
+   period_status_             VARCHAR2(1);
+BEGIN
+   WHILE (Finance_Lib_API.Get_Next_From_Selection_Keyref(selection_, ptr_, keyref_)) LOOP      
+      IF (company_value_ IS NULL) THEN
+         company_value_       := Client_SYS.Get_Key_Reference_Value(keyref_, 'COMPANY');
+      END IF;
+      acc_year_               := Client_SYS.Get_Key_Reference_Value(keyref_, 'ACCOUNTING_YEAR');
+      accounting_period_      := Client_SYS.Get_Key_Reference_Value(keyref_, 'ACCOUNTING_PERIOD');
+      ledger_id_              := Client_SYS.Get_Key_Reference_Value(keyref_, 'LEDGER_ID');
+      period_status_          := Acc_Period_Ledger_Info_API.Get_Period_Status_Db(company_value_,acc_year_,accounting_period_,ledger_id_);
+      IF period_status_ = 'O' AND user_period_status_ = 'O' THEN
+            period_status_ := 'O';
+      ELSE
+         period_status_ := 'C';
+      END IF;
+      
+      IF create_all_ledgers_ THEN
+         User_Group_Period_API.Insert_User_Group_All_Ledger(company_value_,
+                                                            usergroup_,
+                                                            acc_year_,
+                                                            accounting_period_,
+                                                            period_status_);
+      ELSE
+         User_Group_Period_API.Insert_User_Group(company_value_,
+                                                 usergroup_,
+                                                 acc_year_,
+                                                 accounting_period_,
+                                                 period_status_,
+                                                 ledger_id_); 
+      END IF;
+   END LOOP;   
+END Create_Periods_For_User_Groups___;
+
+
+PROCEDURE Modify_Period_Status_All___ (
+   objkey_ IN VARCHAR2 ) 
+IS
+   transactions_in_progress_header_virtual_rec_  Transactions_In_Progress_Header_Virtual_Rec;
+   transactions_in_progress_header_virtual_key_  Transactions_In_Progress_Header_Virtual_Key;
+   selection_                                    VARCHAR2(32000);
+   current_selection_                            VARCHAR2(2000);
+   company_value_                                VARCHAR2(30);
+   acc_year_                                     NUMBER;
+   accounting_period_                            NUMBER;
+   ledger_id_                                    VARCHAR2(30);
+   year_end_period_db_                           VARCHAR2(30);
+BEGIN   
+   transactions_in_progress_header_virtual_key_.objkey := objkey_;   
+   transactions_in_progress_header_virtual_rec_ := Get_Record___(transactions_in_progress_header_virtual_key_);
+   selection_ := transactions_in_progress_header_virtual_rec_.selection;       
+   IF transactions_in_progress_header_virtual_rec_.action = 'VALIDATE' THEN
+      Error_SYS.Appl_General(lu_name_, 'VALIDATETRANS: Command is not allowed for validate transactions');  
+   ELSIF Transaction_Error_Exist___(objkey_) THEN      
+      Error_SYS.Appl_General(lu_name_, 'ERROREXIST: Command is not allowed as there are error transactions');      
+   ELSIF ((selection_ IS NOT NULL) AND (INSTR(selection_, ';') >= 0)) THEN
+      selection_ := selection_ || ';';            
+      WHILE (INSTR(selection_, ';') > 0) LOOP         
+         current_selection_  := SUBSTR(selection_, 0, INSTR(selection_, ';'));
+         company_value_      := Client_SYS.Get_Key_Reference_Value(current_selection_, 'COMPANY');
+         acc_year_           := Client_SYS.Get_Key_Reference_Value(current_selection_, 'ACCOUNTING_YEAR');
+         accounting_period_  := Client_SYS.Get_Key_Reference_Value(current_selection_, 'ACCOUNTING_PERIOD');
+         ledger_id_          := Client_SYS.Get_Key_Reference_Value(current_selection_, 'LEDGER_ID');
+         year_end_period_db_ := Accounting_Period_API.Get_Year_End_Period_Db(company_value_, acc_year_, accounting_period_);
+         Modify_Period_Status___(objkey_, company_value_, acc_year_, accounting_period_, ledger_id_, transactions_in_progress_header_virtual_rec_.action, transactions_in_progress_header_virtual_rec_.all_ledger);
+         selection_ := SUBSTR(selection_, INSTR(selection_, ';')+1);             
+      END LOOP;
+   END IF;
+END Modify_Period_Status_All___;
+
+
+FUNCTION Transaction_Error_Exist___(
+   objkey_ IN VARCHAR2) RETURN BOOLEAN
+IS
+   trans_exist_    NUMBER;
+   CURSOR get_trans_exist IS
+      SELECT 1 
+      FROM   ${PROJECTION}_transactions_in_progress_virtual_vrt
+      WHERE  parent_objkey      = objkey_
+      AND    info_type          = 'ERROR'
+      AND    transactions_exist = 'TRUE';
+BEGIN
+   OPEN  get_trans_exist;
+   FETCH get_trans_exist INTO trans_exist_;
+   CLOSE get_trans_exist;
+   IF (trans_exist_ = 1) THEN
+      RETURN TRUE;
+   END IF;
+   RETURN FALSE;   
+END Transaction_Error_Exist___; 
+
+FUNCTION Open_Accounting_Period___ (
+   key_ IN Acc_Period_Ledger_Info_Key ) RETURN VARCHAR2
+IS   
+BEGIN
+   Acc_Period_Ledger_Info_API.Open_Period(key_.company, key_.accounting_year, key_.accounting_period, key_.ledger_id);
+   RETURN 'TRUE';
+END Open_Accounting_Period___;
+
+FUNCTION Open_All_Il_Periods___ (
+   key_ IN Acc_Period_Ledger_Info_Key ) RETURN VARCHAR2
+IS   
+BEGIN
+   Acc_Period_Ledger_Info_API.Open_All_Il_Period(key_.company, key_.accounting_year, key_.accounting_period);
+   RETURN 'TRUE';
+END Open_All_Il_Periods___;
+
+PROCEDURE Modify_Period_Status___(
+   objkey_            IN VARCHAR2,
+   company_           IN VARCHAR2,
+   accounting_year_   IN VARCHAR2,
+   accounting_period_ IN VARCHAR2,
+   ledger_id_         IN VARCHAR2,
+   action_            IN VARCHAR2,
+   all_ledger_        IN VARCHAR2)
+IS
+BEGIN
+   IF (NOT Transaction_Error_Exist___(objkey_)) THEN   
+      IF (action_ = 'CLOSE' ) THEN 
+         IF (all_ledger_ = 'TRUE') THEN
+            Acc_Period_Ledger_Info_API.Close_All_IL_Period(company_, accounting_year_, accounting_period_);   
+         ELSE
+            Acc_Period_Ledger_Info_API.Close_Period(company_, accounting_year_, accounting_period_, ledger_id_);
+         END IF;   
+      ELSIF (action_ = 'CLOSE_FIN') THEN
+         Acc_Period_Ledger_Info_API.Close_Period_Finally(company_, accounting_year_, accounting_period_, ledger_id_);
+      END IF;
+   END IF;
+END Modify_Period_Status___;
+
+PROCEDURE Create_Trans_In_Progress_List___(
+   error_rec_          IN OUT ErrorRec,
+   company_            IN     VARCHAR2,
+   accounting_year_    IN     NUMBER,
+   accounting_period_  IN     NUMBER,
+   ledger_id_          IN     VARCHAR2,
+   all_ledger_         IN     VARCHAR2,
+   year_end_period_db_ IN     VARCHAR2)
+IS
+   ledger_attr_                           VARCHAR2(32000);
+   accounting_period_rec_                 Accounting_Period_API.Public_Rec;
+   ledger_id_temp_                        VARCHAR2(30);
+   non_updated_vou_exist_                 VARCHAR2(2000);   
+   mpccom_postings_transferred_           VARCHAR2(5);
+   pcm_postings_transferred_status_       VARCHAR2(10);
+   post_err_invs_                         VARCHAR2(5);
+   prelim_invs_                           VARCHAR2(5);
+   non_created_ext_inc_inv_exist_         VARCHAR2(5);
+   non_created_ext_out_inv_exist_         VARCHAR2(5);
+   non_approved_pay_exist_                VARCHAR2(5);
+   non_approved_pay_type_                 VARCHAR2(20);
+   mix_pay_approved_                      VARCHAR2(5);
+   cash_box_approved_                     VARCHAR2(5);
+   non_used_ext_pay_exist_                VARCHAR2(5);
+   non_posted_fa_imp_trans_exist_         VARCHAR2(5);
+   non_posted_fa_change_acq_trans_exist_  VARCHAR2(5);
+   lease_proposal_exist_                  VARCHAR2(5);
+   lease_pay_proposal_exist_              VARCHAR2(5);
+   prj_post_error_trans_                  VARCHAR2(5);    
+   non_upd_period_alloc_exist_            VARCHAR2(5);
+   non_closed_pca_exist_                  VARCHAR2(5);
+   non_posted_curr_rev_exist_             VARCHAR2(5);
+   non_posted_revenue_exist_              VARCHAR2(5); 
+   non_posted_fa_change_net_trans_exist_  VARCHAR2(5);
+   non_posted_fa_depr_proposal_exist_     VARCHAR2(5);
+   non_created_ext_vou_exist_             VARCHAR2(5);         
+   period_status_                         VARCHAR2(20);  
+   ledger_attr_list_                      VARCHAR2(2000);
+BEGIN     
+   accounting_period_rec_ := Accounting_Period_API.Get(company_, accounting_year_, accounting_period_);
+   $IF Component_Genled_SYS.INSTALLED $THEN   
+      IF (all_ledger_ = 'TRUE') THEN
+         All_Ledger_API.Get_Internal_Ledger_List(ledger_attr_, company_);  
+         ledger_attr_list_ := REPLACE(ledger_attr_, chr(30), ',');
+         ledger_attr_list_ := SUBSTR(ledger_attr_list_, 0, LENGTH(ledger_attr_list_)-1);
+         Get_Next_Ledger_Id___(ledger_id_temp_, ledger_attr_);          
+      ELSE
+         ledger_id_temp_ := ledger_id_;
+         IF ledger_id_temp_ IN ('00', '*') THEN
+            Voucher_API.Check_If_Postings_In_Voucher(non_updated_vou_exist_,
+                                                     company_,
+                                                     accounting_period_,
+                                                     accounting_year_);                                            
+         END IF;         
+      END IF;       
+   $END     
+   
+   $IF Component_Mpccom_SYS.INSTALLED $THEN
+      mpccom_postings_transferred_ := Mpccom_Accounting_API.All_Postings_Transferred(company_,
+                                                                                     accounting_period_rec_.date_from,
+                                                                                     accounting_period_rec_.date_until);
+   $END
+   
+   $IF Component_Wo_SYS.INSTALLED $THEN
+      pcm_postings_transferred_status_ := Jt_Task_Transaction_API.All_Postings_Trans_Error(company_,
+                                                                                    accounting_period_rec_.date_from,
+                                                                                    accounting_period_rec_.date_until);
+   $END
+   
+   IF (year_end_period_db_ != 'YEAROPEN') THEN
+      $IF Component_Invoic_SYS.INSTALLED $THEN       
+         Invoice_API.Post_Error_Invs_Exist(post_err_invs_,
+                                           company_,
+                                           accounting_year_,
+                                           accounting_period_,
+                                           accounting_period_rec_.date_from,
+                                           accounting_period_rec_.date_until);
+         Invoice_Utility_Pub_API.Preliminary_Invs_Exist( prelim_invs_,
+                                                         company_,
+                                                         accounting_year_,
+                                                         accounting_period_,
+                                                         accounting_period_rec_.date_from,
+                                                         accounting_period_rec_.date_until); 
+         
+         non_created_ext_inc_inv_exist_ := Ext_Inc_Inv_Load_Info_API.Check_Non_Created_Inv_Exist(company_,
+                                                                                                 accounting_year_,
+                                                                                                 accounting_period_,
+                                                                                                 accounting_period_rec_.date_from,
+                                                                                                 accounting_period_rec_.date_until);                                                                   
+         
+         non_created_ext_out_inv_exist_ := Ext_Out_Inv_Load_Info_API.Check_Non_Created_Inv_Exist(company_,
+                                                                                                 accounting_year_,
+                                                                                                 accounting_period_,
+                                                                                                 accounting_period_rec_.date_from,
+                                                                                                 accounting_period_rec_.date_until);
+      $ELSE
+         NULL;
+      $END
+      
+      $IF Component_Payled_SYS.INSTALLED $THEN 
+         Prel_Payment_Trans_Util_API.Check_Non_Approved_Paym_Exists( non_approved_pay_exist_,
+                                                                     non_approved_pay_type_,
+                                                                     company_,
+                                                                     accounting_year_,
+                                                                     accounting_period_,
+                                                                     accounting_period_rec_.date_from,
+                                                                     accounting_period_rec_.date_until);                                 
+         
+         mix_pay_approved_ := Mixed_Payment_API.All_Approved_For_Period(company_,
+                                                                        accounting_year_,
+                                                                        accounting_period_,
+                                                                        accounting_period_rec_.date_from,
+                                                                        accounting_period_rec_.date_until);                    
+         cash_box_approved_ := Cash_Box_API.All_Approved_For_Period( company_,
+                                                                     accounting_year_,
+                                                                     accounting_period_,
+                                                                     accounting_period_rec_.date_from,
+                                                                     accounting_period_rec_.date_until);
+         
+         non_used_ext_pay_exist_ := Ext_Payment_Head_API.Check_Non_Used_Pay_Exist(company_,
+                                                                                  accounting_year_,
+                                                                                  accounting_period_,
+                                                                                  accounting_period_rec_.date_from,
+                                                                                  accounting_period_rec_.date_until);
+      $ELSE
+         NULL;                                                                                 
+      $END
+      
+      $IF Component_Fixass_SYS.INSTALLED $THEN 
+         non_posted_fa_imp_trans_exist_ := Fa_Object_Transaction_API.All_Imp_Trans_Post_For_Period(company_,
+                                                                                                   accounting_period_rec_.date_from,
+                                                                                                   accounting_period_rec_.date_until);
+         non_posted_fa_change_acq_trans_exist_ := Change_Object_Value_Temp_API.All_Change_Acq_Post_For_Period(company_,
+                                                                                                              accounting_period_rec_.date_from,
+                                                                                                              accounting_period_rec_.date_until);
+         
+         lease_proposal_exist_      := Leasing_Proposal_API.All_Proposal_Post_For_Period(company_,accounting_year_,accounting_period_);                                                                                          
+         lease_pay_proposal_exist_  := Lease_Payment_Proposal_API.All_Proposal_Post_For_Period(company_,accounting_year_,accounting_period_);                                                                                          
+      $ELSE
+         NULL;                                                                                                   
+      $END
+      
+      $IF Component_Prjrep_SYS.INSTALLED $THEN 
+         prj_post_error_trans_ := Project_Trans_Posting_API.Project_Posting_Error_Exist(company_,
+                                                                                        accounting_period_rec_.date_from,
+                                                                                        accounting_period_rec_.date_until);
+      $ELSE
+         NULL;
+      $END      
+   END IF;
+   
+   IF (non_updated_vou_exist_ = 'TRUE') THEN
+      Add_To_List___(error_rec_.voucher_trans_exist_, ledger_id_temp_);         
+   END IF;
+   
+   IF (mpccom_postings_transferred_ = 'FALSE') THEN
+      Add_To_List___(error_rec_.mpccom_posting_trans_exist_, ledger_attr_list_);
+   END IF;
+   
+   IF (pcm_postings_transferred_status_ = 'ERROR') THEN
+      Add_To_List___(error_rec_.pcm_posting_trans_exist_, ledger_attr_list_);
+   END IF;
+   IF (pcm_postings_transferred_status_ = 'WARNING') THEN
+      Add_To_List___(error_rec_.pcm_posting_trans_warning_exist_, ledger_attr_list_);                  
+   END IF;
+   IF (prj_post_error_trans_ = 'TRUE') THEN
+      Add_To_List___(error_rec_.prj_post_error_exist_, ledger_attr_list_);
+   END IF;
+   
+   IF (lease_proposal_exist_ = 'FALSE') THEN 
+      Add_To_List___(error_rec_.non_posted_lease_prop_trans_exist_, ledger_attr_list_);
+   END IF; 
+   
+   IF (lease_pay_proposal_exist_ = 'FALSE') THEN 
+      Add_To_List___(error_rec_.non_posted_lease_pay_prop_trans_exist_, ledger_attr_list_);
+   END IF;
+   
+   IF (year_end_period_db_ != 'YEAROPEN') THEN			
+      IF (post_err_invs_ = 'TRUE') THEN
+         Add_To_List___(error_rec_.post_err_inv_trans_exist_ , ledger_attr_list_);
+      END IF;
+      
+      IF (prelim_invs_ = 'TRUE') THEN
+         Add_To_List___(error_rec_.prelim_invs_exist_, ledger_attr_list_);
+      END IF;
+      
+      IF (non_approved_pay_exist_ = 'TRUE') THEN 
+         Add_To_List___(error_rec_.prel_pay_trans_exist_, ledger_attr_list_);
+      END IF;
+      
+      IF (mix_pay_approved_ = 'FALSE') THEN 
+         Add_To_List___(error_rec_.mix_pay_trans_exist_, ledger_attr_list_);
+      END IF;
+      
+      IF (cash_box_approved_ = 'FALSE') THEN 
+         Add_To_List___(error_rec_.cash_box_trans_exist_, ledger_attr_list_);
+      END IF;
+      
+      IF (non_posted_fa_imp_trans_exist_ = 'FALSE') THEN 
+         Add_To_List___(error_rec_.fa_imp_trans_exist_, ledger_attr_list_);
+      END IF; 
+      IF (non_posted_fa_change_acq_trans_exist_ = 'FALSE') THEN 
+         Add_To_List___(error_rec_.fa_change_acq_trans_exist_, ledger_attr_list_);
+      END IF;      
+      IF (non_created_ext_inc_inv_exist_ = 'TRUE') THEN 
+         Add_To_List___(error_rec_.ext_inc_inv_trans_exist_, ledger_attr_list_);
+      END IF;
+      IF (non_created_ext_out_inv_exist_ = 'TRUE') THEN
+         Add_To_List___(error_rec_.ext_out_inv_trans_exist_, ledger_attr_list_);
+      END IF;
+      IF (non_used_ext_pay_exist_ = 'TRUE') THEN 
+         Add_To_List___(error_rec_.ext_pay_trans_exist_, ledger_attr_list_);
+      END IF;
+   END IF;   
+   WHILE (ledger_id_temp_ IS NOT NULL) LOOP    
+      Acc_Period_Ledger_Info_API.Get_Period_Status(period_status_,
+                                                   company_,                                                                                                
+                                                   accounting_year_,
+                                                   accounting_period_,
+                                                   ledger_id_temp_);
+      IF (period_status_ = 'O') THEN
+         $IF Component_Intled_SYS.INSTALLED $THEN
+            IF (ledger_id_temp_ != '00' OR ledger_id_temp_ != '*') THEN               
+               Internal_Hold_Voucher_API.Check_If_Postings_In_Voucher(non_updated_vou_exist_,
+                                                                      company_,
+                                                                      ledger_id_temp_,
+                                                                      accounting_period_,
+                                                                      accounting_year_);               
+            END IF;
+            
+            IF (ledger_id_temp_ = '00') THEN
+               non_upd_period_alloc_exist_ := Period_Allocation_API.Check_Year_Period_Exist_Ledger(company_,                                                                                                
+                                                                                                   accounting_year_,
+                                                                                                   accounting_period_,
+                                                                                                   ledger_id_temp_);                                                                                                  
+            ELSE
+               non_upd_period_alloc_exist_ := Int_Period_Allocation_API.Check_Year_Period_Exist_Ledger(company_,                                                                                                
+                                                                                                       accounting_year_,
+                                                                                                       accounting_period_,
+                                                                                                       ledger_id_temp_);
+               
+            END IF;
+         $END
+         
+         $IF Component_Percos_SYS.INSTALLED $THEN
+            non_closed_pca_exist_ := Cost_Allocation_Procedure_API.Check_Non_Closed_Proc_Exist(company_,                                                                                                
+                                                                                               accounting_year_,
+                                                                                               accounting_period_,
+                                                                                               ledger_id_temp_);
+            
+         $END         
+         
+         $IF Component_Genled_SYS.INSTALLED $THEN
+            non_posted_curr_rev_exist_ := Currency_Revaluation_API.Check_Non_Posted_Reval_Exist(company_,                                                                                                
+                                                                                                accounting_year_,
+                                                                                                accounting_period_,
+                                                                                                ledger_id_temp_);
+            
+            non_posted_revenue_exist_ := Revenue_Recognition_API.All_Posted_For_Period_Ledger(company_,                                                                                                
+                                                                                              accounting_year_,
+                                                                                              accounting_period_,
+                                                                                              ledger_id_temp_);           
+         $END
+         
+         IF (non_updated_vou_exist_ = 'TRUE') THEN          
+            Add_To_List___(error_rec_.voucher_trans_exist_, ledger_id_temp_);            
+         END IF;
+         
+         IF (non_upd_period_alloc_exist_ = 'TRUE') THEN 
+            Add_To_List___(error_rec_.period_alloc_trans_exist_, ledger_id_temp_ );            
+         END IF;
+         
+         IF (non_closed_pca_exist_ = 'TRUE') THEN
+            Add_To_List___(error_rec_.pca_trans_exist_, ledger_id_temp_ );            
+         END IF;
+         
+         IF (non_posted_curr_rev_exist_ = 'TRUE' ) THEN
+            Add_To_List___(error_rec_.curr_rev_trans_exist_, ledger_id_temp_ );             
+         END IF;
+         
+         IF (non_posted_revenue_exist_ = 'FALSE') THEN
+            Add_To_List___(error_rec_.revenue_trans_exist_, ledger_id_temp_ );         
+         END IF;
+         
+         
+         IF (year_end_period_db_ != 'YEAROPEN') THEN 
+            $IF Component_Fixass_SYS.INSTALLED $THEN
+               non_posted_fa_change_net_trans_exist_ := Change_Object_Value_Temp_API.All_Change_Net_Post_For_Period( company_,                                                                                                
+                                                                                                                     accounting_period_rec_.date_from,
+                                                                                                                     accounting_period_rec_.date_until,
+                                                                                                                     ledger_id_temp_);
+               non_posted_fa_depr_proposal_exist_ := Depr_Proposal_API.All_Proposal_Post_For_Period(company_,                                                                                                
+                                                                                                    accounting_year_,
+                                                                                                    accounting_period_,
+                                                                                                    ledger_id_temp_);
+               
+            $END
+            
+            non_created_ext_vou_exist_ := Ext_Load_Info_API.Non_Created_Vou_Exist_Ledger( company_,                                                                                                
+                                                                                          accounting_period_rec_.date_from,
+                                                                                          accounting_period_rec_.date_until,
+                                                                                          ledger_id_temp_);
+            IF (non_posted_fa_change_net_trans_exist_ = 'FALSE') THEN
+               Add_To_List___(error_rec_.fa_change_net_trans_exist_ , ledger_id_temp_ );               
+            END IF;                            
+            
+            IF (non_posted_fa_depr_proposal_exist_  = 'FALSE') THEN
+               Add_To_List___(error_rec_.fa_depr_proposal_trans_exist_, ledger_id_temp_ );               
+            END IF;            
+            
+            IF (non_created_ext_vou_exist_ = 'TRUE') THEN
+               Add_To_List___(error_rec_.ext_vou_trans_exist_, ledger_id_temp_ );               
+            END IF;                                                                                         
+         END IF;                  
+      END IF;
+      Get_Next_Ledger_Id___(ledger_id_temp_, ledger_attr_);      
+   END LOOP;				
+END Create_Trans_In_Progress_List___;   
+
+@Override
+PROCEDURE CRUD_Create___(
+   rec_ IN Transactions_In_Progress_Header_Virtual_Rec )
+IS
+   selection_          VARCHAR2(32000);
+   current_selection_  VARCHAR2(2000);
+   company_value_      VARCHAR2(30);
+   acc_year_           NUMBER;
+   accounting_period_  NUMBER;
+   ledger_id_          VARCHAR2(30);
+   year_end_period_db_ VARCHAR2(30);
+   error_rec_          ErrorRec;
+   rec_transactions_   Transactions_In_Progress_Virtual_Rec;   
+   header_key_         Transactions_In_Progress_Header_Virtual_Key; 
+   oldrec_             Transactions_In_Progress_Header_Virtual_Rec; 
+   newrec_             Transactions_In_Progress_Header_Virtual_Rec;
+BEGIN   
+   super(rec_);	  
+   selection_ := rec_.selection;  
+   IF (selection_ IS NOT NULL) THEN
+      selection_ := selection_ || ';';
+   END IF;   
+   WHILE (INSTR(selection_, ';') > 0) LOOP
+      current_selection_  := SUBSTR(selection_, 0, INSTR(selection_, ';'));
+      company_value_      := Client_SYS.Get_Key_Reference_Value(current_selection_, 'COMPANY');
+      acc_year_           := Client_SYS.Get_Key_Reference_Value(current_selection_, 'ACCOUNTING_YEAR');
+      accounting_period_  := Client_SYS.Get_Key_Reference_Value(current_selection_, 'ACCOUNTING_PERIOD');
+      ledger_id_          := Client_SYS.Get_Key_Reference_Value(current_selection_, 'LEDGER_ID');
+      year_end_period_db_ := Accounting_Period_API.Get_Year_End_Period_Db(company_value_, acc_year_, accounting_period_);      
+      Create_Trans_In_Progress_List___(error_rec_, company_value_, acc_year_, accounting_period_, ledger_id_, rec_.all_ledger, year_end_period_db_);
+      selection_ := SUBSTR(selection_, INSTR(selection_, ';')+1);      
+   END LOOP; 
+   
+   IF company_value_ IS NOT NULL THEN
+      rec_transactions_.info_type := 'ERROR';
+      rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNOTUPDVOUEXIST: Not updated Vouchers in selected period');
+      rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.voucher_trans_exist_);
+      rec_transactions_.ledger_id :=  Get_Ledger_Id___(error_rec_.voucher_trans_exist_);
+      rec_transactions_.parent_objkey := rec_.objkey;
+      rec_transactions_.objkey := sys_guid();      
+      crud_create___(rec_transactions_); 
+      
+      rec_transactions_.info_type := 'ERROR';
+      rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONUPDPERALLOC: Not updated Vouchers with Period Allocation in selected period');
+      rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.period_alloc_trans_exist_);
+      rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.period_alloc_trans_exist_);
+      rec_transactions_.parent_objkey := rec_.objkey;
+      rec_transactions_.objkey := sys_guid();      
+      crud_create___(rec_transactions_);  
+      
+      $IF Component_Genled_SYS.INSTALLED $THEN
+         rec_transactions_.info_type := 'ERROR';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONPOSTCURRREVEXIST: Not posted Currency Revaluation');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.curr_rev_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.curr_rev_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();         
+         crud_create___(rec_transactions_);
+         
+         rec_transactions_.info_type := 'ERROR';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONPOSTEDREVENUE: Not posted Revenue Recognition');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.revenue_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.revenue_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();         
+         crud_create___(rec_transactions_);
+      $END
+      
+      $IF Component_Percos_SYS.INSTALLED $THEN
+         rec_transactions_.info_type := 'ERROR';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONCLOSEDPCAEXIST: Not closed Cost Allocation Procedure');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.pca_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.pca_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();         
+         crud_create___(rec_transactions_);   
+      $END
+      
+      $IF Component_Mpccom_SYS.INSTALLED $THEN
+         rec_transactions_.info_type := 'ERROR';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONTRANSTRANSDISTRIB: Transactions waiting to be transferred from Distribution and/or Manufacturing');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.mpccom_posting_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.mpccom_posting_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();         
+         crud_create___(rec_transactions_);      
+      $END
+      
+      $IF Component_Wo_SYS.INSTALLED $THEN
+      rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONTRANSTRANSMAINT: Transactions waiting to be transferred from Maintenance');
+      rec_transactions_.parent_objkey := rec_.objkey;
+      rec_transactions_.objkey := sys_guid();
+        
+      IF NOT Get_Trans_Exist_Value___(error_rec_.pcm_posting_trans_warning_exist_) THEN
+         rec_transactions_.info_type := 'ERROR';
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.pcm_posting_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.pcm_posting_trans_exist_);      
+         crud_create___(rec_transactions_);
+      ELSIF Get_Trans_Exist_Value___(error_rec_.pcm_posting_trans_exist_) THEN
+         rec_transactions_.info_type := 'ERROR';
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.pcm_posting_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.pcm_posting_trans_exist_);      
+         crud_create___(rec_transactions_);
+      ELSIF Get_Trans_Exist_Value___(error_rec_.pcm_posting_trans_warning_exist_) THEN
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.pcm_posting_trans_warning_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.pcm_posting_trans_warning_exist_);   
+         crud_create___(rec_transactions_);
+      END IF;
+      $END
+      
+      $IF Component_Proj_SYS.INSTALLED $THEN
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSPROJPOSTINGERROR: Transactions waiting to be transferred from Project Postings');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.prj_post_error_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.prj_post_error_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);     
+      $END
+      
+      $IF Component_Invoic_SYS.INSTALLED $THEN
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSPOSTERRINVS: Invoices with posting errors in the Customer Invoices with Posting Errors page');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.post_err_inv_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.post_err_inv_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+         
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSPRELIMINVS: Customer Invoices in Preliminary status');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.prelim_invs_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.prelim_invs_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+      $END			
+      
+      $IF Component_Payled_SYS.INSTALLED $THEN
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONAPPROVEDPAY: Not approved Preliminary Payments transactions');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.prel_pay_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.prel_pay_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+         
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONAPPROVMIXPAY: Not approved Mixed Payment transactions');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.mix_pay_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.mix_pay_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+         
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONAPPROVEDCASHBOX: Not approved Cash Box transactions');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.cash_box_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.cash_box_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+      $END			
+      
+      $IF Component_Fixass_SYS.INSTALLED $THEN
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONPOSTEDFAIMPTRANS: Not posted transactions in Post Imported Transactions page');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.fa_imp_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.fa_imp_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+         
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONPOSTCHAACQTRANS: Not posted transactions in Change Acquisition Value - Progress page');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.fa_change_acq_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.fa_change_acq_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+         
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONPOSTCHANETTRANS: Not posted transactions in Change Net Value - Progress page');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.fa_change_net_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.fa_change_net_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+         
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONPOSTFADEPRPROP: Not posted depreciation proposals');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.fa_depr_proposal_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.fa_depr_proposal_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+         
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLELEASEACCOUPROPS: Not posted Lease Periodical Accounting Proposals');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.non_posted_lease_prop_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.non_posted_lease_prop_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+         
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLELEASEPAYACCOUPROPS: Not posted Lease Payable Accounting Proposals');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.non_posted_lease_pay_prop_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.non_posted_lease_pay_prop_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+      $END
+      
+      
+      rec_transactions_.info_type := 'WARNING';
+      rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONCREEXTVOUEXIST: External Vouchers waiting to be created');
+      rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.ext_vou_trans_exist_);
+      rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.ext_vou_trans_exist_);
+      rec_transactions_.parent_objkey := rec_.objkey;
+      rec_transactions_.objkey := sys_guid();
+      crud_create___(rec_transactions_);      
+      
+      $IF Component_Invoic_SYS.INSTALLED $THEN
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONCREEXTINCINV: External Supplier Invoices waiting to be created');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.ext_inc_inv_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.ext_inc_inv_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+         
+         
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONCREAEXTOUTINV: External Customer Invoices waiting to be created');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.ext_out_inv_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.ext_out_inv_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);
+      $END 
+      
+      $IF Component_Payled_SYS.INSTALLED $THEN
+         rec_transactions_.info_type := 'WARNING';
+         rec_transactions_.information_message := Language_SYS.Translate_Constant(lu_name_,'HANDLETRNSNONUSEDEXTPAYEXIST: External Payments waiting to be created');
+         rec_transactions_.transactions_exist := Get_Trans_Exist_Value___(error_rec_.ext_pay_trans_exist_);
+         rec_transactions_.ledger_id := Get_Ledger_Id___(error_rec_.ext_pay_trans_exist_);
+         rec_transactions_.parent_objkey := rec_.objkey;
+         rec_transactions_.objkey := sys_guid();
+         crud_create___(rec_transactions_);			
+      $END
+      
+      header_key_.objkey := rec_.objkey;
+      oldrec_ := Get_Record___(header_key_);
+      newrec_ := oldrec_;
+      IF (Transaction_Error_Exist___(rec_.objkey)) THEN
+         newrec_.error_exist := 'TRUE';
+      ELSE
+         newrec_.error_exist := 'FALSE';
+      END IF;
+      CRUD_Update___(oldrec_, newrec_);
+      
+   END IF;
+END CRUD_Create___;
+
+-- Add to the list if the ledger id is not added already.
+PROCEDURE Add_To_List___(
+   value_list_ IN OUT VARCHAR2,
+   ledger_id_  IN     VARCHAR2)   
+IS
+BEGIN
+   IF (value_list_ IS NULL OR (INSTR(value_list_, ','||ledger_id_||',') <= 0)) THEN
+      value_list_ := value_list_ || ',' || ledger_id_;
+   END IF;
+END Add_To_List___;
+
+
+PROCEDURE Get_Next_Ledger_Id___(
+   ledger_id_temp_ IN OUT VARCHAR2,
+   ledger_attr_    IN OUT VARCHAR2) 
+IS
+   position_number_  NUMBER;
+BEGIN
+   IF (ledger_attr_ IS NOT NULL) THEN
+      position_number_ := INSTR( ledger_attr_, chr(30));
+      IF (position_number_ >0) THEN   
+         ledger_id_temp_ := SUBSTR(ledger_attr_, 0, position_number_ -1);
+         ledger_attr_ := SUBSTR(ledger_attr_, position_number_ + 1);         
+      END IF;
+   ELSE
+      ledger_attr_ := NULL;
+      ledger_id_temp_ := NULL;
+   END IF;
+END Get_Next_Ledger_Id___;
+
+FUNCTION Get_Trans_Exist_Value___(
+   trans_exist_ IN VARCHAR2) RETURN BOOLEAN
+IS
+BEGIN
+   RETURN trans_exist_ IS NOT NULL;   
+END Get_Trans_Exist_Value___; 
+
+FUNCTION Get_Ledger_Id___(
+   ledger_id_  IN VARCHAR2) RETURN VARCHAR2
+IS  
+BEGIN
+   IF (ledger_id_ IS NOT NULL) THEN
+      RETURN SUBSTR(ledger_id_, 2);              
+   END IF;
+   RETURN NULL;   
+END Get_Ledger_Id___;
+
+PROCEDURE Do_Final_Check___ (
+   init_ IN BOOLEAN )
+IS   
+   
+BEGIN
+   IF (init_) THEN
+      company_          := NULL;
+      accounting_year_  := NULL;
+   ELSE
+      Accounting_Period_API.Do_Final_Check(company_, accounting_year_);      
+   END IF;
+END Do_Final_Check___;
+
+FUNCTION Manual_Update_Action___ (
+   company_             IN VARCHAR2,
+   accounting_year_     IN NUMBER,
+   accounting_period_   IN NUMBER,
+   date_from_           IN DATE,
+   date_until_          IN DATE) RETURN VARCHAR2
+IS
+   fa_info_ VARCHAR2(30);
+   message_ VARCHAR2(1000);
+BEGIN          
+   $IF Component_Fixass_SYS.INSTALLED $THEN 
+        Fa_Accounting_Period_API.Check_Fa_Periods(fa_info_, company_, accounting_year_, accounting_period_, date_from_, date_until_);
+   $END
+
+   IF(fa_info_ = 'TRUE')THEN
+      message_ := 'Changing the Valid From/ Until dates of the Accounting Period(s) will affect Depreciation Calendar(s). You will have to adjust the depreciation periods already defined in the Depreciation Calendar(s).';
+      RETURN message_;
+   ELSE
+      RETURN message_;
+   END IF;
+END Manual_Update_Action___;

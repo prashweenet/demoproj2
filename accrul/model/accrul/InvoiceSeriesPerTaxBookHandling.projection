@@ -1,0 +1,43 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 191030      Kagalk  gelr: Added to support Global Extension Functionalities.
+-- 191030      Kagalk  GESPRING20-1261, Created for gelr:tax_book_and_numbering.
+----------------------------------------------------------------------------------------------------
+projection InvoiceSeriesPerTaxBookHandling;
+component ACCRUL;
+layer Core;
+description "Invoice Series Per Tax Book";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+@DynamicComponentDependency INVOIC
+entityset TaxBookSet for TaxBook {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+@Override
+@DynamicComponentDependency INVOIC
+entity TaxBook {
+   where = "tax_book_base_db = 'INVOICE_SERIES' AND tax_book_base_values_db = 'RESTRICTED'";
+   use attributes = Description, TaxDirectionSp, TaxBookBase, TaxBookBaseValues;
+   array InvSeriesPerTaxBookArray(Company, TaxBookId) to InvSeriesPerTaxBook(Company, TaxBookId);
+}
+
+@Override
+@DynamicComponentDependency INVOIC
+entity InvSeriesPerTaxBook {
+   crud = Create, Read, Delete;
+   reference SeriesIdRef(Company, SeriesId) to InvoiceSeries(Company, SeriesId) {
+      label = "Series ID";
+   }
+}
+
+-------------------------------- STRUCTURES ---------------------------------

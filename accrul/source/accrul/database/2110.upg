@@ -1,0 +1,1959 @@
+---------------------------------------------------------------------------------------------
+--  Module : ACCRUL
+--
+--  Purpose: Upgrade database objects for IFS/Accounting Rules
+--           from version 10.0.0 to 21.1.0
+--
+--  File   : 2110.upg
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  ------------------------------------------------------------------------
+--  191120   AsHelk  Created.
+--  191216   fiallk  Add TAX_TYPE_CATEGORY column to STATUTORY_FEE_TAB
+--  191216   fiallk  Add TAX_IN_TAX_BASE column to STATUTORY_FEE_TAB
+--  191216   fiallk  Add MARK_UP column to TAX_STRUCTURE_ITEM_TAB
+--  200207   hiralk  Added DIOT_TAX_CLASSIFICATION to STATUTORY_FEE_TAB.
+--  200210   NWeelk  Added TAX_FACTOR to STATUTORY_FEE_TAB.
+--  200218   Samwlk  Merged CDB files.
+--  200420   Jadulk  Merged revisited CDB files.
+--  200421   Jadulk  Added index FIN_DRILL_DOWN_TEMP_IX1 to FIN_DRILL_DOWN_TEMP_TAB.
+--  200506   Smallk  gelr:accounting_xml_data, Added SAT_ACCOUNT_GROUP_TAB.
+--  200423   Rifalk  Added SAT_ACCOUNT_TYPE column to ACCOUNTING_CODE_PART_VALUE_TAB
+--  200602   Sacnlk  GESPRING20-4612, Added PSEUDO_CODES_TAB.
+--  200608   Sacnlk  GESPRING20-4734, Added SAT_ACCOUNT_GROUP and SAT_LEVEL to the ACCOUNTING_CODE_PART_VALUE_TAB.
+--  200611   Kagalk  Added STAMP_DUTY column to STATUTORY_FEE_TAB.
+--  200623   Sacnlk  GESPRING20-4642, Added SAT_ACCOUNT_GROUP and SAT_LEVEL to the PSEUDO_CODES_TAB.
+--  200707   Smallk  gelr:accounting_xml_data, Added UUID_INFORMATION_TAB.
+--  200723   PraWlk  Added new column TAX_CHARACTER to Statutory_Fee_Tab.
+--  200729   Kabelk  Added the column ROUND_ZERO_DECIMAL to STATUTORY_FEE_TAB.
+--  200826   Jadulk  FISPRING20-6694 , Set column CONSOLIDATED to nullable.
+--  200909   Jadulk  FISPRING20-6813, Merged Accrul CDBs to UPG.
+--  200922   Jadulk  FISPRING20-6695, Removed CONACC related obsolete views.
+--  201026   Jadulk  FISPRING20-7163, Fixed Data Dictionary test issue for POSTING_CTRL_DETAIL_SPEC_RPT.
+--  201102   Alwolk  FISPRING20-8010, Corrected Invalid Data in Voucher_Candidate_Approver_Tab.
+--  201112   Sacnlk  GESPRING20-5995, Added SAT_PARENT_ACCOUNT column to ACCOUNTING_CODE_PART_VALUE_TAB and PSEUDO_CODES_TAB.
+--  201119   Chwtlk  FISPRING20-8252, Added APPROVAL_RULE_ID column to VOUCHER_TAB
+--  201120   Jadulk  FISPRING20-8268, Changed IFS Cloud version to 21R1.
+--  201123   Lakhlk  FISPRING20-6701, Remove FINANCIAL_BATCH_QUEUE_ID and FINREP_INLIST_OPT_PERIOD_LIMIT attributes.
+--  201202   Jadulk  FISPRING20-8299, Renamed obsolete columns to 21R1.
+--  201208   Jadulk  FISPRING20-8527, Rollbacked renaming obsolete columns for MV referenced columns in a previous upg.
+--  ------   ------  ------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_1');
+PROMPT START upgrading WITH 2110.upg
+
+---------------------------------------------------------------------------------------------
+------------------------------ Instructions for upg files -----------------------------------
+---------------------------------------------------------------------------------------------
+--
+--  Main section should contain all upgrade operations.
+--  Next section should contain removal of obsolete objects (any removal of data inside upg is prohibited!).
+--  Removal of backup tables and obsolete columns should be added to <component>Cl.sql script!
+--
+--  If possible, everything regarding one table should be placed in one section.
+--  If this is not possible, a proper comment about the reason should be added.
+--
+--  Each section should be started with a "-----" line and a empty line.
+--  This section should then start with a line like: "-- ***** Example_Tab Start *****"
+--  and end with a line like:                       "-- ***** Example_Tab End *****"
+--
+--  Don't forget UPPER/lower case !
+--
+--  Every part inside the section should start with a "PROMPT" line explaining what is done by the block.
+--
+--  If the PL/SQL block has DML instructions (INSERT,UPDATE,DELETE etc) there should always be a "COMMIT;" line after the block.
+--
+--  Remember ordinary coding standard rules !
+--
+--  Don't drop any Table/Column !
+--
+--  Don't forget performance when updating large table !
+--
+--  No unnecessary blank lines or comments !
+--
+--  If possible, use pure SQL commands
+--
+--  If possible, try to group several updates together in one statement.
+--
+--  Timestamps will be added automatically at the end of the project.
+--
+--  For more information refer to the "Upgrade Script Standards" and the "Performance" technical documents.
+--
+---------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------
+------------------------------ CREATE NEW SEQUENCES -----------------------------------------
+---------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------
+--------------- CREATE/ALTER TABLES/INDEXES AND DATA CORRECTIONS ----------------------------
+---------------------------------------------------------------------------------------------
+
+-- ***** Statutory_Fee_Tab Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_2');
+PROMPT Adding columns to STATUTORY_FEE_TAB.
+
+DECLARE
+   table_name_    VARCHAR2(30) := 'STATUTORY_FEE_TAB';
+   column_        Database_SYS.ColRec;
+BEGIN
+   -- gelr:es_sii_reporting, begin
+   column_ := Database_SYS.Set_Column_Values('TAX_LIABILITY_CLASS', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('SII_EXEMPT_REASON', 'VARCHAR2(2)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('BUSINESS_TRANS_TYPE_CUST', 'VARCHAR2(2)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('BUSINESS_TRANS_TYPE_SUP', 'VARCHAR2(2)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('EXCLUDE_FROM_SII_REPORTING', 'VARCHAR2(20)', 'N', '''FALSE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('SII_OPERATION_TYPE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:es_sii_reporting, end
+   -- gelr:extend_tax_code_and_tax_struct, begin
+   column_ := Database_SYS.Set_Column_Values('TAX_TYPE_CATEGORY', 'VARCHAR2(20)', 'N', '''NONE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('TAX_IN_TAX_BASE', 'VARCHAR2(20)', 'N', '''FALSE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:extend_tax_code_and_tax_struct, begin
+   -- gelr:it_tax_reports, begin
+   column_ := Database_SYS.Set_Column_Values('EU_OPERATION', 'VARCHAR2(20)', 'N', '''FALSE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:it_tax_reports, end
+   -- gelr:diot_report_data, begin
+   column_ := Database_SYS.Set_Column_Values('DIOT_TAX_CLASSIFICATION', 'VARCHAR2(20)', 'N', '''NONE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:diot_report_data, end
+   -- gelr:mx_xml_doc_reporting, begin
+   column_ := Database_SYS.Set_Column_Values('TAX_FACTOR', 'VARCHAR2(20)', 'N', '''NONE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:mx_xml_doc_reporting, end
+   -- gelr:it_xml_invoice, begin
+   column_ := Database_SYS.Set_Column_Values('STAMP_DUTY', 'VARCHAR2(20)', 'N', '''FALSE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:it_xml_invoice, end
+   -- gelr: tax_char_on_invoice, begin
+   column_ := Database_SYS.Set_Column_Values('TAX_CHARACTER', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr: tax_char_on_invoice, end
+   -- gelr:round_tax_customs_documents, begin
+   column_ := Database_SYS.Set_Column_Values('ROUND_ZERO_DECIMAL', 'VARCHAR2(20)', 'N', '''FALSE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:round_tax_customs_documents, end
+END;
+/
+
+-- gelr: tax_char_on_invoice, begin
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_3');
+PROMPT Update column tax_character in statutory_fee_tab
+BEGIN
+   UPDATE statutory_fee_tab s
+   SET tax_character =  CASE fee_type
+                           WHEN 'NOTAX' THEN 'NOTAX'
+                           ELSE 'NORMAL'
+                        END
+   WHERE tax_character IS NULL;
+   COMMIT;
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_4');
+PROMPT Modifying column tax_character in statutory_fee_tab
+DECLARE
+   table_name_ VARCHAR2(30) := 'STATUTORY_FEE_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   column_ := Database_SYS.Set_Column_Values('TAX_CHARACTER', 'VARCHAR2(20)', 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'M', column_, TRUE);
+END;
+/
+-- gelr: tax_char_on_invoice, end
+-- ***** Statutory_Fee_Tab End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Tax_Book_Tab Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_5');
+PROMPT Adding column tax_book_base, tax_book_base_values to TAX_BOOK_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'TAX_BOOK_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   -- gelr:tax_book_and_numbering, begin
+   column_ := Database_SYS.Set_Column_Values('TAX_BOOK_BASE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('TAX_BOOK_BASE_VALUES', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:tax_book_and_numbering, end
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_6');
+PROMPT make tax_code COLUMN nullable IN TAX_BOOK_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'TAX_BOOK_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   -- gelr:tax_book_and_numbering, begin
+   IF (Database_SYS.Column_Exist(table_name_,'TAX_CODE')) THEN
+      column_ := Database_SYS.Set_Column_Values('TAX_CODE', 'VARCHAR2(20)', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'M', column_, TRUE);
+   END IF;
+   -- gelr:tax_book_and_numbering, end
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_7');
+PROMPT RENAME tax_code COLUMN IN TAX_BOOK_TAB.
+
+BEGIN
+   IF (Database_SYS.Column_Exist('TAX_BOOK_TAB','TAX_CODE') AND (NOT Database_SYS.Column_Exist('TAX_BOOK_TAB','TAX_CODE_2110'))) THEN
+      Database_SYS.Rename_Column('TAX_BOOK_TAB', 'TAX_CODE_2110', 'TAX_CODE');
+   END IF;
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_8');
+PROMPT Updating tax_book_base, tax_book_base_values in TAX_BOOK_TAB.
+
+DECLARE
+   stmt_ VARCHAR2(4000);
+BEGIN
+   -- gelr:tax_book_and_numbering, begin
+   IF (Database_SYS.Column_Exist('TAX_BOOK_TAB','TAX_CODE_2110')) THEN
+      stmt_ := 'UPDATE tax_book_tab a
+                SET    tax_book_base = ''TAX_CODE'',
+                tax_book_base_values = NVL((SELECT tax_code_2110
+                                               FROM   tax_book_tab b
+                                               WHERE  b.company     = a.company
+                                               AND    b.tax_book_id = a.tax_book_id),''ALL'')
+                                               WHERE  tax_book_base IS NULL';
+      Execute IMMEDIATE stmt_;
+      -- gelr:tax_book_and_numbering, end
+      COMMIT;
+   END IF;
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_9');
+PROMPT convert TO NOT NULL cloumns, tax_book_base, tax_book_base_values  to TAX_BOOK_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'TAX_BOOK_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   -- gelr:tax_book_and_numbering, begin
+   column_ := Database_SYS.Set_Column_Values('TAX_BOOK_BASE', 'VARCHAR2(20)', 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'M', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('TAX_BOOK_BASE_VALUES', 'VARCHAR2(20)', 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'M', column_, TRUE);
+   -- gelr:tax_book_and_numbering, end
+END;
+/
+
+-- ***** Tax_Book_Tab End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Inv_Series_Per_Tax_Book_Tab Start *****
+
+-- gelr:tax_book_and_numbering, begin
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_10');
+PROMPT Creating table INV_SERIES_PER_TAX_BOOK_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'INV_SERIES_PER_TAX_BOOK_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY',     'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'TAX_BOOK_ID', 'VARCHAR2(10)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'SERIES_ID',   'VARCHAR2(50)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION',  'DATE',         'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY',      'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_11');
+PROMPT Creating constraint INV_SERIES_PER_TAX_BOOK_PK.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'INV_SERIES_PER_TAX_BOOK_PK';
+   table_name_ VARCHAR2(30) := 'INV_SERIES_PER_TAX_BOOK_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY');
+   Database_SYS.Set_Table_Column(columns_, 'TAX_BOOK_ID');
+   Database_SYS.Set_Table_Column(columns_, 'SERIES_ID');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_12');
+PROMPT Creating constraint INV_SERIES_PER_TAX_BOOK_RK.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'INV_SERIES_PER_TAX_BOOK_RK';
+   table_name_ VARCHAR2(30) := 'INV_SERIES_PER_TAX_BOOK_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+-- gelr:tax_book_and_numbering, end
+
+-- ***** Inv_Series_Per_Tax_Book_Tab End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Invoice_Types_Per_Tax_Book_Tab Start *****
+
+-- gelr:tax_book_and_numbering, begin
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_13');
+PROMPT Creating table INVOICE_TYPES_PER_TAX_BOOK_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'INVOICE_TYPES_PER_TAX_BOOK_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY',     'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'TAX_BOOK_ID', 'VARCHAR2(10)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'PARTY_TYPE',  'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'TYPE_ID',     'VARCHAR2(50)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION',  'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY',      'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_14');
+PROMPT Creating constraint INVOICE_TYPES_PER_TAX_BOOK_PK.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'INVOICE_TYPES_PER_TAX_BOOK_PK';
+   table_name_ VARCHAR2(30) := 'INVOICE_TYPES_PER_TAX_BOOK_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY');
+   Database_SYS.Set_Table_Column(columns_, 'TAX_BOOK_ID');
+   Database_SYS.Set_Table_Column(columns_, 'PARTY_TYPE');
+   Database_SYS.Set_Table_Column(columns_, 'TYPE_ID');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_15');
+PROMPT Creating constraint INVOICE_TYPES_PER_TAX_BOOK_RK.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'INVOICE_TYPES_PER_TAX_BOOK_RK';
+   table_name_ VARCHAR2(30) := 'INVOICE_TYPES_PER_TAX_BOOK_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+-- gelr:tax_book_and_numbering, end
+
+-- ***** Invoice_Types_Per_Tax_Book_Tab End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Voucher_Row_Tab Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_16');
+PROMPT Adding columns TAX_BOOK_ID, TAX_SERIES_ID, TAX_SERIES_NO to VOUCHER_ROW_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'VOUCHER_ROW_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   -- gelr:tax_book_and_numbering, begin
+   column_ := Database_SYS.Set_Column_Values('TAX_BOOK_ID', 'VARCHAR2(10)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('TAX_SERIES_ID', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('TAX_SERIES_NO', 'NUMBER', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:tax_book_and_numbering, end
+END;
+/
+
+-- ***** Voucher_Row_Tab End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Tax_Structure_Item_Tab Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_17');
+PROMPT Adding column MARK_UP to TAX_STRUCTURE_ITEM_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'TAX_STRUCTURE_ITEM_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   -- gelr:extend_tax_code_and_tax_struct, begin
+   column_ := Database_SYS.Set_Column_Values('MARK_UP', 'NUMBER', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:extend_tax_code_and_tax_struct, end
+END;
+/
+
+-- ***** Tax_Structure_Item_Tab End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Tax_Code_Texts_Tab Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_18');
+PROMPT Adding columns Natureof_Operation, EXC_FROM_SPESOMETRO_DEC.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'TAX_CODE_TEXTS_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   -- gelr:it_tax_reports, begin
+   column_ := Database_SYS.Set_Column_Values('NATUREOF_OPERATION', 'VARCHAR2(100)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('EXC_FROM_SPESOMETRO_DEC', 'VARCHAR2(20)', 'N', '''FALSE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:it_tax_reports, end
+END;
+/
+-- ***** Tax_Code_Texts_Tab End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Missing records in All_Ledger_Tab Start *****
+
+-- Create table to store missing IL rows.
+-- This code is added to reduce no of dynamic sql codes in following statements.
+DECLARE
+   table_name_ VARCHAR2(30) := 'MISSING_IL_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY',     'VARCHAR2(20)');
+   Database_SYS.Set_Table_Column(columns_, 'LEDGER_ID',   'VARCHAR2(10)');
+   Database_SYS.Set_Table_Column(columns_, 'DESCRIPTION', 'VARCHAR2(200)');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION',  'DATE');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_19');
+PROMPT Repir data errors in Internal Ledgers.
+
+DECLARE
+   data_repair_needed_ BOOLEAN:= FALSE;
+BEGIN
+
+
+   -- Enter missing ledgers to Missing_IL_Tab
+   -- This will be used to distinguish records to update in following statements.
+   DECLARE
+      stmt_ VARCHAR2(4000);
+   BEGIN
+      IF (Database_SYS.Table_Active('Internal_Ledger_Tab')) THEN
+
+         Database_SYS.Remove_Table('MISSING_IL_TAB', TRUE);
+
+         stmt_ := 'CREATE TABLE Missing_IL_Tab AS
+                  (SELECT i.company, i.ledger_id, i.description, i.rowversion
+                     FROM Internal_Ledger_Tab i
+                    WHERE NOT EXISTS ( SELECT 1
+                                         FROM All_Ledger_Tab a
+                                        WHERE a.company   = i.company
+                                          AND a.ledger_id = i.ledger_id))';
+         Execute IMMEDIATE stmt_;
+         IF(SQL%ROWCOUNT >0) THEN
+            data_repair_needed_ := TRUE;
+            Dbms_output.Put_Line(SQL%ROWCOUNT ||' row(s) missing in All_Ledger_Tab.');
+         ELSE
+            data_repair_needed_ := FALSE;
+         END IF;
+      END IF;
+   END;
+
+   -- Enter missing records to All_Ledger_Tab.
+   BEGIN
+      IF (data_repair_needed_) THEN
+         INSERT INTO All_Ledger_Tab a
+         (company, ledger_id, description, rowversion)
+         (SELECT i.company, i.ledger_id, i.description, i.rowversion
+            FROM Missing_IL_Tab i);
+         dbms_output.put_line(SQL%ROWCOUNT || ' row(s) added to All_Ledger_Tab.');
+      END IF;
+   END;
+
+   -- Create accounting years for missing ILs.
+   BEGIN
+      IF data_repair_needed_ THEN
+         INSERT
+         INTO acc_year_ledger_info_tab ayl(
+            company,
+            accounting_year,
+            ledger_id,
+            opening_balances,
+            closing_balances,
+            year_status,
+            rowversion )
+         (SELECT
+            ay.company,
+            ay.accounting_year,
+            al.ledger_id,
+            'N',
+            'N',
+            'O',
+            SYSDATE
+         FROM accounting_year_tab ay, Missing_IL_Tab al
+         WHERE ay.company = al.company
+         AND NOT EXISTS (SELECT 1
+                           FROM acc_year_ledger_info_tab ayl
+                          WHERE ayl.company         = ay.company
+                            AND ayl.accounting_year = ay.accounting_year
+                            AND ayl.ledger_id       = al.ledger_id));
+      END IF;
+   END;
+
+   -- Insert accounting periods for missing ILs when clear script was not executed.
+   -- In such scenario period_status_int can used as the internal ledger period status.
+   DECLARE
+      stmt_ VARCHAR2(32000);
+   BEGIN
+      IF (data_repair_needed_ AND Database_SYS.Column_Exist('accounting_period_tab', 'period_status_int')) THEN
+         stmt_ := 'INSERT
+                     INTO acc_period_ledger_info_tab apl(
+                        company,
+                        accounting_year,
+                        accounting_period,
+                        ledger_id,
+                        period_status,
+                        rowversion )
+                     (SELECT
+                        ap.company,
+                        ap.accounting_year,
+                        ap.accounting_period,
+                        al.ledger_id,
+                        ap.period_status_int,
+                        SYSDATE
+                     FROM accounting_period_tab ap, Missing_IL_Tab al
+                     WHERE ap.company = al.company
+                     AND NOT EXISTS
+                        (SELECT  1
+                           FROM  acc_period_ledger_info_tab apl
+                           WHERE apl.company           = ap.company
+                           AND   apl.accounting_year   = ap.accounting_year
+                           AND   apl.accounting_period = ap.accounting_period
+                           AND   apl.ledger_id         = al.ledger_id))';
+         Execute IMMEDIATE stmt_;
+      END IF;
+   END;
+
+   -- If clear script was executed
+   -- IL Period status is set to Open when GL period status is Open.
+   BEGIN
+      IF data_repair_needed_ AND NOT (Database_SYS.Column_Exist('accounting_period_tab', 'period_status_int')) THEN
+         INSERT
+            INTO acc_period_ledger_info_tab apl(
+               company,
+               accounting_year,
+               accounting_period,
+               ledger_id,
+               period_status,
+               rowversion )
+            (SELECT
+               ap.company,
+               ap.accounting_year,
+               ap.accounting_period,
+               al.ledger_id,
+               'O'   period_status,
+               SYSDATE
+            FROM accounting_period_tab ap, Missing_IL_Tab al
+            WHERE ap.company = al.company
+            AND EXISTS (SELECT 1
+                          FROM Acc_Period_Ledger_Info_Tab glp
+                         WHERE glp.company           = ap.company
+                           AND glp.accounting_year   = ap.accounting_year
+                           AND glp.accounting_period = ap.accounting_period
+                           AND glp.ledger_id         = '00'
+                           AND glp.period_status     = 'O')
+            AND NOT EXISTS (SELECT 1
+                              FROM acc_period_ledger_info_tab apl
+                             WHERE apl.company           = ap.company
+                               AND apl.accounting_year   = ap.accounting_year
+                               AND apl.accounting_period = ap.accounting_period
+                               AND apl.ledger_id         = al.ledger_id));
+      END IF;
+   END;
+
+   -- If clear script was executed
+   -- IL Period status is set to Close when GL period status is Close.
+   -- This can be done only when there are no vouchers in IL hold table.
+   DECLARE
+      stmt_ VARCHAR2(32000);
+   BEGIN
+      IF data_repair_needed_ AND (NOT Database_SYS.Column_Exist('accounting_period_tab', 'period_status_int')
+          AND Database_SYS.Table_Active('Internal_Hold_Voucher_Tab')) THEN
+         stmt_ := 'INSERT
+                  INTO acc_period_ledger_info_tab apl(
+                     company,
+                     accounting_year,
+                     accounting_period,
+                     ledger_id,
+                     period_status,
+                     rowversion )
+                  (SELECT
+                     ap.company,
+                     ap.accounting_year,
+                     ap.accounting_period,
+                     al.ledger_id,
+                     ''C''   period_status,
+                     SYSDATE
+                  FROM accounting_period_tab ap, Missing_IL_Tab al
+                  WHERE ap.company = al.company
+                  AND EXISTS (SELECT 1
+                                FROM Acc_Period_Ledger_Info_Tab glp
+                               WHERE glp.company           = ap.company
+                                 AND glp.accounting_year   = ap.accounting_year
+                                 AND glp.accounting_period = ap.accounting_period
+                                 AND glp.ledger_id         = ''00''
+                                 AND glp.period_status     IN (''C'', ''F''))
+                  AND NOT EXISTS (SELECT 1
+                                    FROM Internal_Hold_Voucher_Tab h
+                                    WHERE h.company          = ap.company
+                                     AND h.ledger_id         = al.ledger_id
+                                     AND h.accounting_year   = ap.accounting_year
+                                     AND h.accounting_period = ap.accounting_period
+                                     AND h.voucher_updated   = ''N'')
+                  AND NOT EXISTS (SELECT  1
+                                    FROM Acc_Period_Ledger_Info_Tab apl
+                                   WHERE apl.company           = ap.company
+                                     AND apl.accounting_year   = ap.accounting_year
+                                     AND apl.accounting_period = ap.accounting_period
+                                     AND apl.ledger_id         = al.ledger_id))';
+         Execute IMMEDIATE stmt_;
+      END IF;
+   END;
+
+   -- If clear script was executed
+   -- IL Period status is set to Open for remaining rows.
+   -- This can happen when vouchers exist in internal ledger hold table.
+   BEGIN
+      IF data_repair_needed_ AND NOT (Database_SYS.Column_Exist('accounting_period_tab', 'period_status_int')) THEN
+         INSERT
+            INTO acc_period_ledger_info_tab apl(
+               company,
+               accounting_year,
+               accounting_period,
+               ledger_id,
+               period_status,
+               rowversion )
+            (SELECT
+               ap.company,
+               ap.accounting_year,
+               ap.accounting_period,
+               al.ledger_id,
+               'O'   period_status,
+               SYSDATE
+            FROM accounting_period_tab ap, Missing_IL_Tab al
+            WHERE ap.company = al.company
+            AND NOT EXISTS (SELECT 1
+                              FROM acc_period_ledger_info_tab apl
+                             WHERE apl.company            = ap.company
+                               AND  apl.accounting_year   = ap.accounting_year
+                               AND  apl.accounting_period = ap.accounting_period
+                               AND  apl.ledger_id         = al.ledger_id));
+      END IF;
+   END;
+
+   -- Insert user groups per period when clear script was not executed.
+   DECLARE
+      stmt_ VARCHAR2(32000);
+   BEGIN
+      IF (data_repair_needed_ AND Database_SYS.Column_Exist('user_group_period_tab','period_status_int')) THEN
+         stmt_ := 'INSERT INTO user_group_period_tab
+                    (company,
+                     user_group,
+                     accounting_year,
+                     accounting_period,
+                     period_status,
+                     ledger_id,
+                     rowversion )
+                    ( SELECT DISTINCT a.company,
+                             a.user_group,
+                             a.accounting_year,
+                             a.accounting_period,
+                             a.period_status_int period_status,
+                             l.ledger_id,
+                             SYSDATE rowversion
+                       FROM   user_group_period_tab a, Missing_IL_Tab l
+                       WHERE  a.company     = l.company
+                       AND    a.period_status_int IS NOT NULL
+                       AND NOT EXISTS( SELECT 1 FROM user_group_period_tab u
+                                       WHERE u.company           = a.company
+                                       AND   u.accounting_year   = a.accounting_year
+                                       AND   u.accounting_period = a.accounting_period
+                                       AND   u.ledger_id         = l.ledger_id
+                                       AND   u.user_group        = a.user_group))';
+
+         Execute IMMEDIATE stmt_;
+      END IF;
+   END;
+
+   -- Insert user groups per period when clear script was executed.
+   -- corresponding GL period status will be used as the IL status.
+   BEGIN
+      IF data_repair_needed_ AND (NOT Database_SYS.Column_Exist('user_group_period_tab','period_status_int')) THEN
+         INSERT INTO user_group_period_tab
+                    (company,
+                     user_group,
+                     accounting_year,
+                     accounting_period,
+                     period_status,
+                     ledger_id,
+                     rowversion )
+                    ( SELECT DISTINCT a.company,
+                             a.user_group,
+                             a.accounting_year,
+                             a.accounting_period,
+                             NVL((SELECT u.period_status
+                                    FROM user_group_period_tab u
+                                   WHERE u.company           = a.company
+                                     AND u.accounting_year   = a.accounting_year
+                                     AND u.accounting_period = a.accounting_period
+                                     AND u.ledger_id         = '00'
+                                     AND u.user_group        = a.user_group
+                                     AND u.period_status IN ('C','O')),'O') period_status,
+                             l.ledger_id,
+                             SYSDATE rowversion
+                       FROM   user_group_period_tab a, Missing_IL_Tab l
+                       WHERE  a.company     = l.company
+                       AND NOT EXISTS( SELECT 1
+                                         FROM user_group_period_tab u
+                                        WHERE u.company           = a.company
+                                          AND u.accounting_year   = a.accounting_year
+                                          AND u.accounting_period = a.accounting_period
+                                          AND u.ledger_id         = l.ledger_id
+                                          AND u.user_group        = a.user_group)
+                       AND EXISTS( SELECT 1
+                                     FROM acc_period_ledger_info_tab i
+                                    WHERE i.company           = a.company
+                                      AND i.accounting_year   = a.accounting_year
+                                      AND i.accounting_period = a.accounting_period
+                                      AND i.ledger_id         = l.ledger_id));
+      END IF;
+   END;
+   COMMIT;
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_20');
+PROMPT Remove UPDATE Specific Temporary TABLE MISSING_IL_TAB.
+
+BEGIN
+   Database_SYS.Remove_Table('MISSING_IL_TAB', TRUE);
+END;
+/
+
+-- ***** Missing records in All_Ledger_Tab End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Tax_Accounting_Basis_Info_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_21');
+PROMPT Adding TABLE TAX_ACCOUNTING_BASIS_INFO_TAB.
+
+DECLARE
+      table_name_ VARCHAR2(30) := 'TAX_ACCOUNTING_BASIS_INFO_TAB';
+      columns_    Database_SYS.ColumnTabType;
+      column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'TAX_ACCOUNTING_BASIS_ID', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'DESCRIPTION', 'VARCHAR2(2000)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_22');
+PROMPT Adding PK INDEX TO THE TABLE TAX_ACCOUNTING_BASIS_INFO_TAB.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'TAX_ACCOUNTING_BASIS_INFO_PK';
+   table_name_ VARCHAR2(30) := 'TAX_ACCOUNTING_BASIS_INFO_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY');
+   Database_SYS.Set_Table_Column(columns_, 'TAX_ACCOUNTING_BASIS_ID');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_23');
+PROMPT Adding RK INDEX TO THE TABLE TAX_ACCOUNTING_BASIS_INFO_TAB.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'TAX_ACCOUNTING_BASIS_INFO_RK';
+   table_name_ VARCHAR2(30) := 'TAX_ACCOUNTING_BASIS_INFO_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_24');
+PROMPT Moving Data from COLUMN tax_accounting_basis IN audit_basic_data_master_tab to tax_accounting_basis_info_tab.
+
+BEGIN
+   INSERT INTO tax_accounting_basis_info_tab (company, tax_accounting_basis_id, description, rowversion, rowkey)
+      (SELECT abd.company, abd.tax_accounting_basis, abd.tax_accounting_basis, SYSDATE, sys_guid()
+       FROM   audit_basic_data_master_tab abd
+       WHERE NOT EXISTS (SELECT 1 FROM tax_accounting_basis_info_tab t
+                         WHERE t.company  = abd.company
+                         AND   t.tax_accounting_basis_id = abd.tax_accounting_basis)
+       AND abd.tax_accounting_basis IS NOT NULL
+       GROUP BY abd.company, abd.tax_accounting_basis, abd.tax_accounting_basis);
+   COMMIT;
+END;
+/
+
+-- ***** Tax_Accounting_Basis_Info_TAB End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Tax_Exemption_Reason_Info_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_25');
+PROMPT Adding TABLE TAX_EXEMPTION_REASON_INFO_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'TAX_EXEMPTION_REASON_INFO_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'TAX_EXEMPTION_REASON_ID', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'DESCRIPTION', 'VARCHAR2(2000)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_26');
+PROMPT Adding PK INDEX TO THE TABLE TAX_EXEMPTION_REASON_INFO_TAB.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'TAX_EXEMPTION_REASON_INFO_PK';
+   table_name_ VARCHAR2(30) := 'TAX_EXEMPTION_REASON_INFO_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY');
+   Database_SYS.Set_Table_Column(columns_, 'TAX_EXEMPTION_REASON_ID');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_27');
+PROMPT Adding RK INDEX TO THE TABLE TAX_EXEMPTION_REASON_INFO_TAB.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'TAX_EXEMPTION_REASON_INFO_RK';
+   table_name_ VARCHAR2(30) := 'TAX_EXEMPTION_REASON_INFO_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+-- ***** Tax_Exemption_Reason_Info_TAB End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** STANDARD_TAX_CODE_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_28');
+PROMPT Adding TABLE STANDARD_TAX_CODE_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'STANDARD_TAX_CODE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'STANDARD_TAX_CODE', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'DESCRIPTION', 'VARCHAR2(2000)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_29');
+PROMPT Adding PK INDEX TO THE TABLE STANDARD_TAX_CODE_TAB.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'STANDARD_TAX_CODE_PK';
+   table_name_ VARCHAR2(30) := 'STANDARD_TAX_CODE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY');
+   Database_SYS.Set_Table_Column(columns_, 'STANDARD_TAX_CODE');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_30');
+PROMPT Adding RK INDEX TO THE TABLE STANDARD_TAX_CODE_TAB.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'STANDARD_TAX_CODE_RK';
+   table_name_ VARCHAR2(30) := 'STANDARD_TAX_CODE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+-- ***** STANDARD_TAX_CODE_TAB End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** STANDARD_AUDIT_TAX_CODES_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_31');
+PROMPT Adding COLUMN TAX_EXEMPTION_REASON_ID TO STANDARD_AUDIT_TAX_CODES_TAB.
+
+DECLARE
+   table_name_  VARCHAR2(30) := 'STANDARD_AUDIT_TAX_CODES_TAB';
+   columns_     Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'TAX_EXEMPTION_REASON_ID', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table(table_name_, columns_, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_32');
+PROMPT Modifying length OF THE COLUMN STANDARD_TAX_ID in STANDARD_AUDIT_TAX_CODES_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'STANDARD_AUDIT_TAX_CODES_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   column_ := Database_SYS.Set_Column_Values('STANDARD_TAX_ID', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'M', column_, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_33');
+PROMPT Moving Data from COLUMN standard_tax_id IN STANDARD_AUDIT_TAX_CODES_TAB to STANDARD_TAX_CODE_TAB.
+
+BEGIN
+INSERT INTO standard_tax_code_tab (company, standard_tax_code, description, rowversion, rowkey)
+   (SELECT sat.company, sat.standard_tax_id, sat.standard_tax_id, SYSDATE, sys_guid()
+    FROM   standard_audit_tax_codes_tab sat
+    WHERE NOT EXISTS (SELECT 1 FROM standard_tax_code_tab t
+                      WHERE t.company = sat.company
+                      AND   t.standard_tax_code = sat.standard_tax_id)
+    AND sat.standard_tax_id IS NOT NULL
+    GROUP BY sat.company, sat.standard_tax_id, sat.standard_tax_id);
+    COMMIT;
+
+END;
+/
+
+-- ***** STANDARD_AUDIT_TAX_CODES_TAB End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Payment_Term_Details_Tab Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_34');
+PROMPT Adding column COLLECTIVE_RIBA  INTO PAYMENT_TERM_DETAILS_TAB .
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'PAYMENT_TERM_DETAILS_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   -- gelr:it_payment_formats, begin
+   column_ := Database_SYS.Set_Column_Values('COLLECTIVE_RIBA', 'VARCHAR2(20)', 'N', '''FALSE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:it_payment_formats, end
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_35');
+PROMPT Adding new column to PAYMENT_TERM_DETAILS_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'PAYMENT_TERM_DETAILS_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'DUMMY_INSTALLMENT_NUM', 'NUMBER', 'Y');
+   Database_SYS.Alter_Table(table_name_, columns_, TRUE );
+END;
+/
+
+-- ***** Payment_Term_Details_Tab End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Ext_Parameters_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_36');
+PROMPT Adding column calculate_rate to EXT_PARAMETERS_TAB.
+
+DECLARE
+   table_name_    VARCHAR2(30) := 'EXT_PARAMETERS_TAB';
+   column_        Database_SYS.ColRec;
+BEGIN
+   column_ := Database_SYS.Set_Column_Values('CALCULATE_RATE', 'VARCHAR2(5)', 'N', '''FALSE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+END;
+/
+
+-- ***** Ext_Parameters_TAB End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Voucher_Note_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_37');
+PROMPT Fixing incorrect index VOUCHER_NOTE_TAB_PK.
+
+DECLARE
+   incorrect_index_  VARCHAR2(30) := 'VOUCHER_NOTE_TAB_PK';
+   index_name_       VARCHAR2(30) := 'VOUCHER_NOTE_PK';
+   table_name_       VARCHAR2(30) := 'VOUCHER_NOTE_TAB';
+   columns_          Database_SYS.ColumnTabType;
+BEGIN
+   IF Database_SYS.Index_Exist(incorrect_index_) THEN
+      Database_SYS.Remove_Constraints(table_name_, incorrect_index_, TRUE);
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'COMPANY');
+      Database_SYS.Set_Table_Column(columns_, 'ACCOUNTING_YEAR');
+      Database_SYS.Set_Table_Column(columns_, 'VOUCHER_TYPE');
+      Database_SYS.Set_Table_Column(columns_, 'VOUCHER_NO');
+      Database_SYS.Set_Table_Column(columns_, 'NOTE_ID');
+      Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+   END IF;
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_38');
+PROMPT Fixing incorrect table space used for index VOUCHER_NOTE_TAB_PK.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'VOUCHER_NOTE_PK';
+BEGIN
+   Database_SYS.Move_Object(index_name_, '&IFSAPP_INDEX', TRUE);
+END;
+/
+
+-- ***** Voucher_Note_TAB End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Correcting tablespace in Ext_File_Template_Dir_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_39');
+PROMPT Correcting tablespace of the EXT_FILE_TEMPLATE_DIR_TAB.
+
+DECLARE
+   table_name_    VARCHAR2(30) := 'EXT_FILE_TEMPLATE_DIR_TAB';
+   columns_       VARCHAR2(30) := 'XML_STYLE_SHEET';
+BEGIN
+   Database_SYS.Move_Lob_Segment(table_name_, columns_, '&IFSAPP_LOB', TRUE);
+END;
+/
+
+-- ***** Correcting tablespace in Ext_File_Template_Dir_TAB End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Payment_Term_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_40');
+PROMPT Adding column print_swiss_q_r_code to PAYMENT_TERM_TAB.
+
+DECLARE
+   table_name_    VARCHAR2(30) := 'PAYMENT_TERM_TAB';
+   column_        Database_SYS.ColRec;
+BEGIN
+   column_ := Database_SYS.Set_Column_Values('PRINT_SWISS_Q_R_CODE', 'VARCHAR2(20)', 'N', '''FALSE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+END;
+/
+
+-- ***** Payment_Term_TAB End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Fin_Drill_Down_Temp_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_41');
+PROMPT Adding TABLE FIN_DRILL_DOWN_TEMP_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'FIN_DRILL_DOWN_TEMP_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'GUID', 'VARCHAR2(50)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROW_NO', 'NUMBER', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ACCOUNT', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_B', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_C', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_D', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_E', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_F', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_G', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_H', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_I', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_J', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ACCOUNTING_YEAR', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ACCOUNTING_PERIOD', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ACCOUNT_TYPE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ACCOUNT_GROUP', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ATTRIBUTE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ATTRIBUTE_CODE_PART', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ATTRIBUTE_VALUE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ATTRIBUTE_VALUE_USED', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'MASTER_COM_CODE_PART_VALUE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'SIMULATION_VOUCHER', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'HOLD_VOUCHER', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ACCOUNTING_CURRENCY_CODE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'PARALLEL_CURRENCY_CODE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'STRUCTURE_ID', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'STRUCTURE_CODE_PART', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'STRUCTURE_NODE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'STRUCTURE_LEVEL', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'STRUCTURE_VALUE_USED', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'SPECIAL_NODE_USAGE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'MULTI_COMPANY', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'PROJECT_ID', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'TRANS_CODE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'FREE_PARAM1', 'VARCHAR2(4000)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'FREE_PARAM2', 'VARCHAR2(4000)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'FREE_PARAM3', 'VARCHAR2(4000)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'SUMMARY', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'LEDGER_ID', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'YEAR_PERIOD_KEY', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'COUNTER_PART_ONE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'COUNTER_PART_TWO', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CURRENCY_CODE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_N', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_O', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_P', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_Q', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_R', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_S', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_T', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'YEAR_PERIOD', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'BALANCE_VERSION_ID', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_42');
+PROMPT Adding PK INDEX TO THE TABLE FIN_DRILL_DOWN_TEMP_TAB.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'FIN_DRILL_DOWN_TEMP_PK';
+   table_name_ VARCHAR2(30) := 'FIN_DRILL_DOWN_TEMP_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'GUID');
+   Database_SYS.Set_Table_Column(columns_, 'ROW_NO');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_43');
+PROMPT Adding RK INDEX TO THE TABLE FIN_DRILL_DOWN_TEMP_TAB.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'FIN_DRILL_DOWN_TEMP_RK';
+   table_name_ VARCHAR2(30) := 'FIN_DRILL_DOWN_TEMP_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_44');
+PROMPT Adding index on guid and summary to FIN_DRILL_DOWN_TEMP_TAB.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'FIN_DRILL_DOWN_TEMP_IX1';
+   table_name_ VARCHAR2(30) := 'FIN_DRILL_DOWN_TEMP_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'GUID');
+   Database_SYS.Set_Table_Column(columns_, 'SUMMARY');
+   Database_SYS.Create_Index(table_name_, index_name_, columns_, 'N', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+-- ***** Fin_Drill_Down_Temp_TAB End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Ext_Voucher_Row_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_45');
+PROMPT Changing the column types of amount columns to NUMBER in EXT_VOUCHER_ROW_TAB.
+
+DECLARE
+   table_name_       VARCHAR2(30) := 'EXT_VOUCHER_ROW_TAB';
+   columns_          Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Set_Table_Column(columns_, 'AMOUNT', 'NUMBER');
+   Database_SYS.Set_Table_Column(columns_, 'CREDIT_AMOUNT', 'NUMBER');
+   Database_SYS.Set_Table_Column(columns_, 'DEBET_AMOUNT', 'NUMBER');
+   Database_SYS.Set_Table_Column(columns_, 'CURRENCY_AMOUNT', 'NUMBER');
+   Database_SYS.Set_Table_Column(columns_, 'CURRENCY_CREDIT_AMOUNT', 'NUMBER');
+   Database_SYS.Set_Table_Column(columns_, 'CURRENCY_DEBET_AMOUNT', 'NUMBER');
+   Database_SYS.Set_Table_Column(columns_, 'THIRD_CURRENCY_CREDIT_AMOUNT', 'NUMBER');
+   Database_SYS.Set_Table_Column(columns_, 'THIRD_CURRENCY_DEBIT_AMOUNT', 'NUMBER');
+   Database_SYS.Alter_Table(table_name_, columns_, TRUE);
+END;
+/
+
+-- ***** Ext_Voucher_Row_TAB End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Accounting_Code_Part_Value_Tab Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_46');
+PROMPT Adding COLUMNS INTO ACCOUNTING_CODE_PART_VALUE_TAB
+DECLARE
+   table_name_ VARCHAR2(30) := 'ACCOUNTING_CODE_PART_VALUE_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   -- gelr:accounting_xml_data, begin
+   column_ := Database_SYS.Set_Column_Values('SAT_ACCOUNT_TYPE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('SAT_ACCOUNT_GROUP', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('SAT_LEVEL', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('SAT_PARENT_ACCOUNT', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:accounting_xml_data, end
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_47');
+PROMPT Rename CONS_ACCNT and CONS_CODE_PART_VALUE columns in ACCOUNTING_CODE_PART_VALUE_TAB.
+
+BEGIN
+   IF (Database_SYS.Column_Exist('ACCOUNTING_CODE_PART_VALUE_TAB','CONS_ACCNT') AND (NOT Database_SYS.Column_Exist('ACCOUNTING_CODE_PART_VALUE_TAB','CONS_ACCNT_2110'))) THEN
+      Database_SYS.Rename_Column('ACCOUNTING_CODE_PART_VALUE_TAB', 'CONS_ACCNT_2110', 'CONS_ACCNT');
+   END IF;
+   IF (Database_SYS.Column_Exist('ACCOUNTING_CODE_PART_VALUE_TAB','CONS_CODE_PART_VALUE') AND (NOT Database_SYS.Column_Exist('ACCOUNTING_CODE_PART_VALUE_TAB','CONS_CODE_PART_VALUE_2110'))) THEN
+      Database_SYS.Rename_Column('ACCOUNTING_CODE_PART_VALUE_TAB', 'CONS_CODE_PART_VALUE_2110', 'CONS_CODE_PART_VALUE');
+   END IF;
+END;
+/
+
+-- ***** Accounting_Code_Part_Value_Tab End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Sat_Account_Group_TAB Start *****
+
+-- gelr:accounting_xml_data, begin
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_48');
+PROMPT Adding TABLE SAT_ACCOUNT_GROUP_TAB.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'SAT_ACCOUNT_GROUP_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'SAT_ACCOUNT_GROUP', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'DESCRIPTION', 'VARCHAR2(100)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'SAT_LEVEL', 'VARCHAR2(1)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Set_Table_Column(columns_, 'ROWSTATE', 'VARCHAR2(20)', 'N');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_49');
+PROMPT Adding PK CONSTRAINT for SAT_ACCOUNT_GROUP_TAB.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'SAT_ACCOUNT_GROUP_PK';
+   table_name_ VARCHAR2(30) := 'SAT_ACCOUNT_GROUP_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY');
+   Database_SYS.Set_Table_Column(columns_, 'SAT_ACCOUNT_GROUP');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_50');
+PROMPT Adding RK CONSTRAINT for SAT_ACCOUNT_GROUP_TAB.
+
+DECLARE
+   index_name_ VARCHAR2(30) := 'SAT_ACCOUNT_GROUP_RK';
+   table_name_ VARCHAR2(30) := 'SAT_ACCOUNT_GROUP_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+-- gelr:accounting_xml_data, end
+
+-- ***** Sat_Account_Group_TAB End *****
+---------------------------------------------------------------------------------------------
+
+-- ***** Pseudo_Codes_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_51');
+PROMPT ADD COLUMNS TO PSEUDO_CODES_TAB.
+DECLARE
+   table_name_ VARCHAR2(30) := 'PSEUDO_CODES_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   -- gelr:accounting_xml_data, begin
+   column_ := Database_SYS.Set_Column_Values('SAT_ACCOUNT_TYPE', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('SAT_ACCOUNT_GROUP', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('SAT_LEVEL', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   column_ := Database_SYS.Set_Column_Values('SAT_PARENT_ACCOUNT', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+   -- gelr:accounting_xml_data, end
+END;
+/
+
+-- ***** Pseudo_Codes_TAB End *****
+---------------------------------------------------------------------------------------------
+
+-- ***** Uuid_Information_TAB Start *****
+
+-- gelr:accounting_xml_data, begin
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_52');
+PROMPT Adding TABLE UUID_INFORMATION_TAB.
+DECLARE
+   table_name_ VARCHAR2(30) := 'UUID_INFORMATION_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'SOURCE_REF1', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'SOURCE_REF2', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'SOURCE_REF3', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'SOURCE_REF_TYPE', 'VARCHAR2(20)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'UUID_NUMBER', 'VARCHAR2(36)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'UUID_DATE', 'DATE', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_53');
+PROMPT Adding PK CONSTRAINT for UUID_INFORMATION_TAB.
+DECLARE
+   index_name_ VARCHAR2(30) := 'UUID_INFORMATION_PK';
+   table_name_ VARCHAR2(30) := 'UUID_INFORMATION_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'COMPANY');
+   Database_SYS.Set_Table_Column(columns_, 'SOURCE_REF1');
+   Database_SYS.Set_Table_Column(columns_, 'SOURCE_REF2');
+   Database_SYS.Set_Table_Column(columns_, 'SOURCE_REF3');
+   Database_SYS.Set_Table_Column(columns_, 'SOURCE_REF_TYPE');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_54');
+PROMPT Adding RK CONSTRAINT for UUID_INFORMATION_TAB.
+DECLARE
+   index_name_ VARCHAR2(30) := 'UUID_INFORMATION_RK';
+   table_name_ VARCHAR2(30) := 'UUID_INFORMATION_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+-- gelr:accounting_xml_data, end
+
+-- ***** Uuid_Information_TAB End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Currency_Rate_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_55');
+PROMPT Updating Currency_Rate_TAB to caluculate direct currency rate.
+
+DECLARE
+   CURSOR get_companies IS
+      SELECT company
+      FROM company_finance_tab;
+
+   TYPE comp_list IS TABLE OF VARCHAR2(20) INDEX BY PLS_INTEGER;
+   comp_list_ comp_list;
+
+   CURSOR get_rates (company_ IN VARCHAR2) IS
+      SELECT *
+      FROM currency_rate_tab
+      WHERE company = company_
+      ORDER BY ref_currency_code, currency_code;
+
+   TYPE rates_list IS TABLE OF currency_rate_tab%ROWTYPE INDEX BY PLS_INTEGER;
+   rates_list_ rates_list;
+
+   CURSOR get_curr_code_data (company_ IN VARCHAR2, currency_code_ IN VARCHAR2) IS
+      SELECT emu_currency_from_date, inverted, decimals_in_rate
+      FROM currency_code_tab
+      WHERE company = company_
+      AND currency_code = currency_code_;
+
+   curr_code_emu_date_     DATE;
+   ref_curr_code_emu_date_ DATE;
+   inverted_               VARCHAR2(5);
+   dummy_inverted_         VARCHAR2(5);
+   curr_code_emu_          VARCHAR2(5);
+   ref_curr_code_emu_      VARCHAR2(5);
+   decimals_in_rate_       NUMBER;
+   dummy_decimals_in_rate_ NUMBER;
+   prev_curr_code_         VARCHAR2(3);
+   prev_ref_curr_code_     VARCHAR2(3);
+   ref_date_               DATE := SYSDATE;
+
+   FUNCTION Calculate_Direct_Curr_Rate___ (
+      rec_                    IN Currency_Rate_Tab%ROWTYPE,
+      is_curr_code_emu_       IN VARCHAR2,
+      is_ref_curr_code_emu_   IN VARCHAR2,
+      ref_curr_inverted_      IN VARCHAR2) RETURN NUMBER
+   IS
+      currency_rate_             NUMBER;
+      inverted_                  VARCHAR2(5);
+   BEGIN
+      IF (rec_.ref_currency_code != 'EUR') THEN
+         IF (is_ref_curr_code_emu_ = 'FALSE' AND is_curr_code_emu_ = 'TRUE') THEN
+            IF (ref_curr_inverted_ = 'FALSE') THEN
+               inverted_ := 'FALSE';
+            ELSE
+               inverted_ := 'TRUE';
+            END IF;
+         ELSIF (is_ref_curr_code_emu_ = 'TRUE' AND is_curr_code_emu_ = 'TRUE') THEN
+            inverted_ := 'FALSE';
+         ELSIF (is_ref_curr_code_emu_ = 'TRUE' AND is_curr_code_emu_ = 'FALSE') THEN
+            inverted_ := 'FALSE';
+         ELSE
+            IF (ref_curr_inverted_ = 'FALSE') THEN
+               inverted_ := 'FALSE';
+            ELSE
+               inverted_ := 'TRUE';
+            END IF;
+         END IF;
+      ELSE
+         IF (ref_curr_inverted_ = 'FALSE') THEN
+            inverted_ := 'FALSE';
+         ELSE
+            inverted_ := 'TRUE';
+         END IF;
+      END IF;
+
+      -- No special treament (triangulation handling) for old EMU currencies, so they could get incorrect values. EMU currencies are probably not used in any way nowdays
+      IF (inverted_ = 'TRUE') THEN
+         currency_rate_ := (1/(rec_.currency_rate/rec_.conv_factor));
+      ELSE
+         currency_rate_ := rec_.currency_rate/rec_.conv_factor;
+      END IF;
+      RETURN currency_rate_;
+   END Calculate_Direct_Curr_Rate___;
+BEGIN
+   OPEN get_companies;
+   FETCH get_companies BULK COLLECT INTO comp_list_;
+   CLOSE get_companies;
+
+   FOR i IN 1..comp_list_.COUNT LOOP
+      -- Reset prev_ variables when changing company
+      prev_curr_code_ := 'XXX';
+      prev_ref_curr_code_ := 'XXX';
+      OPEN get_rates(comp_list_(i));
+      LOOP
+         FETCH get_rates BULK COLLECT INTO rates_list_ LIMIT 10000;
+         FOR k IN 1..rates_list_.COUNT LOOP
+            -- if ref currency and currency is same then copy the value from the rate column directly
+            IF (rates_list_(k).ref_currency_code = rates_list_(k).currency_code) THEN
+               rates_list_(k).direct_currency_rate := 1;
+               rates_list_(k).direct_currency_rate_round := 1;
+            ELSE
+               IF (prev_ref_curr_code_ != rates_list_(k).ref_currency_code) THEN
+                  prev_ref_curr_code_ := rates_list_(k).ref_currency_code;
+                  OPEN get_curr_code_data(rates_list_(k).company, rates_list_(k).ref_currency_code);
+                  FETCH get_curr_code_data INTO ref_curr_code_emu_date_, inverted_, dummy_decimals_in_rate_;
+                  CLOSE get_curr_code_data;
+               END IF;
+
+               IF (ref_curr_code_emu_date_ <= rates_list_(k).valid_from) THEN
+                  ref_curr_code_emu_ := 'TRUE';
+               ELSIF (ref_curr_code_emu_date_ IS NULL) OR (ref_curr_code_emu_date_ > rates_list_(k).valid_from) THEN
+                  ref_curr_code_emu_ := 'FALSE';
+               END IF;
+
+               IF (prev_curr_code_ != rates_list_(k).currency_code) THEN
+                  prev_curr_code_ := rates_list_(k).currency_code;
+
+                  OPEN get_curr_code_data(rates_list_(k).company, rates_list_(k).currency_code);
+                  FETCH get_curr_code_data INTO curr_code_emu_date_, dummy_inverted_, decimals_in_rate_;
+                  CLOSE get_curr_code_data;
+               END IF;
+
+               IF (curr_code_emu_date_ <= rates_list_(k).valid_from) THEN
+                  curr_code_emu_ := 'TRUE';
+               ELSIF (curr_code_emu_date_ IS NULL) OR (curr_code_emu_date_ > rates_list_(k).valid_from) THEN
+                  curr_code_emu_ := 'FALSE';
+               END IF;
+
+               rates_list_(k).direct_currency_rate := Calculate_Direct_Curr_Rate___(rates_list_(k),
+                                                                                    curr_code_emu_,
+                                                                                    ref_curr_code_emu_,
+                                                                                    inverted_);
+               rates_list_(k).direct_currency_rate_round := ROUND(rates_list_(k).direct_currency_rate, decimals_in_rate_);
+            END IF;
+         END LOOP;
+
+         FORALL m IN 1..rates_list_.COUNT
+            UPDATE currency_rate_tab
+               SET direct_currency_rate = rates_list_(m).direct_currency_rate,
+                   direct_currency_rate_round = rates_list_(m).direct_currency_rate_round
+            WHERE company = rates_list_(m).company
+            AND   valid_from = rates_list_(m).valid_from
+            AND   currency_type = rates_list_(m).currency_type
+            AND   currency_code = rates_list_(m).currency_code;
+
+         EXIT WHEN get_rates%NOTFOUND;
+
+      END LOOP;
+      CLOSE get_rates;
+      -- commit after each company
+      COMMIT;
+   END LOOP;
+END;
+/
+
+-- ***** Currency_Rate_TAB End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Accounting_Period_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_56');
+PROMPT Modifying column CONSOLIDATED in ACCOUNTING_PERIOD_TAB
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'ACCOUNTING_PERIOD_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_,'CONSOLIDATED', 'VARCHAR2(1)', 'Y');
+   Database_SYS.Alter_Table(table_name_, columns_, TRUE);
+END;
+/
+
+-- ***** Accounting_Period_TAB End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Ext_File_Type_Tab Begin *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_57');
+PROMPT Add Columns TO EXT_FILE_TYPE_TAB.
+DECLARE
+   table_name_    VARCHAR2(30) := 'EXT_FILE_TYPE_TAB';
+   columns_       Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Set_Table_Column(columns_, 'INPUT_PROJECTION_ACTION',  'VARCHAR2(100)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'OUTPUT_PROJECTION_ACTION', 'VARCHAR2(100)', 'Y');
+   Database_SYS.Alter_Table(table_name_, columns_, TRUE);
+END;
+/
+
+-- ***** Ext_File_Type_Tab End *****
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Posting_Ctrl_Comb_Detail_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_58');
+PROMPT Correcting COMB_MODULE in POSTING_CTRL_COMB_DETAIL_TAB.
+
+BEGIN
+   UPDATE posting_ctrl_comb_detail_tab p
+   SET p.comb_module = (SELECT p1.module
+                        FROM  posting_ctrl_posting_type_tab p1
+                        WHERE p1.posting_type = p.posting_type)
+   WHERE p.comb_module != (SELECT p2.module
+                           FROM  posting_ctrl_posting_type_tab p2
+                           WHERE p2.posting_type = p.posting_type);
+   COMMIT;
+END;
+/
+
+-- ***** Posting_Ctrl_Comb_Detail_TAB End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Audit_Basic_Data_Master_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_59');
+PROMPT Modifying software_company_name field in AUDIT_BASIC_DATA_MASTER_TAB.
+DECLARE
+   original_value_    VARCHAR2(50):= 'INDUSTRIAL AND FINANCIAL SYSTEMS';
+   new_value_         VARCHAR2(50):= 'Industrial and Financial Systems';
+BEGIN
+   UPDATE audit_basic_data_master_tab
+   SET software_company_name   = new_value_
+   WHERE software_company_name = original_value_;
+   COMMIT;
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_60');
+PROMPT Modifying software_i_d field in AUDIT_BASIC_DATA_MASTER_TAB.
+DECLARE
+   original_value_    VARCHAR2(20):= 'IFS APPLICATIONS';
+   new_value_         VARCHAR2(20):= 'IFS Cloud';
+BEGIN
+   UPDATE audit_basic_data_master_tab
+   SET software_i_d   = new_value_
+   WHERE software_i_d = original_value_;
+   COMMIT;
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_61');
+PROMPT Modifying software_version field in AUDIT_BASIC_DATA_MASTER_TAB.
+
+DECLARE
+   original_value_    VARCHAR2(20):= 'IFS APPLICATIONS 10';
+   new_value_         VARCHAR2(20):= 'IFS APPS 10';
+BEGIN
+   UPDATE audit_basic_data_master_tab
+      SET software_version = REPLACE(software_version, original_value_, new_value_);
+   COMMIT;
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_62');
+PROMPT Modifying software_version field in AUDIT_BASIC_DATA_MASTER_TAB
+DECLARE
+   original_value_    VARCHAR2(20):= 'IFS APPS 10';
+   new_value_         VARCHAR2(20):= 'IFS Cloud';
+BEGIN
+   UPDATE audit_basic_data_master_tab
+   SET software_version   = new_value_
+   WHERE software_version = original_value_;
+   COMMIT;
+END;
+/
+-- ***** Audit_Basic_Data_Master_TAB End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Company_Tax_Control_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_63');
+PROMPT Adding FETCH_TAX_ON_LINE_ENTRY TO COMPANY_TAX_CONTROL_TAB
+
+DECLARE
+   column_   Database_SYS.ColRec;
+BEGIN
+   column_ := Database_SYS.Set_Column_Values('FETCH_TAX_ON_LINE_ENTRY', 'VARCHAR2(20)', 'N', '''TRUE''', keep_default_ => 'N');
+   Database_SYS.Alter_Table_Column('COMPANY_TAX_CONTROL_TAB', 'A', column_, TRUE);
+END;
+/
+
+-- ***** Company_Tax_Control_TAB End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Accounting_Code_Part_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_64');
+PROMPT Modify CODE_PART_FUNCTION enumeration values in ACCOUNTING_CODE_PART_TAB.
+
+BEGIN
+   UPDATE accounting_code_part_tab
+   SET code_part_function = 'NOFUNC'
+   WHERE code_part_function = 'CONSOL';
+   COMMIT;
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_65');
+PROMPT Rename PARENT_CODE_PART column in ACCOUNTING_CODE_PART_TAB.
+
+BEGIN
+   IF (Database_SYS.Column_Exist('ACCOUNTING_CODE_PART_TAB','PARENT_CODE_PART') AND (NOT Database_SYS.Column_Exist('ACCOUNTING_CODE_PART_TAB','PARENT_CODE_PART_2110'))) THEN
+      Database_SYS.Rename_Column('ACCOUNTING_CODE_PART_TAB', 'PARENT_CODE_PART_2110', 'PARENT_CODE_PART');
+   END IF;
+END;
+/
+
+-- ***** Accounting_Code_Part_TAB End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** POSTING_CTRL_DETAIL_SPEC_RPT Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_66');
+PROMPT Renaming incorrect constraint POSTING_CTRL_DETAIL_SPEC_RPT_PK and POSTING_CTRL_DET_SPEC_RPT_PK.
+
+DECLARE
+   table_name_      VARCHAR2(30) := 'POSTING_CTRL_DETAIL_SPEC_RPT';
+BEGIN
+   -- This was added as a solution for a constraint issue exist in APP9UPD10
+   Database_SYS.Rename_Constraint(table_name_, 'POSTING_CTRL_DET_SPEC_RPT_PK', 'POSTING_CTRL_DETAIL_SPEC_RPK', TRUE, TRUE);
+   Database_SYS.Rename_Constraint(table_name_, 'POSTING_CTRL_DETAIL_SPEC_RPT_PK', 'POSTING_CTRL_DETAIL_SPEC_RPK', TRUE, TRUE); 
+END;
+/
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_67');
+PROMPT Adding PK INDEX to the table POSTING_CTRL_DETAIL_SPEC_RPT.
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'POSTING_CTRL_DETAIL_SPEC_RPT';
+   index_name_ VARCHAR2(30) := 'POSTING_CTRL_DETAIL_SPEC_RPK';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'RESULT_KEY');
+   Database_SYS.Set_Table_Column(columns_, 'ROW_NO');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+/
+
+-- ***** POSTING_CTRL_DETAIL_SPEC_RPT End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Voucher_Candidate_Approver_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_68');
+PROMPT Remove orphan data in Voucher_Candidate_Approver_Tab.
+
+BEGIN
+      DELETE
+      FROM voucher_candidate_approver_tab c
+      WHERE NOT EXISTS (SELECT 1 
+                        FROM voucher_tab v
+                        WHERE v.company        = c.company
+                        AND v.accounting_year  = c.accounting_year
+                        AND v.voucher_type     = c.voucher_type
+                        AND v.voucher_no       = c.voucher_no);
+      COMMIT;
+END;
+/
+
+-- ***** Voucher_Candidate_Approver_TAB End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Voucher_TAB Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_69');
+PROMPT ADD APPROVAL_RULE_ID COLUMN TO VOUCHER_TAB
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'VOUCHER_TAB';
+   column_   Database_SYS.ColRec;
+BEGIN
+   column_ := Database_SYS.Set_Column_Values('APPROVAL_RULE_ID', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Alter_Table_Column(table_name_, 'A', column_, TRUE);
+END;
+/
+
+-- ***** Voucher_TAB End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Accrul_Attribute_Tab Start *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_70');
+PROMPT Remove FINANCIAL_BATCH_QUEUE_ID AND FINREP_INLIST_OPT_PERIOD_LIMIT in ACCRUL_ATTRIBUTE_TAB.
+
+BEGIN
+      DELETE
+      FROM accrul_attribute_tab
+      WHERE attribute_name IN ('FINANCIAL_BATCH_QUEUE_ID', 'FINREP_INLIST_OPT_PERIOD_LIMIT');      
+      COMMIT;
+END;
+/
+
+-- ***** Accrul_Attribute_Tab End *****
+
+
+---------------------------------------------------------------------------------------------
+
+-- ***** Account_Group_Tab Start *****
+
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_71');
+PROMPT Rename DEFAULT_CONS_ACCNT column in ACCOUNT_GROUP_TAB.
+
+BEGIN
+   IF (Database_SYS.Column_Exist('ACCOUNT_GROUP_TAB','DEFAULT_CONS_ACCNT') AND (NOT Database_SYS.Column_Exist('ACCOUNT_GROUP_TAB','DEFAULT_CONS_ACCNT_2110'))) THEN
+      Database_SYS.Rename_Column('ACCOUNT_GROUP_TAB', 'DEFAULT_CONS_ACCNT_2110', 'DEFAULT_CONS_ACCNT');
+   END IF;
+END;
+/
+
+-- ***** Account_Group_Tab End *****
+
+
+---------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------
+------------------------------ RENAME OBSOLETE TABLES ---------------------------------------
+---------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------
+------------------------------ DROP OBSOLETE RPT TABLES/COLUMNS -----------------------------
+---------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------
+------------------------------ DROP OBSOLETE TEMPORARY TABLES -------------------------------
+---------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------
+------------------------------ DROP OBSOLETE PACKAGES ---------------------------------------
+---------------------------------------------------------------------------------------------
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_72');
+PROMPT Remove Obsolete Packages
+BEGIN
+   IF Database_SYS.Package_Exist ('TAX_CODE_API') THEN
+      Database_SYS.Remove_Package('TAX_CODE_API',TRUE);
+   END IF;
+END;
+/
+
+---------------------------------------------------------------------------------------------
+------------------------------ DROP OBSOLETE VIEWS ------------------------------------------
+---------------------------------------------------------------------------------------------
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_73');
+PROMPT Remove Obsolete VIEWS
+BEGIN
+   Database_SYS.Remove_View('EXT_PARAM_VOUCHER_TYPES', TRUE );
+   Database_SYS.Remove_View('CODE_PART_VALUE_FOR_CONS', TRUE );
+   Database_SYS.Remove_View('CONSOLIDATION_ACCOUNT', TRUE );
+   Database_SYS.Remove_View('CODE_PARTS_FOR_CONSOLIDATION', TRUE );
+END;
+/
+
+
+---------------------------------------------------------------------------------------------
+------------------------------ DROP OBSOLETE INDEXES/SEQUENCES ------------------------------
+---------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------
+------------------------------ DROP OBSOLETE TRIGGERS ------------------------------
+---------------------------------------------------------------------------------------------
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_74');
+PROMPT Dropping obsolete triggers.
+BEGIN
+   Database_SYS.Remove_Trigger('POSTING_CTRL_DETAIL_U', TRUE);
+   Database_SYS.Remove_Trigger('POSTING_CTRL_DETAIL_I', TRUE);
+   Database_SYS.Remove_Trigger('POSTING_CTRL_DETAIL_D', TRUE);
+END;
+/
+
+---------------------------------------------------------------------------------------------
+------------------------------ RENAME INDEXES/CONSTRAINTS  ----------------------------------
+---------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Timestamp_75');
+PROMPT Upgrade statements IN FILE 2110.upg ends here.
+
+-- Nothing is allowed to be placed below here
+---------------------------------------------------------------------------------------------
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','2110.upg','Done');

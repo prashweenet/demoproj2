@@ -1,0 +1,90 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ProjectCostElement
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+@Override
+COLUMN Element_Type_Db IS
+   Flags      = 'AMIUL';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Project_Cost_Element_Lov IS
+   Prompt = 'Project Cost Element'
+   Element_Type.Datatype = 'STRING(20)'
+   Element_Type_Db.Prompt = 'Element Type db'
+   Default_Cost_Element.Flags = 'A-IUL'
+SELECT company                        company,
+       project_cost_element           project_cost_element,
+       nvl(Enterp_Comp_Connect_V190_API.Get_Company_Translation(company,
+                                                                'ACCRUL', 
+                                                                'ProjectCostElement',
+                                                                project_cost_element), description)
+                                      description,
+       Prj_Followup_Element_Type_API.Decode(element_type)   element_type,
+       element_type                   element_type_db,
+       default_cost_element           default_cost_element,
+       Project_Cost_Element_API.Finite_State_Decode__(rowstate)   state,
+       rowstate                       objstate,
+       rowid                          objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                         objkey
+FROM   project_cost_element_tab;
+
+VIEW Project_Cost_Type_Element_Lov IS
+   Prompt = 'Project Cost Element'
+   Element_Type.Datatype = 'STRING(20)'
+   Default_Cost_Element.Flags = 'A-IUL'
+SELECT company                        company,
+       project_cost_element           project_cost_element,
+       nvl(Enterp_Comp_Connect_V190_API.Get_Company_Translation(company,
+                                                                'ACCRUL', 
+                                                                'ProjectCostElement',
+                                                                project_cost_element), description)
+                                      description,
+       Prj_Followup_Element_Type_API.Decode(element_type)   element_type,
+       element_type                   element_type_db,
+       default_cost_element           default_cost_element,
+       Project_Cost_Element_API.Finite_State_Decode__(rowstate)   state,
+       rowstate                       objstate,
+       rowid                          objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                         objkey
+FROM   project_cost_element_tab
+WHERE  element_type = 'COST';
+
+VIEW Project_Rev_Type_Element_Lov IS
+   Prompt = 'Project Revenue Element'
+   Project_Cost_Element.Prompt = 'Project Revenue Element'
+   Element_Type.Datatype = 'STRING(20)'
+   Default_Cost_Element.Flags = 'A-IUL'
+SELECT company                        company,
+       project_cost_element           project_cost_element,
+       nvl(Enterp_Comp_Connect_V190_API.Get_Company_Translation(company,
+                                                                'ACCRUL', 
+                                                                'ProjectCostElement',
+                                                                project_cost_element), description)
+                                      description,
+       Prj_Followup_Element_Type_API.Decode(element_type)   element_type,
+       element_type                   element_type_db,
+       default_cost_element           default_cost_element,
+       Project_Cost_Element_API.Finite_State_Decode__(rowstate)   state,
+       rowstate                       objstate,
+       rowid                          objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion
+FROM   project_cost_element_tab
+WHERE  element_type = 'REVENUE';
+

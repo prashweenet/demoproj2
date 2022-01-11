@@ -1,0 +1,50 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 181204      RAKUSE  FIUXX-1705, Converted dialog 'dlgPSheetCleanupAuditSourceInfo' using MTG Version: 1.34
+----------------------------------------------------------------------------------------------------
+projection CleanupAuditSourceInformationHandling;
+component ACCRUL;
+layer Core;
+description "Scheduled Task Assistant handling ''Cleanup of Audit Source Information''";
+category Users;
+include fragment ScheduledTasksCommon;
+
+-------------------------------- STRUCTURES----------------------------------
+
+@Override
+structure ParametersStructure {
+   attribute DaysChecked Enumeration(DaysEnum);
+   attribute NumberOfDays Number;
+   attribute BeforeDate Date;
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+
+@Override
+virtual TaskVirtual using BatchSchedule {
+   -- Parameters
+   attribute DaysChecked Enumeration(DaysEnum) {
+      required = [true];
+   }
+   attribute NumberOfDays Number {
+      default = "to_number(30)";
+   }
+   attribute BeforeDate Date;
+
+   ---------------------------
+   ---
+
+}
+
+
+enumeration DaysEnum {
+   value = "TRUE" {
+      identifier = "DaysBefore";
+      label = "Days Before Current Date";
+   }
+   value = "FALSE" {
+      identifier = "CreatedBefore";
+      label = "Created Before";
+   }
+}

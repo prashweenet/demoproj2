@@ -1,0 +1,183 @@
+fragment CodeB;
+component ACCRUL;
+layer Core;
+description "Contains Common Client Code and Projection Logic for Code B";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+--------------------------------- COMMANDS ----------------------------------
+command CodeStringCompletionCommand for CodeB {
+   label = "Code String Completion";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CodeStringCompletion/Form?$contexts=Company:$[Company]&$filter=CodePart eq $[CodePart] and CodePartValue eq $[CodeB]";
+   }
+}
+
+command TranslationCommand for CodeB {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'CodeB' and AttributeKey eq $[CodeB]";
+   }
+}
+
+command CopyToCompaniesCommand for CodeB {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   enabled = [context.Company.FACodePart != "B" and context.Company.ProjCodePart != "B"];
+   bulkexecute {
+      assistant CopyToCompaniesAssistant(context.Company, "CodeB", "MANUAL", Selection, "Code_B_API") {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand for CodeB {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      if [context.Company.FACodePart != "B" and context.Company.ProjCodePart != "B" and
+      CodePartFunction != "InternalElimination" and
+      CodePartFunction != "Internal"] {
+         set CurrentCompanyVar = "${context.Company}";
+         call IsActiveLuExist(CurrentCompanyVar, "CodeB") into StateVar;
+         if [StateVar = "TRUE"] {
+            if[CreateCount > 0] {
+               set SelectionVar = CreateList;
+            }
+            if[UpdateCount > 0] {
+               set SelectionVar = UpdateList;
+            }
+            if[DeleteCount > 0] {
+               set SelectionVar = DeleteList;
+            }
+            assistant CopyToCompaniesAssistant(CurrentCompanyVar, "CodeB", "AUTOMATIC", SelectionVar, "Code_B_API") {
+               when OK {
+                  exit;
+               }
+            }
+         }
+      }
+   }
+}
+
+command CodePartAttributeConnectionCommand for CodeB {
+   label = "Code Part Attribute Connection";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CodePartAttributeConnection/List?$contexts=Company:$[Company]&$filter=CodePart eq $[CodePart] and CodePartValue eq $[CodeB]";
+   }
+}
+
+@DynamicComponentDependency FIXASS
+command ObjectCommand for CodeB {
+   label = "Fixed Asset Object";
+   enabled = [context.Company.FACodePart = "B"];
+   bulkexecute {
+      bulknavigate "page/Object/Form?$contexts=Company:$[Company]&$filter=ObjectId eq $[CodeB]";
+   }
+}
+
+@DynamicComponentDependency GENLED
+command ProjectCommand for CodeB {
+   label = "Project";
+   enabled = [context.Company.ProjCodePart = "B" and BudgetValueDb != true];
+   bulkexecute {
+      bulknavigate "page/FinancialProject/Form?$contexts=Company:$[Company]&$filter=ProjectId eq $[CodeB]";
+   }
+}
+
+----------------------------------- LISTS -----------------------------------
+list CodeBList for CodeB {
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+      new {
+         enabled = [context.Company.FACodePart != "B" and context.Company.ProjCodePart != "B"];
+      }
+      edit {
+         enabled = [context.Company.FACodePart != "B" and context.Company.ProjCodePart != "B"];
+      }
+      delete {
+         enabled = [context.Company.FACodePart != "B" and context.Company.ProjCodePart != "B"];
+      }
+   }
+   field CodeB {
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid Period";
+   }
+   field CodeStringCompletionExists {
+      size = Small;
+   }
+   field Text {
+      label = "Notes";
+      multiline = true;
+   }
+   field AttributeExists {
+      size = Small;
+   }
+   field BudgetValueDb {
+      size = Small;
+   }
+
+   commandgroup ObjectProjectCommandGrp {
+      @DynamicComponentDependency FIXASS
+      command ObjectCommand;
+      @DynamicComponentDependency GENLED
+      command ProjectCommand;
+   }
+   commandgroup CommandGroup1CommandGrp {
+      command CodeStringCompletionCommand;
+      command CodePartAttributeConnectionCommand;
+   }
+   command TranslationCommand;
+   command CopyToCompaniesCommand;
+
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+@Override
+entity CodeB {
+   crud = Create, Read, Update, Delete;
+   attribute CodeB Text {
+      label = "${context.Company.CodeBName}";
+      maxlength = 10;
+   }
+   attribute CodeStringCompletionExists Boolean {
+      fetch = "DECODE(ACCOUNTING_CODESTR_COMPL_API.Connect_To_Account(COMPANY,'B',CODE_B),'T','TRUE','FALSE')";
+      label = "Code String Completion Exists";
+      editable = [false];
+   }
+   attribute AttributeExists Boolean {
+      fetch = "DECODE(ACCOUNTING_ATTRIBUTE_CON_API.Connect_To_Attribute(COMPANY,'B',CODE_B),'T','TRUE','FALSE')";
+      label = "Attribute Exists";
+      editable = [false];
+   }
+   attribute BudgetValueDb Boolean("Y", "N") {
+      fetch = "BUDGET_VALUE_DB";
+      label = "Budget/Planning Only";
+      required = [true];
+   }
+   attribute BudgetValue Enumeration(BudgetAccountFlag) {
+      required = [false];
+   }
+   attribute CodePartFunction Text {
+      fetch = "ACCOUNTING_CODE_PARTS_API.Get_Code_Part_Function_Db(company, code_part)";
+   }
+
+}

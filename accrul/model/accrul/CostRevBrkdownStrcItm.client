@@ -1,0 +1,123 @@
+client CostRevBrkdownStrcItm;
+component ACCRUL;
+layer Core;
+projection CostRevBrkdownStrcItmHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CostRevenueBreakdownStructureItemsMenu parent AccrulNavigator.CostRevenueElementSetupMenu at index 500 {
+      label = "Cost/Revenue Breakdown Structure Items";
+      page CostRevenueBreakdownStructureItems;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page CostRevenueBreakdownStructureItems using CostStructureItemSet {
+   label = "Cost/Revenue Breakdown Structure Items";
+   list CostStructureItemList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list CostStructureItemList for CostStructureItem {
+   lov CostStructureIdRef with ReferenceCostStructureSelector {
+      search = CostStructureId, Description;
+      size = Large;
+      description = CostStructureIdRef.Description;
+   }
+   field CostStructItemType;
+   field NameValue {
+      size = Large;
+      format = uppercase;
+      lovswitch {
+         when [CostStructItemType = "CostElement"] {
+            lov NameValueRef with ReferenceProjectCostElementLovQuerySelector using GetProjectCostElement(CostStructItemType);
+         }
+      }
+   }
+   field Description {
+      size = Large;
+      label = "Node ID/Cost/Revenue Element Description";
+      editable = [CostStructItemType = "Node"];
+   }
+   lov ItemAboveRef with ReferenceCostStructureItem2QuerySelector;
+   lov LevelIdRef with ReferenceCostStructureLevelChQuerySelector {
+      search = LevelId, Description;
+      size = Large;
+      description = LevelIdRef.Description;
+   }
+}
+
+@Override
+list CostStructureLovList for CostStructure {
+   badge Objstate;
+}
+
+@Override
+list ProjectCostElementLovQueryLovList for ProjectCostElementLovQuery {
+   static Company {
+      columnexclude = [true];
+   }
+}
+
+@Override
+list CostStructureItem2QueryLovList for CostStructureItem2Query {
+   static Company {
+      columnexclude = [true];
+   }
+   static CostStructureId {
+      columnexclude = [true];
+   }
+}
+
+@Override
+list CostStructureLevelChQueryLovList for CostStructureLevelChQuery {
+   static Company {
+      columnexclude = [true];
+   }
+   static CostStructureId {
+      columnexclude = [true];
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

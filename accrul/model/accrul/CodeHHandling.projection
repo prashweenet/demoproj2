@@ -1,0 +1,42 @@
+projection CodeHHandling;
+component ACCRUL;
+layer Core;
+description "Use this Page for Code H Handling";
+category Users;
+
+include fragment CodeH;
+include fragment CopyToCompaniesAssistant;
+include fragment AccountingCodePartValueLovSelector;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CodeHSet for CodeH {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

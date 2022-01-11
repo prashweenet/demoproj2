@@ -1,0 +1,63 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  CurrencyRateType
+--  Component:  ACCRUL
+--  LU:         DimCurrencyType
+--
+--  File     :  DimCurrencyRateTypeOl.api
+--  Purpose  :  Create ON LINE dimension view DIM_CURRENCY_RATE_TYPE_OL
+--  Note     :  NOTE that NULL identity handling is not required for OL views
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   -------------------------------------------------
+--  110701  Anwese  Created 
+--  150512  Umdolk  Reverse Engineering.
+--------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_CURRENCY_RATE_TYPE
+DEFINE VIEW       = DIM_CURRENCY_RATE_TYPE_OL
+DEFINE TAB        = CURRENCY_TYPE_TAB
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimCurrencyType
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT company||'^'||currency_type id,
+       company                     company,
+       currency_type               code,
+       description                 description,
+       ref_currency_code           ref_currency_code,
+       type_default                type_default
+FROM &TAB 
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Currency Rate Type^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(10)/UPPERCASE^PROMPT=Currency Rate Type^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Currency Rate Type Description^';
+   COMMENT ON COLUMN &VIEW..REF_CURRENCY_CODE
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(3)^PROMPT=Reference Currency Code^';
+   COMMENT ON COLUMN &VIEW..TYPE_DEFAULT
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Default Type^';
+   
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE TAB
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

@@ -1,0 +1,48 @@
+-----------------------------------------------------------------------------
+--  Component  : ACCRUL
+--
+--  Filename   : AccrulInfoSourceDefaultFolder.ins 
+--
+--  Purpose    : Defines default IFS Business Analytics client navigator folder for 
+--               Information Sources (facts) in XXXXXX component.
+--
+--  NOTE       : The following actions are done:
+--               1) Register the folder as the default folder for the Fact/IS
+--               2) If the fact/IS is not present in the folder navigator then
+--                  a) Define the default folder in the client navigator if the 
+--                     folder does not already exist
+--                  b) Add the fact/IS to the default folder
+--
+--              This file should contain all Information Sources (facts) for the
+--              current component.
+--              The files should be deployed after all BI metadata INS files, 
+--              making sure that the facts/IS exist
+--
+--              Method:
+--               Xlr_Def_Fact_Nav_Folder_API.Set_Default_Folder_Name(
+--                                 fact_id_             IN VARCHAR2,
+--                                 default_folder_name_ IN VARCHAR2,
+--                                 always_add_          IN BOOLEAN DEFAULT FALSE)
+--
+--              By default the fact will not be handled if it has been removed from
+--              the navigator, typically via the client navigator feature in
+--              Solution Manager.
+--              If however there is a need to "force" an addition of a fact
+--              to the client navigator even if it has been prevously removed,
+--              use the 3rd parameter always_add_ and set it to TRUE.
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   ----------------------------------------------------------
+--  111214  Anwese Created for Apps 8
+-----------------------------------------------------------------------------
+SET SERVEROUT ON
+
+BEGIN
+
+   Xlr_Def_Fact_Nav_Folder_API.Set_Default_Folder_Name('FACT_CURRENCY_RATES', 'Financials');                            
+
+END;
+/
+
+COMMIT;
+

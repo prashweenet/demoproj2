@@ -1,0 +1,148 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtFileTypeParam
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Set_Id IS
+   Flags      = 'PMI--'
+   Datatype   = 'STRING(20)'
+   Prompt     = 'Set ID';
+
+COLUMN Default_Value IS
+   Flags      = 'AMI-L'
+   Datatype   = 'STRING(50)'
+   Prompt     = 'Default Value';
+
+COLUMN Inputable_At_Load IS
+   Flags      = 'AMIUL'
+   Datatype   = 'STRING(5)'
+   Prompt     = 'Inputable At Load';
+
+COLUMN Mandatory_Param IS
+   Flags      = 'A-IU-'
+   Datatype   = 'STRING(5)'
+   Prompt     = 'Mandatory Param';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Ext_File_Type_Param_Dialog IS
+   Prompt = 'Ext File Type Param Dialog'
+SELECT a.file_type                    file_type,
+       a.set_id                       set_id,
+       b.param_no                     param_no,
+       b.param_id                     param_id,
+       NVL(RTRIM(RPAD(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileTypeParam', b.file_type || '^' || b.param_no ),100)),b.description)       
+                                      description,              
+       b.browsable_field              browsable_field,
+       NVL(RTRIM(RPAD(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileTypeParam', b.file_type || '^' || b.param_no || '^' || 'HELP'),200)),b.help_text)
+                                      help_text,
+       a.default_value                default_value,
+       a.inputable_at_load            inputable_at_load,
+       b.lov_view                     lov_view,
+       b.enumerate_method             enumerate_method,
+       b.validate_method              validate_method,
+       a.mandatory_param              mandatory_param,
+       b.rowid                        objid,
+       ltrim(lpad(to_char(b.rowversion,'YYYYMMDDHH24MISS'),2000))                   objversion,
+       a.rowkey                      objkey
+FROM   ext_type_param_per_set_tab a,
+       ext_file_type_param_tab b
+WHERE  a.param_no    = b.param_no
+  AND  a.file_type   = b.file_type
+  AND  a.show_at_load      = 'TRUE';
+
+
+VIEW Ext_File_Type_Param_Load IS
+   Prompt = 'Ext File Type Param Dialog'
+SELECT l.load_file_id                 load_file_id,
+       a.file_type                    file_type,
+       a.set_id                       set_id,
+       b.param_no                     param_no,
+       b.param_id                     param_id,
+       Ext_File_Message_API.Get_Attr_Parameter_Msg (b.param_id, l.parameter_string) param_value,
+       NVL(RTRIM(RPAD(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileTypeParam', b.file_type || '^' || b.param_no ),100)),b.description)       
+                                      description,              
+       b.browsable_field              browsable_field,
+       NVL(RTRIM(RPAD(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileTypeParam', b.file_type || '^' || b.param_no || '^' || 'HELP'),200)),b.help_text)
+                                      help_text,
+       a.default_value                default_value,
+       a.inputable_at_load            inputable_at_load,
+       b.lov_view                     lov_view,
+       b.enumerate_method             enumerate_method,
+       b.validate_method              validate_method,
+       a.mandatory_param              mandatory_param,
+       b.rowid                        objid,
+       ltrim(lpad(to_char(b.rowversion,'YYYYMMDDHH24MISS'),2000))                   objversion,
+       a.rowkey                      objkey
+FROM   ext_type_param_per_set_tab a,
+       ext_file_type_param_tab b,
+       ext_file_load_tab l
+WHERE  a.file_type   = l.file_type
+  AND  a.param_no    = b.param_no
+  AND  a.file_type   = b.file_type
+  AND  a.show_at_load      = 'TRUE';
+
+
+VIEW Ext_File_Type_Param_All IS
+   Prompt = 'Ext File Type Param Dialog'
+SELECT a.file_type                    file_type,
+       a.set_id                       set_id,
+       b.param_no                     param_no,
+       b.param_id                     param_id,
+       NVL(RTRIM(RPAD(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileTypeParam', b.file_type || '^' || b.param_no ),100)),b.description)       
+                                      description,              
+       b.browsable_field              browsable_field,
+       NVL(RTRIM(RPAD(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileTypeParam', b.file_type || '^' || b.param_no || '^' || 'HELP'),200)),b.help_text)
+                                      help_text,
+       a.default_value                default_value,
+       a.show_at_load                 show_at_load,
+       a.inputable_at_load            inputable_at_load,
+       b.lov_view                     lov_view,
+       b.enumerate_method             enumerate_method,
+       b.validate_method              validate_method,
+       a.mandatory_param              mandatory_param,
+       b.rowid                        objid,
+       ltrim(lpad(to_char(b.rowversion,'YYYYMMDDHH24MISS'),2000))                   objversion,
+       a.rowkey                      objkey
+FROM   ext_type_param_per_set_tab a,
+       ext_file_type_param_tab b
+WHERE  a.param_no    = b.param_no
+  AND  a.file_type   = b.file_type;
+
+
+COLUMN Bool_Value IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING(5)'
+   Prompt     = 'Bool Value';
+
+VIEW EXTERNAL_FILE_BOOLEAN IS
+Prompt = 'External File Boolean View'
+SELECT bool_value 
+FROM (SELECT level,decode(level,1,Fnd_Boolean_API.Get_Client_Value(0),2,Fnd_Boolean_API.Get_Client_Value(1)) bool_value       
+FROM dual CONNECT BY level<=2);
+
+
+COLUMN Yes_No_Value IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING(5)'
+   Prompt     = 'Bool Value';
+
+VIEW EXTERNAL_FILE_YES_NO IS
+Prompt = 'External File Yes No View'
+SELECT yes_no_value 
+FROM (SELECT level,decode(level,1,Fnd_Yes_No_API.Get_Client_Value(0),2,Fnd_Yes_No_API.Get_Client_Value(1)) yes_no_value     
+FROM dual CONNECT BY level<=2);
+

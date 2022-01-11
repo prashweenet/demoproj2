@@ -1,0 +1,182 @@
+client PostingControlCombinationDetails;
+component ACCRUL;
+layer Core;
+
+projection PostingControlCombinationDetailsHandling;
+include fragment AccountingCodePartsUsed2Selector;
+include fragment AccountingCodePartValueLovSelector;
+include fragment AllowedControlTypeSelector;
+include fragment CopyToCompaniesAssistant;
+include fragment PostingControlDefValueLovExtended;
+
+warningsenabled = PostingCtrl;
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using PostingCtrlSet {
+   label = "Posting Control Combination Details";
+   selector PostingCtrlDataSelector;
+   group PostingCtrlCombDetGroup;
+   list PostCtrlCombDetList(PostCtrlCombDetArray) {
+      copyoncruddefault(Company, PostingType, CodePart, PcValidFrom, ControlType, ControlType1, ControlType2, Module, CodeName, Module1, Module2) to(Company, PostingType, CodePart, PcValidFrom, CombControlType, ControlType1, ControlType2, CombModule, CodePartName, Module1, Module2);
+   }
+   defaultsearchfields = PostingTypeRef, CodeNameRef, ControlType;
+}
+
+page PcForm using PostingCtrlSet {
+   label = "Posting Control Navigator - Posting Control Combination Details";
+   selector PostingCtrlDataSelector;
+   group PostingCtrlCombDetGroup;
+   list PostCtrlCombDetList(PostCtrlCombDetArray) {
+      copyoncruddefault(Company, PostingType, CodePart, PcValidFrom, ControlType, ControlType1, ControlType2, Module, CodeName, Module1, Module2) to(Company, PostingType, CodePart, PcValidFrom, CombControlType, ControlType1, ControlType2, CombModule, CodePartName, Module1, Module2);
+   }
+}
+
+page CntrlTypeForm using PostingCtrlSet {
+   label = "Posting Control Navigator - Posting Control Combination Details";
+   searchcontext PageSearchContext {
+      defaults = FetchPageSearchContextDefaults(ControlTypeValue);
+   }
+
+   selector PostingCtrlDataSelector;
+   group PostingCtrlCombDetGroup;
+   list PostCtrlCombDetList(PostCtrlCombDetArray) {
+      copyoncruddefault(Company, PostingType, CodePart, PcValidFrom, ControlType, ControlType1, ControlType2, Module, CodeName, Module1, Module2) to(Company, PostingType, CodePart, PcValidFrom, CombControlType, ControlType1, ControlType2, CombModule, CodePartName, Module1, Module2);
+      filter = [ControlType1Value = searchcontext.PageSearchContext.ControlTypeValue];
+   }
+}
+
+searchcontext PageSearchContext for PageSearchContextStructure {
+   label = "";
+   field ControlTypeValue {
+      visible = [false];
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+command CopyDetailSetupCommand for PostingCtrl {
+   label = "Copy Details Set-up";
+   variable CurrentCompanyStr;
+   enabled = [true];
+
+   execute {
+      set CurrentCompanyStr = "${context.Company}";
+      navigate "assistant/CopyDetailSetup/Assistant?$action=InitCopyCompanies{CompanyStr:$[CurrentCompanyStr],LuStr:'PostingCtrlCombDetail',TypeStr:'MANUAL',StrKeyList:$[Selection],StrPackage:'POSTING_CTRL_COMB_DETAIL_API'}";
+   }
+}
+
+command CopyToCompaniesCommand for PostingCtrlCombDetail {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   enabled = [true];
+
+   bulkexecute {
+      assistant CopyToCompaniesAssistant(context.Company, "PostingCtrlCombDetail", "MANUAL", Selection, "Posting_Ctrl_Comb_Detail_API") {
+         when OK {
+            exit OK;
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand for PostingCtrlCombDetail {
+   variable State Text;
+   variable SelectionVar;
+
+   bulkexecute {
+      call IsActiveLuExist(context.Company, "PostingCtrlCombDetail") into State;
+
+      if [State = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(context.Company, "PostingCtrlCombDetail", "AUTOMATIC", SelectionVar, "Posting_Ctrl_Comb_Detail_API") {
+            when OK {
+               exit OK;
+            }
+         }
+      }
+   }
+}
+
+--------------------------------- SELECTORS ---------------------------------
+selector PostingCtrlDataSelector for PostingCtrl {
+   label = "${PostingType} - ${CodeName} - ${ControlType}";
+   static PostingType;
+   static CodeName {
+      label = "Code Part Name";
+   }
+   static ControlType;
+}
+
+@Override
+selector ReferencePostingCtrlPostingTypeSelector for PostingCtrlPostingType {
+   orderby = Module, SortOrder;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group PostingCtrlCombDetGroup for PostingCtrl {
+   label = "";
+
+   lov PostingTypeRef with ReferencePostingCtrlPostingTypeSelector;
+   lov CodeNameRef with ReferenceAccountingCodePartsUsedSelector;
+   field ControlType;
+   field DefaultValue;
+   field DefaultValueNoCt;
+   field PcValidFrom;
+}
+
+----------------------------------- LISTS -----------------------------------
+list PostCtrlCombDetList for PostingCtrlCombDetail {
+   label = "Posting Control Combination Information";
+
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+   field ControlType1ValueRef {
+      label = "${parent.ControlType1Name}";
+      validate command {
+         variable Description1Var Text;
+         execute {
+            call GetControlTypeDescription(Company, ControlType1, ControlType1Value, Module1, ValidFrom) into Description1Var;
+            set ControlType1ValueDesc = Description1Var;
+         }
+      }
+   }
+   field ControlType1ValueDesc {
+      size = Large;
+      searchable = false;
+   }
+   field ControlType2ValueRef {
+      label = "${parent.ControlType2Name}";
+      validate command {
+         variable Description2Var Text;
+         execute {
+            call GetControlTypeDescription(Company, ControlType2, ControlType2Value, Module2, ValidFrom) into Description2Var;
+            set ControlType2ValueDesc = Description2Var;
+         }
+      }
+   }
+   field ControlType2ValueDesc {
+      size = Large;
+      searchable = false;
+   }
+
+   fieldset PostingCtrlCodePartValueLovExtendedFieldSet;
+
+   field NoCodePartValue;
+   field ValidFrom;
+
+   --fieldranking ControlType1Value, ControlType2Value, CodePartValueRef, CodePartDescription, NoCodePartValueDb, ValidFrom;
+
+   commandgroup CommandGroupCmdGroup {
+
+      command CopyToCompaniesCommand;
+   }
+}

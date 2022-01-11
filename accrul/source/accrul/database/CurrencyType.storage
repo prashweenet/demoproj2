@@ -1,0 +1,32 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CurrencyType
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+TABLE currency_type_def_tab IS
+      ( currency_type                   VARCHAR2(3)      NOT NULL,
+        description                     VARCHAR2(100)    NULL,
+        type_default                    VARCHAR2(1)      NULL,
+        ref_currency_code               VARCHAR2(3)      NULL,
+        rate_type_category              VARCHAR2(20)     NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+PRIMARY KEY currency_type_def_pk IS currency_type_def_tab (currency_type);
+
+
+UNIQUE CONSTRAINT currency_type_def_rk IS currency_type_def_tab (rowkey);
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

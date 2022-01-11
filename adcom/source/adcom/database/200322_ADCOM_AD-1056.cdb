@@ -1,0 +1,67 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 200322_ADCOM_AD-1056.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210326   siselk  Removing enumeration PART_REQUEST_PRIORITY API IN ADCOM
+--  210324   siselk  Added AV_PART_REQUEST_PRIORITY_TAB, changed data type of PRIORITY column of AV_EXE_TASK_PART_REQUEST_TAB and AV_FAULT_PART_REQUEST_TAB.
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','200322_ADCOM_AD-1056.cdb','Timestamp_1');
+PROMPT Starting 200322_ADCOM_AD-1056.cdb
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_PART_REQUEST_PRIORITY_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'PRIORITY_CODE', 'VARCHAR2(8)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'PRIORITY_DESCRIPTION', 'VARCHAR2(80)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','200322_ADCOM_AD-1056.cdb','Timestamp_2');
+PROMPT Starting 200322_ADCOM_AD-1056.cdb
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_EXE_TASK_PART_REQUEST_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'PRIORITY', 'VARCHAR2(8)', 'Y');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','200322_ADCOM_AD-1056.cdb','Timestamp_3');
+PROMPT Starting 200322_ADCOM_AD-1056.cdb
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_FAULT_PART_REQUEST_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'PRIORITY', 'VARCHAR2(8)', 'Y');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','200322_ADCOM_AD-1056.cdb','Timestamp_4');
+PROMPT Removing enumeration PART_REQUEST_PRIORITY API IN ADCOM
+BEGIN
+   Database_SYS.Remove_Package('Part_Request_Priority_API', TRUE);
+END;
+/
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','200322_ADCOM_AD-1056.cdb','Done');
+SET SERVEROUTPUT OFF

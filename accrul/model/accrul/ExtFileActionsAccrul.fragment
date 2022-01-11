@@ -1,0 +1,66 @@
+fragment ExtFileActionsAccrul;
+component ACCRUL;
+layer Core;
+description "This fragment is used to add actions to system defined templates in ACCRUL";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+action LoadExtCurrency {
+   initialcheck none;
+   parameter LoadFileId Number;
+   parameter ParameterString Text;
+}
+
+action LoadExtVoucher {
+   initialcheck none;
+   parameter LoadFileId Number;
+   parameter ParameterString Text;
+}
+
+action RemoveExternalFileTransactions {
+   initialcheck none;
+   parameter LoadFileId Number;
+   parameter State Text;
+}
+
+action ExtFileImport {
+   initialcheck none;
+   parameter LoadFileId Number;
+}
+
+action ExtFileExport {
+   initialcheck none;
+   parameter LoadFileId Number;
+}
+
+action DescribeInputFile {
+   initialcheck none;
+   parameter LoadFileId Number;
+}
+
+
+action CreateExtFileInsertScript {
+   initialcheck none;
+   parameter LoadFileId Number;
+}
+
+action ImportExtFileFunctionList {
+   initialcheck none;
+   parameter LoadFileId Number;
+
+}
+
+action ExportExtFileFunctionList {
+   initialcheck none;
+   parameter LoadFileId Number;
+}
+
+action LoadPayroll {
+   initialcheck none;
+   parameter LoadFileId Number;
+   parameter ParameterString Text;
+}

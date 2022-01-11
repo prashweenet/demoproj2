@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>VatDistribution</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <UNCOMPILED_MODEL_SOURCE xsi:nil="1"/>
+   <VALUES>
+      <VALUE>
+         <NAME>Even</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>ALLTAXONFIRSTINST</DB_VALUE>
+               <CLIENT_VALUE>All Tax on first installment</CLIENT_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>AllTaxOnFirstInstment</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>FIRSTINSTONLYTAX</DB_VALUE>
+               <CLIENT_VALUE>First installment only Tax</CLIENT_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>FirstInstallmentOnlyTax</NAME>
+      </VALUE>
+   </VALUES>
+</ENUMERATION>

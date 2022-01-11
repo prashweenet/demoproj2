@@ -1,0 +1,238 @@
+client ExternalVoucherLoadInformation;
+component ACCRUL;
+layer Core;
+projection ExternalVoucherLoadInformationHandling;
+
+include fragment UserGroupMemberFinance2Selector;
+
+warningsenabled = DoCheckTransactions;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ExternalVoucherLoadInformationNavEntry parent AccrulNavigator.ExternalVoucherMenu at index 200 {
+      label = "External Voucher Load Information";
+      page List home ExtLoadInfo;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using ExtLoadInfoSet {
+   label = "External Voucher Load Information";
+
+   list ExtLoadInfoList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ShowTransactionsCommand {
+   label = "Show Transactions";
+   mode = SelectedRecords;
+   execute {
+      navigate "page/ExternalVouchers/List?$contexts=Company:$[Company]&$filter=LoadId eq $[LoadId]";
+   }
+}
+
+command RemoveLoadsCommand for ExtLoadInfo {
+   label = "Remove loads";
+   mode = SelectedRecords;
+   execute {
+      confirm("Are you sure you want to remove the vouchers?") {
+         when OK {
+            call DoRemoveLoads(LoadFileId);
+         }
+         when CANCEL {
+            exit;
+         }
+      }
+   }
+}
+
+command RemoveAllErrorCodesCommand for ExtLoadInfo {
+   label = "Remove All Error Codes";
+   mode = SelectedRecords;
+   enabled = [ExtLoadStateDb in("2", "3", "4", "6")];
+   bulkexecute {
+      bulkcall DoRemoveErrorCodes();
+   }
+}
+
+command ExternalFileTransactionCommand {
+   label = "External File Transaction";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/ExternalFileTransactions/Form?$filter=LoadFileId eq $[LoadFileId]";
+   }
+}
+
+command CheckExternalVoucherCommand for ExtLoadInfo {
+   label = "Check External Voucher";
+   enabled = [ExtLoadStateDb != 5];
+
+   variable ExtVoucherUserDataRec Structure(ExternalVoucherUserDataStruct);
+
+   execute {
+      call GetExtTransValidityInfo() into ExtVoucherUserDataRec;
+      if [ExtVoucherUserDataRec.Results = "TRUE"] {
+         dialog ChangeExternalVoucherUserDataDialog(Company, LoadId, ExtVoucherUserDataRec.UserId, ExtVoucherUserDataRec.UserGroup, ExtVoucherUserDataRec.UserIdPrv, ExtVoucherUserDataRec.UserGroupPrv, "TRUE") {
+            when OK {
+               call DoCheckTransactions();
+               exit;
+            }
+            when CANCEL {
+               exit;
+            }
+         }
+      }
+      else {
+         call DoCheckTransactions();
+      }
+      refresh;
+   }
+}
+
+command Ok for ChangeUserDataStruct {
+   enabled = [(UserId != "" and UserId != null and UserGroup != "" and UserGroup != null and(ValidUserData = "TRUE"))];
+   execute {
+      if [UserIdPrv != UserId or UserGroupPrv != UserGroup] {
+         call DoUpdateNewUserData(Company, LoadId, UserId, UserGroup, UserIdPrv, UserGroupPrv);
+      }
+      exit OK;
+   }
+}
+
+command CreateVoucherCommand for ExtLoadInfo {
+   label = "Create Voucher";
+   mode = SelectedRecords;
+   enabled = [ExtLoadStateDb in("3", "4")];
+   bulkexecute {
+      bulkcall DoCreateVoucher();
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ReferenceUserFinanceSelector for UserFinance {
+   label = "";
+   static Userid {
+      label = "User ID";
+   }
+   static Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ChangeUserDataGroup for ChangeUserDataStruct {
+   label = "New User Data";
+   lov UserIdRef with ReferenceUserFinanceSelector {
+      validate command {
+         execute {
+            call IsValidUserData(Company, UserId, UserGroup) into ValidUserData;
+         }
+      }
+   }
+   lov UserGroupRef with ReferenceUserGroupMemberFinance2Selector {
+      validate command {
+         execute {
+            call IsValidUserData(Company, UserId, UserGroup) into ValidUserData;
+         }
+      }
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtLoadInfoList for ExtLoadInfo {
+   orderby = LoadDate desc, LoadIdSort desc;
+
+   field LoadId {
+      size = Small;
+   }
+   field VoucherType {
+      size = Small;
+   }
+   field LoadDate;
+   field Userid {
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   badge ExtLoadState {
+      style = TextOnly;
+      emphasis Progress2 = [ExtLoadState = "Loaded"];
+      emphasis StateError = [ExtLoadState = "LoadedWithErrors"];
+      emphasis Progress7 = [ExtLoadState = "Checked"];
+      emphasis Progress5 = [ExtLoadState = "PartlyChecked"];
+      emphasis Progress11 = [ExtLoadState = "Created"];
+      emphasis Progress9 = [ExtLoadState = "PartlyCreated"];
+   }
+
+   field LoadType {
+      size = Small;
+   }
+   field LoadFileId;
+
+   command ShowTransactionsCommand;
+   commandgroup Group2CmdGroup {
+      command CheckExternalVoucherCommand;
+      command CreateVoucherCommand;
+   }
+   command ExternalFileTransactionCommand;
+   commandgroup Group1CmdGroup {
+      command RemoveLoadsCommand;
+      command RemoveAllErrorCodesCommand;
+   }
+}
+
+@Override
+list UserFinanceLovList for UserFinance {
+   label = "";
+   static Userid {
+      label = "User ID";
+   }
+   static Description;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+dialog ChangeExternalVoucherUserDataDialog for ChangeUserDataStruct {
+   label = "Change External Voucher User Data";
+   input(Company, LoadId, UserId, UserGroup, UserIdPrv, UserGroupPrv, ValidUserData);
+
+   group ChangeUserDataGroup;
+
+   command Ok;
+   command Cancel;
+}
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

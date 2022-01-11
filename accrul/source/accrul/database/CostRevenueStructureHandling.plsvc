@@ -1,0 +1,20 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CostRevenueStructureHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@DynamicComponentDependency PROJ
+FUNCTION Do_Get_Connected_Structures___ (
+   key_ IN Cost_Structure_Key ) RETURN VARCHAR2
+IS
+BEGIN
+   RETURN Project_API.Is_Structure_Connected(key_.company, key_.cost_structure_id);
+END Do_Get_Connected_Structures___;

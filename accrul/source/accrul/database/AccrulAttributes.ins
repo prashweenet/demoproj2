@@ -1,0 +1,74 @@
+---------------------------------------------------------------------
+--
+--  Filename      : accrulattributes.ins
+--
+--  Module        : ACCRUL
+--
+--  Purpose       : Inserting system-parameters for ACCRUL.
+--
+--  Localization  : Optional. If other values or formats than those
+--                  provided in this file are desired, "translate" /
+--                  replace the 2:nd argument in call to PROCEDURE
+--                  Attribute_Row_ in PL/SQL block below.
+--
+--  Date    Sign  History
+--  ------  ----  ---------------------------------------------------
+--  011015  ANDJ  Created.
+--  030414  JeGu  Moved creation of attributes for External Files from AccrulExtFile.ins
+--  rakolk  rako  Added attribute FINREP_BATCH_QUEUE_ID.
+--  031023  Jegu  Removed creation of unused attributes. 
+--  050920  AsHelk Added attribute FINANCIAL_BATCH_QUEUE_ID.
+--  100518  Jobase EAFH-2938, Removed attributes MASTER_OR_SLAVE and ACCRUL_ID.
+--  100618  ShFrlk Bug 90945, Corrected. Bad performance after upgrading FINREP from 2003-2 to APP75.
+--  100618         Added new attribute FINREP_INLIST_OPT_PERIOD_LIMIT to control the CARDINALITY for performance gains.
+--  100920  AjPelk Bug 91106 , Added server_path_separator and set '\'
+--  140724  THPELK PRFI-264 - LCS Merge(Bug 105417) , Added GL Update Batch Queue Handling section.
+--  201123  Lakhlk FISPRING20-6701, Remove FINANCIAL_BATCH_QUEUE_ID and FINREP_INLIST_OPT_PERIOD_LIMIT attributes.
+---------------------------------------------------------------------
+SET SERVEROUT ON
+
+PROMPT Inserting default data to accrul_attribute_tab
+DECLARE
+   date_ DATE := SYSDATE;
+   PROCEDURE Attribute_Row_(
+      name_ IN VARCHAR2,
+      value_ IN VARCHAR2 )
+   IS
+   BEGIN
+      INSERT INTO accrul_attribute_tab(
+         attribute_name,
+         attribute_value,
+         rowversion)
+      VALUES (
+         name_,
+         value_,
+         date_);
+      COMMIT;         
+   EXCEPTION
+      WHEN dup_val_on_index THEN
+         NULL;      
+   END Attribute_Row_;
+BEGIN
+   Attribute_Row_('DEFAULT_VALID_TO',         '20491231');
+   Attribute_Row_('SERVER_DIRECTORY',             'NULL');
+   --
+   -- External Files Start
+   Attribute_Row_('CLIENT_INPUT_PATH',        'C:\temp');
+   Attribute_Row_('CLIENT_OUTPUT_PATH',       'C:\temp');
+   Attribute_Row_('CLIENT_BACKUP_PATH',       'C:\temp');
+   Attribute_Row_('EXT_REMOVE_DAYS_IN',       '30');
+   Attribute_Row_('EXT_REMOVE_DAYS_OUT',      '30');
+   Attribute_Row_('DEFAULT_X_SEPARATOR_ID',   '1');
+   Attribute_Row_('DEFAULT_X_DECIMAL_SYMBOL', '.');
+   Attribute_Row_('DEFAULT_X_DATE_FORMAT',    'YYYY-MM-DD');
+   Attribute_Row_('DEFAULT_X_FILE_EXT',       'csv');
+   Attribute_Row_('DEFAULT_X_FILE_TYPE_LIST', '*^*');
+   Attribute_Row_('NAME_OPTION_DATE_FORMAT',  'YYYY-MM-DD');
+   Attribute_Row_('SERVER_PATH_SEPARATOR',    '\');
+   -- External Files End
+      
+   -- GL Update Batch Queue Handling
+   Attribute_Row_('GL_UPDATE_BATCH_QUEUE',    'FALSE');
+   Attribute_Row_('GL_UPDATE_BATCH_QUEUE_ID', '<GL_UPDATE_BATCH_QUEUE_ID>');
+END;
+/

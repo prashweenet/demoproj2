@@ -1,0 +1,19 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistFault
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+UNIQUE CONSTRAINT av_hist_fault_uc1 IS av_hist_fault_tab (fault_alt_id);
+INDEX av_hist_fault_ix1 IS av_hist_fault_tab (flight_id, inventory_id);
+-------------------- OTHER DEFINITIONS --------------------------------------
+

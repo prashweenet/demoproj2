@@ -1,0 +1,154 @@
+projection PostingControlDetailsSpecHandling;
+component ACCRUL;
+layer Core;
+description "Posting Control Details Specification";
+category Users;
+
+include fragment AccountingCodePartValueLovSelector;
+include fragment CtrlTypeAllowedValueSelector;
+include fragment AccountingCodePartsUsed2Selector;
+include fragment CopyToCompaniesAssistant;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PostingCtrlDetailSet for PostingCtrlDetail {
+   context Company(Company);
+   where = "spec_control_type IS NOT NULL ";
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity PostingCtrlDetail {
+   crud = Read;
+
+   attribute PostingType Text;
+   attribute CodeNa Text {
+      label = "Code Part Name";
+      fetch = "Accounting_Code_Parts_API.Get_Name(company, code_part)";
+   }
+   attribute CodeName Text {
+      format = lowercase;
+   }
+   attribute ControlType Text;
+   attribute ControlTypeDesc Text {
+      label = "Control Type Description";
+   }
+   attribute ControlTypeValue Text;
+   attribute SpecControlType Text {
+      label = "Specification Control Type";
+   }
+   attribute SpecControlTypeDesc Text {
+      label = "";
+   }
+   attribute SpecDefaultValue Text {
+      label = "Default Value No Details";
+   }
+   attribute SpecDefaultValueNoCt Text {
+      label = "Default Value No CT Value";
+   }
+   attribute ValidFrom Date;
+   attribute PkgName Text {
+      fetch = "NULL";
+   }
+   attribute CodePart Text;
+   attribute PcValidFrom Date;
+
+   reference PostingTypeRef(PostingType) to PostingCtrlPostingType(PostingType) {
+      label = "Posting Type";
+   }
+   reference ControlTypeRef(Company, PostingType, CodePart, PcValidFrom, ControlTypeValue, ValidFrom, ControlType) to PostingCtrlDetail(Company, PostingType, CodePart, PcValidFrom, ControlTypeValue, ValidFrom, ControlType) {
+      label = "Control Type";
+   }
+   reference CodeNaRef(Company, CodeNa) to AccountingCodePartsUsed2(Company, CodeName) {
+      label = "Code Part Name";
+   }
+   reference SpecControlTypeRef(Company, PostingType, CodePart, SpecControlType) to CtrlTypeAllowedValue(Company, PostingType, CodePart, ControlType) {
+      label = "Specification Control Type";
+   }
+   reference SpecDefaultValueRef(Company, CodePart, SpecDefaultValue) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Default Value No Details";
+   }
+   reference SpecDefaultValueNoCtRef(Company, CodePart, SpecDefaultValueNoCt) to AccountingCodepartValFinrep(Company, CodePart, CodePartValue) {
+      label = "Default Value No CT Value";
+   }
+
+   array PostCtrlDetSpecArray(Company, CodePart, PostingType, PcValidFrom, ControlTypeValue, ValidFrom) to PostingCtrlDetailSpec(Company, CodePart, PostingType, PcValidFrom, ControlTypeValue, ValidFrom);
+}
+
+@Override
+entity PostingCtrlDetailSpec {
+   attribute CodePart Text;
+   attribute PcValidFrom Date;
+   attribute SpecControlType Text;
+   attribute SpecModule Text {
+      fetch = "Posting_Ctrl_Detail_API.Get_Spec_Module(company, posting_type, code_part, control_type_value, pc_valid_from, valid_from)";
+   }
+   attribute SpecControlTypeValue Text {
+      label = "Control Type Value";
+   }
+   attribute SpecControlTypeValueDesc Text {
+      fetch = "Posting_Ctrl_Detail_API.Get_Control_Type_Desc(company, posting_type, code_part, control_type_value, pc_valid_from, valid_from, spec_control_type, spec_control_type_value)";
+      label = "Description";
+      editable = [false];
+      required = [false];
+   }
+   attribute CodePartValue Text;
+   attribute CodePartDescription Text {
+      fetch = "Accounting_Code_Part_Value_API.Get_Description(company,code_part,code_part_value)";
+      label = "Code Part Description";
+      maxlength = 100;
+      editable = [false];
+   }
+   attribute NoCodePartValue Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+
+   reference CtrlType1ValueRef(SpecControlTypeValue) dynamic(SpecControlType) parent(Company);
+   reference CodePartValueRef(Company, CodePart, CodePartValue) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Code Part Value";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query AccountingCodepartValFinrep {
+   from = "ACCOUNTING_CODEPART_VAL_FINREP";
+   lu = AccountingCodePartValue;
+
+   attribute Company Text;
+   attribute CodePart Text;
+   attribute AccntGroup Text;
+   attribute AccntType Text;
+   attribute CodePartValue Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetControlTypeDesc Text {
+   parameter Company Text;
+   parameter PostingType Text;
+   parameter CodePart Text;
+   parameter ControlTypeValue Text;
+   parameter PcValidFrom Date;
+   parameter ValidFrom Date;
+   parameter SpecControlType Text;
+   parameter SpecControlTypeValue Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

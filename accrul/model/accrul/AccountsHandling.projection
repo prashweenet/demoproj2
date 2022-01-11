@@ -1,0 +1,84 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 201112      Sacnlk  GESPRING20-5995, Added SatParentAccount for accounting_xml_data functionality.
+----------------------------------------------------------------------------------------------------
+
+projection AccountsHandling;
+component ACCRUL;
+layer Core;
+description "Accounts Overview";
+category Users;
+
+include fragment AccountsConsolidationSelector;
+include fragment AccountCommonHandling;
+include fragment CopyToCompaniesAssistant;
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountSet for Account {
+   context Company(Company);
+}
+
+entityset MultiCompanyAccountSet for Account {
+   where = "company IN (SELECT company FROM user_finance_auth_pub)";
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity Account {
+   supportwarnings = [true];
+
+   contexttodefault = Company(Company);
+   -- gelr:accounting_xml_data, begin
+   attribute AccountingXmlDataEnabled Boolean("TRUE", "FALSE") {
+      fetch = "Company_Localization_Info_API.Get_Parameter_Value_Db(Company, 'ACCOUNTING_XML_DATA')";
+   }
+   reference SatAccountGroupRef(Company, SatAccountGroup) to SatAccountGroup(Company, SatAccountGroup) {
+      label = "SAT Account Group";
+   }
+   reference SatParentAccountRef(Company, SatParentAccount) to Account(Company, Account) {
+      label = "SAT Parent Account";
+   }
+   -- gelr:accounting_xml_data, end
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+}
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetSelectedCompany Text {
+   parameter FullSelection Text;
+}
+
+-- gelr:accounting_xml_data, begin
+function ValidateSatAccountGroup Text {
+   parameter Company Text;
+   parameter SatAccountGroup Text;
+}
+-- gelr:accounting_xml_data, end
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+

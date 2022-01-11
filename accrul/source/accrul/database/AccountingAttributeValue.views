@@ -1,0 +1,36 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingAttributeValue
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  081031  Nudilk  Bug 143791, Created.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+VIEW Include_Exclude_Attribute IS
+   Prompt = 'Accounting Attribute Value'
+   Term_Name.Flags = 'PMI-L'
+   Term_Name.Datatype = 'STRING(20)/UPPERCASE'
+   Term_Name.Prompt = 'Attribute'
+   Term_Value.Datatype = 'STRING(100)'
+   Term_Value.Prompt = 'Attribute Value'
+   Description.Flags = 'AMIUL'
+SELECT company                        company,
+       attribute                      term_name,
+       attribute_value                term_value,
+       description                    description,
+       rowkey                         objkey
+FROM   accounting_attribute_value_tab;
+

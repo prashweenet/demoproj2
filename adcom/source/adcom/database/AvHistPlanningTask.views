@@ -1,0 +1,161 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistPlanningTask
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210205  chdslk  DISO2020R1-516, Removed inst_rmvl_inventory_id in both exe and pln tasks and replaced them by av_hist_task_part related inventories.
+--  201122  chdslk  Added ref_inventory_id to include the installed/removed inventories as well as the hierarchical inventories to create the array reference in the UI.
+--  200611  chdslk  AD2020R1-1011, Added union with parent inventory as inventory for exec and pln tasks to show tasks in installed and removed inventories. 
+--  200629  chdslk  DISO2020R1-60, Added luname and keyref to Av_Hist_Task.
+--  200623  chdslk  DISO2020R1-25, Added Av_Hist_Task.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+VIEW Av_Hist_Task IS
+SELECT 
+   a.pt_barcode                                    task_barcode,
+   a.task_name                                     task_name,
+   a.task_status_code                              task_status_code,
+   a.task_type                                     task_type,
+   a.task_class_code                               task_class_code,
+   a.actual_end_date                               actual_end_date,
+   a.assm_code                                     assm_code,
+   inv.inventory_id                                ref_inventory_id,  -- Used to create the array in the Technical Record UI from AvInventory
+   a.inventory_id                                  inventory_id,
+   a.parent_inventory_id                           parent_inventory_id,
+   a.task_originator_code                          task_originator_code,
+   a.sched_priority_code                           sched_priority_code,
+   a.work_types                                    work_types,
+   a.task_alt_id                                   task_alt_id,
+   b.work_package_name                             work_package_name,
+   b.work_package_alt_id                           work_package_alt_id,
+   b.wp_barcode                                    wp_barcode,
+   b.work_order_number                             work_order_number,
+   b.repair_order_number                           repair_order_number,
+   'AvHistPlanningTask'                            luname,
+   'PT_BARCODE='||a.pt_barcode||'^'                keyref_value,
+   a.rowid                                         objid,
+   TO_CHAR(a.rowversion,'YYYYMMDDHH24MISS')        objversion,
+   a.rowkey                                        objkey
+FROM av_hist_planning_task_tab a
+LEFT JOIN av_hist_work_package_tab b
+ON a.wp_barcode = b.wp_barcode
+INNER JOIN 
+(select 
+   connect_by_root(inventory_id) AS root,inventory_id
+   from av_inventory_tab
+   connect by inventory_id = prior parent_inventory_id) inv
+ON a.inventory_id = inv.root
+WHERE a.task_class_code <> 'ADHOC' --ADHOC tasks are duplicated in both planning and execution task entities. Removing from the planning tasks to avoid record duplication in the UI.
+UNION
+SELECT 
+   a.et_barcode                                    task_barcode,
+   a.task_name                                     task_name,
+   a.task_status_code                              task_status_code,
+   a.task_type                                     task_type,
+   a.task_class_code                               task_class_code,
+   a.actual_end_date                               actual_end_date,
+   a.assm_code                                     assm_code,
+   inv.inventory_id                                ref_inventory_id, -- Used to create the array in the Technical Record UI from AvInventory
+   a.inventory_id                                  inventory_id,
+   a.parent_inventory_id                           parent_inventory_id,
+   a.task_originator_code                          task_originator_code,
+   a.sched_priority_code                           sched_priority_code,
+   a.work_types                                    work_types,
+   a.task_alt_id                                   task_alt_id,
+   b.work_package_name                             work_package_name,
+   b.work_package_alt_id                           work_package_alt_id,
+   b.wp_barcode                                    wp_barcode,
+   b.work_order_number                             work_order_number,
+   b.repair_order_number                           repair_order_number,
+   'AvHistExecutionTask'                           luname,
+   'ET_BARCODE='||a.et_barcode||'^'                keyref_value,
+   a.rowid                                         objid,
+   TO_CHAR(a.rowversion,'YYYYMMDDHH24MISS')        objversion,
+   a.rowkey                                        objkey
+FROM av_hist_execution_task_tab a
+LEFT JOIN av_hist_work_package_tab b
+ON a.wp_barcode = b.wp_barcode
+INNER JOIN 
+(select 
+   connect_by_root(inventory_id) AS root,inventory_id
+   from av_inventory_tab
+   connect by inventory_id = prior parent_inventory_id) inv
+ON a.inventory_id = inv.root
+UNION
+--Get Tasks for Installed Inventories
+SELECT 
+   a.et_barcode                                    task_barcode,
+   a.task_name                                     task_name,
+   a.task_status_code                              task_status_code,
+   a.task_type                                     task_type,
+   a.task_class_code                               task_class_code,
+   a.actual_end_date                               actual_end_date,
+   a.assm_code                                     assm_code,
+   c.installed_inventory_id                        ref_inventory_id,  -- Used to create the array in the Technical Record UI from AvInventory
+   c.installed_inventory_id                        inventory_id,
+   a.parent_inventory_id                           parent_inventory_id,
+   a.task_originator_code                          task_originator_code,
+   a.sched_priority_code                           sched_priority_code,
+   a.work_types                                    work_types,
+   a.task_alt_id                                   task_alt_id,
+   b.work_package_name                             work_package_name,
+   b.work_package_alt_id                           work_package_alt_id,
+   b.wp_barcode                                    wp_barcode,
+   b.work_order_number                             work_order_number,
+   b.repair_order_number                           repair_order_number,
+   'AvHistExecutionTask'                           luname,
+   'ET_BARCODE='||a.et_barcode||'^'                keyref_value,
+   a.rowid                                         objid,
+   TO_CHAR(a.rowversion,'YYYYMMDDHH24MISS')        objversion,
+   a.rowkey                                        objkey
+FROM av_hist_execution_task_tab a
+LEFT JOIN av_hist_work_package_tab b
+ON a.wp_barcode = b.wp_barcode
+LEFT JOIN av_hist_task_part_tab c
+ON c.et_barcode = a.et_barcode
+WHERE c.installed_inventory_id IS NOT NULL
+UNION
+--Get Tasks for Removed Inventories
+SELECT 
+   a.et_barcode                                    task_barcode,
+   a.task_name                                     task_name,
+   a.task_status_code                              task_status_code,
+   a.task_type                                     task_type,
+   a.task_class_code                               task_class_code,
+   a.actual_end_date                               actual_end_date,
+   a.assm_code                                     assm_code,
+   c.removed_inventory_id                          ref_inventory_id,  -- Used to create the array in the Technical Record UI from AvInventory
+   c.removed_inventory_id                          inventory_id,
+   a.parent_inventory_id                           parent_inventory_id,
+   a.task_originator_code                          task_originator_code,
+   a.sched_priority_code                           sched_priority_code,
+   a.work_types                                    work_types,
+   a.task_alt_id                                   task_alt_id,
+   b.work_package_name                             work_package_name,
+   b.work_package_alt_id                           work_package_alt_id,
+   b.wp_barcode                                    wp_barcode,
+   b.work_order_number                             work_order_number,
+   b.repair_order_number                           repair_order_number,
+   'AvHistExecutionTask'                           luname,
+   'ET_BARCODE='||a.et_barcode||'^'                keyref_value,
+   a.rowid                                         objid,
+   TO_CHAR(a.rowversion,'YYYYMMDDHH24MISS')        objversion,
+   a.rowkey                                        objkey
+FROM av_hist_execution_task_tab a
+LEFT JOIN av_hist_work_package_tab b
+ON a.wp_barcode = b.wp_barcode
+LEFT JOIN av_hist_task_part_tab c
+ON c.et_barcode = a.et_barcode
+WHERE c.removed_inventory_id IS NOT NULL;
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------

@@ -1,0 +1,323 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingCtrlCrecomp
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Posting_Ctrl_Gen_Pct IS
+   Prompt = 'Accrul Posting Ctrl'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Code_Part.Flags = 'PMI--'
+   Code_Part.Datatype = 'STRING(1)/UPPERCASE'
+   Code_Part.Prompt = 'Code Part'
+   Code_Part.Ref = 'AccountingCodeParts(company)/NOCHECK'
+   Posting_Type.Flags = 'PMI-L'
+   Posting_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Posting_Type.Prompt = 'Posting Type'
+   Posting_Type.Ref = 'PostingCtrlPostingType/NOCHECK'
+   Pc_Valid_From.Flags = 'KMIU-'
+   Pc_Valid_From.Datatype = 'DATE/DATE'
+   Pc_Valid_From.Prompt = 'Pc Valid From'
+   Control_Type.Flags = 'AMI--'
+   Control_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Control_Type.Prompt = 'Control Type'
+   Control_Type.Ref = 'PostingCtrlAllowedComb(POSTING_TYPE,CODE_PART)/NOCHECK'
+   Module.Flags = 'AMI--'
+   Module.Datatype = 'STRING(20)/UPPERCASE'
+   Module.Prompt = 'Module'
+   Override_Db.Flags = 'A----'
+   Override_Db.Datatype = 'STRING(20)'
+   Override_Db.Prompt = 'Override'
+   Default_Value.Flags = 'A----'
+   Default_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Default_Value.Prompt = 'Default Value'
+   Default_Value.Ref = 'AccountingCodePartValue(COMPANY,CODE_PART)/NOCHECK'
+   Default_Value_No_Ct.Flags = 'A----'
+   Default_Value_No_Ct.Datatype = 'STRING(20)/UPPERCASE'
+   Default_Value_No_Ct.Prompt = 'Default Value No CT Value'
+   Default_Value_No_Ct.Ref = 'AccountingCodePartValue(COMPANY,CODE_PART)/NOCHECK'
+   Component.Flags = 'A----'
+   Component.Datatype = 'STRING(6)/UPPERCASE'
+   Component.Prompt = 'Component'
+SELECT company                                                company,
+       code_part                                              code_part,
+       posting_type                                           posting_type,
+       pc_valid_from                                          pc_valid_from,
+       control_type                                           control_type,
+       module                                                 module,
+       override_db                                            override_db,
+       default_value                                          default_value,
+       default_value_no_ct                                    default_value_no_ct,
+       component                                              component
+FROM   POSTING_CTRL_PUB;
+
+VIEW Posting_Ctrl_Detail_Gen_Pct IS
+   Prompt = 'Accrul Posting Ctrl Detail'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Code_Part.Flags = 'PMI-L'
+   Code_Part.Datatype = 'STRING(1)/UPPERCASE'
+   Code_Part.Prompt = 'Code Part'
+   Posting_Type.Flags = 'PMI-L'
+   Posting_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Posting_Type.Prompt = 'Posting Type'
+   Pc_Valid_From.Flags = 'PMI--'
+   Pc_Valid_From.Datatype = 'DATE/DATE'
+   Pc_Valid_From.Prompt = 'Pc Valid From'
+   Code_Part_Value.Flags = 'P-IU-'
+   Code_Part_Value.Datatype = 'STRING(100)/UPPERCASE'
+   Code_Part_Value.Prompt = 'Code Part Value'
+   Code_Part_Value.Ref = 'AccountingCodePartValue(company,code_part)/NOCHECK'
+   Control_Type_Value.Flags = 'KMI--'
+   Control_Type_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Control_Type_Value.Prompt = 'Control Type Value'
+   Valid_From.Flags = 'KMIU-'
+   Valid_From.Datatype = 'DATE/DATE'
+   Valid_From.Prompt = 'Valid From'
+   Control_Type.Flags = 'AMI--'
+   Control_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Control_Type.Prompt = 'Control Type'
+   Module.Flags = 'AMI--'
+   Module.Datatype = 'STRING(100)'
+   Module.Prompt = 'Module'
+   Spec_Control_Type.Flags = 'A-IU-'
+   Spec_Control_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Spec_Control_Type.Prompt = 'Specification Control Type'
+   Spec_Module.Flags = 'A-IU-'
+   Spec_Module.Datatype = 'STRING(20)/UPPERCASE'
+   Spec_Module.Prompt = 'Specification Module'
+   Spec_Default_Value.Flags = 'A-IU-'
+   Spec_Default_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Spec_Default_Value.Prompt = 'Specification Default Value No Details'
+   Spec_Default_Value_No_Ct.Flags = 'A-IU-'
+   Spec_Default_Value_No_Ct.Datatype = 'STRING(20)/UPPERCASE'
+   Spec_Default_Value_No_Ct.Prompt = 'Specification Default Value No CT Value'
+   No_Code_Part_Value_Db.Flags = 'AMIU-'
+   No_Code_Part_Value_Db.Datatype = 'STRING(5)'
+   No_Code_Part_Value_Db.Prompt = 'No Code Part Value'
+SELECT company                        company,
+       code_part                      code_part,
+       posting_type                   posting_type,
+       pc_valid_from                  pc_valid_from,       
+       code_part_value                code_part_value,
+       control_type_value             control_type_value,
+       valid_from                     valid_from,
+       control_type                   control_type,
+       module                         module,
+       component                      component,
+       spec_control_type              spec_control_type,
+       spec_module                    spec_module,
+       spec_default_value             spec_default_value,
+       spec_default_value_no_ct       spec_default_value_no_ct,
+       no_code_part_value_db          no_code_part_value_db
+FROM   POSTING_CTRL_DETAIL_PUB     ;
+
+VIEW Posting_Ctrl_Comb_Det_Gen_Pct IS
+   Prompt = 'Accrul Posting Ctrl Combination Detail'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Posting_Type.Flags = 'PMI--'
+   Posting_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Posting_Type.Prompt = 'Posting Type'
+   Pc_Valid_From.Flags = 'KMI-L'
+   Pc_Valid_From.Datatype = 'DATE/DATE'
+   Pc_Valid_From.Prompt = 'Pc Valid From'
+   Comb_Control_Type.Flags = 'KMIU-'
+   Comb_Control_Type.Datatype = 'STRING(10)'
+   Comb_Control_Type.Prompt = 'Comb Control Type'
+   Control_Type1.Flags = 'KMI--'
+   Control_Type1.Datatype = 'STRING(10)'
+   Control_Type1.Prompt = 'Control Type1'
+   Control_Type1_Value.Flags = 'AMIU-'
+   Control_Type1_Value.Datatype = 'STRING(100)'
+   Control_Type1_Value.Prompt = 'Control Type1 Value'
+   Control_Type2.Flags = 'KMI--'
+   Control_Type2.Datatype = 'STRING(10)'
+   Control_Type2.Prompt = 'Control Type2'
+   Control_Type2_Value.Flags = 'AMIU-'
+   Control_Type2_Value.Datatype = 'STRING(100)'
+   Control_Type2_Value.Prompt = 'Control Type2 Value'
+   Comb_Module.Flags = 'AMIU-'
+   Comb_Module.Datatype = 'STRING(20)'
+   Comb_Module.Prompt = 'Comb Module'
+   Module1.Flags = 'AMIU-'
+   Module1.Datatype = 'STRING(20)'
+   Module1.Prompt = 'Module1'
+   Module2.Flags = 'AMIU-'
+   Module2.Datatype = 'STRING(20)'
+   Module2.Prompt = 'Module2'
+   Code_Part.Flags = 'AMIU-'
+   Code_Part.Datatype = 'STRING(1)'
+   Code_Part.Prompt = 'Code Part'
+   Code_Part_Name.Flags = 'AMIU-'
+   Code_Part_Name.Datatype = 'STRING(20)'
+   Code_Part_Name.Prompt = 'Code Part Name'
+   Code_Part_Value.Flags = 'A-IU-'
+   Code_Part_Value.Datatype = 'STRING(20)'
+   Code_Part_Value.Prompt = 'Code Part Value'
+   Valid_From.Flags = 'AMIU-'
+   Valid_From.Datatype = 'DATE'
+   Valid_From.Prompt = 'Valid From'
+   Component.Flags = 'A----'
+   Component.Datatype = 'STRING(6)/UPPERCASE'
+   Component.Prompt = 'Component'
+   No_Code_Part_Value_Db.Flags = 'AMIU-'
+   No_Code_Part_Value_Db.Datatype = 'STRING(5)'
+   No_Code_Part_Value_Db.Prompt = 'No Code Part Value'
+SELECT company                        company,
+       posting_type                   posting_type,
+       pc_valid_from                  pc_valid_from,       
+       comb_control_type              comb_control_type,
+       control_type1                  control_type1,
+       control_type1_value            control_type1_value,
+       control_type2                  control_type2,
+       control_type2_value            control_type2_value,
+       comb_module                    comb_module,
+       module1                        module1,
+       module2                        module2,
+       code_part                      code_part,
+       code_part_name                 code_part_name,
+       code_part_value                code_part_value,
+       valid_from                     valid_from,
+       component                      component,
+       no_code_part_value_db          no_code_part_value_db
+FROM   POSTING_CTRL_COMB_DETAIL_PUB     ;
+
+VIEW Posting_Ctrl_Det_Spec_Gen_Pct IS
+   Prompt = 'Posting Ctrl Detail Spec'
+   Company.Flags = 'PMI-L'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Code_Part.Flags = 'PMI--'
+   Code_Part.Datatype = 'STRING(1)'
+   Code_Part.Prompt = 'Code Part'
+   Pc_Valid_From.Flags = 'PMI--'
+   Pc_Valid_From.Datatype = 'DATE/DATE'
+   Pc_Valid_From.Prompt = 'Pc Valid From'
+   Posting_Type.Flags = 'PMI-L'
+   Posting_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Posting_Type.Prompt = 'Posting Type'
+   Control_Type_Value.Flags = 'PMIU-'
+   Control_Type_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Control_Type_Value.Prompt = 'Control Type Value'
+   Valid_From.Flags = 'PMIU-'
+   Valid_From.Datatype = 'DATE/DATE'
+   Valid_From.Prompt = 'Valid From'
+   Spec_Control_Type_Value.Flags = 'KMI--'
+   Spec_Control_Type_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Spec_Control_Type_Value.Prompt = 'Specification Control Type Value'
+   Spec_Control_Type.Flags = 'AMI--'
+   Spec_Control_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Spec_Control_Type.Prompt = 'Specification Control Type'
+   Spec_Module.Flags = 'AMI--'
+   Spec_Module.Datatype = 'STRING(20)/UPPERCASE'
+   Spec_Module.Prompt = 'Specification Module'
+   Code_Part_Value.Flags = 'A-IU-'
+   Code_Part_Value.Datatype = 'STRING(20)'
+   Code_Part_Value.Prompt = 'Code Part Value'
+   Component.Flags = 'PMI--'
+   Component.Datatype = 'STRING(6)/UPPERCASE'
+   Component.Prompt = 'Component'
+   No_Code_Part_Value_Db.Flags = 'AMIU-'
+   No_Code_Part_Value_Db.Datatype = 'STRING(5)'
+   No_Code_Part_Value_Db.Prompt = 'No Code Part Value'
+SELECT company                      company,
+       code_part                    code_part,
+       pc_valid_from                pc_valid_from,
+       posting_type                 posting_type,
+       control_type_value           control_type_value,
+       valid_from                   valid_from,
+       spec_control_type_value      spec_control_type_value,
+       spec_control_type            spec_control_type,
+       spec_module                  spec_module,
+       code_part_value              code_part_value,
+       component                    component,
+       no_code_part_value_db        no_code_part_value_db
+FROM   POSTING_CTRL_DETAIL_SPEC_PUB;
+
+VIEW Posting_Ctrl_Cdet_Spec_Gen_Pct IS
+   Prompt = 'Posting Ctrl Comb Det Spec Pub'
+   Company.Flags = 'PMI-L'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Code_Part.Flags = 'PMI--'
+   Code_Part.Datatype = 'STRING(1)'
+   Code_Part.Prompt = 'Code Part'
+   Pc_Valid_From.Flags = 'PMI--'
+   Pc_Valid_From.Datatype = 'DATE/DATE'
+   Pc_Valid_From.Prompt = 'Pc Valid From'
+   Posting_Type.Flags = 'PMI-L'
+   Posting_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Posting_Type.Prompt = 'Posting Type'
+   Control_Type_Value.Flags = 'PMIU-'
+   Control_Type_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Control_Type_Value.Prompt = 'Control Type Value'
+   Valid_From.Flags = 'PMIU-'
+   Valid_From.Datatype = 'DATE/DATE'
+   Valid_From.Prompt = 'Valid From'
+   Spec_Comb_Control_Type.Flags = 'KMI--'
+   Spec_Comb_Control_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Spec_Comb_Control_Type.Prompt = 'Spec Comb Control Type'
+   Spec_Control_Type1_Value.Flags = 'KMI--'
+   Spec_Control_Type1_Value.Datatype = 'STRING(100)/UPPERCASE'
+   Spec_Control_Type1_Value.Prompt = 'Spec Control Type1 Value'
+   Spec_Control_Type2_Value.Flags = 'KMI--'
+   Spec_Control_Type2_Value.Datatype = 'STRING(100)/UPPERCASE'
+   Spec_Control_Type2_Value.Prompt = 'Spec Control Type2 Value'
+   Spec_Control_Type1.Flags = 'AMI--'
+   Spec_Control_Type1.Datatype = 'STRING(10)/UPPERCASE'
+   Spec_Control_Type1.Prompt = 'Spec Control Type1'
+   Spec_Module1.Flags = 'AMI--'
+   Spec_Module1.Datatype = 'STRING(20)/UPPERCASE'
+   Spec_Module1.Prompt = 'Spec Module1'
+   Spec_Control_Type2.Flags = 'AMI--'
+   Spec_Control_Type2.Datatype = 'STRING(10)/UPPERCASE'
+   Spec_Control_Type2.Prompt = 'Spec Control Type2'
+   Spec_Module2.Flags = 'AMI--'
+   Spec_Module2.Datatype = 'STRING(20)/UPPERCASE'
+   Spec_Module2.Prompt = 'Spec Module2'
+   Code_Part_Value.Flags = 'A-IU-'
+   Code_Part_Value.Datatype = 'STRING(100)'
+   Code_Part_Value.Prompt = 'Code Part Value'
+   Component.Flags = 'PMI--'
+   Component.Datatype = 'STRING(6)/UPPERCASE'
+   Component.Prompt = 'Component'
+   No_Code_Part_Value_Db.Flags = 'AMIU-'
+   No_Code_Part_Value_Db.Datatype = 'STRING(5)'
+   No_Code_Part_Value_Db.Prompt = 'No Code Part Value'
+SELECT company                        company,
+       code_part                      code_part,
+       pc_valid_from                  pc_valid_from,
+       posting_type                   posting_type,
+       control_type_value             control_type_value,
+       valid_from                     valid_from,
+       spec_comb_control_type         spec_comb_control_type,
+       spec_control_type1_value       spec_control_type1_value,
+       spec_control_type2_value       spec_control_type2_value,
+       spec_control_type1             spec_control_type1,
+       spec_module1                   spec_module1,
+       spec_control_type2             spec_control_type2,
+       spec_module2                   spec_module2,
+       code_part_value                code_part_value,
+       component                      component,
+       no_code_part_value_db          no_code_part_value_db
+FROM   POSTING_CTRL_COMB_DET_SPEC_PUB;
+

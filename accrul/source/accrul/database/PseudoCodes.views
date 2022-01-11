@@ -1,0 +1,60 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PseudoCodes
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-- 200602   SACNLK   GESPRING20-4612, Modified Private_Pseudo_Codes view to add sat_account_type.
+-- 200623   SACNLK   GESPRING20-4642, Added Private_Pseudo_Codes view to add sat_level and sat_account_group.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+@Override
+COLUMN Code_Part IS
+   Column     = 'company';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Private_Pseudo_Codes IS
+   Prompt = 'Private Pseudo Codes'
+   User_Name.Flags = 'KM---'
+   Pseudo_Code.Flags = 'KMIU-'
+SELECT company                        company,
+       user_name                      user_name,
+       pseudo_code                    pseudo_code,
+       description                    description,
+       process_code                   process_code,
+       text                           text,
+       quantity                       quantity,
+       account                        account,
+       code_b                         code_b,
+       code_c                         code_c,
+       code_d                         code_d,
+       code_e                         code_e,
+       code_f                         code_f,
+       code_g                         code_g,
+       code_h                         code_h,
+       code_i                         code_i,
+       code_j                         code_j,
+       Fin_Ownership_API.Decode(pseudo_code_ownership)      pseudo_code_ownership,
+       pseudo_code_ownership          pseudo_code_ownership_db,
+       project_activity_id            project_activity_id,
+       -- gelr:accounting_xml_data, begin
+       sat_account_type               sat_account_type,
+       sat_account_group              sat_account_group,
+       sat_level                      sat_level,
+       -- gelr:accounting_xml_data, end
+       rowid                         objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                        objkey
+FROM   pseudo_codes_tab
+WHERE  user_name = FND_SESSION_API.Get_Fnd_User  ;

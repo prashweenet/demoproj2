@@ -1,0 +1,53 @@
+projection TaxCodeTextsHandling;
+component ACCRUL;
+layer Core;
+description "Tax Code Texts Handling";
+category Users;
+
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset TaxCodeTextsSet for TaxCodeTexts {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity TaxCodeTexts {
+   reference FeeCodeRef(Company, FeeCode) to StatutoryFee(Company, FeeCode) {
+      label = "Tax Code";
+   }
+   attribute ValidUntil Date {
+      label = "Valid To";
+   }
+   attribute AttributeKey Text {
+      fetch = "fee_code||'^'||TO_CHAR(valid_from,'YYYYMMDD')||'^'||TO_CHAR(valid_until,'YYYYMMDD')";
+   }
+   attribute ExcFromSpesometroDec Boolean("TRUE", "FALSE");
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

@@ -1,0 +1,40 @@
+fragment FooterWithoutSiteLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view footer_without_site_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceFooterWithoutSiteLovSelector for FooterWithoutSiteLov {
+   static Contract;
+   static Description;
+}
+
+card FooterWithoutSiteLovCard for FooterWithoutSiteLov {
+   label = "";
+   fieldranking Contract;
+   field Contract;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query FooterWithoutSiteLov {
+   from = "footer_without_site_lov";
+   lu = FooterConnection;
+   keys = Contract;
+   ludependencies = FooterConnection;
+   attribute Contract Text {
+      label = "Site";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      label = "Site Description";
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

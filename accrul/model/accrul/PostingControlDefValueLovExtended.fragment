@@ -1,0 +1,112 @@
+fragment PostingControlDefValueLovExtended;
+component ACCRUL;
+layer Core;
+description "Fragment with a fieldset, supports when navigating for Acount, Code B-J via lov references";
+// The page using this fieldset must be Company Context dependent
+// This fragment contains look up functionality to Account or Code B-J pages conditionaly considering the default values no details, default value no CT, spec default no, spec default value no CT  values in Posting control related pages.
+// The reference in the projection must be named DefaultValueRef for DefaultValue, DefaultValueNoCtRef for DefaultValueNoCt, SpecDefaultValueRef for SpecDefaultValue, SpecDefaultValueNoCtRef for SpecDefaultValueNoCt and CodePartValueRef for CodePartValue.
+--------------------------------- FRAGMENTS ---------------------------------
+include fragment AccountingCodePartValueLovSelector;
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+-------------------------------- FIELD SETS ---------------------------------
+fieldset PostingControlDefValueLovExtendedFieldSet {
+   field DefaultValue {
+      size = Small;
+      editable = [(CtrlTypeCategory != "") and(CtrlTypeCategory != "PrePosting")];
+      lovswitch {
+         when [CodePart = "A"] {
+            lov DefaultValueRef with ReferenceAccountingCodePartValueLovSelector {
+               details = "page/Account/Form?contexts=Company:${Company}&$filter=(startswith(AccountSearch,'${DefaultValue}'))";
+            }
+         }
+         when [true] {
+            lov DefaultValueRef with ReferenceAccountingCodePartValueLovSelector {
+               details = "page/Code${CodePart}/List?contexts=Company:${Company}&filter=Code${CodePart} eq ${DefaultValue}";
+            }
+         }
+      }
+   }
+   field DefaultValueNoCt {
+      size = Small;
+      editable = [(CtrlTypeCategory != "") and(CtrlTypeCategory != "FixedValue") and(CtrlTypeCategory != "PrePosting")];
+      lovswitch {
+         when [CodePart = "A"] {
+            lov DefaultValueNoCtRef with ReferenceAccountingCodePartValueLovSelector {
+               details = "page/Account/Form?contexts=Company:${Company}&$filter=(startswith(AccountSearch,'${DefaultValueNoCt}'))";
+            }
+         }
+         when [true] {
+            lov DefaultValueNoCtRef with ReferenceAccountingCodePartValueLovSelector {
+               details = "page/Code${CodePart}/List?contexts=Company:${Company}&filter=Code${CodePart} eq ${DefaultValueNoCt}";
+            }
+         }
+      }
+   }
+}
+
+fieldset PostingControlSpecDefValueLovExtendedFieldSet {
+   field SpecDefaultValue {
+      size = Small;
+      lovswitch {
+         when [CodePart = "A"] {
+            lov SpecDefaultValueRef with ReferenceAccountingCodePartValueLovSelector {
+               editable = [SpecControlType != null];
+               details = "page/Account/Form?contexts=Company:${Company}&$filter=(startswith(AccountSearch,'${SpecDefaultValue}'))";
+            }
+         }
+         when [true] {
+            lov SpecDefaultValueRef with ReferenceAccountingCodePartValueLovSelector {
+               editable = [SpecControlType != null];
+               details = "page/Code${CodePart}/List?contexts=Company:${Company}&filter=Code${CodePart} eq ${SpecDefaultValue}";
+            }
+         }
+      }
+   }
+   field SpecDefaultValueNoCt {
+      size = Small;
+      lovswitch {
+         when [CodePart = "A"] {
+            lov SpecDefaultValueNoCtRef with ReferenceAccountingCodePartValueLovSelector {
+               editable = [not(SpecControlType = null or SpecCtrlTypeCategory = "FixedValue" or SpecCtrlTypeCategory = "PrePosting")];
+               details = "page/Account/Form?contexts=Company:${Company}&$filter=(startswith(AccountSearch,'${SpecDefaultValueNoCt}'))";
+            }
+         }
+         when [true] {
+            lov SpecDefaultValueNoCtRef with ReferenceAccountingCodePartValueLovSelector {
+               editable = [not(SpecControlType = null or SpecCtrlTypeCategory = "FixedValue" or SpecCtrlTypeCategory = "PrePosting")];
+               details = "page/Code${CodePart}/List?contexts=Company:${Company}&filter=Code${CodePart} eq ${SpecDefaultValueNoCt}";
+            }
+         }
+      }
+   }
+}
+
+fieldset PostingCtrlCodePartValueLovExtendedFieldSet {
+   field CodePartValue {
+      label = "${parent.CodeName}";
+      lovswitch {
+         when [CodePart = "A"] {
+            lov CodePartValueRef with ReferenceAccountingCodePartValueLovSelector {
+               description = CodePartValueRef.Description;
+               search = CodePartValue, Description;
+               details = "page/Account/Form?contexts=Company:${Company}&$filter=(startswith(AccountSearch,'${CodePartValue}'))";
+            }
+         }
+         when [true] {
+            lov CodePartValueRef with ReferenceAccountingCodePartValueLovSelector {
+               description = CodePartValueRef.Description;
+               search = CodePartValue, Description;
+               details = "page/Code${CodePart}/List?contexts=Company:${Company}&filter=Code${CodePart} eq ${CodePartValue}";
+            }
+         }
+      }
+   }
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+
+

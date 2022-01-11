@@ -1,0 +1,56 @@
+projection CostRevenueStructureHandling;
+component ACCRUL;
+layer Core;
+description "Manage Cost/Revenue Breakdown Structures";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CostStructureSet for CostStructure {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CostStructure {
+   attribute Template Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute SingleProject Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute CostStructureId Text {
+      label = "Structure ID";
+   }
+   @DynamicComponentDependency PROJ
+   function DoGetConnectedStructures  Text {
+      ludependencies = CostStructure;
+   }
+}
+
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

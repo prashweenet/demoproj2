@@ -1,0 +1,26 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CompanySecurity
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+VIEW Company_Security_Basic IS
+   Prompt = 'Company Security Basic'      
+SELECT company                             company       
+FROM   user_finance_auth_pub;
+
+VIEW Company_Security_Extended IS
+   Prompt = 'Company Security Extended'      
+SELECT company                             company       
+FROM   user_finance_auth_pub;
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

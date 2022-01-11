@@ -1,0 +1,48 @@
+projection ExternalFileSeparatorsHandling;
+component ACCRUL;
+layer Core;
+description "External File Separators";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtFileSeparatorSet for ExtFileSeparator;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileSeparator {
+   attribute Separator Text {
+      required = [false];
+   }
+   attribute SeparatorAscii Text {
+      label = "Separator ID";
+      required = [false];
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

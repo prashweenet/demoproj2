@@ -1,0 +1,20 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtTypeParamPerSet
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+@Overtake Base
+PRIMARY KEY ext_type_param_per_set_pk IS ext_type_param_per_set_tab (file_type, set_id, param_no);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

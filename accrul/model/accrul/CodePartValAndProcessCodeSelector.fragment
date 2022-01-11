@@ -1,0 +1,29 @@
+fragment CodePartValAndProcessCodeSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view code_part_val_and_process_code";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+@Override
+list CodePartValAndProcessCodeLovList for CodePartValAndProcessCode {
+   static Company {
+      columnexclude = [true];
+   }
+   static CodePart {
+      columnexclude = [true];
+   }
+}
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+query CodePartValAndProcessCode {
+   from = "code_part_val_and_process_code";
+   lu = AccountingCodePartValue;
+   keys = Company, CodePart, CodePartValue;
+   attribute Company Text;
+   attribute CodePart Text;
+   attribute CodePartValue Text {
+      label = "Code Part Value / Process Code";
+   }
+   attribute Description Text;
+}

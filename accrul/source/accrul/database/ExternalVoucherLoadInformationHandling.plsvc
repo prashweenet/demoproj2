@@ -1,0 +1,96 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalVoucherLoadInformationHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+PROCEDURE Do_Remove_Loads___ (
+   key_          IN Ext_Load_Info_Key,
+   load_file_id_ IN NUMBER ) 
+IS
+   attr_ VARCHAR2(1000);
+BEGIN
+   Client_SYS.Add_To_Attr('LOAD_FILE_ID', load_file_id_, attr_);
+   Client_SYS.Add_To_Attr('LOAD_ID', key_.load_id, attr_);      
+   Ext_Load_Info_API.Complete_Remove(key_.company, attr_);
+END Do_Remove_Loads___;
+
+
+PROCEDURE Do_Remove_Error_Codes___ (
+   key_ IN Ext_Load_Info_Key )    
+IS   
+BEGIN      
+   Ext_Transactions_API.Clear_All_Error(key_.company, key_.load_id);
+END Do_Remove_Error_Codes___;
+
+PROCEDURE Do_Create_Voucher___ (
+   key_ IN Ext_Load_Info_Key )    
+IS
+   fun_group_q_exist_ VARCHAR2(5);
+   info_              VARCHAR2(2000);
+BEGIN      
+   fun_group_q_exist_ := Ext_Transactions_API.Check_Exist_Function_Group_Q(key_.company, key_.load_id);
+   IF (fun_group_q_exist_ = 'TRUE') THEN      
+      Client_SYS.Add_Warning(lu_name_, 'NOAUTOTAXTRANS: No automatic tax transaction will be created on a voucher of function group Q');
+   END IF;
+   -- TODO:UXX Shdilk 171114 chk whether the info messages fire from this function will raise
+   Ext_Create_API.Create_Voucher(info_, key_.company, key_.load_id);   
+END Do_Create_Voucher___;
+
+
+PROCEDURE Do_Check_Transactions___ (
+   key_   IN  Ext_Load_Info_Key,
+   info$_ OUT VARCHAR2) 
+IS
+   loc_info_   VARCHAR2(32000);
+BEGIN
+   Ext_Check_API.Check_Transaction__(loc_info_, key_.company, key_.load_id, 'TRUE');   
+   
+   Client_SYS.Merge_Info(loc_info_);
+   info$_ := Client_SYS.Get_All_Info();
+END Do_Check_Transactions___;
+
+FUNCTION Get_Ext_Trans_Validity_Info___ (
+   key_ IN Ext_Load_Info_Key ) RETURN External_Voucher_User_Data_Struct_Rec
+IS
+   rec_   External_Voucher_User_Data_Struct_Rec; 
+BEGIN
+   Ext_Transactions_API.Check_Condition(  rec_.results, 
+                                          rec_.user_id_prv, 
+                                          rec_.user_group_prv, 
+                                          rec_.user_id, 
+                                          rec_.user_group, 
+                                          key_.company, 
+                                          key_.load_id);      
+   RETURN rec_;
+END Get_Ext_Trans_Validity_Info___;
+
+FUNCTION Is_Valid_User_Data___(
+   company_    IN VARCHAR2,
+   user_id_    IN VARCHAR2,
+   user_group_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   results_   VARCHAR2(5);
+BEGIN
+   Ext_Transactions_API.Validate_User_Data(results_, company_, user_id_, user_group_);
+   RETURN results_;
+END Is_Valid_User_Data___;
+
+PROCEDURE Do_Update_New_User_Data___ (
+   company_        IN VARCHAR2,
+   load_id_        IN VARCHAR2,
+   user_id_        IN VARCHAR2,
+   user_group_     IN VARCHAR2,
+   user_id_prv_    IN VARCHAR2,
+   user_group_prv_ IN VARCHAR2 ) 
+IS
+BEGIN
+   Ext_Transactions_API.Update_New_User_Data(company_, load_id_, user_id_, user_group_, user_id_prv_, user_group_prv_);
+END Do_Update_New_User_Data___;

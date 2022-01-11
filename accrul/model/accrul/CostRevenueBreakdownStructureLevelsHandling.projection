@@ -1,0 +1,68 @@
+projection CostRevenueBreakdownStructureLevelsHandling;
+component ACCRUL;
+layer Core;
+description "Structure Levels";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CostStructureLevelSet for CostStructureLevel {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CostStructureLevel {
+   attribute CostStructureId Text {
+      label = "Structure";
+   }
+   attribute LevelNo Number {
+      required = [false];
+      insertable = [false];
+   }
+   attribute Description Text {
+      required = [false];
+   }
+   attribute LevelAbove Text {
+      editable = [false];
+      format = uppercase;
+      required = [false];
+      insertable = [false];
+   }
+
+   reference CostStructureIdRef(Company, CostStructureId) to CostStructure(Company, CostStructureId) {
+      label = "Structure";
+   }
+}
+
+@Override
+entity CostStructure {
+   crud = Read;
+   attribute Template Boolean("TRUE", "FALSE");
+   attribute SingleProject  Boolean("TRUE", "FALSE");
+
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

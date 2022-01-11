@@ -1,0 +1,33 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: Voucher
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+--  141208  DipeLK  PRFI-3818,Dropping obsolete COLUMNS from VOUCHER_TAB.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+@Overtake Base
+PRIMARY KEY voucher_pk IS voucher_tab (company, accounting_year, voucher_no, voucher_type);
+
+
+INDEX voucher_ix1 IS voucher_tab (transfer_id);
+
+
+INDEX voucher_ix2 IS voucher_tab (function_group);
+
+
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+SEQUENCE ACCRUL_FICTIVE_VOU_NO IS INCREMENT BY -1 START WITH -1  ORDER;

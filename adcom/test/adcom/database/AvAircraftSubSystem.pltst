@@ -1,0 +1,144 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvAircraftSubSystem
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210112  KAWJLK  LMM2020R1-1477, Added  pltst for overridden Check_Insert___, Check_Common_Data.
+--  210105  sevhlk  LMM2020R1-1482, Changes made to pre sync action test.
+--  201017  rosdlk  LMM2020R1-794, Test method changes added
+--  200924  rosdlk  LMM2020R1-1087, Test method correction after refactoring
+--  200811  rosdlk  LMM2020R1-464, Created
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_aircraft_system_tab
+   VALUES
+      | system_id | mx_unique_key |
+      | 1         | 'MXKEY1'      |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_     VARCHAR2(2000);
+   expected1_    VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'SYSTEM_UNIQUE_KEY'||chr(31)||'MXKEY1'||chr(30)||'WITH_SYSTEM_KEY'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+      --Insert your assertions here
+      expected1_ := 'WITH_SYSTEM_KEY'||'SYSTEM_ID'||chr(31)||'1'||chr(30);
+
+      IF attr_ LIKE '%WITH_SYSTEM_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Check_Insert___ should assign sequence value for Sub_System_Id when inserting new record" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT Av_Aircraft_Sub_System_Tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      |dummy |
+      |1     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_  Av_Aircraft_Sub_System_Tab%ROWTYPE;
+   output4_  Av_Aircraft_Sub_System_Tab%ROWTYPE;
+   output2_  Indicator_Rec;
+
+BEGIN
+   FOR
+      | newrec_ | indrec_ | attr_ |
+      | output1_| output2_| 'A'   |
+      | output4_| output2_| 'A'   |
+   LOOP
+      --Insert your test code here
+      IF newrec_.Sub_System_Id IS NULL THEN
+         newrec_.Sub_System_Id := av_sub_system_seq.nextval;
+         ASSERT newrec_.Sub_System_Id IS NOT NULL MESSAGE 'Returned '||newrec_.Sub_System_Id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Check_Common_Data should return TRUE when there is no common sub system exists" FOR
+   FUNCTION Check_Common_Data (rec_ IN     Av_Aircraft_Sub_System_Tab%ROWTYPE)RETURN BOOLEAN;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_aircraft_sub_system_tab
+   VALUES
+      | sub_system_id | aircraft_type_code | sub_system_code |
+      | 1             | 'A'                | 'A'             |
+      | 2             | 'B'                | 'B'             |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   rec1_ Av_Aircraft_Sub_System_Tab%ROWTYPE;
+   rec2_ Av_Aircraft_Sub_System_Tab%ROWTYPE;
+   return_   BOOLEAN;
+   output_ VARCHAR2(100);
+   output2_ VARCHAR2(100);
+   expected_ BOOLEAN;
+BEGIN
+   rec1_.sub_system_id := 1 ;
+   rec1_.aircraft_type_code := 'A' ;
+   rec1_.sub_system_code := 'A' ;
+
+   rec2_.sub_system_id := 2 ;
+   rec2_.aircraft_type_code := 'A' ;
+   rec2_.sub_system_code := 'A' ;
+
+   FOR
+      | expected_ | rec_ |
+      |    TRUE   | rec1_|
+      |    FALSE  | rec2_|
+   LOOP
+      --Insert your test code here
+      return_ := Check_Common_Data(rec_);
+      IF return_ THEN
+         output_ :=  'TRUE';
+      ELSE
+         output_ :=  'FALSE';
+      END IF;
+
+      IF expected_ THEN
+         output2_ :=  'TRUE';
+      ELSE
+         output2_ :=  'FALSE';
+      END IF;
+      --Insert your assertions here
+      ASSERT output_ = output2_ MESSAGE 'Expected '||output2_||' but returned '||output_;
+
+   END LOOP;
+END UNITTEST;

@@ -1,0 +1,371 @@
+fragment ExtFileAssistant;
+component ACCRUL;
+layer Core;
+description "For use in External File Assistants";
+
+include fragment ExtFileTypeUsableSelector;
+include fragment ExtFileTemplateLov2Selector;
+include fragment ScheduledTasksCommon;
+include fragment ExtFileActionsAccrul;
+@DynamicComponentDependency INVOIC
+include fragment ExtFileActionsInvoic;
+@DynamicComponentDependency JINSUI
+include fragment ExtFileActionsJinsui;
+@DynamicComponentDependency TAXLED
+include fragment ExtFileActionsTaxled;
+@DynamicComponentDependency PAYLED
+include fragment ExtFileActionsPayled;
+@DynamicComponentDependency GENLED
+include fragment ExtFileActionsGenled;
+@DynamicComponentDependency BUSPLN
+include fragment ExtFileActionsBuspln;
+@DynamicComponentDependency GROCON
+include fragment ExtFileActionsGrocon;
+@DynamicComponentDependency FIXASS
+include fragment ExtFileActionsFixass;
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+--------------------------------- COMMANDS ----------------------------------
+
+command NavigateToExtTrans {
+   label = "View External File Transactions";
+}
+
+----------------------------- Group Definitions -----------------------------
+
+group ProcessOptionsGroup for TaskVirtual {
+   label = "";
+   radiogroup ProcessOptions {
+      validate command {
+         execute {
+            if [ProcessOptions = "Batch"] {
+               call GetParameters() into Params;
+               set ScheduleMethodId = Params.ScheduleMethodId;
+               set ScheduleName = Params.Description;
+            }
+         }
+      }
+   }
+}
+
+group FileOptionsGroup for TaskVirtual {
+   label = "File Options";
+   lov FileTypeRef with ReferenceExtFileTypeUsableSelector {
+      search = FileType, Description;
+      description = FileTypeRef.Description;
+      search = FileType;
+      editable = [FileTypeParam = null or FileTypeParam != FileType];
+
+      validate command {
+         variable Company Text;
+         execute {
+            set Company = "${context.Company}";
+            call GetDefaultFileTypeInfo(Company, FileType, ProcessOptions) into DefaultInfo;
+            set Company = "${DefaultInfo.Company}";
+            set SetId = "${DefaultInfo.SetId}";
+            set FileTemplate = "${DefaultInfo.FileTemplate}";
+            set ParamString = "${DefaultInfo.ParamString}";
+            set FileDirection = "${DefaultInfo.FileDirection}";
+            set FileDirectionDb = "${DefaultInfo.FileDirectionDb}";
+            set FileName = DefaultInfo.FileName;
+         }
+      }
+   }
+   lov SetIdRef with ReferenceExtTypeParamSetSelector {
+      search = SetId, Description;
+      description = SetIdRef.Description;
+      validate command {
+         variable Company Text;
+         execute {
+            set Company = "${context.Company}";
+            if [SetIdRef.SetId = "1"] {
+               set FileDirection = "InputFile";
+               set FileDirectionDb = "1";
+            }
+            else {
+               set FileDirection = "OutputFile";
+               set FileDirectionDb = "2";
+            }
+            call GetDefaultSetIdInfo(Company, FileType, SetId, ProcessOptions) into DefaultInfo;
+            set FileTemplate = "${DefaultInfo.FileTemplate}";
+            set ParamString = "${DefaultInfo.ParamString}";
+            set FileDirection = "${DefaultInfo.FileDirection}";
+            set FileDirectionDb = "${DefaultInfo.FileDirectionDb}";
+            set FileName = DefaultInfo.FileName;
+
+         }
+      }
+   }
+   lov TemplateIdRef with ReferenceExtFileTemplateLov2Selector {
+      search = FileTemplateId, Description;
+      description = TemplateIdRef.Description;
+      validate command {
+         variable Company Text;
+         execute {
+            set Company = "${context.Company}";
+            call GetFileTemplateInformation(Company, FileType, SetId, FileTemplate, ProcessOptions) into DefaultInfo;
+            set Company = DefaultInfo.Company;
+            set ParamString = DefaultInfo.ParamString;
+            set FileDirection = DefaultInfo.FileDirection;
+            set FileDirectionDb = DefaultInfo.FileDirectionDb;
+            set FileName = DefaultInfo.FileName;
+         }
+      }
+   }
+   field FileDirection {
+      editable = [false];
+   }
+   field FileName {
+      visible = [(FileDirectionDb = "1" and ProcessOptions = "Batch") or FileDirectionDb = "2"];
+      editable = [ProcessOptions = "Online"];
+
+      validate command {
+         execute {
+            call ChangeParamValues("FILE_NAME", FileName, ParamString) into ParamString;
+         }
+      }
+   }
+}
+
+group FileTypeInfoGroup for TaskVirtual {
+   label = "Selected File Options";
+
+   lov FileTypeRef with ReferenceExtFileTypeUsableSelector {
+      search = FileType, Description;
+      description = FileTypeRef.Description;
+      editable = [false];
+   }
+   lov SetIdRef with ReferenceExtTypeParamSetSelector {
+      search = SetId, Description;
+      description = SetIdRef.Description;
+      editable = [false];
+   }
+}
+
+----------------------------- List Definitions -----------------------------
+
+list ExtFileTypeParamList for ExtFileTypeParamDialog {
+   editmode = SingleCellEdit;
+
+   label = "Parameters";
+   disable = Create, Delete;
+   field Company {
+      columnexclude = [true];
+   }
+   field LovView {
+      columnexclude = [true];
+   }
+   field UserId {
+      columnexclude = [true];
+   }
+   field ParamKey {
+      columnexclude = [true];
+   }
+   field ParamId {
+      columnexclude = [true];
+   }
+   field Editable {
+      columnexclude = [true];
+   }
+   field MandatoryParam {
+      columnexclude = [true];
+   }
+   field ValidateMethod {
+      columnexclude = [true];
+   }
+   field Description {
+      editable = [false];
+   }
+   field ValueRef {
+      label = "Value";
+      required = [MandatoryParam = "TRUE"];
+      editable = [Editable = "TRUE"];
+      validate command {
+         execute {
+            call RefreshFileTypeParamVal(Value);
+         }
+      }
+   }
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset TaskVirtualSet for TaskVirtual;
+
+------------------------------ ENTITY DETAILS -------------------------------
+virtual ExtFileTypeParamDialog {
+   ludependencies = ExtFileVirtual;
+
+   attribute Company Text;
+   attribute LovView Text;
+   attribute ParamId Text;
+   attribute Editable Text;
+   attribute MandatoryParam Text;
+   attribute ValidateMethod Text;
+   attribute ParamKey Text;
+   attribute UserId Text;
+   attribute Description Text;
+   attribute Value Text;
+
+   reference ValueRef(Value) dynamic(ParamKey);
+
+   action RefreshFileTypeParamVal {
+      ludependencies = ExtFileTypeParamDialog;
+      parameter Value Text;
+   }
+}
+
+@Override
+virtual TaskVirtual using BatchSchedule {
+   -- Parameters
+   //! TODO: Define the arguments and their data type, required flag and label here...
+   attribute Attr Text;
+   attribute ProcessOptions Enumeration(ProcessOptionsEnum);
+   attribute FinishAllowed Boolean;
+   attribute FileTypeParam Text;
+   attribute FileType Text;
+   attribute SetId Text;
+   attribute FileTemplate Text;
+   attribute FileName Text;
+   attribute Company Text;
+   attribute ParamString Text;
+   attribute FileDirection Text;
+   attribute FileDirectionDb Text;
+   attribute LoadFileId Number;
+   attribute ReturnInfo Text;
+   attribute LoadStateDb Text;
+   attribute FileData Stream {
+      fileinfo {
+         filename FileName;
+      }
+   }
+   attribute XmlData Stream {
+      fileinfo {
+         filename FileName;
+      }
+   }
+   reference FileTypeRef(FileType) to ExtFileTypeUsable(FileType) {
+      label = "File Type";
+   }
+   reference SetIdRef(FileType, SetId) to ExtTypeParamSet(FileType, SetId) {
+      label = "Parameter Set";
+   }
+   reference TemplateIdRef(FileType, FileTemplate) to ExtFileTemplateLov2(FileType, FileTemplateId) {
+      label = "File Template";
+   }
+
+   array FileTypeParamArr() to ExtFileTypeParamDialog();
+
+   action CreateFileTypeParamVal;
+   action ValidateParameters;
+   action ExportFile Structure(ExportFileInfo);
+   action ImportFile Structure(ImportFileInfo);
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+structure FileTypeInfo {
+   attribute FileType Text;
+   attribute SetId Text;
+   attribute FileTemplate Text;
+   attribute Company Text;
+   attribute ParamString Text;
+   attribute FileDirection Text;
+   attribute FileDirectionDb Text;
+   attribute FileName Text;
+}
+
+structure ImportFileInfo {
+   attribute LoadFileId Number;
+   attribute Info Text;
+}
+
+structure ExportFileInfo {
+   attribute LoadFileId Number;
+   attribute XmlData Text;
+}
+
+---------------------------- ACTION DEFINITIONS -----------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+function ValidateBasicInfo Boolean {
+   parameter FileType Text;
+   parameter FileTemplate Text;
+   parameter SetId Text;
+   parameter FileOperation Text;
+}
+function GetDefaultFileTypeInfo Structure(FileTypeInfo) {
+   parameter Company Text;
+   parameter FileType Text;
+   parameter ProcessOption Enumeration(ProcessOptionsEnum);
+}
+
+function GetDefaultSetIdInfo Structure(FileTypeInfo) {
+   parameter Company Text;
+   parameter FileType Text;
+   parameter SetId Text;
+   parameter ProcessOption Enumeration(ProcessOptionsEnum);
+}
+
+function GetFileTemplateInfo Structure(FileTypeInfo) {
+   parameter Company Text;
+   parameter FileType Text;
+   parameter SetId Text;
+   parameter FileTemplate Text;
+}
+
+function GetFileTemplateInformation Structure(FileTypeInfo) {
+   parameter Company Text;
+   parameter FileType Text;
+   parameter SetId Text;
+   parameter FileTemplate Text;
+   parameter ProcessOption Enumeration(ProcessOptionsEnum);
+}
+
+function ChangeParamValues Text {
+   parameter ParamName Text;
+   parameter ParamValue Text;
+   parameter ParamString Text;
+}
+
+function CreateLoadId Number {
+   parameter Objkey Text;
+   parameter ParamString Text;
+}
+
+function GetFileLoadStateDb Text {
+   parameter LoadFileId Number;
+}
+
+function GetFileLoadState Text {
+   parameter LoadFileId Number;
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+enumeration ProcessOptionsEnum {
+   value = "Online" {
+      label = "Online Process";
+   }
+   value = "Batch" {
+      label = "Batch Process";
+   }
+}
+
+query ExternalFileBooleanQuery {
+   from = "EXTERNAL_FILE_BOOLEAN";
+   lu = ExtFileTypeParam;
+   attribute BoolValue Text {
+      lovcolumn = [true];
+   }
+}
+
+query ExternalFileYesNoQuery {
+   from = "EXTERNAL_FILE_YES_NO";
+   lu = ExtFileTypeParam;
+   attribute YesNoValue Text {
+      lovcolumn = [true];
+   }
+}

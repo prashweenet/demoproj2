@@ -1,0 +1,124 @@
+client ExternalFileTypeParameterSetDefinition;
+component ACCRUL;
+layer Core;
+projection ExternalFileTypeParameterSetDefinitionHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ExtTypeParamSets {
+   label = "External File Type Parameter Set Definition";
+   crudactions {
+      edit {
+         enabled = [not SystemDefined];
+      }
+   }
+   selector ExtTypeParamSetSelector;
+   group ExternalFileParamSetGroup bind ExtTypeParamSetSelector;
+   list ExtFileParamPerSetList(DetailExtFileParamPerSet) bind ExtTypeParamSetSelector;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ExtTypeParamSetSelector for ExtTypeParamSet {
+   label = "${FileType} - ${SetId}";
+   orderby = FileType, SetId;
+   static FileType;
+   static SetId;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ExternalFileParamSetGroup for ExtTypeParamSet {
+   label = "";
+   field FileType;
+   field ExtFileTypeRef.Description {
+      label = "File Type Description";
+   }
+   field SetId;
+   field Description {
+      label = "Parameter Set Description";
+   }
+   field SetIdDefault;
+   field SystemDefined;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileParamPerSetList for ExtTypeParamPerSet {
+   label = "External File Type Parameter Set Definition";
+   editmode = SingleCellEdit;
+
+   crudactions {
+      new {
+         enabled = [not parent.SystemDefined];
+      }
+      edit {
+         enabled = [not parent.SystemDefined];
+      }
+      delete {
+         enabled = [not parent.SystemDefined];
+      }
+   }
+
+   field ExtFileTypeParamRef {
+      label = "Parameter Number";
+   }
+   field ExtFileTypeParamRef.Description {
+      size = Large;
+      label = "Description";
+   }
+   field DefaultValue {
+      editable = [not isNew];
+      lovswitch {
+         when [EnumerateMethod = "Fnd_Boolean_API.Enumerate"] {
+            lov DefaultValueBooleanRef with ReferenceExternalFileBooleanQuerySelector;
+         }
+         when [EnumerateMethod = "Finance_Yes_No_API.Enumerate"] {
+            lov DefaultValueYesNoRef with ReferenceExternalFileYesNoQuerySelector;
+         }
+      }
+   }
+   field MandatoryParam {
+      label = "Mandatory Parameter";
+   }
+   field ShowAtLoad;
+   field InputableAtLoad;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

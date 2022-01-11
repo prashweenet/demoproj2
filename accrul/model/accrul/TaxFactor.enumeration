@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>TaxFactor</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <NAME>Tasa</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>Cuota</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>Exento</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>None</NAME>
+      </VALUE>
+   </VALUES>
+   <SUBSETS>
+      <SUBSET>
+         <NAME>MxTaxFactor</NAME>
+         <VALUES>
+            <SUBSET_VALUE>
+               <NAME>Tasa</NAME>
+            </SUBSET_VALUE>
+            <SUBSET_VALUE>
+               <NAME>Cuota</NAME>
+            </SUBSET_VALUE>
+            <SUBSET_VALUE>
+               <NAME>Exento</NAME>
+            </SUBSET_VALUE>
+         </VALUES>
+      </SUBSET>
+   </SUBSETS>
+</ENUMERATION>

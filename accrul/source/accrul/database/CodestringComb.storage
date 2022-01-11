@@ -1,0 +1,54 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CodestringComb
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+UNIQUE CONSTRAINT codestring_comb_uc1 IS codestring_comb_tab (codestring);
+
+INDEX codestring_comb_ix1 IS codestring_comb_tab (account);
+
+
+INDEX codestring_comb_ix2 IS codestring_comb_tab (code_b);
+
+
+INDEX codestring_comb_ix3 IS codestring_comb_tab (code_c);
+
+
+INDEX codestring_comb_ix4 IS codestring_comb_tab (code_d);
+
+
+INDEX codestring_comb_ix5 IS codestring_comb_tab (code_e);
+
+
+INDEX codestring_comb_ix6 IS codestring_comb_tab (code_f);
+
+
+INDEX codestring_comb_ix7 IS codestring_comb_tab (code_g);
+
+
+INDEX codestring_comb_ix8 IS codestring_comb_tab (code_h);
+
+
+INDEX codestring_comb_ix9 IS codestring_comb_tab (code_i);
+
+
+INDEX codestring_comb_ix10 IS codestring_comb_tab (code_j);
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+
+
+SEQUENCE CODESTRING_COMB_SEQ IS INCREMENT BY 1 START WITH 1;

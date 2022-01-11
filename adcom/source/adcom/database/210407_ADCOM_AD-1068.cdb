@@ -1,0 +1,29 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210407_ADCOM_AD-1068.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210407   rosdlk  Added TASK_ALT_ID column to AV_FAULT_TAB
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_FAULT_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+    IF NOT(Database_SYS.Column_Exist(table_name_, 'TASK_ALT_ID')) THEN
+      column_ := Database_SYS.Set_Column_Values('TASK_ALT_ID', 'VARCHAR2(50)', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'A', column_ , TRUE );
+   END IF;
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+SET SERVEROUTPUT OFF

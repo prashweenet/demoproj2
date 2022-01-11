@@ -1,0 +1,51 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherRow
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+@Overtake Base
+PRIMARY KEY voucher_row_pk IS voucher_row_tab (voucher_no, voucher_type, accounting_year, company, row_no);
+
+INDEX voucher_row_ix1 IS voucher_row_tab (transfer_id);
+
+
+INDEX voucher_row_ix2 IS voucher_row_tab (project_activity_id);
+
+
+INDEX voucher_row_ix3 IS voucher_row_tab (year_period_key, company);
+
+
+INDEX voucher_row_ix4 IS voucher_row_tab (posting_combination_id, company);
+
+
+INDEX voucher_row_ix5 IS voucher_row_tab (object_id, account, company);
+
+
+INDEX voucher_row_ix6 IS voucher_row_tab (project_id, company);
+
+
+INDEX voucher_row_ix7 IS voucher_row_tab (allocation_id);
+
+
+INDEX voucher_row_ix8 IS voucher_row_tab (account, year_period_key, company);
+
+INDEX voucher_row_ix9 IS voucher_row_tab (multi_company_id, multi_company_acc_year, multi_company_voucher_type, multi_company_voucher_no, multi_company_row_no);
+
+
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------

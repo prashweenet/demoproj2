@@ -1,0 +1,92 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingCtrlCombDetail
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Component IS
+   Flags      = 'PMI--'
+   Datatype   = 'STRING(6)/UPPERCASE'
+   Prompt     = 'Component';
+
+COLUMN Posting_Type_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Posting Type Description';
+
+COLUMN Control_Type1_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Control Type1 Description';
+
+COLUMN Control_Type2_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Control Type2 Description';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+VIEW Posting_Ctrl_Comb_Detail_Pub IS
+   Prompt = 'Posting Ctrl Comb Detail Pub'
+   Pc_Valid_From.Flags = 'KMI-L'
+   Control_Type1_Value.Flags = 'AMIU-'
+   Control_Type2_Value.Flags = 'AMIU-'
+   Code_Part.Flags = 'AMIU-'
+   Valid_From.Flags = 'AMIU-'
+   Valid_From.Datatype = 'DATE'
+   No_Code_Part_Value_Db.Flags = 'AMIU-'
+   No_Code_Part_Value_Db.Datatype = 'STRING(5)'
+SELECT p.company                        company,
+       p.posting_type                   posting_type,
+       p.pc_valid_from                  pc_valid_from,       
+       p.comb_control_type              comb_control_type,
+       p.control_type1                  control_type1,
+       p.control_type1_value            control_type1_value,
+       p.control_type2                  control_type2,
+       p.control_type2_value            control_type2_value,
+       p.comb_module                    comb_module,
+       p.module1                        module1,
+       p.module2                        module2,
+       p.code_part                      code_part,
+       p.code_part_name                 code_part_name,
+       p.code_part_value                code_part_value,
+       p.valid_from                     valid_from,
+       pt.module                        component,
+       p.no_code_part_value             no_code_part_value_db,
+       p.rowkey                        objkey
+FROM   posting_ctrl_comb_detail_tab p, posting_ctrl_posting_type_tab pt
+WHERE  p.posting_type = pt.posting_type;
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Posting_Ctrl_Comb_Detail_Av IS
+   Prompt = 'Posting Ctrl Comb Detail Tax Audit'
+SELECT company                        company,
+       posting_type                   posting_type,
+       Posting_Ctrl_Posting_Type_API.Get_Description(posting_type)
+                                      posting_type_desc,
+       comb_control_type              comb_control_type,
+       control_type1                  control_type1,
+       Posting_Ctrl_Control_Type_API.Get_Description(control_type1,module1)
+                                      control_type1_desc,
+       control_type1_value            control_type1_value,
+       control_type2                  control_type2,
+       Posting_Ctrl_Control_Type_API.Get_Description(control_type2,module2)
+                                      control_type2_desc,
+       control_type2_value            control_type2_value,
+       code_part                      code_part,
+       code_part_name                 code_part_name,
+       code_part_value                code_part_value,
+       valid_from                     valid_from
+FROM   POSTING_CTRL_COMB_DETAIL_TAB;
+

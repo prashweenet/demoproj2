@@ -1,0 +1,249 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvFaultDeferral
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210428  siselk  AD-1025, modified Pre_Sync_Action test to remove natural key
+--  210419  siselk  AD-1025, modified Pre_Sync_Action test
+--  210304  LAHNLK  LMM2020R1-1794, updated unit test for Get_Act_Deferral_reference_Id, Get_Act_Deferral
+--  201102  LAHNLK  LMM2020R1-1377, Added test for Check_Insert___ Get_Wp_Id and Get_Wp_Status
+--  200911  TAJALK  LMM2020R1-716, Added test for Pre_Sync_Action
+--  200904  LAHNLK  LMM2020R1-1037, Created Unit testing for Get_Act_Deferral
+--  200619  KAWJLK  LMM2020R1-299, Created Unit testing for Get_Act_Deferral_reference_Id
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+
+UNITTEST "Get_Act_Deferral_reference_Id should return currently avtive deferral reference Id related to fault Id" FOR
+   FUNCTION Get_Act_Deferral_reference_Id(
+      fault_id_ IN     IFSAPP.Av_Fault_Deferral_Tab.fault_id%TYPE)RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_deferral_tab
+   VALUES
+      | deferral_reference_id | fault_id | is_available | deferral_dt |
+      | 11                    | 1        | 0            | TO_DATE('2020-06-21 05:00:00', 'yyyy-mm-dd HH:MI:SS')     |
+      | 12                    | 1        | 0            | TO_DATE('2020-06-23 05:00:00', 'yyyy-mm-dd HH:MI:SS')     |
+      | 45                    | 2        | 0            | TO_DATE('2020-06-01 05:00:00', 'yyyy-mm-dd HH:MI:SS')     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | fault_id_ |
+      | 12        |     1     |
+      | 45        |     2     |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Act_Deferral_reference_Id(fault_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Active_Deferral should return currently active deferral Id related to fault Id" FOR
+   FUNCTION Get_Active_Deferral(
+      fault_id_ IN     NUMBER ) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_deferral_tab
+   VALUES
+      | deferral_id | deferral_dt | fault_id | is_available |
+      | 0           | TO_DATE('2020-06-21 05:00:00', 'yyyy-mm-dd HH:MI:SS')     | 1        | 0            |
+      | 1           | TO_DATE('2020-06-20 05:00:00', 'yyyy-mm-dd HH:MI:SS')     | 1        | 0            |
+      | 2           | TO_DATE('2020-06-20 05:00:00', 'yyyy-mm-dd HH:MI:SS')     | 2        | 0            |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | fault_id_ |
+      | 0         |  1        |
+      | 2         |  2        |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Active_Deferral(fault_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_tab
+   VALUES
+      | fault_id | mx_unique_key |
+      | 1        | 'MXKEY1'      |
+   END VALUES;
+
+   @MockTable av_deferral_reference_tab
+   VALUES
+      | mx_unique_key | deferral_reference_id |
+      | 'MXKEY2'      | 2                     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_  VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+   expected2_  VARCHAR2(2000);
+   expected3_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'FAULT_UNIQUE_KEY'||chr(31)||'MXKEY1'||chr(30)||'WITH_FAULT_KEY'|
+      | 'DEF_REF_UNIQUE_KEY'||chr(31)||'MXKEY2'||chr(30)||'WITH_DEF_REF_KEY'|
+      | 'DEF_REF_UNIQUE_KEY'||chr(31)||'MXKEY2'||chr(30)||'FAULT_UNIQUE_KEY'||chr(31)||'MXKEY1'||chr(30)||'WITH_BOTH_KEYS'|
+      | 'NOTE'||chr(31)||'NOTE1'||chr(30)|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+      --Insert your assertions here
+
+      expected1_  := 'WITH_FAULT_KEY'||'FAULT_ID'||chr(31)||'1'||chr(30);
+      expected2_  := 'WITH_DEF_REF_KEY'||'DEFERRAL_REFERENCE_ID'||chr(31)||'2'||chr(30);
+      expected3_  := 'WITH_BOTH_KEYS'||'FAULT_ID'||chr(31)||'1'||chr(30)||'DEFERRAL_REFERENCE_ID'||chr(31)||'2'||chr(30);
+
+      IF attr_ LIKE '%WITH_FAULT_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_DEF_REF_KEY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_BOTH_KEYS%' THEN
+         ASSERT output1_ = expected3_ MESSAGE 'Expected '||expected3_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Check_Insert___ should assign next sequence value when inserting a new record" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_fault_deferral_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      |dummy |
+      |1     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_  av_fault_deferral_tab%ROWTYPE;
+   output4_  av_fault_deferral_tab%ROWTYPE;
+   output2_  Indicator_Rec;
+   --output3_  VARCHAR2(2000);
+BEGIN
+   output1_.Deferral_Id := NULL;
+   output4_.Deferral_Id := 3001;
+   FOR
+      | newrec_ | indrec_ | attr_ |
+      | output1_| output2_| 'A'   |
+      | output4_| output2_| 'A'   |
+   LOOP
+      IF newrec_.Deferral_Id IS NULL THEN
+         newrec_.Deferral_Id := DEFERRAL_ID_SEQ.nextval;
+         ASSERT newrec_.Deferral_Id IS NOT NULL MESSAGE 'Returned '||newrec_.Deferral_Id;
+      END IF;
+
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Wp_Id should return valid Wp id when fault id is passed" FOR
+   FUNCTION Get_Wp_Id(
+      fault_id_ IN     NUMBER ) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_tab
+   VALUES
+      | aircraft_wp_id | fault_id | rowstate |
+      | 1              | 1        | 'A'      |
+      | 1              | 2        | 'A'      |
+      | 1              | 3        | 'A'      |
+      | 1              | 4        | 'A'      |
+   END VALUES;
+
+   @MockTable av_aircraft_work_package_tab
+   VALUES
+      | rowstate | aircraft_work_package_id |
+      | 'Active' | 1                        |
+      | 'Committed'      | 2                        |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | fault_id_ |
+      | 1         |  1        |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Wp_Id(fault_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Wp_Status should return Wp status of Wp when fault id is passed" FOR
+   FUNCTION Get_Wp_Status(
+      fault_id_ IN     NUMBER ) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_aircraft_work_package_tab
+   VALUES
+      | rowstate | aircraft_work_package_id |
+      | 'Active' | 1                        |
+   END VALUES;
+
+   @MockTable av_exe_task_tab
+   VALUES
+      | rowstate | aircraft_wp_id | fault_id |
+      | 'A'      | 1              | 1        |
+      | 'A'      | 1              | 2        |
+      | 'A'      | 1              | 3        |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | fault_id_ |
+      | 'Active'  |  1        |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Wp_Status(fault_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+

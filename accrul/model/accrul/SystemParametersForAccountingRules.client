@@ -1,0 +1,71 @@
+client SystemParametersForAccountingRules;
+component ACCRUL;
+layer Core;
+projection SystemParametersForAccountingRulesHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AccrulAttributeNavEntry parent AccrulNavigator.BasicDataMenu at index 100 {
+      label = "System Parameters for Accounting Rules";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AccrulAttributes {
+   label = "System Parameters for Accounting Rules";
+   list AccrulAttributeList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AccrulAttributeList for AccrulAttribute {
+   field AttributeName {
+      size = Small;
+   }
+   field AttributeValue {
+      size = Large;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

@@ -1,0 +1,87 @@
+client CostRevenueBreakdownStructureLevels;
+component ACCRUL;
+layer Core;
+projection CostRevenueBreakdownStructureLevelsHandling;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CostRevenueBreakdownStructureLevelsNavEntry parent AccrulNavigator.CostRevenueElementSetupMenu at index 600 {
+      label = "Cost/Revenue Breakdown Structure Levels";
+      page List home CostStructureLevel;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using CostStructureLevelSet {
+   label = "Cost/Revenue Breakdown Structure Levels";
+   list CostStructureLevelList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list CostStructureLevelList for CostStructureLevel {
+   lov CostStructureIdRef with ReferenceCostStructureSelector {
+      search = CostStructureId, Description;
+      description = CostStructureIdRef.Description;
+   }
+   field LevelId;
+   field Description;
+   field LevelAbove;
+}
+
+
+
+@Override
+list CostStructureLovList for CostStructure {
+   label = "";
+   static Company {
+      columnexclude = [true];
+   }
+   static CostStructureId;
+   static Description;
+   static Template;
+   static SingleProject;
+   badge Objstate;
+}
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

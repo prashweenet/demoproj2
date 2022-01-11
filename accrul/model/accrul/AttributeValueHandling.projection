@@ -1,0 +1,62 @@
+projection AttributeValueHandling;
+component ACCRUL;
+layer Core;
+description "Attribute Value";
+
+category Users;
+include fragment AccountingCodePartsUsed2Selector;
+include fragment CopyToCompaniesAssistant;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountingAttributeSet for AccountingAttribute {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountingAttribute {
+   attribute CodePart Text {
+      format = uppercase;
+   }
+   reference AttributeRef(Company, Attribute) to AccountingAttribute(Company, Attribute) {
+      label = "Attribute";
+   }
+   reference CodePartRef(Company, CodePart) to AccountingCodePartsUsed2(Company, CodePart) {
+      label = "Code Part Name";
+   }
+   array AccountingAttributeValueArray(Company, Attribute) to AccountingAttributeValue(Company, Attribute);
+}
+
+@Override
+entity AccountingAttributeValue {
+   reference AttributeValueRef(Company, Attribute, AttributeValue) to AccountingAttributeValue(Company, Attribute, AttributeValue) {
+      label = "Attribute Value";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

@@ -1,0 +1,37 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ApproverDetail
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Approver_Detail_Approver_Lov IS
+   Prompt = 'Approver Id LOV'
+   approver_id.Flags = 'KM--L'
+SELECT DISTINCT a.company                       company,
+         approver_id           approver_id,
+         approver_name         approver_name
+FROM   approver_detail a
+WHERE a.approver_id IS NOT NULL;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Approver_Detail_Group_Lov IS
+   Prompt = 'Approver Group LOV'
+   approver_group_id.Flags = 'KM--L'
+SELECT DISTINCT a.company                       company,
+         approver_group_id           approver_group_id,
+         approver_group_desc         approver_group_desc
+FROM   approver_detail a
+WHERE a.approver_group_id IS NOT NULL;

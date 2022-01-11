@@ -1,0 +1,94 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvDeferralReference
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201106  siselk  LMM2020R1-1387 Unit test for Check_Insert___
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+
+UNITTEST "Check_Insert___ should genarate next sequence value when deferral_reference_id is NULL" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_deferral_reference_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   test_rec1_  av_deferral_reference_tab%ROWTYPE;
+   test_rec2_  av_deferral_reference_tab%ROWTYPE;
+   output_  Indicator_Rec;
+
+BEGIN
+   test_rec1_.deferral_reference_id := NULL;
+   test_rec1_.aircraft_type_code := 'testtype';
+   test_rec1_.deferral_reference_name := 'test reference name';
+   test_rec1_.deferral_ref_description := 'test description';
+
+   test_rec2_.deferral_reference_id := 5000;
+
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.deferral_reference_id IS NULL THEN
+         newrec_.deferral_reference_id := av_deferral_ref_seq.NEXTVAL;
+         ASSERT newrec_.deferral_reference_id IS NOT NULL MESSAGE 'Returned '||newrec_.deferral_reference_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_aircraft_sub_system_tab
+   VALUES
+      | sub_system_id | mx_unique_key |
+      | 1             | 'MXKEY1'      |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_    VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'SYSTEM_UNIQUE_KEY'||chr(31)||'MXKEY1'||chr(30)||'WITH_SUBSYSTEM_KEY'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_:=  'WITH_SUBSYSTEM_KEY'||'SUB_SYSTEM_ID'||chr(31)||'1'||chr(30);
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_AIRCRAFT_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+

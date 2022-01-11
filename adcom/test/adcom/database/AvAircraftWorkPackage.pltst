@@ -1,0 +1,854 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvAircraftWorkPackage
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210407  siselk  AD-1026, Updated unit test of Get_Work_Package_Id
+--  210218  SATGLK  LMM2020R1-1552, Updated unit test of Sync_State_Handle___ to test the transition from InWork to Committed.
+--  210211  ROSDLK  LMM2020R1-1526, Updated unit test of Pre_sync method with the wp barcode.
+--  200111  SEVHLK  LMM2020R1-1478, Changed unit tests of Sync_State_Handle and Post_Sync_Action.
+--  201125  LAHNLK  LMM2020R1-1441, created unit tests for Get_Func_Actual_Start and Get_Func_Actual_End
+--  201106  KAWJLK  LMM2020R1-1388, Added unit test for Check_Insert___
+--  200924  siselk  LMM2020R1-1249 Updated Get_Work_Package_Id, Get_Func_Scheduled_Start and Get_Func_Scheduled_End
+--  200904  SISELK  added tests for Get_Func_Scheduled_Start and Get_Func_Scheduled_End
+--  200902  TAJALK  LMM2020R1-1014 - Added tests for Sync_State_Handle___, Post_Sync_Action
+--  200812  siselk  LMM2020R1-154 Changed Get_Work_Package_Id scheduled start date
+--  200811  TAJALK  LMM2020R1-669 - Added tests for Pre_Sync_Action
+--  200707  SISELK  added tests for Get_Last_Release_Date, Get_Work_Package_Id
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+
+UNITTEST "Get_Last_Release_Date should return the actual end date of last work package when the aircraft id is same" FOR
+   FUNCTION Get_Last_Release_Date(
+      aircraft_id_ IN     NUMBER) RETURN TIMESTAMP;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_aircraft_work_package_tab
+   VALUES
+      | actual_end_date_time | aircraft_id |
+      | TO_DATE('2020-06-21 05:00:00', 'yyyy-mm-dd HH:MI:SS')              | 1           |
+      | TO_DATE('2020-06-22 05:00:00', 'yyyy-mm-dd HH:MI:SS')              | 1           |
+      | TO_DATE('2020-06-26 05:00:00', 'yyyy-mm-dd HH:MI:SS')              | 2           |
+      | TO_DATE('2020-06-24 05:00:00', 'yyyy-mm-dd HH:MI:SS')              | 1           |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   TIMESTAMP;
+   expected_ TIMESTAMP;
+BEGIN
+   FOR
+      | expected_ | aircraft_id_ |
+      | TO_DATE('2020-06-24 05:00:00', 'yyyy-mm-dd HH:MI:SS')        |  1           |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Last_Release_Date(aircraft_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Work_Package_Id should return relevant work package ID when aircraft, airport and flight passed" FOR
+   FUNCTION Get_Work_Package_Id(
+      aircraft_id_               IN     NUMBER,
+      arr_airport_id_            IN     NUMBER,
+      flight_id_                 IN     NUMBER,
+      fl_sched_arr_time_         IN     TIMESTAMP DEFAULT NULL,
+      fl_next_sched_depart_time_ IN     TIMESTAMP DEFAULT NULL,
+      fl_actual_arr_time_        IN     TIMESTAMP DEFAULT NULL,
+      turn_status_               IN     VARCHAR2 DEFAULT NULL) RETURN NUMBER;
+USING
+   @MockPackage Av_Flight_API
+   FUNCTION Get_Shed_Arrival_Date_Time (
+      flight_id_ IN     NUMBER )  RETURN  DATE
+   IS
+   BEGIN
+      RETURN CASE flight_id_
+      WHEN 16 THEN TO_DATE('2020-06-22 05:00:00', 'yyyy-mm-dd HH:MI:SS')
+      WHEN 3 THEN TO_DATE('2020-07-22 05:00:00', 'yyyy-mm-dd HH:MI:SS')
+      WHEN 4 THEN TO_DATE('2020-07-22 05:00:00', 'yyyy-mm-dd HH:MI:SS')
+   END;
+END Get_Shed_Arrival_Date_Time;
+
+@MockPackage Av_Flight_API
+FUNCTION Get_Departure_Timestamp (
+   aircraft_id_    IN     NUMBER,
+   arr_airport_id_ IN     NUMBER,
+   shed_arr_time_  IN     TIMESTAMP )  RETURN  TIMESTAMP
+IS
+BEGIN
+   RETURN CASE
+   WHEN aircraft_id_ = 2 AND arr_airport_id_ = 1001 AND shed_arr_time_= TO_DATE('2020-06-22 05:00:00', 'yyyy-mm-dd HH:MI:SS') THEN TO_DATE('2020-06-23 08:00:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN aircraft_id_ = 3 AND arr_airport_id_ = 1005 AND shed_arr_time_= TO_DATE('2020-07-22 05:00:00', 'yyyy-mm-dd HH:MI:SS') THEN TO_DATE('2020-07-23 05:00:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN aircraft_id_ = 5 AND arr_airport_id_ = 1008 AND shed_arr_time_= TO_DATE('2020-07-22 06:00:00', 'yyyy-mm-dd HH:MI:SS') THEN TO_DATE('2020-07-23 05:00:00', 'yyyy-mm-dd HH:MI:SS')
+END;
+   END Get_Departure_Timestamp;
+
+@MockPackage Av_Flight_API
+FUNCTION Get_Actual_Arrival_Date_Time (
+   flight_id_ IN     NUMBER )  RETURN  DATE
+IS
+BEGIN
+   RETURN CASE flight_id_
+   WHEN 16 THEN TO_DATE('2020-06-22 06:00:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 3 THEN TO_DATE('2020-07-22 06:00:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 4 THEN TO_DATE('2020-07-22 06:00:00', 'yyyy-mm-dd HH:MI:SS')
+END;
+   END Get_Actual_Arrival_Date_Time;
+
+@MockPackage Av_Flight_API
+FUNCTION Get_Turn_Status (
+   flight_id_ IN     NUMBER )  RETURN  VARCHAR2
+IS
+BEGIN
+   RETURN CASE flight_id_
+   WHEN 16 THEN 'Inbound'
+   WHEN 3 THEN 'InMaintenance'
+   WHEN 4 THEN 'Released'
+END;
+   END Get_Turn_Status;
+
+@MockTable av_aircraft_work_package_tab
+VALUES
+   | aircraft_work_package_id | aircraft_id | sched_start_date_time                                 |sched_end_date_time                                 | location_code | actual_start_date_time                               | actual_end_date_time                                  |
+   | 9                        | 2           | TO_DATE('2020-06-22 10:00:00', 'yyyy-mm-dd HH:MI:SS') |NULL                                                | 'A'           | NULL                                                 | NULL                                                  |
+   | 12                       | 3           | TO_DATE('2020-07-22 05:20:00', 'yyyy-mm-dd HH:MI:SS') |NULL                                                | 'B'           | TO_DATE('2020-07-22 05:40:00', 'yyyy-mm-dd HH:MI:SS')| NULL                                                  |
+   | 22                       | 5           | TO_DATE('2020-07-22 05:20:00', 'yyyy-mm-dd HH:MI:SS') |TO_DATE('2020-07-22 8:20:00', 'yyyy-mm-dd HH:MI:SS')| 'C'           | TO_DATE('2020-07-22 05:40:00', 'yyyy-mm-dd HH:MI:SS')| TO_DATE('2020-07-22 8:20:00', 'yyyy-mm-dd HH:MI:SS')  |
+   | 30                       | 2           | TO_DATE('2020-07-22 10:00:00', 'yyyy-mm-dd HH:MI:SS') |NULL                                                | 'A'           | NULL                                                 | NULL                                                  |
+   | 32                       | 5           | TO_DATE('2020-06-29 05:20:00', 'yyyy-mm-dd HH:MI:SS') |TO_DATE('2020-06-30 8:20:00', 'yyyy-mm-dd HH:MI:SS')| 'C'           | TO_DATE('2020-07-22 05:40:00', 'yyyy-mm-dd HH:MI:SS')| TO_DATE('2020-06-30 8:20:00', 'yyyy-mm-dd HH:MI:SS')  |
+END VALUES;
+
+@MockTable av_maintenance_location_tab
+VALUES
+   | location_code           | airport_id |
+   | 'A'                     | 1001       |
+   | 'B'                     | 1005       |
+   | 'C'                     | 1008       |
+END VALUES;
+
+IS
+--Insert your test variables here
+return_   NUMBER;
+expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | aircraft_id_ | arr_airport_id_ | flight_id_ |
+      | 9         |  2           |  1001           |  16        |
+      | 12        |  3           |  1005           |  3         |
+      | 22        |  5           |  1008           |  4         |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Work_Package_Id(aircraft_id_, arr_airport_id_, flight_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+
+   FOR
+      | expected_ | aircraft_id_ | arr_airport_id_ | flight_id_ |fl_sched_arr_time_                                     | fl_next_sched_depart_time_                             | fl_actual_arr_time_                                    | turn_status_    |
+      | 9         |  2           |  1001           |  16        |TO_DATE('2020-06-22 05:00:00', 'yyyy-mm-dd HH:MI:SS')  | TO_DATE('2020-06-23 08:00:00', 'yyyy-mm-dd HH:MI:SS')  | TO_DATE('2020-06-22 06:00:00', 'yyyy-mm-dd HH:MI:SS')  | 'Inbound'       |
+      | 12        |  3           |  1005           |  3         |TO_DATE('2020-07-22 05:00:00', 'yyyy-mm-dd HH:MI:SS')  | TO_DATE('2020-07-23 05:00:00', 'yyyy-mm-dd HH:MI:SS')  | TO_DATE('2020-07-22 06:00:00', 'yyyy-mm-dd HH:MI:SS')  | 'InMaintenance' |
+      | 22        |  5           |  1008           |  4         |TO_DATE('2020-07-22 05:00:00', 'yyyy-mm-dd HH:MI:SS')  | TO_DATE('2020-07-23 05:00:00', 'yyyy-mm-dd HH:MI:SS')  | TO_DATE('2020-07-22 06:00:00', 'yyyy-mm-dd HH:MI:SS')  |  'InMaintenance'|
+   LOOP
+      --Insert your test code here
+      return_ := Get_Work_Package_Id(aircraft_id_, arr_airport_id_, flight_id_,fl_sched_arr_time_, fl_next_sched_depart_time_, fl_actual_arr_time_, turn_status_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable aircraft_tab
+   VALUES
+      | aircraft_id | mx_unique_key |
+      | 1           | 'MXKEY1'      |
+   END VALUES;
+IS
+   --Insert your test variables here
+   output1_    VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+   expected2_  VARCHAR2(2000);
+   expected3_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXKEY1'||chr(30)||'WITH_AIRCRAFT_KEY'|
+      | 'LOCATION_CODE'||chr(31)||'LOC1'||chr(30)||'WITH_MAINTENANCE_LOCATION_KEY'|
+      | 'WO_NUMBER'||chr(31)||'WO1'||chr(30)|
+      | 'BARCODE'||chr(31)||'T40S001EB7T'||chr(30)||'WITH_BARCODE'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_AIRCRAFT_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30);
+      expected2_ := 'LOCATION_CODE'||chr(31)||'LOC1'||chr(30) || 'WITH_MAINTENANCE_LOCATION_KEY';
+      expected3_  := 'BARCODE'||chr(31)||'T40S001EB7T'||chr(30)||'WITH_BARCODE'||'NATURAL_KEY'||chr(31)||'T40S001EB7T'||chr(30);
+
+      --Insert your assertions here
+
+      IF attr_ LIKE '%WITH_AIRCRAFT_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_MAINTENANCE_LOCATION_KEY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_BARCODE%' THEN
+         ASSERT output1_ = expected3_ MESSAGE 'Expected '||expected3_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Sync_State_Handle___ should correct the incoming state based on the current state" FOR
+   PROCEDURE Sync_State_Handle___(
+      current_rowstate_  IN     VARCHAR2,
+      incoming_rowstate_ IN     VARCHAR2,
+      input_objid_       IN     VARCHAR2,
+      input_objversion_  IN     VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage  Av_Aircraft_Work_Package_API
+   PROCEDURE Commit_Work_Package__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('COMMIT1', 'INWORK1', 'COMPLETE1')     MESSAGE 'Expected '||'COMMIT1,INWORK1,COMPLETE1'||' but  was '||objid_;
+   END Commit_Work_Package__;
+
+   @MockPackage  Av_Aircraft_Work_Package_API
+   PROCEDURE Cancel_Work_Package__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     =  'CANCEL1'     MESSAGE 'Expected '||'CANCEL1'||' but  was '||objid_;
+   END Cancel_Work_Package__;
+
+   @MockPackage  Av_Aircraft_Work_Package_API
+   PROCEDURE Start_Work_Package__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('INWORK1', 'COMPLETE1', 'INWORK2', 'COMPLETE2')    MESSAGE 'Expected '||'INWORK1,COMPLETE1,INWORK2,COMPLETE2'||' but  was '||objid_;
+   END Start_Work_Package__;
+
+   @MockPackage  Av_Aircraft_Work_Package_API
+   PROCEDURE Complete_Work_Package__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('COMPLETE1', 'COMPLETE2', 'COMPLETE3')     MESSAGE 'Expected '||'COMPLETE1,COMPLETE2,COMPLETE3'||' but  was '||objid_;
+   END Complete_Work_Package__;
+
+   @MockPackage  Av_Aircraft_Work_Package_API
+   PROCEDURE Uncommit_Work_Package__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('UNCOMMIT1')     MESSAGE 'Expected '||'UNCOMMIT1'||' but  was '||objid_;
+   END Uncommit_Work_Package__;
+
+   @MockPackage  Av_Aircraft_Work_Package_API
+   PROCEDURE Undo_Start_Work_Package__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT VARCHAR2,
+      attr_       IN OUT VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+      rec_ av_aircraft_work_package_tab%ROWTYPE;
+   BEGIN
+      ASSERT   objid_     IN  ('COMMIT2')     MESSAGE 'Expected '||'COMMIT2'||' but  was '||objid_;
+   END Undo_Start_Work_Package__;
+
+IS
+   --Insert your test variables here
+BEGIN
+   FOR
+      | current_rowstate_ | incoming_rowstate_ | input_objid_ | input_objversion_ |
+      | 'Active'          |  'ACTV'            |  'NOTAPP1'   |  'A'              |
+      | 'Committed'       |  'COMMIT'          |  'NOTAPP2'   |  'A'              |
+      | 'Canceled'        |  'CANCEL'          |  'NOTAPP3'   |  'A'              |
+      | 'InWork'          |  'IN WORK'         |  'NOTAPP4'   |  'A'              |
+      | 'Completed'       |  'COMPLETE'        |  'NOTAPP5'   |  'A'              |
+      | 'Active'          |  'COMMIT'          |  'COMMIT1'   |  'A'              |
+      | 'Active'          |  'CANCEL'          |  'CANCEL1'   |  'A'              |
+      | 'Active'          |  'IN WORK'         |  'INWORK1'   |  'A'              |
+      | 'Active'          |  'COMPLETE'        |  'COMPLETE1' |  'A'              |
+      | 'Committed'       |  'IN WORK'         |  'INWORK2'   |  'A'              |
+      | 'Committed'       |  'COMPLETE'        |  'COMPLETE2' |  'A'              |
+      | 'InWork'          |  'COMPLETE'        |  'COMPLETE3' |  'A'              |
+      | 'Committed'       |  'ACTV'            |  'UNCOMMIT1' |  'A'              |
+      | 'InWork'          |  'COMMIT'          |  'COMMIT2'   |  'A'              |
+   LOOP
+      --Insert your test code here
+      Sync_State_Handle___(current_rowstate_, incoming_rowstate_, input_objid_, input_objversion_);
+      --Insert your assertions here
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Post_Sync_Action should correct the incoming state based on the current state" FOR
+   PROCEDURE Post_Sync_Action(
+      objid_      IN     VARCHAR2,
+      objversion_ IN     VARCHAR2,
+      attr_       IN     VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage  Av_Aircraft_Work_Package_API
+   FUNCTION Get_Object_By_Id___ (
+      objid_ IN     VARCHAR2 ) RETURN av_aircraft_work_package_tab%ROWTYPE
+   IS
+      aircraft_wp_rec_         av_aircraft_work_package_tab%ROWTYPE;
+   BEGIN
+      CASE objid_
+      WHEN 'NOTAPP1' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 1;
+         RETURN aircraft_wp_rec_;
+      WHEN 'NOTAPP2' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 2;
+         RETURN aircraft_wp_rec_;
+      WHEN 'NOTAPP3' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 3;
+         RETURN aircraft_wp_rec_;
+      WHEN 'NOTAPP4' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 4;
+         RETURN aircraft_wp_rec_;
+      WHEN 'NOTAPP5' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 5;
+         RETURN aircraft_wp_rec_;
+      WHEN 'COMMIT1' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 6;
+         RETURN aircraft_wp_rec_;
+      WHEN 'CANCEL1' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 7;
+         RETURN aircraft_wp_rec_;
+      WHEN 'INWORK1' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 8;
+         RETURN aircraft_wp_rec_;
+      WHEN 'COMPLETE1' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 9;
+         RETURN aircraft_wp_rec_;
+      WHEN 'INWORK2' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 10;
+         RETURN aircraft_wp_rec_;
+      WHEN 'COMPLETE2' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 11;
+         RETURN aircraft_wp_rec_;
+      WHEN 'COMPLETE3' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 12;
+         RETURN aircraft_wp_rec_;
+      WHEN 'UNCOMMIT1' THEN
+         aircraft_wp_rec_.aircraft_work_package_id := 13;
+         RETURN aircraft_wp_rec_;
+      END CASE ;
+
+      RETURN NULL;
+END Get_Object_By_Id___;
+
+@MockPackage  Av_Aircraft_Work_Package_API
+FUNCTION Get_Objstate (
+   aircraft_work_package_id_ IN     NUMBER ) RETURN VARCHAR2
+IS
+BEGIN
+   CASE aircraft_work_package_id_
+   WHEN 1 THEN
+      RETURN 'Active';
+   WHEN 2 THEN
+      RETURN 'Committed';
+   WHEN 3 THEN
+      RETURN 'Canceled';
+   WHEN 4 THEN
+      RETURN 'InWork';
+   WHEN 5 THEN
+      RETURN 'Completed';
+   WHEN 6 THEN
+      RETURN 'Active';
+   WHEN 7 THEN
+      RETURN 'Active';
+   WHEN 8 THEN
+      RETURN 'Active';
+   WHEN 9 THEN
+      RETURN 'Active';
+   WHEN 10 THEN
+      RETURN 'Committed';
+   WHEN 11 THEN
+      RETURN 'Committed';
+   WHEN 12 THEN
+      RETURN 'InWork';
+   WHEN 13 THEN
+      RETURN 'Active';
+   END CASE ;
+
+   RETURN NULL;
+END Get_Objstate;
+
+@MockPackage  Av_Aircraft_Work_Package_API
+PROCEDURE Sync_State_Handle___(
+   current_rowstate_  IN     VARCHAR2,
+   incoming_rowstate_ IN     VARCHAR2,
+   input_objid_       IN     VARCHAR2,
+   input_objversion_  IN     VARCHAR2)
+IS
+BEGIN
+   ASSERT  current_rowstate_ IN  ('Active', 'Committed', 'Canceled', 'InWork', 'Completed')     MESSAGE 'Expected '||'Active,Committed,Canceled,InWork,Completed'||' but  was '||current_rowstate_;
+   ASSERT  incoming_rowstate_ IN  ('ACTV', 'COMMIT', 'CANCEL', 'IN WORK', 'COMPLETE')     MESSAGE 'Expected '||'ACTV,COMMIT,CANCEL,IN WORK,COMPLETE'||' but  was '||incoming_rowstate_;
+END Sync_State_Handle___;
+IS
+--Insert your test variables here
+BEGIN
+FOR
+   | objid_      | objversion_ | attr_                                   |
+   | 'NOTAPP1'   |  'A'        | 'ROWSTATE'||chr(31)||'ACTV'||chr(30)    |
+   | 'NOTAPP2'   |  'A'        | 'ROWSTATE'||chr(31)||'COMMIT'||chr(30)  |
+   | 'NOTAPP3'   |  'A'        | 'ROWSTATE'||chr(31)||'CANCEL'||chr(30)  |
+   | 'NOTAPP4'   |  'A'        | 'ROWSTATE'||chr(31)||'IN WORK'||chr(30) |
+   | 'NOTAPP5'   |  'A'        | 'ROWSTATE'||chr(31)||'COMPLETE'||chr(30)|
+   | 'COMMIT1'   |  'A'        | 'ROWSTATE'||chr(31)||'COMMIT'||chr(30)  |
+   | 'CANCEL1'   |  'A'        | 'ROWSTATE'||chr(31)||'CANCEL'||chr(30)  |
+   | 'INWORK1'   |  'A'        | 'ROWSTATE'||chr(31)||'IN WORK'||chr(30) |
+   | 'COMPLETE1' |  'A'        | 'ROWSTATE'||chr(31)||'COMPLETE'||chr(30)|
+   | 'INWORK2'   |  'A'        | 'ROWSTATE'||chr(31)||'IN WORK'||chr(30) |
+   | 'COMPLETE2' |  'A'        | 'ROWSTATE'||chr(31)||'COMPLETE'||chr(30)|
+   | 'COMPLETE3' |  'A'        | 'ROWSTATE'||chr(31)||'COMPLETE'||chr(30)|
+   | 'UNCOMMIT1' |  'A'        | 'ROWSTATE'||chr(31)||'ACTV'||chr(30)    |
+LOOP
+   --Insert your test code here
+   Post_Sync_Action(objid_, objversion_, attr_);
+   --Insert your assertions here
+END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Func_Scheduled_Start should return scheduled start date time when aircraft_id_, arr_airport_id_ and flight_id_ are given" FOR
+   FUNCTION Get_Func_Scheduled_Start (
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      flight_id_      IN     NUMBER) RETURN TIMESTAMP;
+USING
+
+   @MockPackage Av_Aircraft_Work_Package_API
+   FUNCTION Get_Work_Package_Id (
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      flight_id_      IN     NUMBER) RETURN NUMBER
+   IS
+   BEGIN
+      RETURN CASE
+      WHEN aircraft_id_ = 16 AND arr_airport_id_ = 1 AND flight_id_= 1 THEN 41
+      WHEN aircraft_id_ = 12 AND arr_airport_id_ = 2 AND flight_id_= 3 THEN 42
+      WHEN aircraft_id_ = 16 AND arr_airport_id_ = 3 AND flight_id_= 6 THEN 43
+      WHEN aircraft_id_ = 13 AND arr_airport_id_ = 1 AND flight_id_= 1 THEN 44
+   END;
+END Get_Work_Package_Id;
+
+@MockPackage Av_Aircraft_Work_Package_API
+FUNCTION Get_Sched_Start_Date_Time (
+   work_package_id_ IN     NUMBER) RETURN TIMESTAMP
+IS
+BEGIN
+   RETURN CASE work_package_id_
+   WHEN 41 THEN TO_DATE('2020-06-20 05:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 42 THEN TO_DATE('2020-06-21 04:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 43 THEN TO_DATE('2020-06-22 07:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 44 THEN TO_DATE('2020-06-23 02:01:00', 'yyyy-mm-dd HH:MI:SS')
+END;
+   END Get_Sched_Start_Date_Time;
+
+IS
+return_   TIMESTAMP;
+expected_ TIMESTAMP;
+work_package_id_ NUMBER;
+BEGIN
+FOR
+   | expected_                                               | aircraft_id_ | arr_airport_id_ | flight_id_ |
+   | TO_DATE('2020-06-20 05:01:00', 'yyyy-mm-dd HH:MI:SS')   |  16          |  1              |  1         |
+   | TO_DATE('2020-06-21 04:01:00', 'yyyy-mm-dd HH:MI:SS')   |  12          |  2              |  3         |
+   | TO_DATE('2020-06-22 07:01:00', 'yyyy-mm-dd HH:MI:SS')   |  16          |  3              |  6         |
+   | TO_DATE('2020-06-23 02:01:00', 'yyyy-mm-dd HH:MI:SS')   |  13          |  1              |  1         |
+LOOP
+
+   return_ := Get_Func_Scheduled_Start(aircraft_id_, arr_airport_id_, flight_id_);
+
+   ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Func_Scheduled_End should return scheduled start date time when aircraft_id_, arr_airport_id_ and flight_id_ are given" FOR
+   FUNCTION Get_Func_Scheduled_End (
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      flight_id_      IN     NUMBER) RETURN TIMESTAMP;
+USING
+   @MockPackage Av_Aircraft_Work_Package_API
+   FUNCTION Get_Work_Package_Id (
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      flight_id_      IN     NUMBER) RETURN NUMBER
+   IS
+   BEGIN
+      RETURN CASE
+      WHEN aircraft_id_ = 16 AND arr_airport_id_ = 1 AND flight_id_= 1 THEN 41
+      WHEN aircraft_id_ = 12 AND arr_airport_id_ = 2 AND flight_id_= 3 THEN 42
+      WHEN aircraft_id_ = 16 AND arr_airport_id_ = 3 AND flight_id_= 6 THEN 43
+      WHEN aircraft_id_ = 13 AND arr_airport_id_ = 1 AND flight_id_= 1 THEN 44
+   END;
+END Get_Work_Package_Id;
+
+@MockPackage Av_Aircraft_Work_Package_API
+FUNCTION Get_Sched_End_Date_Time (
+   work_package_id_ IN     NUMBER) RETURN TIMESTAMP
+IS
+BEGIN
+   RETURN CASE work_package_id_
+   WHEN 41 THEN TO_DATE('2020-06-22 05:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 42 THEN TO_DATE('2020-06-24 04:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 43 THEN TO_DATE('2020-06-23 07:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 44 THEN TO_DATE('2020-06-23 06:01:00', 'yyyy-mm-dd HH:MI:SS')
+END;
+END Get_Sched_End_Date_Time;
+IS
+return_   TIMESTAMP;
+expected_ TIMESTAMP;
+work_package_id_ NUMBER;
+BEGIN
+   FOR
+      | expected_                                               | aircraft_id_ | arr_airport_id_ | flight_id_ |
+      | TO_DATE('2020-06-22 05:01:00', 'yyyy-mm-dd HH:MI:SS')   |  16          |  1              |  1         |
+      | TO_DATE('2020-06-24 04:01:00', 'yyyy-mm-dd HH:MI:SS')   |  12          |  2              |  3         |
+      | TO_DATE('2020-06-23 07:01:00', 'yyyy-mm-dd HH:MI:SS')   |  16          |  3              |  6         |
+      | TO_DATE('2020-06-23 06:01:00', 'yyyy-mm-dd HH:MI:SS')   |  13          |  1              |  1         |
+   LOOP
+
+      return_ := Get_Func_Scheduled_End(aircraft_id_, arr_airport_id_, flight_id_);
+
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Flight_Id should return relevant flight ID when WP is is provided" FOR
+   FUNCTION Get_Flight_Id (
+      wp_id_ IN     NUMBER
+      ) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Aircraft_Work_Package_API
+   FUNCTION Get_Aircraft_Id (
+      aircraft_work_package_id_ IN     NUMBER )  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN CASE aircraft_work_package_id_
+      WHEN 100 THEN 1001
+      WHEN 101 THEN 1002
+   END;
+END Get_Aircraft_Id;
+
+@MockPackage Av_Maintenance_Location_API
+FUNCTION Get_Airport_Id (
+   location_code_ IN     VARCHAR2 )  RETURN  NUMBER
+IS
+BEGIN
+   RETURN CASE location_code_
+   WHEN 20 THEN 10
+   WHEN 21 THEN 11
+END;
+   END Get_Airport_Id;
+
+@MockPackage Av_Aircraft_Work_Package_API
+FUNCTION Get_Location_Code (
+   aircraft_work_package_id_ IN     NUMBER )  RETURN  VARCHAR2
+IS
+BEGIN
+   RETURN CASE aircraft_work_package_id_
+   WHEN 100 THEN 20
+   WHEN 101 THEN 21
+END;
+   END Get_Location_Code;
+
+@MockPackage Av_Aircraft_Work_Package_API
+FUNCTION Get_Sched_Start_Date_Time (
+   aircraft_work_package_id_ IN     NUMBER )  RETURN  DATE
+IS
+BEGIN
+   RETURN CASE aircraft_work_package_id_
+   WHEN 100 THEN TO_DATE('2020-06-23 06:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 101 THEN TO_DATE('2020-07-23 06:01:00', 'yyyy-mm-dd HH:MI:SS')
+END;
+   END Get_Sched_Start_Date_Time;
+
+@MockPackage Av_Aircraft_Work_Package_API
+FUNCTION Get_Sched_End_Date_Time (
+   aircraft_work_package_id_ IN     NUMBER )  RETURN  DATE
+IS
+BEGIN
+   RETURN CASE aircraft_work_package_id_
+   WHEN 100 THEN TO_DATE('2020-06-24 06:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 101 THEN TO_DATE('2020-07-24 06:01:00', 'yyyy-mm-dd HH:MI:SS')
+END;
+   END Get_Sched_End_Date_Time;
+
+@MockTable av_flight_tab
+VALUES
+   | flight_id | arrival_airport_id | aircraft_id | shed_arrival_date_time                                |
+   | 300       | 10                 | 1001        | TO_DATE('2020-06-23 05:01:00', 'yyyy-mm-dd HH:MI:SS') |
+   | 301       | 11                 | 1002        | TO_DATE('2020-06-30 05:01:00', 'yyyy-mm-dd HH:MI:SS') |
+END VALUES;
+
+IS
+--Insert your test variables here
+return_   NUMBER;
+expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | wp_id_ |
+      | 300       |  100   |
+      | 301       |  101   |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Flight_Id(wp_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Check_Insert___ should genarate next sequence number when insert new record into av_aircraft_work_package_tab" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_aircraft_work_package_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      |dummy |
+      |1     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_  av_aircraft_work_package_tab%ROWTYPE;
+   output4_  av_aircraft_work_package_tab%ROWTYPE;
+   output2_  Indicator_Rec;
+
+BEGIN
+   output1_.aircraft_work_package_id := NULL;
+   output4_.aircraft_work_package_id := 5000;
+   FOR
+      | newrec_ | indrec_ | attr_ |
+      | output1_| output2_| 'A'   |
+      | output4_| output2_| 'A'   |
+   LOOP
+      --Insert your test code here
+      IF newrec_.aircraft_work_package_id IS NULL THEN
+         newrec_.aircraft_work_package_id := AIRCRAFT_WORK_PACKAGE_SEQ.NEXTVAL;
+         --Insert your assertions here
+         ASSERT newrec_.aircraft_work_package_id IS NOT NULL MESSAGE 'Returned '||newrec_.aircraft_work_package_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Func_Actual_Start should return actual start date time when aircraft_id_, arr_airport_id_ and flight_id_ are given" FOR
+   FUNCTION Get_Func_Actual_Start (
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      flight_id_      IN     NUMBER) RETURN TIMESTAMP;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Aircraft_Work_Package_API
+   FUNCTION Get_Work_Package_Id (
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      flight_id_      IN     NUMBER )  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN CASE
+      WHEN aircraft_id_ = 16 AND arr_airport_id_ = 1 AND flight_id_= 1 THEN 41
+      WHEN aircraft_id_ = 12 AND arr_airport_id_ = 2 AND flight_id_= 3 THEN 42
+      WHEN aircraft_id_ = 16 AND arr_airport_id_ = 3 AND flight_id_= 6 THEN 43
+      WHEN aircraft_id_ = 13 AND arr_airport_id_ = 1 AND flight_id_= 1 THEN 44
+   END;
+END Get_Work_Package_Id;
+
+@MockPackage Av_Aircraft_Work_Package_API
+FUNCTION Get_Actual_Start_Date_Time (
+   aircraft_work_package_id_ IN     NUMBER )  RETURN  DATE
+IS
+BEGIN
+   RETURN CASE aircraft_work_package_id_
+   WHEN 41 THEN TO_DATE('2020-06-22 05:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 42 THEN TO_DATE('2020-06-24 04:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 43 THEN TO_DATE('2020-06-23 07:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 44 THEN TO_DATE('2020-06-23 06:01:00', 'yyyy-mm-dd HH:MI:SS')
+END;
+   END Get_Actual_Start_Date_Time;
+
+IS
+--Insert your test variables here
+return_   TIMESTAMP;
+expected_ TIMESTAMP;
+BEGIN
+FOR
+   | expected_ | aircraft_id_ | arr_airport_id_ | flight_id_ |
+   | TO_DATE('2020-06-22 05:01:00', 'yyyy-mm-dd HH:MI:SS')   |  16          |  1              |  1         |
+   | TO_DATE('2020-06-24 04:01:00', 'yyyy-mm-dd HH:MI:SS')   |  12          |  2              |  3         |
+   | TO_DATE('2020-06-23 07:01:00', 'yyyy-mm-dd HH:MI:SS')   |  16          |  3              |  6         |
+   | TO_DATE('2020-06-23 06:01:00', 'yyyy-mm-dd HH:MI:SS')   |  13          |  1              |  1         |
+LOOP
+   --Insert your test code here
+   return_ := Get_Func_Actual_Start(aircraft_id_, arr_airport_id_, flight_id_);
+   --Insert your assertions here
+   ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Func_Actual_End should return actual end date time when aircraft_id_, arr_airport_id_ and flight_id_ are given" FOR
+   FUNCTION Get_Func_Actual_End (
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      flight_id_      IN     NUMBER) RETURN TIMESTAMP;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Aircraft_Work_Package_API
+   FUNCTION Get_Work_Package_Id (
+      aircraft_id_    IN     NUMBER,
+      arr_airport_id_ IN     NUMBER,
+      flight_id_      IN     NUMBER )  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN CASE
+      WHEN aircraft_id_ = 16 AND arr_airport_id_ = 1 AND flight_id_= 1 THEN 41
+      WHEN aircraft_id_ = 12 AND arr_airport_id_ = 2 AND flight_id_= 3 THEN 42
+      WHEN aircraft_id_ = 16 AND arr_airport_id_ = 3 AND flight_id_= 6 THEN 43
+      WHEN aircraft_id_ = 13 AND arr_airport_id_ = 1 AND flight_id_= 1 THEN 44
+   END;
+END Get_Work_Package_Id;
+
+@MockPackage Av_Aircraft_Work_Package_API
+FUNCTION Get_Actual_End_Date_Time (
+   aircraft_work_package_id_ IN     NUMBER )  RETURN  DATE
+IS
+BEGIN
+   RETURN CASE aircraft_work_package_id_
+   WHEN 41 THEN TO_DATE('2020-06-22 05:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 42 THEN TO_DATE('2020-06-24 04:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 43 THEN TO_DATE('2020-06-23 07:01:00', 'yyyy-mm-dd HH:MI:SS')
+   WHEN 44 THEN TO_DATE('2020-06-23 06:01:00', 'yyyy-mm-dd HH:MI:SS')
+END;
+   END Get_Actual_End_Date_Time;
+
+IS
+--Insert your test variables here
+return_   TIMESTAMP;
+expected_ TIMESTAMP;
+BEGIN
+   FOR
+      | expected_ | aircraft_id_ | arr_airport_id_ | flight_id_ |
+      | TO_DATE('2020-06-22 05:01:00', 'yyyy-mm-dd HH:MI:SS')   |  16          |  1              |  1         |
+      | TO_DATE('2020-06-24 04:01:00', 'yyyy-mm-dd HH:MI:SS')   |  12          |  2              |  3         |
+      | TO_DATE('2020-06-23 07:01:00', 'yyyy-mm-dd HH:MI:SS')   |  16          |  3              |  6         |
+      | TO_DATE('2020-06-23 06:01:00', 'yyyy-mm-dd HH:MI:SS')   |  13          |  1              |  1         |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Func_Actual_End(aircraft_id_, arr_airport_id_, flight_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Complete_WP_Error should return SUCCESS when Maintenix validations does not fail" FOR
+   FUNCTION Get_Complete_WP_Error (
+      payload_ IN     VARCHAR2) RETURN VARCHAR2;
+USING
+IS
+   return_        VARCHAR2(2000);
+   expected_      VARCHAR2(2000);
+   expected_1     VARCHAR2(2000) := 'SUCCESS';
+   actual_1       VARCHAR2(2000) := '{"drivingTaskId":null,"lastModifiedDate":"2021-03-08T20:54:26Z","highestInventoryId":"AD3F55CEA1B64FEA905811907E1F66D6","dueDate":null,"revisionDate":"2021-03-08T20:54:26Z","classMode":null,"taskCode":null,"subClass":null,"heavyMaintenanceBool":false,"usageRemainingQuantity":0.0,"dueDataType":null,"statusDescription":"Complete","workscopeGeneratedBool":true,"warrantyNote":null,"aircraftId":"AD3F55CEA1B64FEA905811907E1F66D6","locationId":"DBEB749DAE18450D906852FEFD794EA0","issueAccountId":null,"requestParts":true,"endDate":"2021-03-08T15:24:26Z","inventoryId":"AD3F55CEA1B64FEA905811907E1F66D6","taskClass":"CHECK","workTypes":null,"barcode":"T40S000HELL","creationDate":"2021-03-08T20:42:41Z","externalId":null,"actualStartDate":"2021-03-08T12:00:00Z","schedEndDate":"2021-03-09T12:00:00Z","schedStartDate":"2021-03-08T12:00:00Z","number":"WO - 1371204","description":null,"status":"COMPLETE","id":"F32AD436F90A45569715E4EE3179993E","name":"WPH001"}';
+BEGIN
+   FOR
+      | expected_  | payload_ |
+      | expected_1 | actual_1 |
+   LOOP
+      return_ := Get_Complete_WP_Error(payload_);
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Complete_WP_Error should return error message when Maintenix validations fail" FOR
+   FUNCTION Get_Complete_WP_Error (
+      payload_ IN     VARCHAR2) RETURN VARCHAR2;
+USING
+IS
+   return_        VARCHAR2(2000);
+   expected_      VARCHAR2(2000);
+   expected_1     VARCHAR2(2000) := 'MXCOMWPERR: Maintenix complete work package failed with error - Cannot complete workpackage. Please ensure all attached tasks are completed/cancelled before completing the work package';
+   actual_1       VARCHAR2(2000) := '{"status":400,"detail":"[MXERR-31518] Cannot complete work package because there is an outstanding labor requirement","message":"Cannot complete workpackage. Please ensure all attached tasks are completed/cancelled before completing the work package","errorCode":"MXERR-31518"}';
+BEGIN
+   FOR
+      | expected_  | payload_ |
+      | expected_1 | actual_1 |
+   LOOP
+      return_ := Get_Complete_WP_Error(payload_);
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Build_Complete_WP_Body should return request body" FOR
+   FUNCTION Build_Complete_WP_Body RETURN VARCHAR2;
+USING
+IS
+   return_        VARCHAR2(2000);
+   expected_      VARCHAR2(2000);
+   expected_1     VARCHAR2(2000) := '{"status":"COMPLETE"}';
+BEGIN
+   FOR
+      | expected_  |
+      | expected_1 |
+   LOOP
+      return_ := Build_Complete_WP_Body;
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+

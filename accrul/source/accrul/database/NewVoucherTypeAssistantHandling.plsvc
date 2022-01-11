@@ -1,0 +1,569 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: NewVoucherTypeAssistantHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  082018  jadulk  Added function Is_Voucher_Type_Exist___
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override
+PROCEDURE CRUD_Create___(
+   rec_ IN Voucher_Type_Detail_Virtual_Rec )
+IS
+BEGIN
+   Function_Group_API.Exist(rec_.function_group); 
+   
+   super(rec_);
+   
+   Update_Voucher_Approval___(rec_.parent_objkey, Is_Approval_Workflow_Allowed___(rec_.parent_objkey));
+   Update_Voucher_Privilege___(rec_.parent_objkey, Is_Sep_User_Apporval_Allowed___(rec_.parent_objkey));     
+END CRUD_Create___;
+
+
+@Override
+PROCEDURE CRUD_Update___(
+   old_ IN Voucher_Type_Detail_Virtual_Rec,
+   new_ IN Voucher_Type_Detail_Virtual_Rec )
+IS
+BEGIN
+   super(old_, new_);
+   
+   Update_Voucher_Approval___(new_.parent_objkey, Is_Approval_Workflow_Allowed___(new_.parent_objkey));
+   Update_Voucher_Privilege___(new_.parent_objkey, Is_Sep_User_Apporval_Allowed___(new_.parent_objkey));     
+END CRUD_Update___;
+
+
+PROCEDURE Update_Voucher_Privilege___(
+   objkey_        IN VARCHAR2,
+   update_action_ IN VARCHAR2)
+IS
+   old_voucher_type_virtual_rec_ Voucher_Type_Virtual_Rec;
+   new_voucher_type_virtual_rec_ Voucher_Type_Virtual_Rec;
+   voucher_type_virtual_key_ Voucher_Type_Virtual_Key;
+BEGIN
+   voucher_type_virtual_key_.objkey := objkey_;
+   old_voucher_type_virtual_rec_ := Get_Record___(voucher_type_virtual_key_);  
+   new_voucher_type_virtual_rec_ := old_voucher_type_virtual_rec_;
+   
+   new_voucher_type_virtual_rec_.voucher_privilege := update_action_;
+   CRUD_Update___(old_voucher_type_virtual_rec_, new_voucher_type_virtual_rec_);  
+END Update_Voucher_Privilege___;   
+
+
+PROCEDURE Update_Voucher_Approval___(
+   objkey_        IN VARCHAR2,
+   update_action_ IN VARCHAR2)
+IS
+   old_voucher_type_virtual_rec_ Voucher_Type_Virtual_Rec;
+   new_voucher_type_virtual_rec_ Voucher_Type_Virtual_Rec;
+   voucher_type_virtual_key_ Voucher_Type_Virtual_Key;
+BEGIN
+   voucher_type_virtual_key_.objkey := objkey_;
+   old_voucher_type_virtual_rec_ := Get_Record___(voucher_type_virtual_key_);  
+   new_voucher_type_virtual_rec_ := old_voucher_type_virtual_rec_;
+   
+   new_voucher_type_virtual_rec_.voucher_approval := update_action_;
+   CRUD_Update___(old_voucher_type_virtual_rec_, new_voucher_type_virtual_rec_);  
+END Update_Voucher_Approval___; 
+
+
+FUNCTION Is_Voucher_Type_Exist___ (
+   company_      IN VARCHAR2,
+   voucher_type_ IN VARCHAR2 
+   ) RETURN BOOLEAN
+IS
+BEGIN 
+   Voucher_Type_API.Voucher_Type_Exists(company_, voucher_type_);
+   RETURN TRUE;
+END Is_Voucher_Type_Exist___;
+
+
+FUNCTION Get_Intled_Active___ RETURN VARCHAR2
+IS
+   
+BEGIN
+   $IF Component_Intled_SYS.INSTALLED $THEN
+      RETURN 'TRUE';
+   $ELSE
+      RETURN 'FALSE';
+   $END
+END Get_Intled_Active___;
+
+
+FUNCTION Get_Use_Vou_No_Period___(
+   company_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+BEGIN
+   RETURN Company_Finance_API.Get_Use_Vou_No_Period(company_);
+END;
+
+
+FUNCTION Get_Initialized_Voucher_Type___ (
+   company_ IN VARCHAR2) RETURN Initial_Voucher_Type_Structure_Rec
+IS
+   voucher_type_rec_ Initial_Voucher_Type_Structure_Rec;
+BEGIN  
+   voucher_type_rec_.intled_Active := Get_Intled_Active___();
+   voucher_type_rec_.use_vou_no_period := Get_Use_Vou_No_Period___(company_);
+   
+   RETURN  voucher_type_rec_;
+END Get_Initialized_Voucher_Type___;
+
+
+FUNCTION Create_Vou_Type___(
+   objkey_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   voucher_type_virtual_rec_ Voucher_Type_Virtual_Rec;
+   voucher_type_virtual_key_ Voucher_Type_Virtual_Key;
+   voucher_type_details_message_  VARCHAR2(32000);
+   voucher_series_info_message_   VARCHAR2(32000);
+   
+BEGIN
+   voucher_type_virtual_key_.objkey := objkey_;
+   voucher_type_virtual_rec_ := Get_Record___(voucher_type_virtual_key_);
+   
+   Voucher_Type_API.Create_Voucher_Type(voucher_type_virtual_rec_.company,
+                                        voucher_type_virtual_rec_.Voucher_Type,
+                                        voucher_type_virtual_rec_.description,
+                                        Convert_To_Text_Y_N(voucher_type_virtual_rec_.automatic_allot),
+                                        'N',
+                                        'N',
+                                        Convert_To_Text_True_False(voucher_type_virtual_rec_.Get_Vou_Detail_From_Vou_Type),---- Not used in the server
+                                        Convert_To_Text_Y_N(voucher_type_virtual_rec_.single_function_group),
+                                        Convert_To_Text_True_False(voucher_type_virtual_rec_.simulation_voucher),
+                                        Convert_To_Text_True_False(voucher_type_virtual_rec_.use_manual),
+                                        voucher_type_virtual_rec_.ledger_id,
+                                        Convert_To_Text_True_False(voucher_type_virtual_rec_.balance),
+                                        Convert_To_Text_True_False(voucher_type_virtual_rec_.use_approval_workflow),
+                                        Convert_To_Text_True_False(voucher_type_virtual_rec_.separate_user_approval));  
+   
+   voucher_type_details_message_ := Get_Function_Group_Detail___(objkey_);
+   Voucher_Type_Detail_API.Process_Message(voucher_type_details_message_, 'TRUE'); 
+   
+   voucher_series_info_message_  := Get_Voucher_Series_Info___(objkey_);
+   Voucher_No_Serial_API.Create_Voucher_No(voucher_type_virtual_rec_.company,
+                                           voucher_type_virtual_rec_.Voucher_Type,
+                                           Convert_To_Text_True_False(voucher_type_virtual_rec_.Get_Vou_Detail_From_Vou_Type),
+                                           voucher_type_virtual_rec_.User_Group,
+                                           Finance_Yes_No_API.Decode(Convert_To_Text_Y_N(voucher_type_virtual_rec_.Default_Type)),
+                                           Authorize_Level_API.Decode(voucher_type_virtual_rec_.Authorization_Level),
+                                           voucher_series_info_message_,
+                                           voucher_type_virtual_rec_.Function_Group,
+                                           voucher_type_virtual_rec_.Copy_From_Voucher_Type);
+   RETURN 'TRUE';          
+END Create_Vou_Type___;
+
+
+FUNCTION Convert_To_Text_Y_N( 
+   param_   IN BOOLEAN) RETURN VARCHAR2
+IS
+BEGIN
+   IF (param_ = TRUE) THEN
+      RETURN 'Y';
+   END IF;
+   RETURN 'N';
+END Convert_To_Text_Y_N;
+
+
+FUNCTION Convert_To_Text_True_False(
+   param_   IN BOOLEAN) RETURN VARCHAR2
+IS
+BEGIN
+   IF (param_ = TRUE ) THEN
+      RETURN 'TRUE';
+   END IF;
+   RETURN 'FALSE';
+END Convert_To_Text_True_False;
+
+FUNCTION Convert_To_Text_Y_N(
+   param_   IN NUMBER) RETURN VARCHAR2
+IS
+BEGIN
+   IF (param_ = 1) THEN
+      RETURN 'Y';
+   END IF;
+   RETURN 'N';
+END Convert_To_Text_Y_N;
+
+
+FUNCTION Convert_To_Text_True_False
+   (param_  IN NUMBER) RETURN VARCHAR2
+IS
+BEGIN
+   IF (param_ = 1 ) THEN
+      RETURN 'TRUE';
+   END IF;
+   RETURN 'FALSE';
+END Convert_To_Text_True_False;
+
+
+FUNCTION Get_Function_Group_Detail___(
+   objkey_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   main_message_  VARCHAR2(32000);
+   sub_message_  VARCHAR2(32000);
+   voucher_type_virtual_key_ Voucher_Type_Virtual_Key;
+   count_         NUMBER := 0;
+BEGIN
+   voucher_type_virtual_key_.objkey := objkey_;
+   main_message_ := Message_SYS.Construct('VOUCHER_TYPE_DETAIL');
+   FOR rec_ IN Get_Voucher_Type_Detail_Virtual_Array___(voucher_type_virtual_key_) LOOP
+      count_ := count_ +1;
+      sub_message_ := NULL;
+      sub_message_ := Message_SYS.Construct('');
+      Message_SYS.Add_Attribute(sub_message_, 'COMPANY', rec_.company);
+      Message_SYS.Add_Attribute(sub_message_, 'VOUCHER_TYPE', rec_.Voucher_Type);
+      Message_SYS.Add_Attribute(sub_message_, 'FUNCTION_GROUP', rec_.Function_Group);
+      Message_SYS.Add_Attribute(sub_message_, 'AUTOMATIC_VOU_BALANCE', rec_.Automatic_Vou_Balance);
+      Message_SYS.Add_Attribute(sub_message_, 'STORE_ORIGINAL', rec_.Store_Original);
+      Message_SYS.Add_Attribute(sub_message_, 'SINGLE_FUNCTION_GROUP', rec_.Single_Function_Group);
+      Message_SYS.Add_Attribute(sub_message_, 'AUTOMATIC_ALLOT', rec_.Automatic_Allot);
+      Message_SYS.Add_Attribute(sub_message_, 'ROW_GROUP_VALIDATION', rec_.Row_Group_Validation);
+      Message_SYS.Add_Attribute(sub_message_, 'REFERENCE_MANDATORY', rec_.Reference_Mandatory);
+      Message_SYS.Add_Attribute(main_message_, chr(65+count_) ,sub_message_);
+   END LOOP;
+   RETURN main_message_;
+END Get_Function_Group_Detail___;
+
+
+FUNCTION Get_Voucher_Series_Info___(
+   objkey_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   main_message_              VARCHAR2(32000);
+   sub_message_               VARCHAR2(32000);
+   voucher_type_virtual_key_  Voucher_Type_Virtual_Key;
+   count_                     NUMBER := 0;
+BEGIN
+   voucher_type_virtual_key_.objkey := objkey_;
+   main_message_ := Message_SYS.Construct('VOUCHER_SERIE_DETAIL');
+   FOR rec_ IN Get_Voucher_Number_Serial_Virtual_Array___(voucher_type_virtual_key_) LOOP
+      count_ := count_ +1;
+      sub_message_ := NULL;
+      sub_message_ := Message_SYS.Construct('');
+      Message_SYS.Add_Attribute(sub_message_, 'COMPANY', rec_.company);
+      Message_SYS.Add_Attribute(sub_message_, 'VOUCHER_TYPE', rec_.Voucher_Type);
+      Message_SYS.Add_Attribute(sub_message_, 'ACCOUNTING_YEAR', rec_.Year);
+      IF (Company_Finance_API.Get_Use_Vou_No_Period(rec_.company) = 'TRUE') THEN
+         Message_SYS.Add_Attribute(sub_message_, 'PERIOD', rec_.Period);
+      ELSE
+         Message_SYS.Add_Attribute(sub_message_, 'PERIOD', 99);
+      END IF;
+      Message_SYS.Add_Attribute(sub_message_, 'SERIE_FROM', rec_.From_Number);
+      Message_SYS.Add_Attribute(sub_message_, 'SERIE_UNTIL', rec_.Until_Number);
+      Message_SYS.Add_Attribute(sub_message_, 'CURRENT_NUMBER', rec_.Next_Number);
+      Message_SYS.Add_Attribute(main_message_, chr(65+count_) ,sub_message_);
+   END LOOP;
+   RETURN main_message_;
+END Get_Voucher_Series_Info___;
+
+
+FUNCTION Convert_To_Boolean(
+   param_ VARCHAR2) RETURN BOOLEAN
+IS
+BEGIN
+   IF (param_ = 'TRUE') THEN
+      RETURN TRUE;
+   END IF;
+   RETURN FALSE;
+END Convert_To_Boolean;
+
+
+FUNCTION Check_Auto_Allotment___(
+   objkey_ IN VARCHAR2)RETURN BOOLEAN
+IS
+   CURSOR voucher_type_detail IS
+      SELECT function_group, automatic_allot
+      FROM  ${PROJECTION}_voucher_type_detail_virtual_vrt
+      WHERE parent_objkey = objkey_;
+BEGIN
+   FOR rec_ IN voucher_type_detail LOOP
+      IF (rec_.automatic_allot = 'Y') THEN
+         RETURN TRUE;
+      END IF;
+   END LOOP; 
+   RETURN FALSE;
+END Check_Auto_Allotment___;  
+
+
+FUNCTION Check_Single_Function_Group___(
+   objkey_                IN VARCHAR2,
+   single_function_group_ IN BOOLEAN,
+   function_group_count_  IN NUMBER
+   )RETURN BOOLEAN
+IS 
+   temp_single_function_group_  voucher_type_detail.single_function_group%TYPE;    
+   
+   CURSOR get_voucher_type_detail IS
+      SELECT single_function_group
+      FROM  ${PROJECTION}_voucher_type_detail_virtual_vrt
+      WHERE parent_objkey = objkey_
+      FETCH FIRST 1 ROWS ONLY;
+BEGIN 
+   OPEN get_voucher_type_detail;
+   FETCH get_voucher_type_detail INTO temp_single_function_group_;
+   CLOSE get_voucher_type_detail;
+   
+   IF (single_function_group_ = FALSE AND temp_single_function_group_ = 'Y' AND function_group_count_ = 1) THEN
+      RETURN TRUE;
+   ELSE
+      RETURN FALSE;
+   END IF;
+END Check_Single_Function_Group___; 
+
+FUNCTION Check_Function_Group___(
+   function_group_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+BEGIN
+   Function_Group_API.Exist(function_group_);
+   RETURN 'TRUE';
+END Check_Function_Group___;  
+
+
+FUNCTION Is_Function_Group_Exists___(
+   function_group_ IN VARCHAR2 ) RETURN BOOLEAN
+IS
+BEGIN
+   RETURN Function_Group_API.Exists(function_group_);
+END Is_Function_Group_Exists___; 
+
+
+PROCEDURE Update_Automatic_Allotment___ (
+   objkey_         IN VARCHAR2,
+   required_value_ IN BOOLEAN )
+IS
+   old_voucher_type_virtual_rec_ Voucher_Type_Virtual_Rec;
+   new_voucher_type_virtual_rec_ Voucher_Type_Virtual_Rec;
+   voucher_type_virtual_key_     Voucher_Type_Virtual_Key;
+BEGIN  
+   voucher_type_virtual_key_.objkey := objkey_;
+   old_voucher_type_virtual_rec_ := Get_Record___(voucher_type_virtual_key_); 
+   User_Finance_API.Exist_Current_User(old_voucher_type_virtual_rec_.company);
+   new_voucher_type_virtual_rec_ := old_voucher_type_virtual_rec_;
+   
+   IF (required_value_) THEN
+      new_voucher_type_virtual_rec_.automatic_allot := TRUE;
+   ELSE
+      new_voucher_type_virtual_rec_.automatic_allot := FALSE;
+   END IF; 
+   
+   CRUD_Update___(old_voucher_type_virtual_rec_, new_voucher_type_virtual_rec_);  
+END Update_Automatic_Allotment___;
+
+
+PROCEDURE Update_Single_Function_Group___ (
+   objkey_         IN VARCHAR2,
+   required_value_ IN BOOLEAN )
+IS
+   old_voucher_type_virtual_rec_ Voucher_Type_Virtual_Rec;
+   new_voucher_type_virtual_rec_ Voucher_Type_Virtual_Rec;
+   voucher_type_virtual_key_ Voucher_Type_Virtual_Key;
+BEGIN  
+   voucher_type_virtual_key_.objkey := objkey_;
+   old_voucher_type_virtual_rec_ := Get_Record___(voucher_type_virtual_key_);  
+   User_Finance_API.Exist_Current_User(old_voucher_type_virtual_rec_.company);
+   new_voucher_type_virtual_rec_ := old_voucher_type_virtual_rec_;
+   
+   IF (required_value_) THEN
+      new_voucher_type_virtual_rec_.single_function_group := TRUE;
+   ELSE
+      new_voucher_type_virtual_rec_.single_function_group := FALSE;
+   END IF; 
+   
+   CRUD_Update___(old_voucher_type_virtual_rec_, new_voucher_type_virtual_rec_);
+END Update_Single_Function_Group___;
+
+
+PROCEDURE Reset_Row_Group_Validation___(
+   objkey_ IN VARCHAR2)
+IS
+   CURSOR get_voucher_type_detail IS
+      SELECT *
+      FROM  ${PROJECTION}_voucher_type_detail_virtual_vrt
+      WHERE parent_objkey = objkey_;
+   
+   old_voucher_type_detail_virtual_rec_ Voucher_Type_Detail_Virtual_Rec;
+   new_voucher_type_detail_virtual_rec_ Voucher_Type_Detail_Virtual_Rec;
+   voucher_type_detail_virtual_key_     Voucher_Type_Detail_Virtual_Key;
+   
+BEGIN
+   FOR rec_ IN get_voucher_type_detail LOOP
+      voucher_type_detail_virtual_key_.objkey := rec_.objkey;
+      old_voucher_type_detail_virtual_rec_ := Get_Record___(voucher_type_detail_virtual_key_);  
+      User_Finance_API.Exist_Current_User(old_voucher_type_detail_virtual_rec_.company);
+      new_voucher_type_detail_virtual_rec_ := old_voucher_type_detail_virtual_rec_;
+      
+      IF(rec_.function_group IS NOT NULL) THEN
+         IF (old_voucher_type_detail_virtual_rec_.row_group_validation = TRUE) THEN
+            new_voucher_type_detail_virtual_rec_.row_group_validation := FALSE;
+            CRUD_Update___(old_voucher_type_detail_virtual_rec_, new_voucher_type_detail_virtual_rec_);
+         END IF;
+      END IF;
+   END LOOP;
+END Reset_Row_Group_Validation___; 
+
+
+FUNCTION Is_Approval_Workflow_Allowed___(
+   objkey_ IN VARCHAR2) RETURN VARCHAR2
+IS
+   function_group_            voucher_type_detail.function_group%TYPE;
+   voucher_type_virtual_rec_  Voucher_Type_Virtual_Rec;
+   voucher_type_virtual_key_  Voucher_Type_Virtual_Key;
+   
+   CURSOR get_voucher_type_detail IS
+      SELECT function_group
+      FROM   ${PROJECTION}_voucher_type_detail_virtual_vrt
+      WHERE  parent_objkey = objkey_
+      FETCH FIRST 1 ROWS ONLY;
+BEGIN
+   voucher_type_virtual_key_.objkey := objkey_;
+   voucher_type_virtual_rec_ := Get_Record___(voucher_type_virtual_key_);
+   
+   IF (voucher_type_virtual_rec_.ledger != '01' AND voucher_type_virtual_rec_.single_function_group = TRUE) THEN
+      OPEN get_voucher_type_detail;
+      FETCH get_voucher_type_detail INTO function_group_;  
+      IF (get_voucher_type_detail%NOTFOUND) THEN      
+         function_group_ := NULL;
+      END IF;
+      CLOSE get_voucher_type_detail;
+      
+      IF (function_group_ IS NOT NULL) THEN 
+         IF (Function_Group_API.Get_Sep_User_Approval_Allow_Db(function_group_) = 'TRUE') THEN               
+            RETURN 'TRUE';
+         END IF;  
+      END IF;
+   END IF;      
+   
+   RETURN 'FALSE';
+END Is_Approval_Workflow_Allowed___;  
+
+
+FUNCTION Is_Sep_User_Apporval_Allowed___ (
+   objkey_ IN VARCHAR2) RETURN VARCHAR2
+IS
+   function_group_            voucher_type_detail.function_group%TYPE;
+   voucher_type_virtual_rec_  Voucher_Type_Virtual_Rec;
+   voucher_type_virtual_key_  Voucher_Type_Virtual_Key;
+   
+   CURSOR get_voucher_type_detail IS
+      SELECT function_group
+      FROM   ${PROJECTION}_voucher_type_detail_virtual_vrt
+      WHERE  parent_objkey = objkey_
+      FETCH FIRST 1 ROWS ONLY;
+BEGIN
+   voucher_type_virtual_key_.objkey := objkey_;
+   voucher_type_virtual_rec_ := Get_Record___(voucher_type_virtual_key_);
+   
+   IF (voucher_type_virtual_rec_.single_function_group = TRUE) THEN 
+      OPEN get_voucher_type_detail;
+      FETCH get_voucher_type_detail INTO function_group_;
+      IF (get_voucher_type_detail%NOTFOUND) THEN      
+         function_group_ := NULL;
+      END IF;
+      CLOSE get_voucher_type_detail;
+      
+      IF (function_group_ IS NOT NULL) THEN
+         IF (Function_Group_API.Get_Sep_User_Approval_Allow_Db(function_group_) = 'TRUE') THEN               
+            RETURN 'TRUE';
+         END IF; 
+      END IF;
+   END IF;
+   
+   RETURN 'FALSE';
+END Is_Sep_User_Apporval_Allowed___;
+
+
+PROCEDURE Check_Voucher_Approval_Workflow___(
+   objkey_ IN VARCHAR2) 
+IS
+   function_group_               voucher_type_detail.function_group%TYPE;
+   voucher_type_virtual_rec_     Voucher_Type_Virtual_Rec;
+   new_voucher_type_virtual_rec_ Voucher_Type_Virtual_Rec;
+   voucher_type_virtual_key_     Voucher_Type_Virtual_Key;
+   
+   CURSOR get_voucher_type_detail IS
+      SELECT function_group
+      FROM   ${PROJECTION}_voucher_type_detail_virtual_vrt
+      WHERE  parent_objkey = objkey_
+      FETCH FIRST 1 ROWS ONLY;
+BEGIN
+   voucher_type_virtual_key_.objkey := objkey_;
+   voucher_type_virtual_rec_ := Get_Record___(voucher_type_virtual_key_);
+   User_Finance_API.Exist_Current_User(voucher_type_virtual_rec_.company);
+   new_voucher_type_virtual_rec_ := voucher_type_virtual_rec_;
+   
+   IF (voucher_type_virtual_rec_.ledger != '01' AND voucher_type_virtual_rec_.single_function_group = TRUE) THEN
+      OPEN get_voucher_type_detail;
+      FETCH get_voucher_type_detail INTO function_group_;  
+      IF (get_voucher_type_detail%NOTFOUND) THEN      
+         function_group_ := NULL;
+      END IF;
+      CLOSE get_voucher_type_detail;
+      
+      IF (function_group_ IS NOT NULL) THEN 
+         IF (Function_Group_API.Get_Sep_User_Approval_Allow_Db(function_group_) = 'TRUE') THEN               
+            new_voucher_type_virtual_rec_.voucher_approval := 'TRUE';
+         ELSE
+            new_voucher_type_virtual_rec_.voucher_approval := 'FALSE';
+         END IF;      
+      ELSE
+         new_voucher_type_virtual_rec_.voucher_approval := 'FALSE';
+      END IF;   
+   ELSE
+      IF(voucher_type_virtual_rec_.use_approval_workflow)THEN        
+         new_voucher_type_virtual_rec_.use_approval_workflow := FALSE;
+      END IF; 
+      new_voucher_type_virtual_rec_.voucher_approval := 'FALSE';
+   END IF; 
+   CRUD_Update___(voucher_type_virtual_rec_, new_voucher_type_virtual_rec_);
+END Check_Voucher_Approval_Workflow___;  
+
+
+PROCEDURE Voucher_Approve_Privilege___ (
+   objkey_ IN VARCHAR2)
+IS
+   function_group_               voucher_type_detail.function_group%TYPE;
+   voucher_type_virtual_rec_     Voucher_Type_Virtual_Rec;
+   new_voucher_type_virtual_rec_ Voucher_Type_Virtual_Rec;
+   voucher_type_virtual_key_     Voucher_Type_Virtual_Key;
+   
+   CURSOR get_voucher_type_detail IS
+      SELECT function_group
+      FROM   ${PROJECTION}_voucher_type_detail_virtual_vrt
+      WHERE  parent_objkey = objkey_
+      FETCH FIRST 1 ROWS ONLY;
+BEGIN
+   voucher_type_virtual_key_.objkey := objkey_;
+   voucher_type_virtual_rec_ := Get_Record___(voucher_type_virtual_key_);
+   User_Finance_API.Exist_Current_User(voucher_type_virtual_rec_.company);
+   new_voucher_type_virtual_rec_ := voucher_type_virtual_rec_;
+   
+   IF (voucher_type_virtual_rec_.single_function_group = TRUE) THEN 
+      OPEN get_voucher_type_detail;
+      FETCH get_voucher_type_detail INTO function_group_;
+      IF (get_voucher_type_detail%NOTFOUND) THEN      
+         function_group_ := NULL;
+      END IF;
+      CLOSE get_voucher_type_detail;
+      
+      IF (function_group_ IS NOT NULL) THEN
+         IF (Function_Group_API.Get_Sep_User_Approval_Allow_Db(function_group_) = 'TRUE') THEN               
+            new_voucher_type_virtual_rec_.voucher_privilege := 'TRUE';
+         ELSE
+            new_voucher_type_virtual_rec_.voucher_privilege := 'FALSE';
+         END IF; 
+      ELSE
+         new_voucher_type_virtual_rec_.voucher_privilege := 'FALSE';
+      END IF;
+   ELSE
+      new_voucher_type_virtual_rec_.separate_user_approval := FALSE;
+      new_voucher_type_virtual_rec_.voucher_privilege := 'FALSE';
+   END IF;  
+   
+   CRUD_Update___(voucher_type_virtual_rec_, new_voucher_type_virtual_rec_);
+END Voucher_Approve_Privilege___;

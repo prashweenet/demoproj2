@@ -1,0 +1,79 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CtrlTypeAllowedValue
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Ctrl_Type_Allowed_Value IS
+   Prompt = 'CtrlTypeAllowedValue'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)'
+   Company.Prompt = 'Company'
+   Posting_Type.Flags = 'PMI--'
+   Posting_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Posting_Type.Prompt = 'Posting Type'
+   Code_Part.Flags = 'PMIU-'
+   Code_Part.Datatype = 'STRING(1)'
+   Code_Part.Prompt = 'Code Part'
+   Control_Type.Flags = 'KMI-L'
+   Control_Type.Datatype = 'STRING(10)/UPPERCASE'
+   Control_Type.Prompt = 'Control Type'
+   Control_Type_Desc.Flags = 'A-I-L'
+   Control_Type_Desc.Datatype = 'STRING(35)'
+   Control_Type_Desc.Prompt = 'Description'
+   Module.Flags = 'AMI-L'
+   Module.Datatype = 'STRING(20)'
+   Module.Prompt = 'Module'
+   Ctrl_Type_Category.Flags = 'AMIUL'
+   Ctrl_Type_Category.Datatype = 'STRING(20)'
+   Ctrl_Type_Category.Enumeration = 'CtrlTypeCategory'
+   Ctrl_Type_Category.Prompt = 'Control Type Category'
+   Ctrl_Type_Category_Db.Flags = 'A----'
+   Ctrl_Type_Category_Db.Datatype = 'STRING(20)'
+   Ctrl_Type_Category_Db.Prompt = 'Control Type Category'
+   Allow_Prepost_Det_Db.Flags = 'A----'
+   Allow_Prepost_Det_Db.Datatype = 'STRING(20)'
+   Allow_Prepost_Det_Db.Prompt = 'Allow Pre-Posting on Detail level'   
+SELECT c.company                                            company,
+       posting_type                                         posting_type,
+       code_part                                            code_part,
+       control_type                                         control_type,
+       Posting_Ctrl_Control_Type_API.Get_Description(control_type,
+                                                     module,
+                                                     company)  
+                                                            control_type_desc,
+       module                                               module,
+       Posting_Ctrl_Control_Type_API.Get_Ctrl_Type_Category(control_type,
+                                                            module)
+                                                            ctrl_type_category,
+       Posting_Ctrl_Control_Type_API.Get_Ctrl_Type_Category_Db(control_type,
+                                                               module)
+                                                            ctrl_type_category_db,
+      allow_prepost_det_db                                  allow_prepost_det_db                                 
+FROM   posting_ctrl_allowed_value t, company_finance_auth1 c
+UNION ALL
+SELECT company                                              company,
+       posting_type                                         posting_type,
+       code_part                                            code_part,
+       control_type                                         control_type,
+       control_type_desc                                    control_type_desc,
+       module                                               module,
+       Ctrl_Type_Category_API.Decode('COMBINATION')         ctrl_type_category,
+       'COMBINATION'                                        ctrl_type_category_db,
+       'FALSE'                                              allow_prepost_det_db
+FROM   comb_control_type_value c;
+

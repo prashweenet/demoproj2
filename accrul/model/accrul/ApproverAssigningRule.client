@@ -1,0 +1,167 @@
+client ApproverAssigningRule;
+component ACCRUL;
+layer Core;
+projection ApproverAssigningRuleHandling;
+include fragment VoucherTypeForArdSelector;
+include fragment ApproverDetailGroupLovSelector;
+include fragment ApproverDetailApproverLovSelector;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ApproverAssigningRuleNavEntry parent AccrulNavigator.ApprovalWorkflowBasicDataMenu at index 400 {
+      label = "Approver Assigning Rule";
+      page Form home ApprovalRuleDefinition;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ApprovalRuleDefinitionSet {
+   label = "Approver Assigning Rule";
+   stateindicator ApprovalRuleDefinitionStateIndicator;
+   selector ApprovalRuleDefinitionNewSelector;
+   group ApprovalRuleDefinitionGroup;
+   group AssigningCriteriaGroup;
+
+   list ApprovalRuleApproverList(ApprovalRuleApproverArray);
+
+   commandgroup StateChangeCmdGroup {
+      command Activate {
+         label = "Set Active";
+      }
+      command SetObsolete;
+      command SetInProgress;
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+selector ApprovalRuleDefinitionNewSelector for ApprovalRuleDefinition {
+   label = "${ApprovalRuleId} - ${Description}";
+   static ApprovalRuleId;
+   static Description;
+   badge Objstate {
+      label = "Status";
+      showlabel = false;
+      style = TextOnly;
+      emphasis Progress2 = [Objstate = "InProgress"];
+      emphasis Progress11 = [Objstate = "Active"];
+      emphasis StateObsolete = [Objstate = "Obsolete"];
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ApprovalRuleDefinitionGroup for ApprovalRuleDefinition {
+   label = "";
+
+   field ApprovalRuleId;
+   field Description;
+   field TwoApproverRequired {
+      validate command {
+         execute {
+            set SequentialApproval = false;
+         }
+      }
+   }
+   field SequentialApproval {
+      editable = [TwoApproverRequired = true];
+   }
+}
+
+group AssigningCriteriaGroup for ApprovalRuleDefinition {
+   label = "Assigning Criteria";
+
+   field MinimumAmount {
+      format = ifscurrency;
+   }
+   field MaximumAmount {
+      format = ifscurrency;
+   }
+   multilov VoucherTypesRef with VoucherTypeForArdList using VoucherTypeForArdSet;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ApprovalRuleApproverList for ApprovalRuleApprover {
+   label = "Voucher Approvers";
+   orderby = Sequence asc;
+
+   field Sequence {
+      columnexclude = [parent.SequentialApproval != true];
+      columnvisible = [parent.SequentialApproval = true];
+   }
+   lov ApproverIdRef with ReferenceApproverDetailApproverLovSelector {
+      search = ApproverId, ApproverName;
+      size = Large;
+      editable = [ApproverGroupId = null];
+      description = ApproverIdRef.ApproverName;
+   }
+   lov ApproverGroupIdRef with ReferenceApproverDetailGroupLovSelector {
+      search = ApproverGroupId, ApproverGroupDesc;
+      size = Large;
+      editable = [ApproverId = null];
+      description = ApproverGroupIdRef.ApproverGroupDesc;
+   }
+}
+
+list VoucherTypeForArdList for VoucherTypeForArd {
+   label = "Voucher Type(s)";
+
+   static Company {
+      columnexclude = [true];
+   }
+   static VoucherType;
+   static Description;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+@Override
+stateindicator ApprovalRuleDefinitionStateIndicator for ApprovalRuleDefinition {
+   state "In Progress" {
+      completed = 33%;
+      emphasis Progress2 = [Objstate = "InProgress"];
+   }
+   state "Active" {
+      completed = 100%;
+      emphasis Progress11 = [Objstate = "Active"];
+   }
+   state "Obsolete" {
+      completed = 100%;
+      emphasis StateObsolete = [Objstate = "Obsolete"];
+   }
+}
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

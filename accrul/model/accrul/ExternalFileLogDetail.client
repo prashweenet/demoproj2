@@ -1,0 +1,104 @@
+client ExternalFileLogDetail;
+component ACCRUL;
+layer Core;
+projection ExternalFileLogDetailHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ExtFileLogs {
+   label = "External File Log Detail";
+
+   crudactions {
+      new {
+         enabled = [false];
+
+      }
+
+   }
+   selector ExtFileLogSelector;
+   group ExtFileLogGroup bind ExtFileLogSelector;
+   list ExtFileLogDetailList(ExtFileLogDetailArray) bind ExtFileLogSelector;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ExtFileLogSelector for ExtFileLog {
+   label = "${LoadFileId}";
+   orderby = LoadFileId desc, SeqNo asc;
+
+   static LoadFileId;
+   static State;
+   static LogDate;
+   static FileType;
+   static FileTemplateId;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ExtFileLogGroup for ExtFileLog {
+   label = "";
+
+   field LoadFileId;
+   field State {
+      size = Small;
+   }
+   field LogDate;
+   lov FileTypeRef with ReferenceExtFileTypeSelector {
+      search = FileType, Description;
+      description = FileTypeRef.Description;
+   }
+   lov FileTemplateIdRef with ReferenceExtFileTemplateSelector {
+      search = FileTemplateId, Description;
+      description = FileTemplateIdRef.Description;
+   }
+   field LoadFileIdRef.FileDirection;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileLogDetailList for ExtFileLogDetail {
+   label = "Log Details";
+
+   field RowState {
+      size = Small;
+   }
+   field NoOfRecords;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

@@ -1,0 +1,251 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CostStructureItem
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Sorted_Item_Above IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Sorted Item Above';
+
+COLUMN Sorted_Name_Value IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Sorted Name Value';
+
+COLUMN Struct_Level IS
+   Flags      = 'A----'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Structure Level';
+
+COLUMN Item_Description IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING(200)'
+   Prompt     = 'Item Description';
+   
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Cost_Structure_Item2 IS
+   Prompt = 'Cost Structure Node'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)'
+   Cost_Structure_Id.Flags = 'PMI--'
+   Cost_Structure_Id.Prompt = 'Cost Structure Id'
+   Cost_Structure_Id.Ref = 'CostStructure(company)'
+   Name_Value.Flags = 'KMI-L'
+   Name_Value.Datatype = 'STRING(100)/UPPERCASE'
+   Name_Value.Prompt = 'Node ID'
+   Description.Flags = 'A-IUL'
+   Description.Prompt = 'Description'
+   Level_No.Flags = 'AMIUL'
+   Level_No.Datatype = 'NUMBER/UPPERCASE'
+   Level_No.Prompt = 'Level'
+   Level_No.Ref = 'CostStructureLevel(company,cost_structure_id)'
+   Level_Id.Flags = 'A----'
+   Item_Above.Datatype = 'STRING(100)/UPPERCASE'
+   Cost_Struct_Item_Type.Flags = 'AMI--'
+   Cost_Struct_Item_Type.Prompt = 'CBS Item Type'
+SELECT t.company                        company,
+       t.cost_structure_id              cost_structure_id,
+       t.name_value                     name_value,
+       t.description                    description,
+       t.level_no                       level_no,
+       l.level_id                       level_id,
+       t.item_above                     item_above,
+       Cost_Struct_Item_Type_API.Decode(cost_struct_item_type)
+                                        cost_struct_item_type,
+       cost_struct_item_type            cost_struct_item_type_db,
+       DECODE(Finance_Lib_API.Is_Valid_Number(t.item_above),'TRUE',lpad(t.item_above,100,'0'),t.item_above)
+                                        sorted_item_above,
+       DECODE(Finance_Lib_API.Is_Valid_Number(t.name_value),'TRUE',lpad(t.name_value,100,'0'),t.name_value)
+                                        sorted_name_value,
+       t.ROWID                          objid,
+       to_char(t.rowversion,'YYYYMMDDHH24MISS')                      objversion,
+       t.rowkey                        objkey
+FROM   cost_structure_item_tab t,
+       cost_structure_level_tab l
+WHERE  t.company(+) = l.company
+   AND t.cost_structure_id(+) = l.cost_structure_id
+   AND t.level_no(+) = l.level_no
+   AND cost_struct_item_type = 'NODE';
+
+VIEW Cost_Structure_Item3 IS
+   Prompt = 'Cost Structure Cost Element'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)'
+   Cost_Structure_Id.Flags = 'PMI--'
+   Cost_Structure_Id.Prompt = 'Cost Structure Id'
+   Cost_Structure_Id.Ref = 'CostStructure(company)'
+   Name_Value.Flags = 'KMI-L'
+   Name_Value.Datatype = 'STRING(100)/UPPERCASE'
+   Name_Value.Prompt = 'Node Name'
+   Description.Flags = 'A-IUL'
+   Description.Prompt = 'Description'
+   Level_No.Flags = 'AMIUL'
+   Level_No.Datatype = 'NUMBER/UPPERCASE'
+   Level_No.Prompt = 'Level'
+   Level_No.Ref = 'CostStructureLevel(company,cost_structure_id)'
+   Level_Id.Flags = 'A----'
+   Item_Above.Datatype = 'STRING(100)/UPPERCASE'
+   Cost_Struct_Item_Type.Flags = 'AMI--'
+   Cost_Struct_Item_Type.Prompt = 'CBS Item Type'
+SELECT t.company                        company,
+       t.cost_structure_id              cost_structure_id,
+       t.name_value                     name_value,
+       Project_Cost_Element_API.Get_Description(t.company, t.name_value)
+                                        description,
+       t.level_no                       level_no,
+       l.level_id                       level_id,
+       t.item_above                     item_above,
+       Cost_Struct_Item_Type_API.Decode(cost_struct_item_type)
+                                        cost_struct_item_type,
+       cost_struct_item_type            cost_struct_item_type_db,
+       DECODE(Finance_Lib_API.Is_Valid_Number(t.item_above),'TRUE',lpad(t.item_above,100,'0'),t.item_above)
+                                        sorted_item_above,
+       DECODE(Finance_Lib_API.Is_Valid_Number(t.name_value),'TRUE',lpad(t.name_value,100,'0'),t.name_value)
+                                        sorted_name_value,
+       t.ROWID                          objid,
+       to_char(t.rowversion,'YYYYMMDDHH24MISS')                      objversion,
+       t.rowkey                          objkey
+FROM   cost_structure_item_tab t,
+       cost_structure_level_tab   l
+WHERE  t.company(+) = l.company
+   AND t.cost_structure_id(+) = l.cost_structure_id
+   AND t.level_no(+) = l.level_no
+   AND cost_struct_item_type = 'COST_ELEMENT';
+
+VIEW Cost_Structure_Item_Disp IS
+   Prompt = 'Cost Structure Item'
+   Company.Flags = 'P----'
+   Company.Datatype = 'STRING(20)'
+   Cost_Structure_Id.Flags = 'P----'
+   Cost_Structure_Id.Prompt = 'Cost Structure Id'
+   Cost_Structure_Id.Ref = 'CostStructure(company)'
+   Name_Value.Flags = 'K----'
+   Name_Value.Datatype = 'STRING(100)/UPPERCASE'
+   Name_Value.Prompt = 'Node Name'
+   Description.Flags = 'A----'
+   Description.Prompt = 'Description'
+   Level_No.Flags = 'A----'
+   Level_No.Datatype = 'NUMBER/UPPERCASE'
+   Level_No.Prompt = 'Level'
+   Level_No.Ref = 'CostStructureLevel(company,cost_structure_id)'
+   Item_Above.Flags = 'A----'
+   Item_Above.Datatype = 'STRING(100)/UPPERCASE'
+   Cost_Struct_Item_Type.Flags = 'K----'
+   Cost_Struct_Item_Type.Prompt = 'Cbs Item Type'
+SELECT t.company                        company,
+       t.cost_structure_id              cost_structure_id,
+       t.name_value                     name_value,
+       DECODE(t.cost_struct_item_type,'NODE',t.description,Project_Cost_Element_API.Get_Description(t.company, t.name_value))
+                                        description,
+       t.level_no                       level_no,
+       t.item_above                     item_above,
+       Cost_Struct_Item_Type_API.Decode(cost_struct_item_type) cost_struct_item_type,
+       cost_struct_item_type       cost_struct_item_type_db,
+       l.level_no                           struct_level,
+       DECODE(Finance_Lib_API.Is_Valid_Number(t.item_above),'TRUE',lpad(t.item_above,10,'0'),t.item_above)
+                                        sorted_item_above,
+       DECODE(Finance_Lib_API.Is_Valid_Number(name_value),'TRUE',lpad(t.name_value,10,'0'),name_value)
+                                        sorted_name_value,
+       element_type                     element_type_db,
+       t.ROWID                          objid,
+       to_char(t.rowversion,'YYYYMMDDHH24MISS')                      objversion,
+       t.rowkey                        objkey
+FROM   cost_structure_item_tab t,
+       cost_structure_level_tab   l
+WHERE  t.company(+) = l.company
+   AND t.cost_structure_id(+) = l.cost_structure_id
+   AND t.level_no(+) = l.level_no;
+
+VIEW Cost_Structure_Item_Lov IS
+   Prompt = 'Cost Breakdown Structure Item'
+   Cost_Structure_Id.Ref = 'CostStructure(company)'
+   Name_Value.Flags = 'KMI-L'
+   Cost_Struct_Item_Type.Flags = 'A---L'
+   Cost_Struct_Item_Type_Db.Prompt = 'Cost Struct Item Type Db'
+SELECT company                        company,
+       cost_structure_id              cost_structure_id,
+       name_value                     name_value,
+       Cost_Struct_Item_Type_API.Decode(cost_struct_item_type) cost_struct_item_type,
+       cost_struct_item_type     cost_struct_item_type_db,
+       description                    item_description,
+       Prj_Followup_Element_Type_API.Decode(element_type) element_type,
+       element_type                   element_type_db,
+       rowid                         objid,
+       to_char(rowversion,'YYYYMMDDHH24MISS')                    objversion,
+       rowkey                        objkey
+FROM   cost_structure_item_tab;
+
+VIEW Structure_Cost_Type_Lov IS
+   Prompt = 'Cost Breakdown Structure Item'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)'
+   Cost_Structure_Id.Flags = 'PMI--'
+   Cost_Structure_Id.Ref = 'CostStructure(company)'
+   Name_Value.Flags = 'KMI-L'
+   Cost_Struct_Item_Type.Flags = 'A---L'
+SELECT company                        company,
+       cost_structure_id              cost_structure_id,
+       name_value                     name_value,
+       Cost_Struct_Item_Type_API.Decode(cost_struct_item_type) cost_struct_item_type,
+       cost_struct_item_type     cost_struct_item_type_db,
+       description                    item_description,
+       Prj_Followup_Element_Type_API.Decode(element_type) element_type, 
+       element_type                   element_type_db,
+       rowid                         objid,
+       to_char(rowversion,'YYYYMMDDHH24MISS')                    objversion
+FROM   cost_structure_item_tab
+WHERE (element_type = 'COST' OR cost_struct_item_type = 'NODE');
+
+VIEW Structure_Rev_Type_Lov IS
+   Prompt = 'Cost Breakdown Structure Item'
+   Cost_Structure_Id.Ref = 'CostStructure(company)'
+   Name_Value.Flags = 'KMI-L'
+   Cost_Struct_Item_Type.Flags = 'A---L'
+SELECT company                        company,
+       cost_structure_id              cost_structure_id,
+       name_value                     name_value,
+       Cost_Struct_Item_Type_API.Decode(cost_struct_item_type) cost_struct_item_type,
+       cost_struct_item_type     cost_struct_item_type_db,
+       description                    item_description,
+       Prj_Followup_Element_Type_API.Decode(element_type) element_type, 
+       element_type                   element_type_db,
+       rowid                         objid,
+       to_char(rowversion,'YYYYMMDDHH24MISS')                    objversion
+FROM   cost_structure_item_tab
+WHERE (element_type = 'REVENUE' OR cost_struct_item_type = 'NODE');
+
+--View created for Project CBS functionality
+VIEW Cost_Structure_Item_Hierarchy IS
+   Prompt = 'Cost Breakdown Structure Hierarchy'
+SELECT company                      company,
+       cost_structure_id            cost_structure_id,
+       CONNECT_BY_ROOT name_value   top_name_value,
+       name_value                   name_value,
+       item_above                   item_above,
+       Cost_Struct_Item_Type_API.Decode(cost_struct_item_type) cost_struct_item_type,
+       cost_struct_item_type        cost_struct_item_type_db,
+       description                  description,
+       level_no                     level_no,
+       level_id                     level_id,
+       Prj_Followup_Element_Type_API.Decode(element_type) element_type,
+       element_type                 element_type_db
+FROM   cost_structure_item_tab
+CONNECT BY NOCYCLE PRIOR company = company
+               AND PRIOR cost_structure_id = cost_structure_id
+               AND PRIOR name_value = item_above;
+

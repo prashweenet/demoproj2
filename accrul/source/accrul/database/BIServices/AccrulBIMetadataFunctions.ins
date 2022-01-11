@@ -1,0 +1,375 @@
+-----------------------------------------------------------------------------
+--  Module : ACCRUL
+--
+--  Purpose: Add default functions related to the function parameters functionality available in Business Analytics Client
+--           Currently available functions:
+--                 - GET_YEAR_PERIOD_INCR
+--                 - GET_CURR_ACC_YEAR
+--                 - GET_CURR_ACC_PERIOD
+--                 - GET_ACC_YEAR
+--                 - GET_ACC_PERIOD
+--                 - GET_CURR_ACC_YEAR_PERIOD
+--                 - GET_ACC_YEAR_PERIOD
+--                  
+--
+--  File   : AccrulBIFunctionParam.INS
+--
+--  IFS/Design Template Version 2.3
+--
+--  Date       Sign     History
+--  ------     ------   ---------------------------------------------------------
+--  2013-07-29 vohelk   Created.
+--  2013-08-21 sjaylk   Added more parameters.
+--  2014-06-04 Shhelk   Merged - Add translation support, merge this line so that the ins will be deployed
+--  2015-11-24 THPELK   STRFI-669, Replaced Accounting_Period_Api.Get_Acc_Year with Get_Ordinary_Accounting_Year
+--						and Accounting_Period_Api.Get_Ordinary_Accounting_Period with Get_Ordinary_Accounting_Period().
+-----------------------------------------------------------------------------
+
+SET SERVEROUT ON
+
+-----------------------------------------------------------------------------------
+--- GET_YEAR_PERIOD_INCR function based parameter begin ---
+-----------------------------------------------------------------------------------
+   
+PROMPT Define GET_YEAR_PERIOD_INCR FUNCTION 
+DECLARE
+   func_param_rec_  XLR_FUNCTIONAL_PARAMETER_API.Func_Param_Public_Rec;
+BEGIN
+   func_param_rec_.Function_Id    := 'GET_YEAR_PERIOD_INCR';
+   func_param_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_rec_.Function_Type  := Xlr_Function_Type_API.DB_ADVANCED_FUNCTION;
+   func_param_rec_.Description    := 'Get YearPeriod incremented value based on Company, Current YearPeriod and Include Year End setting';
+   func_param_rec_.Help_Text      := 'This function calls Accounting_Period_Api.Get_Period_Incr method in order to get YearPeriod incremented value based on Company, Current YearPeriod, Only Ordinary setting';
+   func_param_rec_.Api_To_Call    := 'Accounting_Period_Api.Get_Period_Incr';
+   func_param_rec_.Module         := 'ACCRUL';
+   func_param_rec_.Syntax         := 'Accounting_Period_Api.Get_Next_Period(Company, YearPeriod, OnlyOrdinary, Increment)';
+   
+   XLR_FUNCTIONAL_PARAMETER_API.Install_Functional_Param(func_param_rec_);
+END;
+/
+
+PROMPT Define Argument1 OF GET_YEAR_PERIOD_INCR FUNCTION 
+DECLARE
+   func_param_arg_rec_  XLR_FUNCTIONAL_PARAM_ARG_API.Func_Param_Arg_Public_Rec;
+BEGIN
+   func_param_arg_rec_.Function_Id    := 'GET_YEAR_PERIOD_INCR';
+   func_param_arg_rec_.Arg_No         := 1;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_arg_rec_.Arg_Name       := 'Company';
+   func_param_arg_rec_.Help_Text      := 'Company Id';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+END;
+/
+
+PROMPT Define Argument2 OF GET_YEAR_PERIOD_INCR FUNCTION
+DECLARE
+   func_param_arg_rec_  XLR_FUNCTIONAL_PARAM_ARG_API.Func_Param_Arg_Public_Rec;
+BEGIN
+   func_param_arg_rec_.Function_Id    := 'GET_YEAR_PERIOD_INCR';
+   func_param_arg_rec_.Arg_No         := 2;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_arg_rec_.Arg_Name       := 'Year Period';
+   func_param_arg_rec_.Help_Text      := 'Year Period value passing in';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+END;
+/
+
+PROMPT Define Argument3 OF GET_YEAR_PERIOD_INCR FUNCTION 
+DECLARE
+   func_param_arg_rec_  XLR_FUNCTIONAL_PARAM_ARG_API.Func_Param_Arg_Public_Rec;
+BEGIN
+   func_param_arg_rec_.Function_Id    := 'GET_YEAR_PERIOD_INCR';
+   func_param_arg_rec_.Arg_No         := 3;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_arg_rec_.Arg_Name       := 'Include Year End'; 
+   func_param_arg_rec_.Help_Text      := 'Include year end periods or not. Use TRUE or FALSE only';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   func_param_arg_rec_.Default_Value  := 'FALSE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+END;
+/
+
+PROMPT Define Argument4 OF GET_YEAR_PERIOD_INCR FUNCTION
+DECLARE
+   func_param_arg_rec_  XLR_FUNCTIONAL_PARAM_ARG_API.Func_Param_Arg_Public_Rec;
+BEGIN
+   func_param_arg_rec_.Function_Id    := 'GET_YEAR_PERIOD_INCR';
+   func_param_arg_rec_.Arg_No         := 4;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_NUMBER;
+   func_param_arg_rec_.Arg_Name       := 'Increment';
+   func_param_arg_rec_.Help_Text      := 'Increment year period value by this amount. (Example 3, -2 )';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+END;
+/
+
+-----------------------------------------------------------------------------------
+--- GET_YEAR_PERIOD_INCR function based parameter end ---
+-----------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------
+--- GET_CURR_ACC_YEAR function based parameter begin ---
+-----------------------------------------------------------------------------------   
+PROMPT Define GET_CURR_ACC_YEAR FUNCTION 
+DECLARE
+   func_param_rec_  XLR_FUNCTIONAL_PARAMETER_API.Func_Param_Public_Rec;
+BEGIN
+   func_param_rec_.Function_Id    := 'GET_CURR_ACC_YEAR';
+   func_param_rec_.Data_Type      := Fnd_Data_Type_API.DB_NUMBER;
+   func_param_rec_.Function_Type  := Xlr_Function_Type_API.DB_ADVANCED_FUNCTION;
+   func_param_rec_.Description    := 'Get Current Accounting Year value based on Company';
+   func_param_rec_.Help_Text      := 'This function calls Accounting_Period_Api.Get_Curr_Acc_Year method in order to get Current Accounting Year value based on Company';
+   func_param_rec_.Api_To_Call    := 'Accounting_Period_Api.Get_Curr_Acc_Year';
+   func_param_rec_.Module         := 'ACCRUL';
+   func_param_rec_.Syntax         := 'Accounting_Period_Api.Get_Curr_Acc_Year(Company)';
+   
+   XLR_FUNCTIONAL_PARAMETER_API.Install_Functional_Param(func_param_rec_);
+END;
+/
+
+PROMPT Define Argument1 OF GET_CURR_ACC_YEAR FUNCTION 
+DECLARE
+   func_param_arg_rec_  XLR_FUNCTIONAL_PARAM_ARG_API.Func_Param_Arg_Public_Rec;
+BEGIN
+   func_param_arg_rec_.Function_Id    := 'GET_CURR_ACC_YEAR';
+   func_param_arg_rec_.Arg_No         := 1;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_arg_rec_.Arg_Name       := 'Company';
+   func_param_arg_rec_.Help_Text      := 'Company Id';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+END;
+/
+-----------------------------------------------------------------------------------
+--- GET_CURR_ACC_YEAR function based parameter end---
+-----------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------
+--- GET_CURR_ACC_PERIOD function based parameter begin ---
+-----------------------------------------------------------------------------------   
+PROMPT Define GET_CURR_ACC_PERIOD FUNCTION 
+DECLARE
+   func_param_rec_  XLR_FUNCTIONAL_PARAMETER_API.Func_Param_Public_Rec;
+BEGIN
+   func_param_rec_.Function_Id    := 'GET_CURR_ACC_PERIOD';
+   func_param_rec_.Data_Type      := Fnd_Data_Type_API.DB_NUMBER;
+   func_param_rec_.Function_Type  := Xlr_Function_Type_API.DB_ADVANCED_FUNCTION;
+   func_param_rec_.Description    := 'Get Current Accounting Period value based on Company';
+   func_param_rec_.Help_Text      := 'This function calls Accounting_Period_Api.Get_Curr_Acc_Period method in order to get Current Accounting Period value based on Company';
+   func_param_rec_.Api_To_Call    := 'Accounting_Period_Api.Get_Curr_Acc_Period';
+   func_param_rec_.Module         := 'ACCRUL';
+   func_param_rec_.Syntax         := 'Accounting_Period_Api.Get_Curr_Acc_Period(Company)';
+   
+   XLR_FUNCTIONAL_PARAMETER_API.Install_Functional_Param(func_param_rec_);
+END;
+/
+
+PROMPT Define Argument1 OF GET_CURR_ACC_PERIOD FUNCTION 
+DECLARE
+   func_param_arg_rec_  XLR_FUNCTIONAL_PARAM_ARG_API.Func_Param_Arg_Public_Rec;
+BEGIN
+   func_param_arg_rec_.Function_Id    := 'GET_CURR_ACC_PERIOD';
+   func_param_arg_rec_.Arg_No         := 1;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_arg_rec_.Arg_Name       := 'Company';
+   func_param_arg_rec_.Help_Text      := 'Company Id';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+END;
+/
+-----------------------------------------------------------------------------------
+--- GET_CURR_ACC_PERIOD function based parameter end ---
+-----------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------
+--- GET_ACC_YEAR function based parameter begin ---
+-----------------------------------------------------------------------------------   
+PROMPT Define GET_ACC_YEAR FUNCTION 
+DECLARE
+   func_param_rec_  XLR_FUNCTIONAL_PARAMETER_API.Func_Param_Public_Rec;
+BEGIN
+   func_param_rec_.Function_Id    := 'GET_ACC_YEAR';
+   func_param_rec_.Data_Type      := Fnd_Data_Type_API.DB_NUMBER;
+   func_param_rec_.Function_Type  := Xlr_Function_Type_API.DB_ADVANCED_FUNCTION;
+   func_param_rec_.Description    := 'Get Current Accounting Year value based on Company, Date';
+   func_param_rec_.Help_Text      := 'This function calls Accounting_Period_Api.Get_Ordinary_Accounting_Year method in order to get Accounting Year value based on Company, Date';
+   func_param_rec_.Api_To_Call    := 'Accounting_Period_Api.Get_Ordinary_Accounting_Year';
+   func_param_rec_.Module         := 'ACCRUL';
+   func_param_rec_.Syntax         := 'Accounting_Period_Api.Get_Ordinary_Accounting_Year(Company, Date)';
+   
+   XLR_FUNCTIONAL_PARAMETER_API.Install_Functional_Param(func_param_rec_);
+END;
+/
+
+PROMPT Define Arguments OF GET_ACC_YEAR FUNCTION 
+DECLARE
+   func_param_arg_rec_  XLR_FUNCTIONAL_PARAM_ARG_API.Func_Param_Arg_Public_Rec;
+BEGIN
+   func_param_arg_rec_.Function_Id    := 'GET_ACC_YEAR';
+   func_param_arg_rec_.Arg_No         := 1;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_arg_rec_.Arg_Name       := 'Company';
+   func_param_arg_rec_.Help_Text      := 'Company Id';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+   
+   func_param_arg_rec_.Function_Id    := 'GET_ACC_YEAR';
+   func_param_arg_rec_.Arg_No         := 2;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_DATE;
+   func_param_arg_rec_.Arg_Name       := 'Date';
+   func_param_arg_rec_.Help_Text      := 'Date';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+END;
+/
+-----------------------------------------------------------------------------------
+--- GET_ACC_YEAR function based parameter end ---
+-----------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------
+--- GET_ACC_PERIOD function based parameter begin ---
+-----------------------------------------------------------------------------------   
+PROMPT Define GET_ACC_PERIOD FUNCTION 
+DECLARE
+   func_param_rec_  XLR_FUNCTIONAL_PARAMETER_API.Func_Param_Public_Rec;
+BEGIN
+   func_param_rec_.Function_Id    := 'GET_ACC_PERIOD';
+   func_param_rec_.Data_Type      := Fnd_Data_Type_API.DB_NUMBER;
+   func_param_rec_.Function_Type  := Xlr_Function_Type_API.DB_ADVANCED_FUNCTION;
+   func_param_rec_.Description    := 'Get Current Accounting Period value based on Company, Date';
+   func_param_rec_.Help_Text      := 'This function calls Accounting_Period_Api.Get_Ordinary_Accounting_Period method in order to get Accounting Period value based on Company, Date';
+   func_param_rec_.Api_To_Call    := 'Accounting_Period_Api.Get_Ordinary_Accounting_Period';
+   func_param_rec_.Module         := 'ACCRUL';
+   func_param_rec_.Syntax         := 'Accounting_Period_Api.Get_Ordinary_Accounting_Period(Company, Date)';
+   
+   XLR_FUNCTIONAL_PARAMETER_API.Install_Functional_Param(func_param_rec_);
+END;
+/
+
+PROMPT Define Arguments OF GET_ACC_PERIOD FUNCTION 
+DECLARE
+   func_param_arg_rec_  XLR_FUNCTIONAL_PARAM_ARG_API.Func_Param_Arg_Public_Rec;
+BEGIN
+   func_param_arg_rec_.Function_Id    := 'GET_ACC_PERIOD';
+   func_param_arg_rec_.Arg_No         := 1;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_arg_rec_.Arg_Name       := 'Company';
+   func_param_arg_rec_.Help_Text      := 'Company Id';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+   
+   func_param_arg_rec_.Function_Id    := 'GET_ACC_PERIOD';
+   func_param_arg_rec_.Arg_No         := 2;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_DATE;
+   func_param_arg_rec_.Arg_Name       := 'Date';
+   func_param_arg_rec_.Help_Text      := 'Date';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+END;
+/
+-----------------------------------------------------------------------------------
+--- GET_ACC_YEAR function based parameter end ---
+-----------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------
+--- GET_CURR_ACC_PERIOD function based parameter begin ---
+-----------------------------------------------------------------------------------   
+PROMPT Define GET_CURR_ACC_YEAR_PERIOD FUNCTION 
+DECLARE
+   func_param_rec_  XLR_FUNCTIONAL_PARAMETER_API.Func_Param_Public_Rec;
+BEGIN
+   func_param_rec_.Function_Id    := 'GET_CURR_ACC_YEAR_PERIOD';
+   func_param_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_rec_.Function_Type  := Xlr_Function_Type_API.DB_ADVANCED_FUNCTION;
+   func_param_rec_.Description    := 'Get Current Accounting Year Period value based on Company';
+   func_param_rec_.Help_Text      := 'This function calls Accounting_Period_Api.Get_Curr_Acc_Year_Period method in order to get Current Accounting Year Period value based on Company';
+   func_param_rec_.Api_To_Call    := 'Accounting_Period_Api.Get_Curr_Acc_Year_Period';
+   func_param_rec_.Module         := 'ACCRUL';
+   func_param_rec_.Syntax         := 'Accounting_Period_Api.Get_Curr_Acc_Year_Period(Company)';
+   
+   XLR_FUNCTIONAL_PARAMETER_API.Install_Functional_Param(func_param_rec_);
+END;
+/
+
+PROMPT Define Argument1 OF GET_CURR_ACC_YEAR_PERIOD FUNCTION 
+DECLARE
+   func_param_arg_rec_  XLR_FUNCTIONAL_PARAM_ARG_API.Func_Param_Arg_Public_Rec;
+BEGIN
+   func_param_arg_rec_.Function_Id    := 'GET_CURR_ACC_YEAR_PERIOD';
+   func_param_arg_rec_.Arg_No         := 1;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_arg_rec_.Arg_Name       := 'Company';
+   func_param_arg_rec_.Help_Text      := 'Company Id';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+END;
+/
+-----------------------------------------------------------------------------------
+--- GET_CURR_ACC_YEAR_PERIOD function based parameter end ---
+-----------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------
+--- GET_ACC_YEAR_PERIOD function based parameter begin ---
+-----------------------------------------------------------------------------------   
+PROMPT Define GET_ACC_YEAR_PERIOD FUNCTION 
+DECLARE
+   func_param_rec_  XLR_FUNCTIONAL_PARAMETER_API.Func_Param_Public_Rec;
+BEGIN
+   func_param_rec_.Function_Id    := 'GET_ACC_YEAR_PERIOD';
+   func_param_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_rec_.Function_Type  := Xlr_Function_Type_API.DB_ADVANCED_FUNCTION;
+   func_param_rec_.Description    := 'Get Current Accounting Year Period value based on Company, Date';
+   func_param_rec_.Help_Text      := 'This function calls Accounting_Period_Api.Get_Acc_Year_Period method in order to get Accounting Year Period value based on Company, Date';
+   func_param_rec_.Api_To_Call    := 'Accounting_Period_Api.Get_Acc_Year_Period';
+   func_param_rec_.Module         := 'ACCRUL';
+   func_param_rec_.Syntax         := 'Accounting_Period_Api.Get_Acc_Year_Period(Company, Date)';
+   
+   XLR_FUNCTIONAL_PARAMETER_API.Install_Functional_Param(func_param_rec_);
+END;
+/
+
+PROMPT Define Arguments OF GET_ACC_YEAR FUNCTION 
+DECLARE
+   func_param_arg_rec_  XLR_FUNCTIONAL_PARAM_ARG_API.Func_Param_Arg_Public_Rec;
+BEGIN
+   func_param_arg_rec_.Function_Id    := 'GET_ACC_YEAR_PERIOD';
+   func_param_arg_rec_.Arg_No         := 1;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_STRING;
+   func_param_arg_rec_.Arg_Name       := 'Company';
+   func_param_arg_rec_.Help_Text      := 'Company Id';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+   
+   func_param_arg_rec_.Function_Id    := 'GET_ACC_YEAR_PERIOD';
+   func_param_arg_rec_.Arg_No         := 2;
+   func_param_arg_rec_.Data_Type      := Fnd_Data_Type_API.DB_DATE;
+   func_param_arg_rec_.Arg_Name       := 'Date';
+   func_param_arg_rec_.Help_Text      := 'Date';
+   func_param_arg_rec_.Mandatory      := 'TRUE';
+   
+   XLR_FUNCTIONAL_PARAM_ARG_API.Install_Functional_Param_Arg(func_param_arg_rec_);
+END;
+/
+-----------------------------------------------------------------------------------
+--- GET_ACC_YEAR_PERIOD function based parameter end ---
+-----------------------------------------------------------------------------------
+COMMIT;
+
+SET SERVEROUT OFF

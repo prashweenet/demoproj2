@@ -1,0 +1,124 @@
+client CostRevenueStructure;
+component ACCRUL;
+layer Core;
+projection CostRevenueStructureHandling;
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CostStructureMenu parent AccrulNavigator.CostRevenueElementSetupMenu at index 400 {
+      label = "Cost/Revenue Breakdown Structures";
+      page CostRevenueBreakdownStructures;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page CostRevenueBreakdownStructures using CostStructureSet {
+   label = "Cost/Revenue Breakdown Structures";
+   list CostStructureList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ProjectCBSCmd for CostStructure {
+   label = "CBS";
+
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "tree/CostRevenueBreakdownStructure/Tree?$filter=Company eq $[Company] and CostStructureId eq $[CostStructureId] ";
+   }
+}
+
+@DynamicComponentDependency PROJ
+command ViewConnectedProjectsCmd for CostStructure {
+   label = "View Connected Projects";
+   mode = SelectedRecords;
+
+   execute {
+      call DoGetConnectedStructures() into IsStructureConnectedStr;
+      if [IsStructureConnectedStr = "FALSE"] {
+         alert("No Data Found");
+      }
+      else {
+         navigate "page/Projects/List?$contexts=Company:$[Company]&$filter=CostStructureId eq $[CostStructureId]";
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list CostStructureList for CostStructure {
+   label = "Cost/Revenue Breakdown Structures";
+
+   field CostStructureId {
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+   badge Objstate {
+      label = "Status";
+      style = TextOnly;
+
+      emphasis Progress3 = [Objstate = "InProgress"];
+      emphasis Progress11 = [Objstate = "Active"];
+      emphasis StateClosed = [Objstate = "Obsolete"];
+   }
+   field CopiedFrom {
+      size = Small;
+   }
+   field Template {
+      size = Small;
+   }
+   field SingleProject {
+      size = Small;
+   }
+   field Note {
+      label = "Notes";
+      size = Large;
+   }
+
+   commandgroup ProjectCommandGroup {
+      command ProjectCBSCmd;
+      @DynamicComponentDependency PROJ
+      command ViewConnectedProjectsCmd;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

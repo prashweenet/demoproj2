@@ -1,0 +1,156 @@
+client PaymentVacationDays;
+component ACCRUL;
+layer Core;
+projection PaymentVacationDaysHandling;
+include fragment CustomerInfoCustcategoryPubSelector;
+@DynamicComponentDependency PAYLED
+include fragment PaymentWayLov2Selector;
+@DynamicComponentDependency INVOIC
+include fragment IdentityInvoiceInfoCustSelector;
+include fragment CopyToCompaniesAssistant;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry PaymentVacationDaysNavEntry parent AccrulNavigator.PaymentTermsMenu at index 300 {
+      label = "Payment Vacation Days";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using PaymentVacationPeriodSet {
+   label = "Payment Vacation Days";
+   list PaymentVacationPeriodList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command CopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PaymentVacationPeriod", "MANUAL", Selection, "Payment_Vacation_Period_API") {
+         when OK {
+            exit;
+
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "PaymentVacationPeriod") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PaymentVacationPeriod", "AUTOMATIC", SelectionVar, "Payment_Vacation_Period_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list PaymentVacationPeriodList for PaymentVacationPeriod {
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+
+   @DynamicComponentDependency PAYLED
+   lov PaymentMethodRef with ReferencePaymentWayLov2Selector {
+      search = WayId, Description;
+      size = Large;
+      format = uppercase;
+      description = PaymentMethodRef.Description;
+   }
+   field CustomerId {
+      format = uppercase;
+      editable = [isNew];
+      contactwidget {
+         enabled = [true];
+         source = Customer;
+      }
+      lovswitch {
+         when [InvoicActive = 1] {
+            @DynamicComponentDependency INVOIC
+            lov CustomerIdInvoiceRef with ReferenceIdentityInvoiceInfoCustSelector {
+               search = Identity, Name;
+               description = CustomerIdInvoiceRef.Name;
+            }
+         }
+         when [true] {
+            lov CustomerIdRef with ReferenceCustomerInfoCustcategoryPubSelector {
+               search = CustomerId, Name;
+               description = CustomerIdRef.Name;
+            }
+         }
+      }
+   }
+   field StartDate {
+      editable = [isNew];
+   }
+   field EndDate;
+   field NewDueDate;
+
+   command CopyToCompaniesCommand;
+}
+
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

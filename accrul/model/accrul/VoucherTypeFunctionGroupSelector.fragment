@@ -1,0 +1,46 @@
+fragment VoucherTypeFunctionGroupSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view voucher_type_function_group";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceVoucherTypeFunctionGroupSelector for VoucherTypeFunctionGroup {
+   static VoucherType;
+   static Description;
+}
+
+card VoucherTypeFunctionGroupCard for VoucherTypeFunctionGroup {
+   label = "";
+   fieldranking VoucherType;
+   field VoucherType;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query VoucherTypeFunctionGroup {
+   from = "voucher_type_function_group";
+   lu = VoucherType;
+   keys = Company, FunctionGroup, VoucherType;
+   ludependencies = VoucherType;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute FunctionGroup Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute VoucherType Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

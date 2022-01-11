@@ -1,0 +1,21 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherTemplatesHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Validate_Multi_Company___(
+   company_  IN VARCHAR2,
+   template_ IN VARCHAR2 )  RETURN VARCHAR2
+IS   
+BEGIN
+   Voucher_Template_Row_API.Is_Multi_Company(company_,template_);
+   RETURN 'TRUE';
+END Validate_Multi_Company___;

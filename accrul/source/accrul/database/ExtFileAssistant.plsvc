@@ -1,0 +1,1006 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     ExtFileAssistant
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+TYPE bind_record IS RECORD (  bind_name   VARCHAR2(100),
+                              data_type   VARCHAR2(10),
+                              bind_num    NUMBER,
+                              bind_str    VARCHAR2(4000));
+                              
+TYPE bind_table IS TABLE OF bind_record INDEX BY BINARY_INTEGER;                              
+
+FUNCTION Get_Default_File_Type_Info___ (
+   company_        IN VARCHAR2,
+   file_type_      IN VARCHAR2,
+   process_option_ IN VARCHAR2) RETURN File_Type_Info_Rec
+IS
+   rec_              File_Type_Info_Rec;   
+   client_server_    VARCHAR2(1);
+   column_name_      VARCHAR2(50);
+   column_value_     VARCHAR2(2000);            
+BEGIN
+   rec_.company   := company_;
+   rec_.file_type := file_type_;   
+   
+   IF process_option_ = 'Online' THEN
+      client_server_ := 'C';
+   ELSE
+      client_server_ := 'S';
+   END IF;
+	Ext_File_Message_API.Return_For_Trans_Form ( file_type_,
+                                              rec_.set_id,
+                                              rec_.param_string,
+                                              rec_.file_template,
+                                              rec_.file_direction_db,
+                                              rec_.file_direction,
+                                              rec_.file_name,
+                                              rec_.company,
+                                              client_server_,
+                                              column_name_,
+                                              column_value_);
+   
+   IF rec_.file_name IS NULL AND client_server_ = 'S'THEN
+      rec_.file_name := Accrul_Attribute_API.Get_Attribute_Value('SERVER_DIRECTORY');
+   END IF;
+   
+   RETURN rec_;
+END Get_Default_File_Type_Info___;
+
+FUNCTION Get_Default_Set_Id_Info___ (
+   company_        IN VARCHAR2,
+   file_type_      IN VARCHAR2,
+   set_id_         IN VARCHAR2,
+   process_option_ IN VARCHAR2) RETURN File_Type_Info_Rec
+IS
+   rec_                 File_Type_Info_Rec;
+   tmp_set_id_          VARCHAR2(32000);
+   param_str_           VARCHAR2(32000);
+   file_template_id_    VARCHAR2(32000);
+   file_direction_db_   VARCHAR2(32000);
+   file_direction_      VARCHAR2(32000);
+   file_name_           VARCHAR2(32000);
+   company_return_      VARCHAR2(32000):=company_;
+   client_server_       VARCHAR2(1000);
+   column_name_         VARCHAR2(32000);
+   column_value_        VARCHAR2(32000);
+   package_name_        VARCHAR2(200);
+   
+BEGIN
+   package_name_  := Ext_File_Type_API.Get_Api_To_Call_Input(file_type_);
+   IF (process_option_ = 'Online') THEN
+      client_server_ := 'C';
+   ELSE
+      client_server_ := 'S';
+   END IF;
+   tmp_set_id_ := set_id_;
+   column_name_  := 'SET_ID';
+   column_value_ :=  tmp_set_id_;
+	Ext_File_Message_API.Return_For_Trans_Form ( file_type_,
+                                              tmp_set_id_,
+                                              param_str_,
+                                              file_template_id_,
+                                              file_direction_db_,
+                                              file_direction_,
+                                              file_name_,
+                                              company_return_,
+                                              client_server_,
+                                              column_name_,
+                                              column_value_);
+   rec_.file_type           := file_type_;
+   rec_.set_id              := tmp_set_id_;
+   rec_.file_template       := file_template_id_;
+   rec_.company             := company_return_;
+   rec_.param_string        := param_str_;
+   rec_.file_direction_db   := file_direction_db_;    
+   rec_.file_direction      := file_direction_;
+   rec_.file_name           := file_name_;
+   RETURN rec_;
+END Get_Default_Set_Id_Info___;
+
+FUNCTION Get_File_Template_Info___ (
+   company_       IN VARCHAR2,
+   file_type_     IN VARCHAR2,
+   set_id_        IN VARCHAR2,
+   file_template_ IN VARCHAR2 ) RETURN File_Type_Info_Rec
+IS
+   rec_                 File_Type_Info_Rec;  
+   temp_set_id_         VARCHAR2(32000) := set_id_;
+   temp_file_template_  VARCHAR2(32000) := file_template_;
+   param_str_           VARCHAR2(32000);
+   file_direction_db_   VARCHAR2(32000);
+   file_direction_      VARCHAR2(32000);
+   file_name_           VARCHAR2(32000);
+   company_return_      VARCHAR2(32000) := company_;
+   client_server_       VARCHAR2(1000)  := 'C';
+   column_name_         VARCHAR2(32000);
+   column_value_        VARCHAR2(32000);
+BEGIN
+   Ext_File_Message_API.Return_For_Trans_Form ( file_type_,
+                                                temp_set_id_,
+                                                param_str_,
+                                                temp_file_template_,
+                                                file_direction_db_,
+                                                file_direction_,
+                                                file_name_,
+                                                company_return_,
+                                                client_server_,
+                                                column_name_,
+                                                column_value_);  
+   
+   rec_.file_type           := file_type_;
+   rec_.set_id              := temp_set_id_;
+   rec_.file_template       := temp_file_template_;
+   rec_.company             := company_return_;
+   rec_.param_string        := param_str_;
+   rec_.file_direction_db   := file_direction_db_;    
+   rec_.file_direction      := file_direction_;   
+   RETURN rec_;
+END Get_File_Template_Info___;
+
+FUNCTION Get_File_Template_Information___ (
+   company_        IN VARCHAR2,
+   file_type_      IN VARCHAR2,
+   set_id_         IN VARCHAR2,
+   file_template_  IN VARCHAR2,
+   process_option_ IN VARCHAR2) RETURN File_Type_Info_Rec
+IS
+   rec_                 File_Type_Info_Rec;  
+   temp_set_id_         VARCHAR2(32000) := set_id_;
+   temp_file_template_  VARCHAR2(32000) := file_template_;
+   param_str_           VARCHAR2(32000);
+   file_direction_db_   VARCHAR2(32000);
+   file_direction_      VARCHAR2(32000);
+   file_name_           VARCHAR2(32000);
+   company_return_      VARCHAR2(32000) := company_;
+   client_server_       VARCHAR2(1000)  := 'C';
+   column_name_         VARCHAR2(32000);
+   column_value_        VARCHAR2(32000);
+BEGIN
+   IF process_option_ = 'Online' THEN
+      client_server_ := 'C';
+   ELSE
+      client_server_ := 'S';
+   END IF;
+   
+   Ext_File_Message_API.Return_For_Trans_Form ( file_type_,
+                                                temp_set_id_,
+                                                param_str_,
+                                                temp_file_template_,
+                                                file_direction_db_,
+                                                file_direction_,
+                                                file_name_,
+                                                company_return_,
+                                                client_server_,
+                                                column_name_,
+                                                column_value_);  
+   
+   rec_.file_type           := file_type_;
+   rec_.set_id              := temp_set_id_;
+   rec_.file_template       := temp_file_template_;
+   rec_.company             := company_return_;
+   rec_.param_string        := param_str_;
+   rec_.file_direction_db   := file_direction_db_;    
+   rec_.file_direction      := file_direction_;
+   rec_.file_name           := file_name_;   
+   RETURN rec_;
+END Get_File_Template_Information___;
+
+FUNCTION Change_Param_Values___ (
+   param_name_   IN VARCHAR2,
+   param_value_  IN VARCHAR2,
+   param_string_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   temp_param_string_ VARCHAR2(32000) := param_string_;
+BEGIN
+   Ext_File_Message_API.Change_Attr_Parameter_Msg (temp_param_string_,
+                                                   param_name_,
+                                                   param_value_ );
+   RETURN temp_param_string_;                                                
+END Change_Param_Values___;
+
+FUNCTION Create_Load_Id___ (
+   objkey_       IN VARCHAR2,
+   param_string_ IN VARCHAR2 ) RETURN NUMBER
+IS
+   temp_param_string_ VARCHAR2(32000);
+   load_file_id_      NUMBER;
+BEGIN
+   temp_param_string_ := Refresh_Param_String___(objkey_, param_string_);
+   Ext_File_Load_API.Create_Load_Id_Param(load_file_id_, temp_param_string_);
+   RETURN load_file_id_;                                       
+END Create_Load_Id___;
+
+FUNCTION Complete_File_Processing___ (
+   load_file_id_  IN NUMBER,
+   file_type_     IN VARCHAR2,
+   file_template_ IN VARCHAR2,
+   company_       IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   info_          VARCHAR2(32000);
+BEGIN
+   External_File_Utility_API.Unpack_Ext_Line_(file_type_,
+                                              file_template_,
+                                              load_file_id_,
+                                              company_ );
+   External_File_Utility_API.Store_File_Identities_(load_file_id_);
+   External_File_Utility_API.Start_Api_To_Call_(info_, load_file_id_ );                                                
+   info_  := REPLACE(REPLACE(info_, 'INFO'||chr(31)),chr(30));
+   RETURN info_;                                             
+END Complete_File_Processing___;
+
+PROCEDURE Import_External_File___ (
+   temp_param_string_ IN     VARCHAR2,
+   file_type_         IN     VARCHAR2,
+   set_id_            IN     VARCHAR2,
+   file_template_     IN     VARCHAR2,
+   company_           IN     VARCHAR2,
+   file_name_         IN     VARCHAR2,
+   load_file_id_      IN OUT VARCHAR2,
+   info_              IN OUT VARCHAR2,
+   file_data_blob_    IN OUT BLOB) 
+IS
+BEGIN
+   Validate_Import___(file_type_,set_id_, file_template_, temp_param_string_, file_name_, file_data_blob_);
+   External_File_Utility_API.Create_Load_Id_Param_(load_file_id_, temp_param_string_);
+   External_File_Utility_API.Load_Client_File_('EXE',
+                                                load_file_id_,
+                                                file_template_,
+                                                file_type_,
+                                                file_data_blob_,
+                                                company_,
+                                                file_name_);                              
+   External_File_Utility_API.Unpack_Ext_Line_(file_type_,
+                                              file_template_,
+                                              load_file_id_,
+                                              company_ );   
+   External_File_Utility_API.Store_File_Identities_(load_file_id_);   
+   External_File_Utility_API.Start_Api_To_Call_(info_, load_file_id_ );
+END Import_External_File___;
+
+FUNCTION Get_File_Load_State_Db___ (
+   load_file_id_ IN NUMBER ) RETURN VARCHAR2
+IS  
+BEGIN
+   RETURN Ext_File_Load_API.Get_State_Db(load_file_id_);
+END Get_File_Load_State_Db___;
+
+FUNCTION Get_File_Load_State___ (
+   load_file_id_ IN NUMBER ) RETURN VARCHAR2
+IS  
+BEGIN
+   RETURN Ext_File_Load_API.Get_State(load_file_id_);
+END Get_File_Load_State___;
+
+PROCEDURE Validate_Master_Company___ (
+   file_type_    IN VARCHAR2,
+   param_string_ IN VARCHAR2) 
+IS
+   component_      VARCHAR2(6);
+   master_company_ VARCHAR2(20);
+BEGIN
+   component_ := Ext_File_Type_API.Get_Component(file_type_);
+   IF component_ = 'GROCON' THEN 
+      master_company_ := Ext_File_Message_API.Get_Attr_Parameter_Msg('MASTER_COMPANY', param_string_);
+      IF Company_API.Get_Master_Company_Db(master_company_) = 'FALSE' THEN
+         Error_SYS.Appl_General(lu_name_, 'NOTMASTERT: This Assistant can only be used by a Master Company  for Group Consolidation.');
+      END IF;
+   END IF;
+END Validate_Master_Company___;
+
+PROCEDURE Validate_Import___ (
+   file_type_      IN VARCHAR2,
+   set_id_         IN VARCHAR2,
+   file_template_  IN VARCHAR2,
+   param_string_   IN VARCHAR2,
+   file_name_      IN VARCHAR2,
+   file_data_blob_ IN BLOB) 
+IS   
+BEGIN
+   IF (Validate_Basic_Info___(file_type_,file_template_, set_id_, 'IMPORT')) THEN 
+      Validate_Master_Company___(file_type_,param_string_);
+      IF (file_type_ = 'ExtVoucher' AND Ext_File_Message_API.Get_Attr_Parameter_Msg('LOAD_TYPE', param_string_) IS NULL) THEN
+         Error_SYS.Appl_General(lu_name_, 'NOLOADTYPE: Load Type must have a value for file type ExtVoucher');
+      END IF;
+      IF (Dbms_Lob.Getlength(file_data_blob_) IS NULL) THEN
+         Error_SYS.Appl_General(lu_name_, 'NOLINE: No File Lines Found');
+      END IF;
+      IF (LENGTH(file_name_) > 260) THEN
+         Error_SYS.Appl_General(lu_name_, 'MAXLENGTH: The length of File Name should be less than 260 characters.');
+      END IF;   
+   END IF;
+END Validate_Import___;
+
+FUNCTION Validate_Basic_Info___ (
+   file_type_     IN VARCHAR2,
+   file_template_ IN VARCHAR2,
+   set_id_        IN VARCHAR2,
+   file_operation_ IN VARCHAR2)  RETURN BOOLEAN 
+IS   
+   projection_action_   VARCHAR2(100);
+   ext_file_rec_        Ext_File_Type_API.Public_Rec;
+BEGIN
+   IF file_type_ IS NULL THEN
+      Error_SYS.Appl_General(lu_name_, 'NOFILETYPE: File type must have a value');
+   ELSIF file_template_ IS NULL THEN
+      Error_SYS.Appl_General(lu_name_, 'NOFILETEMPLATE: File template must have correct value');
+   ELSIF (Ext_Type_Param_Set_API.Check_Exist (file_type_, set_id_) = 'FALSE')  THEN
+      Error_SYS.Appl_General(lu_name_, 'WRONGSETID: Parameter Set Id does not exist');
+   END IF;    
+   IF (file_operation_ IN ('IMPORT', 'EXPORT')) THEN
+      ext_file_rec_ := Ext_File_Type_API.Get(file_type_);
+      IF (file_operation_ = 'IMPORT') THEN
+         projection_action_ := ext_file_rec_.input_projection_action;
+      ELSE
+         projection_action_ := ext_file_rec_.output_projection_action;
+      END IF;
+      IF (ext_file_rec_.system_defined = 'FALSE') THEN
+         Error_SYS.Appl_General(lu_name_, 'FILETYPENOTAVAILABLE: File type :P1 is not available for the user.', file_type_);
+      ELSIF ((projection_action_ IS NULL) OR (NOT Security_SYS.Is_Proj_Action_Available('ExternalFileAssistantHandling', projection_action_))) THEN
+         Error_SYS.Appl_General(lu_name_, 'NOPROJACTAVAILABLE: Projection action :P1 is not available for the user.', projection_action_);
+      END IF;      
+   END IF;
+   RETURN TRUE;
+END Validate_Basic_Info___;
+
+PROCEDURE Get_ValueRef_Info_ (
+   attr_ IN OUT VARCHAR2 )
+IS  
+   CURSOR get_lov_views IS  
+      SELECT ORA_HASH(CONCAT(CONCAT(file_type,set_id),param_id)) param_key, 
+      DECODE(enumerate_method, 'Fnd_Boolean_API.Enumerate' ,'EXTERNAL_FILE_BOOLEAN', 'Finance_Yes_No_API.Enumerate' ,'EXTERNAL_FILE_YES_NO', lov_view)   view_name                               
+      FROM   EXT_FILE_TYPE_PARAM_DIALOG;   
+BEGIN
+   FOR rec_ IN get_lov_views LOOP
+      IF ( rec_.view_name IS NOT NULL)THEN 
+         IF (Instr(rec_.view_name,'(') > 0)THEN
+            rec_.view_name := Get_Altered_View___(rec_.view_name);
+         END IF;
+         Client_SYS.Add_To_Attr(to_char(rec_.param_key), rec_.view_name, attr_);
+      END IF;
+   END LOOP;
+END Get_ValueRef_Info_;
+
+FUNCTION Get_Altered_View___(
+   full_view_ IN VARCHAR2 )RETURN VARCHAR2 
+IS
+   param_str_        VARCHAR2(4000);
+   altered_view_     VARCHAR2(200);
+   param_count_      NUMBER;
+BEGIN
+   param_str_    := Substr(full_view_,Instr(full_view_,'(')+1,(Instr(full_view_,')')-1)-Instr(full_view_,'('));
+   param_count_  := REGEXP_COUNT(param_str_,',')+1;
+   
+   IF (param_count_ > 0 ) THEN
+      IF (REGEXP_COUNT(param_str_,'MASTER_COMPANY')> 0) THEN
+         param_str_ := replace(param_str_,'MASTER_COMPANY','COMPANY');
+      END IF;
+      
+      IF (REGEXP_COUNT(param_str_,'COMPANY')= 0 AND REGEXP_COUNT(param_str_,'USER_ID')=0)THEN
+         altered_view_ := Substr(full_view_,0,Instr(full_view_,'(')-1); 
+      ELSIF (REGEXP_COUNT(param_str_,'COMPANY')> 0 AND REGEXP_COUNT(param_str_,'USER_ID')=0) THEN
+         altered_view_ := Substr(full_view_,0,Instr(full_view_,'(')-1)||'(COMPANY)';
+      ELSIF(REGEXP_COUNT(param_str_,'COMPANY')= 0 AND REGEXP_COUNT(param_str_,'USER_ID')>0) THEN
+         altered_view_ := Substr(full_view_,0,Instr(full_view_,'(')-1)||'(USER_ID)';
+      ELSE
+         altered_view_ := Substr(full_view_,0,Instr(full_view_,'(')-1)||'(COMPANY,USER_ID)';
+      END IF;
+   END IF;
+   RETURN altered_view_;
+END Get_Altered_View___;
+
+
+--PROCEDURE Get_Altered_View___(
+--   view_with_param_ IN OUT  VARCHAR2)  
+--IS
+--   param_data_type_  VARCHAR2(50);
+--   param_str_        VARCHAR2(4000);
+--   temp_param_str_   VARCHAR2(4000);
+--   view_name_        VARCHAR2(100);
+--   parameter_        VARCHAR2(100);
+--   param_count_      NUMBER;
+--   session_id_      NUMBER;
+--   temp_view_        VARCHAR2(4000);
+--   mapped_column_    VARCHAR2(5);
+--   map_rec_          Param_Mapping_Rec;
+--   
+--
+--BEGIN
+--   temp_view_    := view_with_param_;
+--   param_str_    := Substr(view_with_param_,Instr(view_with_param_,'(')+1,(Instr(view_with_param_,')')-1)-Instr(view_with_param_,'('));
+--   view_name_    := Substr(view_with_param_,0,Instr(view_with_param_,'(')-1); 
+--   param_count_  := REGEXP_COUNT(param_str_,',')+1;
+--   
+--   OPEN get_session;
+--   FETCH get_session INTO session_id_;
+--   CLOSE get_session;
+--   
+--   IF (param_count_ > 0)THEN
+--      temp_param_str_ := param_str_;
+--      WHILE (temp_param_str_ IS NOT NULL)LOOP
+--         IF (Instr(temp_param_str_,',') > 0 )THEN            
+--            parameter_          := trim(Substr(temp_param_str_,1,Instr(temp_param_str_,',')-1));
+--            temp_param_str_     := Substr(temp_param_str_,Instr(temp_param_str_,',')+1);
+--         ELSE
+--            parameter_          := trim(temp_param_str_);
+--            temp_param_str_     := NULL;
+--         END IF;     
+--         
+--         mapped_column_  :=  Get_Mapped_Col_Test___(view_name_,parameter_);
+--         
+--         IF (mapped_column_ IS NULL) THEN           
+--            param_data_type_    := Get_Column_Data_Type___(view_name_, parameter_);
+--            IF (param_data_type_ IS NOT NULL )THEN 
+--               IF (param_data_type_ = 'VARCHAR2')THEN
+--                  FOR i_ IN 1..20 LOOP
+--                     IF (Check_Column_Avail_Test___(view_name_,'S'||i_))     THEN
+--                        temp_view_ := replace(temp_view_,parameter_,'S'||i_);
+--                        map_rec_.mapping_column := 'S'||i_;
+--                        EXIT;
+--                     END IF;               
+--                  END LOOP; 
+--               ELSIF(param_data_type_ = 'NUMBER')THEN
+--                  FOR i_ IN 11..13 LOOP
+--                     IF (Check_Column_Avail_Test___(view_name_,'N'||i_))     THEN
+--                        temp_view_ := replace(temp_view_,parameter_,'N'||i_);
+--                        map_rec_.mapping_column := 'N'||i_;
+--                        EXIT;
+--                     END IF;               
+--                  END LOOP;
+--               ELSIF(param_data_type_ = 'DATE') THEN
+--                  FOR i_ IN 14..16 LOOP
+--                     IF (Check_Column_Avail_Test___(view_name_,'D'||i_))     THEN
+--                        temp_view_ := replace(temp_view_,parameter_,'D'||i_);                     
+--                        map_rec_.mapping_column := 'D'||i_;
+--                        EXIT;
+--                     END IF;               
+--                  END LOOP;
+--               END IF;
+--               map_rec_.objkey         := sys_guid();
+--               map_rec_.parent_objkey  := view_name_;
+--               map_rec_.parameter      := parameter_;
+--               map_rec_.altered_view   := temp_view_;
+--               Crud_Create___(map_rec_);                  
+--            ELSE
+--               temp_view_ := replace(temp_view_,','||parameter_,'');
+--            END IF;              
+--         ELSE
+--            temp_view_ := replace(temp_view_,parameter_,mapped_column_);         
+--         END IF;
+--      END LOOP;
+--   END IF;   
+--END Get_Altered_View___;
+
+--FUNCTION Check_Column_Avail_Test___(
+--   parent_objkey_ IN VARCHAR2,
+--   column_        IN VARCHAR2)RETURN BOOLEAN
+--IS
+--   dummy_               NUMBER;
+--   
+--   CURSOR get_match_column IS 
+--      SELECT 1
+--         FROM ${PROJECTION}_param_mapping_vrt
+--         WHERE parent_objkey = parent_objkey_
+--         AND  mapping_column = column_--;
+--BEGIN
+--   OPEN get_match_column;
+--   FETCH get_match_column INTO dummy_;
+--   IF (get_match_column%NOTFOUND)THEN
+--      CLOSE get_match_column;
+--      RETURN TRUE;
+--   END IF;   
+--   CLOSE get_match_column;
+--   
+--   RETURN FALSE;
+--END Check_Column_Avail_Test___;
+--
+--FUNCTION Get_Mapped_Col_Test___(
+--   parent_objkey_       IN VARCHAR2,
+--   paramter_            IN VARCHAR2)RETURN VARCHAR2
+--IS
+--   mapped_column_        VARCHAR2(5);
+--   
+--   CURSOR get_match_column IS 
+--      SELECT mapping_column
+--         FROM ${PROJECTION}_param_mapping_vrt
+--         WHERE parent_objkey = parent_objkey_
+--         AND parameter = paramter_--;
+--BEGIN
+--   OPEN get_match_column;
+--   FETCH get_match_column INTO mapped_column_;
+--   
+--   IF (get_match_column%FOUND)THEN
+--      CLOSE get_match_column;
+--      RETURN mapped_column_;
+--   END IF;  
+--   CLOSE get_match_column;
+--   
+--   RETURN NULL;
+--END Get_Mapped_Col_Test___; 
+
+PROCEDURE Show_Edit_ (
+   field_             IN OUT VARCHAR2,
+   inputable_at_load_ IN     VARCHAR2,
+   show_at_load_      IN     VARCHAR2)
+IS
+BEGIN
+   IF (inputable_at_load_ = 'TRUE') THEN
+      field_ := 'EDIT';
+   ELSIF (show_at_load_ = 'TRUE') THEN
+      field_ := 'SHOW';
+   END IF;
+END Show_Edit_;
+
+PROCEDURE String_To_Boolean_ (
+   field_       IN OUT BOOLEAN,
+   param_value_ IN     VARCHAR2)
+IS
+BEGIN
+   IF (param_value_ = 'TRUE')THEN
+      field_ := TRUE;
+   ELSE
+      field_ := FALSE;
+   END IF;
+END String_To_Boolean_;
+
+PROCEDURE Create_File_Type_Param_Val___ (
+   key_   IN Task_Virtual_Key)
+IS
+   head_rec_   Task_Virtual_Rec;
+   rec_        Ext_File_Type_Param_Dialog_Rec;
+   
+   CURSOR get_ext_file_type_params IS
+      SELECT lov_view, 
+             enumerate_method,
+             ORA_HASH(CONCAT(CONCAT(FILE_TYPE, SET_ID),PARAM_ID)) param_key , 
+             param_id, 
+             description,
+             inputable_at_load,
+             mandatory_param,
+             validate_method
+      FROM   EXT_FILE_TYPE_PARAM_ALL
+      WHERE  file_type  = head_rec_.file_type
+      AND    set_id     = head_rec_.set_id
+      AND    show_at_load = 'TRUE';
+BEGIN
+   head_rec_ := Get_Record___(key_);
+   
+   IF (Validate_Basic_Info___(head_rec_.file_type,head_rec_.file_template, head_rec_.set_id, 'NULL'))THEN 
+      DELETE FROM ${PROJECTION}_EXT_FILE_TYPE_PARAM_DIALOG_VRT
+      WHERE parent_objkey = key_.objkey;
+      
+      FOR param_rec_ IN get_ext_file_type_params LOOP
+         rec_                 := NULL;
+         rec_.objkey          := sys_guid();
+         rec_.parent_objkey   := head_rec_.objkey;
+         IF (param_rec_.lov_view IS NULL AND param_rec_.enumerate_method IS NOT NULL )THEN
+            IF (param_rec_.enumerate_method = 'Fnd_Boolean_API.Enumerate') THEN             
+               param_rec_.lov_view        := 'EXTERNAL_FILE_BOOLEAN';
+            ELSIF (param_rec_.enumerate_method = 'Finance_Yes_No_API.Enumerate') THEN
+               param_rec_.lov_view        := 'EXTERNAL_FILE_YES_NO';
+            END IF;         
+         END IF;
+         
+         IF (head_rec_.company IS NULL) THEN
+            User_Finance_API.Get_Default_Company (rec_.company );
+         ELSE
+            rec_.company := head_rec_.company;
+         END IF;         
+         rec_.user_id         := Fnd_Session_API.Get_Fnd_User;
+         rec_.lov_view        := param_rec_.lov_view;
+         rec_.param_key       := TO_char(param_rec_.param_key);
+         rec_.param_id        := param_rec_.param_id;
+         rec_.editable        := param_rec_.inputable_at_load;
+         rec_.mandatory_param := param_rec_.mandatory_param;
+         rec_.validate_method := param_rec_.validate_method;
+         rec_.description     := param_rec_.description;
+         Message_SYS.Get_Attribute (head_rec_.param_string, param_rec_.param_id, rec_.value); 
+         IF (param_rec_.enumerate_method IS NOT NULL )THEN
+            IF (param_rec_.enumerate_method = 'Fnd_Boolean_API.Enumerate') THEN             
+               rec_.value        := Fnd_Boolean_API.Decode(rec_.value);
+            ELSIF (param_rec_.enumerate_method = 'Finance_Yes_No_API.Enumerate') THEN
+               rec_.value        := Finance_Yes_No_API.Decode(rec_.value);
+            END IF;         
+         END IF;
+         CRUD_Create___(rec_);
+      END LOOP;      
+   END IF;   
+END Create_File_Type_Param_Val___;
+
+FUNCTION Export_File___ (
+   key_   IN Task_Virtual_Key) RETURN Export_File_Info_Rec
+IS
+   temp_param_string_ VARCHAR2(32000);
+   load_file_id_      NUMBER;
+   file_type_         VARCHAR2(1000);
+   file_template_id_  VARCHAR2(1000);
+   company_           VARCHAR2(1000);
+   is_xml_type_       VARCHAR2(5);
+   xml_data_clob_     CLOB;
+   xml_data_blob_     BLOB;
+   oldrec_            Task_Virtual_Rec;
+   newrec_            Task_Virtual_Rec;
+   rec_               Export_File_Info_Rec;   
+   objid_             VARCHAR2(32000);
+   xml_data_          VARCHAR2(5) := 'FALSE';
+   file_name_         VARCHAR2(2000);
+BEGIN
+   oldrec_ := Get_Record___(key_);
+   
+   IF (Validate_Basic_Info___(oldrec_.file_type,oldrec_.file_template, oldrec_.set_id, 'EXPORT')) THEN 
+      temp_param_string_ := Refresh_Param_String___ (oldrec_.objkey, oldrec_.param_string);
+      
+      External_File_Utility_API.Create_Load_Id_Param_(load_file_id_, temp_param_string_);
+      External_File_Utility_API.Start_Api_To_Call_(temp_param_string_, load_file_id_);
+      Message_SYS.Get_Attribute (temp_param_string_, 'FILE_TYPE', file_type_);
+      Message_SYS.Get_Attribute (temp_param_string_, 'FILE_TEMPLATE_ID', file_template_id_);
+      Message_SYS.Get_Attribute (temp_param_string_, 'COMPANY', company_); 
+      
+      External_File_Utility_API.Pack_Out_Ext_Line_(file_type_,
+                                                   file_template_id_,
+                                                   load_file_id_,
+                                                   company_);
+      
+      file_name_ := newrec_.file_name;
+      External_File_Utility_API.Modify_File_Name_(load_file_id_, file_name_);
+      newrec_.file_name := file_name_;
+      External_File_Utility_API.Update_State_(load_file_id_, '7');
+      External_File_Utility_API.Create_Xml_File_(load_file_id_, is_xml_type_ );
+      
+      IF (is_xml_type_ = 'FALSE') THEN
+         External_File_Utility_API.Process_Xml_File_(objid_, load_file_id_);
+         newrec_ := oldrec_;
+         IF objid_ = 'NULL' THEN
+            xml_data_ := 'FALSE';
+            newrec_.file_data := External_File_Utility_API.Pack_Ext_Trans_To_Blob(load_file_id_);
+            CRUD_Update___(oldrec_,newrec_);
+            
+            $IF Component_Payled_SYS.INSTALLED $THEN
+               IF Security_SYS.Is_Proj_Action_Available('ExternalFileAssistantHandling', 'ImportMandateToPi') AND file_type_ = 'MandateToPi' THEN 
+                  Ext_Payment_History_API.Make_New(newrec_.file_name,
+                                                   newrec_.company,
+                                                   '*',
+                                                   'FALSE',
+                                                   'FALSE',
+                                                   'FALSE',
+                                                   'FALSE');      
+               END IF;
+            $END
+         ELSE
+            xml_data_ := 'TRUE';
+            xml_data_clob_ := External_File_Utility_API.Get_Xml_Data(load_file_id_);
+            xml_data_blob_ := External_File_Utility_API.Clob_To_Blob(xml_data_clob_);
+            newrec_.xml_data := xml_data_blob_;
+            CRUD_Update___(oldrec_,newrec_);
+            External_File_Utility_API.Clear_Temp_Data;
+         END IF;      
+      END IF;
+      rec_.load_file_id := load_file_id_;
+      rec_.xml_data     := xml_data_;
+   END IF;
+   RETURN rec_;  
+END Export_File___;
+
+FUNCTION Import_File___ (
+   key_   IN Task_Virtual_Key) RETURN Import_File_Info_Rec
+IS
+   info_                VARCHAR2(32000);
+   load_file_id_        NUMBER;
+   rec_                 Import_File_Info_Rec;
+   temp_param_string_   VARCHAR2(32000);
+   file_data_blob_      BLOB;
+   head_rec_            Task_Virtual_Rec;
+   
+   CURSOR get_blob_object IS
+   SELECT FILE_DATA
+   FROM ${PROJECTION}_TASK_VIRTUAL_VRT
+   WHERE Objkey = head_rec_.objkey;
+BEGIN
+	head_rec_ := Get_Record___(key_);
+   temp_param_string_ := Refresh_Param_String___(head_rec_.objkey,head_rec_.param_string);
+   
+   OPEN get_blob_object;
+   FETCH get_blob_object INTO file_data_blob_;
+   CLOSE get_blob_object;
+   
+   Import_External_File___ (temp_param_string_,
+                            head_rec_.file_type,
+                            head_rec_.set_id,
+                            head_rec_.file_template,
+                            head_rec_.company,
+                            head_rec_.file_name,
+                            load_file_id_,
+                            info_,
+                            file_data_blob_); 
+   
+   info_  := REPLACE(REPLACE(info_, 'INFO'||chr(31)),chr(30));
+   rec_.load_file_id := load_file_id_;
+   rec_.info := REPLACE(REPLACE(info_, 'INFO'||chr(31)),chr(30));
+   RETURN rec_; 
+END Import_File___;
+
+FUNCTION Refresh_Param_String___ (
+   objkey_       IN VARCHAR2,
+   param_string_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   temp_param_string_ VARCHAR2(32000) := param_string_;
+   string_value_      VARCHAR2(2000);
+   
+   CURSOR get_file_type_param_val IS
+      SELECT lov_view, param_id, value
+      FROM   ${PROJECTION}_EXT_FILE_TYPE_PARAM_DIALOG_VRT
+      WHERE  parent_objkey = objkey_;
+BEGIN
+   FOR param_val_rec_ IN get_file_type_param_val LOOP
+      string_value_ := Ext_File_Message_API.Get_Attr_Parameter_Msg (param_val_rec_.param_id,  temp_param_string_); 
+      --      Trace_SYS.Message ('***** Before param_val_rec_.param_id : '||param_val_rec_.param_id||' string_value_ : '||string_value_||' param_val_rec_.value : '||TO_CHAR(param_val_rec_.value));
+      string_value_ := TO_CHAR(param_val_rec_.value);
+      IF (param_val_rec_.lov_view = 'EXTERNAL_FILE_BOOLEAN') THEN             
+         string_value_   := Fnd_Boolean_API.Encode(string_value_);
+      ELSIF (param_val_rec_.lov_view = 'EXTERNAL_FILE_YES_NO') THEN
+         string_value_   := Finance_Yes_No_API.Encode(string_value_);
+      END IF; 
+      Ext_File_Message_API.Check_And_Replace_Attribute_ (temp_param_string_, param_val_rec_.param_id, string_value_);
+   END LOOP;
+   RETURN temp_param_string_;
+END Refresh_Param_String___;
+
+PROCEDURE Refresh_File_Type_Param_Val___ (
+   key_   IN Ext_File_Type_Param_Dialog_Key,
+   value_ IN VARCHAR2)
+IS
+   rec_             Ext_File_Type_Param_Dialog_Rec; 
+   oldrec_          Ext_File_Type_Param_Dialog_Rec; 
+   param_rec_       Ext_File_Type_Param_Dialog_Rec;
+   param_key_       Ext_File_Type_Param_Dialog_Key;
+   head_rec_        Task_Virtual_Rec;
+   head_key_        Task_Virtual_Key;
+   column_value_    VARCHAR2(200);
+   tab_name_        VARCHAR2(50);
+   stmt_            VARCHAR2(32000);
+   dummy_num_       NUMBER;
+   
+   TYPE Get_Lov_Values     IS REF CURSOR;
+   get_value_              Get_Lov_Values;
+   
+   CURSOR get_inv_param_data IS
+      SELECT * 
+      FROM ${PROJECTION}_Ext_File_Type_Param_Dialog_Vrt
+      WHERE parent_objkey = head_rec_.objkey;
+   
+   CURSOR check_exsit_column (tab_name_ IN VARCHAR2, column_name_ IN VARCHAR2) IS
+      SELECT 1 
+      FROM USER_TAB_COLUMNS 
+      WHERE table_name = tab_name_
+      AND column_name = column_name_;      
+      
+BEGIN
+   param_rec_        := Get_Record___(key_);
+	head_key_.objkey  := param_rec_.parent_objkey;
+   head_rec_         := Get_Record___(head_key_);   
+   
+   IF (head_rec_.file_type IN ('ExtCustInv','ExtSuppInv','ExtVoucher') AND param_rec_.param_id = 'LOAD_TYPE' )THEN
+      
+      CASE head_rec_.file_type
+         WHEN 'ExtCustInv' THEN tab_name_ := 'EXT_OUT_INV_PARAM_TAB';
+         WHEN 'ExtSuppInv' THEN tab_name_ := 'EXT_INC_INV_PARAM_TAB';
+         WHEN 'ExtVoucher' THEN tab_name_ := 'EXT_PARAMETERS_TAB';
+      END CASE;   
+      
+      FOR col_rec_ IN get_inv_param_data LOOP  
+         
+         OPEN check_exsit_column(tab_name_, col_rec_.param_id);
+         FETCH check_exsit_column INTO dummy_num_;
+         
+         IF (col_rec_.param_id = 'LOAD_TYPE') THEN  
+            rec_                 := NULL;
+            param_key_.objkey    := col_rec_.objkey;
+            oldrec_              := Get_Record___(param_key_);
+            rec_                 := oldrec_;
+            rec_.value           := value_;
+            CRUD_Update___(oldrec_,rec_);
+         END IF;
+         
+         IF (check_exsit_column%FOUND AND col_rec_.param_id NOT IN ('COMPANY','LOAD_TYPE','FILE_TYPE','SET_ID','FILE_NAME'))THEN
+            stmt_ := 'SELECT '||col_rec_.param_id||' FROM '||tab_name_||' WHERE company = :company AND load_type = :load_type';
+            
+            @ApproveDynamicStatement(2019-04-09,DIHELK)
+            OPEN get_value_ FOR stmt_ USING col_rec_.company,value_;
+            FETCH get_value_ INTO column_value_;
+            CLOSE get_value_;              
+            
+            rec_                 := NULL;
+            param_key_.objkey    := col_rec_.objkey;
+            oldrec_              := Get_Record___(param_key_);
+            rec_                 := oldrec_;
+            IF (col_rec_.param_id IN ('CHECK_WHEN_LOADED','CREATE_WHEN_CHECKED')) THEN 
+               rec_.value        := Fnd_Boolean_API.Decode(column_value_);
+            END IF;
+            CRUD_Update___(oldrec_,rec_);
+         END IF;
+         
+         CLOSE check_exsit_column;
+      END LOOP;  
+   ELSIF(param_rec_.param_id IN ('COMPANY' , 'MASTER_COMPANY') )  THEN 
+      UPDATE ${PROJECTION}_Ext_File_Type_Param_Dialog_Vrt
+      SET COMPANY = value_
+      WHERE  parent_objkey = head_rec_.objkey;
+      
+      rec_                 := NULL;
+      oldrec_              := Get_Record___(key_);      
+      rec_                 := oldrec_;      
+      rec_.value           := value_;
+      CRUD_Update___(oldrec_,rec_);
+   ELSE
+      rec_                 := NULL;
+      oldrec_              := Get_Record___(key_);      
+      rec_                 := oldrec_;      
+      rec_.value           := value_;
+      CRUD_Update___(oldrec_,rec_);
+   END IF; 
+   
+END Refresh_File_Type_Param_Val___;
+
+PROCEDURE Validate_Parameters___ (
+   key_ IN Task_Virtual_Key)
+IS
+   head_rec_         Task_Virtual_Rec;
+   param_str_        VARCHAR2(2000);
+   temp_param_str_   VARCHAR2(2000);
+   method_stmt_      VARCHAR2(200);
+   execution_stmt_   VARCHAR2(200);
+   parameter_        VARCHAR2(50);
+   parameter_value_  VARCHAR2(50);
+   bind_name_        VARCHAR2(30);
+   cursor_id_        INTEGER;
+   idum_             PLS_INTEGER;  
+   
+   CURSOR get_inv_param_data IS
+      SELECT * 
+      FROM ${PROJECTION}_Ext_File_Type_Param_Dialog_Vrt
+      WHERE parent_objkey = head_rec_.objkey;
+      
+BEGIN
+	head_rec_ := Get_Record___(key_);
+   
+   FOR rec_ IN get_inv_param_data LOOP
+      DECLARE 
+         bind_table_    bind_table;
+         BEGIN  
+            IF (rec_.validate_method IS NOT NULL)THEN
+               cursor_id_ := dbms_sql.Open_Cursor;
+               
+               IF (instr(rec_.validate_method,'USERID')>0)THEN
+                  rec_.validate_method := REPLACE(rec_.validate_method,'USERID','USER_ID');
+               END IF;
+               
+               param_str_        := Substr(rec_.validate_method,Instr(rec_.validate_method,'(')+1,(Instr(rec_.validate_method,')')-1)-Instr(rec_.validate_method,'('));  
+               temp_param_str_   := param_str_;
+               method_stmt_      := rec_.validate_method;
+               
+               WHILE temp_param_str_ IS NOT NULL LOOP
+                  IF (Instr(temp_param_str_,',') > 0 )THEN                
+                     parameter_          := trim(Substr(temp_param_str_,1,Instr(temp_param_str_,',')-1));
+                     temp_param_str_     := Substr(temp_param_str_,Instr(temp_param_str_,',')+1);
+                  ELSE
+                     parameter_          := trim(temp_param_str_);
+                     temp_param_str_     := NULL;
+                  END IF;
+                  parameter_value_  := Get_Parameter_Value___(head_rec_.objkey,parameter_); 
+                  
+                  bind_name_ := ':'||LOWER(parameter_);
+                  Add_To_Bind_Table___(bind_table_,bind_name_,parameter_value_,'STRING');
+                  
+                  method_stmt_      := REPLACE(method_stmt_,parameter_,bind_name_);
+               END LOOP; 
+               
+               execution_stmt_ := 'BEGIN '||method_stmt_||'; END;';
+               
+               @ApproveDynamicStatement(2019-07-10,DIHELK)
+               dbms_sql.parse(cursor_id_, execution_stmt_, 1);         
+               
+               FOR i_ IN 1..bind_table_.count LOOP
+                  dbms_sql.bind_variable(cursor_id_, 
+                                         bind_table_(i_).bind_name,
+                                         bind_table_(i_).bind_str);     
+               END LOOP;
+               idum_ := dbms_sql.EXECUTE(cursor_id_);               
+               dbms_sql.close_cursor(cursor_id_); 
+            END IF;
+         END;               
+      END LOOP;
+   END Validate_Parameters___;
+
+FUNCTION Get_Parameter_Value___(
+   parent_objkey_ IN VARCHAR2,
+   param_id_      IN VARCHAR2)RETURN VARCHAR2
+IS
+   temp_    VARCHAR2(50);
+   
+   CURSOR get_param_value IS
+      SELECT VALUE 
+      FROM ${PROJECTION}_Ext_File_Type_Param_Dialog_Vrt
+      WHERE parent_objkey  = parent_objkey_
+      AND  param_id        = param_id_;
+BEGIN
+   OPEN get_param_value;
+   FETCH get_param_value INTO temp_;
+   CLOSE get_param_value;
+   
+   RETURN temp_;
+END Get_Parameter_Value___;
+
+PROCEDURE Add_To_Bind_Table___(
+   bind_table_      IN OUT bind_table,
+   bind_name_       IN     VARCHAR2,   
+   bind_value_      IN     VARCHAR2,
+   known_data_type_ IN     VARCHAR2)
+IS
+   cnt_     BINARY_INTEGER := Nvl(bind_table_.LAST, 0) + 1;
+   
+   FUNCTION Is_Number___ (
+      str_value_ IN VARCHAR2) RETURN BOOLEAN
+   IS
+      num_              NUMBER;
+      invalid_number    EXCEPTION;
+      PRAGMA exception_init(invalid_number, -06502);     
+   BEGIN
+      num_ := To_Number(str_value_);
+      RETURN TRUE;
+   EXCEPTION 
+      WHEN invalid_number THEN
+         RETURN FALSE;
+   END Is_Number___;       
+BEGIN
+   bind_table_(cnt_).bind_name := bind_name_;
+   IF (known_data_type_ = 'STRING') THEN
+      bind_table_(cnt_).data_type := 'STRING';      
+      -- Remove any chr(39) that was added when creating the statement
+      bind_table_(cnt_).bind_str := Replace(bind_value_, '''');            
+   ELSIF (known_data_type_ = 'NUMBER') THEN
+      bind_table_(cnt_).data_type := 'NUMBER';
+      bind_table_(cnt_).bind_num := To_Number(bind_value_);         
+   ELSE
+      IF (Is_Number___(bind_value_)) THEN
+         bind_table_(cnt_).data_type := 'NUMBER';
+         bind_table_(cnt_).bind_num := To_Number(bind_value_);   
+      ELSE
+         bind_table_(cnt_).data_type := 'STRING';
+         bind_table_(cnt_).bind_str := Replace(bind_value_, '''');      
+      END IF;
+   END IF;
+END Add_To_Bind_Table___;
+
+@Override
+FUNCTION Get_Parameters___ RETURN Parameters_Structure_Rec
+IS
+   method_name_ VARCHAR2(200) := 'EXTERNAL_FILE_UTILITY_API.EXECUTE_BATCH_PROCESS2';
+   rec_ Parameters_Structure_Rec := super();
+   --msg_ VARCHAR2(32000);   
+BEGIN
+   rec_.schedule_method_id := Batch_Schedule_Method_API.Get_Schedule_Method_Id(method_name_);
+   rec_.description := Batch_Schedule_Method_API.Get_Description(rec_.schedule_method_id);
+   --Batch_Schedule_Method_Par_API.Get_Default_Values__(msg_, rec_.schedule_method_id);
+   RETURN rec_;
+END Get_Parameters___;
+
+FUNCTION Construct_Param_Attr___ (
+   virt_rec_ IN OUT Task_Virtual_Rec ) RETURN VARCHAR2
+IS
+   attr_                VARCHAR2(32000);
+   final_param_string_  VARCHAR2(32000);
+   param_no_            NUMBER; 
+BEGIN   
+   final_param_string_ := Refresh_Param_String___(virt_rec_.objkey, virt_rec_.param_string);
+   Ext_File_Batch_Param_API.New_Batch_Param(param_no_, final_param_string_);
+   Client_SYS.Add_To_Attr('PARAMETER_STRING_', param_no_, attr_);
+   RETURN attr_;
+END Construct_Param_Attr___;

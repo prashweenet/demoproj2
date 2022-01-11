@@ -1,0 +1,84 @@
+fragment FinSelObjectCompanySelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view fin_sel_object_company";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceFinSelObjectCompanySelector for FinSelObjectCompany {
+   orderby = SortOrder;
+   static SelectionObjectId;
+   static Description;
+}
+
+@Override
+list FinSelObjectCompanyLovList for FinSelObjectCompany {
+   orderby = SortOrder;
+}
+
+card FinSelObjectCompanyCard for FinSelObjectCompany {
+   label = "";
+   fieldranking SelectionObjectId;
+   field SelectionObjectId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query FinSelObjectCompany {
+   from = "fin_sel_object_company";
+   lu = FinSelObject;
+   keys = Company, ObjectGroupId, SelectionObjectId;
+   ludependencies = FinSelObject;
+   attribute Company Text {
+      lovcolumn = [false];
+   }
+   attribute ObjectGroupId Text {
+      lovcolumn = [false];
+   }
+   attribute SelectionObjectId Text {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute IsCodePart Boolean("TRUE", "FALSE") {
+      lovcolumn = [false];
+   }
+   attribute CodePart Text {
+      lovcolumn = [false];
+   }
+   attribute SortOrder Number {
+      lovcolumn = [false];
+   }
+   attribute DataType Enumeration(FndDataType) {
+      lovcolumn = [false];
+      fetch = "data_type_db";
+   }
+   attribute LovReference Text {
+      lovcolumn = [false];
+   }
+   attribute ZoomWindow Text {
+      lovcolumn = [false];
+   }
+   attribute ZoomWindowColKey Text {
+      lovcolumn = [false];
+   }
+   attribute ZoomWindowParentColKey Text {
+      lovcolumn = [false];
+   }
+   attribute ObjectColId Text {
+      lovcolumn = [false];
+   }
+   attribute ObjectColDesc Text {
+      lovcolumn = [false];
+   }
+   attribute ManualInputDb Text {
+      label = "Manual Input";
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

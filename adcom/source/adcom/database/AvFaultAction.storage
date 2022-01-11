@@ -1,0 +1,20 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvFaultAction
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200831  KAWJLK  LMM2020R1-557, added SEQUENCE av_fault_action_seq.
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+SEQUENCE av_fault_action_seq IS MAXVALUE 999999999999999 INCREMENT BY 1 START WITH 1 NOCACHE;

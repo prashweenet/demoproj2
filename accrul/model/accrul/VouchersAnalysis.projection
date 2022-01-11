@@ -1,0 +1,156 @@
+projection VouchersAnalysis;
+component ACCRUL;
+layer Core;
+description "Voucher Analysis";
+category Users;
+
+include fragment FinNotesDialog;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherSet for Voucher {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity Voucher {
+   crud = Read;
+   where = "Voucher_Updated_DB = 'N' and Voucher_No > 0";
+   ludependencies = FinNotesVirtual;
+
+
+   attribute VoucherStatus Text {
+      label = "Status";
+   }
+   attribute FunctionGroup Text {
+      format = uppercase;
+   }
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute AccountingPeriod Number {
+      label = "Period";
+   }
+   //<ussolk- Added AccountingYearStr and AccountingPeriodStr to handle page parameters in Month End Process Lobby Navigations >
+   attribute AccountingYearStr Text {
+      fetch = "to_char(accounting_year)";
+   }
+   attribute AccountingPeriodStr Text {
+      fetch = "DECODE(SIGN(accounting_period- 10),-1,concat('0', to_char(accounting_period)),accounting_period) ";
+   }
+
+   attribute DateReg Date {
+      label = "Entry Date";
+      fetch = "Trunc(date_reg)";
+   }
+   attribute EnteredByUserGroup Text {
+      format = uppercase;
+   }
+   attribute Userid Text {
+      label = "Entered By";
+      format = uppercase;
+   }
+   attribute ApprovedByUserid Text {
+      label = "Approved by User";
+      format = uppercase;
+   }
+   attribute VoucherDate Date {
+      fetch = "Trunc(voucher_date)";
+   }
+   attribute ApprovalDate Date {
+      fetch = "Trunc(approval_date)";
+
+   }
+   attribute SecondApprovalDate Date {
+      fetch = "Trunc(second_approval_date)";
+   }
+   attribute ApprovedByUserGroup Text {
+      format = uppercase;
+   }
+   attribute SecondApproverId Text {
+      label = "Second Approved By User";
+   }
+   attribute SecondApproverUserGroup Text {
+      label = "Second Approved By User Group";
+   }
+   attribute VoucherText2 Text {
+      label = "Voucher Text";
+   }
+   attribute Notes Boolean("TRUE", "FALSE") {
+      fetch = "Voucher_Note_API.Check_Note_Exist(COMPANY, ACCOUNTING_YEAR, VOUCHER_TYPE, VOUCHER_NO)";
+      label = "Notes";
+      required = [true];
+   }
+   attribute InterimVoucher Boolean("Y", "N") {
+      required = [true];
+   }
+   attribute MultiCompanyVoucher Boolean("TRUE", "FALSE") {
+      fetch = "VOUCHER_API.Is_Multi_Company_Voucher(COMPANY, VOUCHER_TYPE, ACCOUNTING_YEAR, VOUCHER_NO)";
+      label = "Multi-Company Voucher";
+      required = [true];
+   }
+   attribute MultiCompanyId Text {
+      label = "Multi-Company ID";
+      format = uppercase;
+   }
+   attribute VoucherTypeReference Text {
+      label = "Vou Type Ref";
+   }
+   attribute VoucherNoReference Number {
+      label = "Voucher No Ref";
+   }
+   attribute AccountingYearReference Number {
+      label = "Acc Year Ref";
+   }
+   attribute VoucherUpdatedDb Text;
+
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+   reference EnteredByUserGroupRef(Company, EnteredByUserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "Entered By User Group";
+   }
+   reference ApprovedByUserGroupRef(Company, ApprovedByUserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "Approved by User Group";
+   }
+   reference MultiCompanyIdRef(MultiCompanyId) to CompanyFinance(Company) {
+      label = "Multi-Company ID";
+   }
+   reference VoucherTypeReferenceRef(Company, VoucherTypeReference) to VoucherType(Company, VoucherType) {
+      label = "Vou Type Ref";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetMultiCompanyInfo Structure(MultiCompanyInfoStructure) {
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter VoucherType Text;
+   parameter VoucherNo Number;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure MultiCompanyInfoStructure {
+   attribute OriginalCompany Text;
+   attribute OriginalAccYear Number;
+   attribute OriginalVoucherType Text;
+   attribute OriginalVoucherNo Number;
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------
+

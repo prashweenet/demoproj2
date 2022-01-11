@@ -1,0 +1,35 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: FinSelObjTempl
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Fin_Sel_Obj_Templ_Gen_Pct IS
+   Prompt = 'Selection Template'
+   Module.Flags = 'A----'
+   Module.Datatype = 'STRING(6)/UPPERCASE'
+   Module.Prompt = 'Module'   
+SELECT company                        company,
+       object_group_id                object_group_id,
+       template_id                    template_id,
+       description                    description,       
+       ownership                      ownership_db,
+       owner                          owner,
+       default_template               default_template,
+       Fin_Obj_Grp_API.Get_Module(object_group_id)   
+                                      module
+FROM   FIN_SEL_OBJ_TEMPL_TAB;

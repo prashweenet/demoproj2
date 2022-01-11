@@ -1,0 +1,48 @@
+fragment VoucherTypeUserGrpAllGlSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view voucher_type_user_grp_all_gl";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceVoucherTypeUserGrpAllGlSelector for VoucherTypeUserGrpAllGl {
+   static VoucherType;
+}
+
+card VoucherTypeUserGrpAllGlCard for VoucherTypeUserGrpAllGl {
+   label = "";
+   fieldranking VoucherType;
+   field VoucherType;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query VoucherTypeUserGrpAllGl {
+   from = "voucher_type_user_grp_all_gl";
+   lu = VoucherTypeUserGroup;
+   keys = Company, VoucherType;
+   ludependencies = VoucherTypeUserGroup;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute AccountingYear Number {
+      lovcolumn = [false];
+   }
+   attribute UserGroup Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute VoucherType Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute FunctionGroup Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

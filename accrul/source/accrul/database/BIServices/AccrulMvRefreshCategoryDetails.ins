@@ -1,0 +1,114 @@
+-----------------------------------------------------------------------------
+--  Component  : ACCRUL
+--
+--  Filensame  : AccrulMvRefreshCategoryDetails.ins
+--
+--  Purpose    : Adds component specific Materialized Views to default
+--               refresh categories. These refresh categories can after installation
+--               be found in Solution Manager and an administrator can use them
+--               when specifying a scheduled job that refresh a set of Materialized
+--               Views. By doing so, it is made sure that related Materialized Views
+--               are refreshed by one common job, thus simplifying the refresh
+--               administration.
+--               
+--  NOTE       : It is suggested that the following Refresh Categories are used:
+--               * "DIM_ALL" 
+--                 Category for dimension specific MVs. Can normally be 
+--                 refreshed by one single job, e.g. once per day.
+--               * "TRANSLATIONS"
+--                 Category for translation specific MVs. Suggested to be
+--                 refreshed manually.
+--               * "IS_<product>" e.g. "IS_FINANCIALS"
+--                 Category for fact specific MVs. All Facs MVs in one product will
+--                 then be defined in one and the same category.
+--
+--               Categories to be used are registered by the FNDBAS component.
+--
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   ----------------------------------------------------------
+--  090715  RORALK Bug 77385, Created for 75 track.
+--  111220  Anwese Modified for Apps 8.
+--  160106  Umdolk Added Additional code part MVs.
+--  201002  Jadulk Removed SUBSIDIARY_COMPANY_MV from default refresh categories.
+-----------------------------------------------------------------------------
+SET SERVEROUT ON
+
+PROMPT Add Materialized views to appropriate categories
+--
+--  Add default MVs for refresh categories
+--
+BEGIN
+   -- Dimension MV
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ANALYTIC_ATTR_ACCOUNT_MV');    
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ANALYTIC_ATTR_CODE_B_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ANALYTIC_ATTR_CODE_C_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ANALYTIC_ATTR_CODE_D_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ANALYTIC_ATTR_CODE_E_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ANALYTIC_ATTR_CODE_F_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ANALYTIC_ATTR_CODE_G_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ANALYTIC_ATTR_CODE_H_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ANALYTIC_ATTR_CODE_I_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ANALYTIC_ATTR_CODE_J_MV');    
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ACCOUNT_MV');                            
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ACCOUNTING_PERIOD_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'COMPANY_FINANCE_MV');                                  
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_B_MV');                            
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_C_MV');                            
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_D_MV');                            
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_E_MV');                            
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_F_MV');                            
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_G_MV');                            
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_H_MV');                            
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_I_MV');                            
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_J_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'COUNTER_PART_ONE_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'COUNTER_PART_TWO_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_N_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_O_MV');    
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_P_MV');  
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_Q_MV');  
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_R_MV');  
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_S_MV');  
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CODE_T_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'VOUCHER_TYPE_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'ACCOUNTING_PROCESS_CODE_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'TAXCODE_MV');                                                              
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CURRENCY_CODE_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'TAX_BOOK_MV');  
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'CURRENCY_RATE_TYPE_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'RPD_PERIOD_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'RPD_COMPANY_PERIOD_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('DIM_ALL', 'LEDGER_INFORMATION_MV');
+      
+   -- Translation MV
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'ACCOUNT_TRANSLATION_MV'); 
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'ACCOUNTING_PERIOD_TRANSL_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_B_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_C_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_D_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_E_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_F_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_G_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_H_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_I_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_J_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_N_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_O_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_P_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_Q_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_R_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_S_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'CODE_T_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'VOUCHER_TYPE_TRANSL_MV');     
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'ACC_PROCESS_CODE_TRANSL_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'TAXCODE_TRANSLATION_MV');
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('TRANSLATIONS', 'TAX_BOOK_TRANSLATION_MV');
+
+   -- Fact MV
+   Xlr_Mv_Per_Refresh_Cat_API.New_Mv('IS_FINANCIALS', 'CURRENCY_RATE_MV');
+ 
+END;
+/
+
+COMMIT;

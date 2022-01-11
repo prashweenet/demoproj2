@@ -1,0 +1,183 @@
+----------------------------------------------------------------------------
+--
+--  Dimension:  RpdPeriod
+--  Component:  ACCRUL
+--  LU:         DimRpdPeriod
+--
+--  File        : MVAccrul_DimRpdPeriod.cre
+--  Purpose     : Create Materialized views, constraints and indexes for ACCRUL BI Services
+--  Localization: No translation needed.
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+
+
+-- ***** &MV - Start *****
+
+DEFINE MV         = RPD_PERIOD_MV
+DEFINE TAB1       = RPD_PERIOD_TAB
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT d.reporting_date                                              id,
+              d.reporting_date                                              code,
+              d.RPD_ID || ''^'' ||
+      TO_CHAR(d.REPORTING_DATE, ''YYYY-MM-DD'', ''NLS_CALENDAR=Gregorian'') id_with_rpd_id,
+              d.rpd_id                                                      rpd_id,
+              d.rpd_year                                                    rpd_year,
+              d.rpd_period                                                  rpd_period,
+              d.reporting_date                                              reporting_date,
+              i.description                                                 rpd_id_description,
+              p.year_period_str                                             year_period_str,
+              p.from_date                                                   from_date,
+              p.until_date                                                  until_date,
+              p.year_period_num                                             year_period_num,
+              p.string_attribute1                                           string_attribute1,
+              p.string_attribute2                                           string_attribute2,
+              p.string_attribute3                                           string_attribute3,
+              p.string_attribute4                                           string_attribute4,
+              p.string_attribute5                                           string_attribute5,
+              p.number_attribute1                                           number_attribute1,
+              p.number_attribute2                                           number_attribute2,
+              p.number_attribute3                                           number_attribute3,
+              p.number_attribute4                                           number_attribute4,
+              p.number_attribute5                                           number_attribute5
+       FROM   RPD_IDENTITY_TAB i, RPD_PERIOD_TAB p, RPD_PERIOD_DETAIL_TAB d
+       WHERE i.rpd_id     = d.rpd_id
+   AND p.rpd_id     = d.rpd_id
+   AND p.rpd_year   = d.rpd_year
+   AND p.rpd_period = d.rpd_period
+       UNION ALL
+       SELECT TO_DATE(''1900-01-01'', ''YYYY-MM-DD'', ''NLS_CALENDAR=Gregorian'') id,
+              NULL                                                                code,
+              NULL                                                                id_with_rpd_id,
+              NULL                                                                rpd_id,
+              NULL                                                                rpd_year,
+              NULL                                                                rpd_period,
+              NULL                                                                reporting_date,
+              NULL                                                                rpd_id_description,
+              NULL                                                                year_period_str,
+              NULL                                                                from_date,
+              NULL                                                                until_date,
+              NULL                                                                year_period_num,
+              NULL                                                                string_attribute1,
+              NULL                                                                string_attribute2,
+              NULL                                                                string_attribute3,
+              NULL                                                                string_attribute4,
+              NULL                                                                string_attribute5,
+              NULL                                                                number_attribute1,
+              NULL                                                                number_attribute2,
+              NULL                                                                number_attribute3,
+              NULL                                                                number_attribute4,
+              NULL                                                                number_attribute5
+       FROM BI_DUAL_TAB
+    ';
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_ || '_IX1';
+   Database_SYS.Set_Table_Column (columns_, 'CODE');
+   Database_Sys.Create_Index(table_name_,
+                             index_name_,
+                             columns_,
+                             'N',
+                             '&IFSAPP_INDEX',
+                             NULL,
+                             TRUE,
+                             TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_ || '_IX2';
+   Database_SYS.Set_Table_Column (columns_, 'RPD_ID');
+   Database_SYS.Set_Table_Column (columns_, 'RPD_YEAR');
+   Database_SYS.Set_Table_Column (columns_, 'RPD_PERIOD');
+   Database_SYS.Set_Table_Column (columns_, 'REPORTING_DATE');
+   Database_Sys.Create_Index(table_name_,
+                             index_name_,
+                             columns_,
+                             'N',
+                             '&IFSAPP_INDEX',
+                             NULL,
+                             TRUE,
+                             TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_ || '_IX3';
+   Database_SYS.Set_Table_Column (columns_, 'ID_WITH_RPD_ID');
+   Database_Sys.Create_Index(table_name_,
+                             index_name_,
+                             columns_,
+                             'N',
+                             '&IFSAPP_INDEX',
+                             NULL,
+                             TRUE,
+                             TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_ || '_UX1';
+   Database_SYS.Set_Table_Column (columns_, 'RPD_ID');
+   Database_Sys.Create_Index(table_name_,
+                             index_name_,
+                             columns_,
+                             'U',
+                             '&IFSAPP_INDEX',
+                             NULL,
+                             TRUE,
+                             TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/
+
+UNDEFINE MV
+UNDEFINE TAB1
+-- ***** &MV - End *****
+------------------------------------------------------------------

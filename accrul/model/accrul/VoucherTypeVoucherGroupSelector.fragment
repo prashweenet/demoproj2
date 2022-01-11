@@ -1,0 +1,66 @@
+fragment VoucherTypeVoucherGroupSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view voucher_type_voucher_group";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceVoucherTypeVoucherGroupSelector for VoucherTypeVoucherGroup {
+   static VoucherType;
+   static Description;
+}
+
+card VoucherTypeVoucherGroupCard for VoucherTypeVoucherGroup {
+   label = "";
+   fieldranking VoucherType;
+   field VoucherType;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query VoucherTypeVoucherGroup {
+   from = "voucher_type_voucher_group";
+   lu = VoucherType;
+   keys = Company, FunctionGroup, VoucherType;
+   ludependencies = VoucherType;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute FunctionGroup Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute VoucherType Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute FunctionGroupDesc Text {
+      lovcolumn = [false];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute LablePrint Enumeration(FinanceYesNo) {
+      lovcolumn = [false];
+      fetch = "lable_print_db";
+   }
+   attribute StoreOriginal Enumeration(FinanceYesNo) {
+      lovcolumn = [false];
+      fetch = "store_original_db";
+   }
+   attribute RowGroupValidation Text {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------
+
+function GetVoucherTypeVoucherGroupCashBox List < Entity(VoucherTypeVoucherGroup) > {
+   where = "function_group = 'CB'";
+}
+

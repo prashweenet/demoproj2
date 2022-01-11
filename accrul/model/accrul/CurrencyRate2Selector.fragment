@@ -1,0 +1,50 @@
+fragment CurrencyRate2Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view currency_rate2";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCurrencyRate2Selector for CurrencyRate2 {
+   static CurrencyType;
+   static ValidFrom;
+}
+
+card CurrencyRate2Card for CurrencyRate2 {
+   label = "";
+   fieldranking CurrencyType;
+   field CurrencyType;
+   field ValidFrom;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CurrencyRate2 {
+   from = "currency_rate2";
+   lu = CurrencyRate;
+   keys = Company, CurrencyCode, CurrencyType;
+   ludependencies = CurrencyRate;
+   attribute Company Text {
+      lovcolumn = [false];
+   }
+   attribute CurrencyCode Text {
+      lovcolumn = [false];
+   }
+   attribute CurrencyType Text {
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [true];
+   }
+   attribute CurrencyRate Number {
+      label = "Rate";
+      lovcolumn = [true];
+   }
+   attribute ConvFactor Number {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

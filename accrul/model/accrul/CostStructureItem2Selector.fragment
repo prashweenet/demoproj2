@@ -1,0 +1,70 @@
+fragment CostStructureItem2Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view cost_structure_item2";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCostStructureItem2Selector for CostStructureItem2 {
+   static NameValue;
+   static Description;
+}
+
+card CostStructureItem2Card for CostStructureItem2 {
+   label = "";
+   fieldranking NameValue;
+   field NameValue;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CostStructureItem2 {
+   from = "cost_structure_item2";
+   lu = CostStructureItem;
+   keys = Company, CostStructureId, NameValue;
+   ludependencies = CostStructureItem;
+   attribute Company Text {
+      lovcolumn = [false];
+   }
+   attribute CostStructureId Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute NameValue Text {
+      label = "Node ID";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute LevelNo Number {
+      label = "Level";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute LevelId Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute ItemAbove Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CostStructItemType Enumeration(CostStructItemType) {
+      label = "CBS Item Type";
+      lovcolumn = [false];
+      fetch = "cost_struct_item_type_db";
+   }
+   attribute SortedItemAbove Text {
+      lovcolumn = [false];
+   }
+   attribute SortedNameValue Text {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

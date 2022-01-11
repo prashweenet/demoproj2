@@ -1,0 +1,330 @@
+fragment SelectionTemplate;
+component ACCRUL;
+layer Core;
+description "This fragment contains common client/projection implementations of AR and AP selection templates ...";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+assistant IncludeExcludeValuesAssistant using IncludeExcludeValuesVirtualSet {
+   label = "Include/Exclude Values";
+
+   input(Company, ObjectGroupId, TemplateId, ItemId, SelectionObjectId);
+
+   steps {
+      step {
+         list FinSelTemplValuesList(FinSelTemplValuesArray);
+      }
+      final step {
+      }
+      cancelled step {
+      }
+   }
+   finish command {
+      execute {
+         exit OK;
+      }
+   }
+   cancel command {
+      visible = [false];
+   }
+
+   restart command {
+      visible = [false];
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+command SetPublicDefaultCommand for FinSelObjTempl {
+   label = "Set Default";
+   enabled = [DefaultTemplate != true and Ownership = "Public"];
+   execute {
+      call SetPublicDefault(Ownership, Owner);
+   }
+}
+
+command ResetPublicDefaultCommand for FinSelObjTempl {
+   label = "Reset Default";
+   enabled = [DefaultTemplate != false and Ownership = "Public"];
+   execute {
+      call ResetPublicDefault();
+   }
+}
+command SetPrivateDefaultCommand for FinSelObjTempl {
+   label = "Set Default";
+   enabled = [DefaultTemplate != true and Ownership = "Private"];
+   execute {
+      call SetPrivateDefault(Ownership, Owner);
+   }
+}
+
+command ResetPrivateDefaultCommand for FinSelObjTempl {
+   label = "Reset Default";
+   enabled = [DefaultTemplate != false and Ownership = "Private"];
+   execute {
+      call ResetPrivateDefault();
+   }
+}
+
+command DefineIncludeExcludeValuesCommand for FinSelObjTemplDet {
+   label = "Define Include/Exclude Values";
+
+   enabled = [SelectionOperator = "Incl" or SelectionOperator = "Excl"];
+   execute {
+      assistant IncludeExcludeValuesAssistant(Company, ObjectGroupId, TemplateId, ItemId, SelectionObjectId) {
+         when OK {
+            exit OK;
+         }
+      }
+   }
+}
+
+--------------------------------- SELECTORS ---------------------------------
+
+selector FinSelObjTemplateSelector for FinSelObjTempl {
+   label = "${TemplateId} - ${Description}";
+   static TemplateId;
+   static Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+group FinSelObjTemplGroup for FinSelObjTempl {
+   label = "";
+
+   field TemplateId {
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+   field Ownership {
+      size = Small;
+   }
+   field Owner {
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field DefaultTemplate {
+      size = Small;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+
+list FinSelObjTemplDetList for FinSelObjTemplDet {
+   label = "Selection Template Details";
+
+   crudactions {
+      new {
+         enabled = [parent.TemplateId != null];
+      }
+   }
+
+   lov SelectionObjectIdRef with ReferenceFinSelObjectCompanySelector {
+      search = SelectionObjectId, Description;
+      size = Large;
+      description = SelectionObjectIdRef.Description;
+   }
+   field SelectionOperator {
+      validate command {
+         execute {
+            if [SelectionOperator = "Incl" or SelectionOperator = "Excl"] {
+               set ValueFrom = null;
+               set ValueTo = null;
+            }
+            if [SelectionOperator != "Between" and SelectionOperator != "NotBetween"] {
+               set ValueTo = null;
+            }
+         }
+      }
+   }
+   field ValueFromRef {
+      size = Small;
+      label = "From Value";
+      editable = [SelectionOperator != "Incl" and SelectionOperator != "Excl"];
+   }
+   field ValueToRef {
+      size = Small;
+      label = "To Value";
+      editable = [SelectionOperator = "Between" or SelectionOperator = "NotBetween"];
+   }
+   field ValuesExist {
+      size = Small;
+   }
+
+   command DefineIncludeExcludeValuesCommand;
+}
+
+list FinSelTemplValuesList for FinSelTemplValues {
+   field ValueRef {
+      size = Small;
+      label = "Value";
+
+      validate command {
+         variable SelObjValueInfoStructureVar Structure(SelObjValueInfoStructure);
+         execute {
+            call ValidateSelObjValue(SelectionObjectId, Value, Company) into SelObjValueInfoStructureVar;
+            set Description = SelObjValueInfoStructureVar.Description;
+            set Status = SelObjValueInfoStructureVar.Status;
+         }
+      }
+   }
+   field Description {
+      size = Large;
+   }
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+entityset IncludeExcludeValuesVirtualSet for IncludeExcludeValuesVirtual {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+@Override
+entity FinSelObjTempl {
+   ludependencies = FinSelObjTempl;
+   crud = Read, Create, Update, Delete;
+   supportwarnings = [true];
+   attribute TemplateId Text {
+      maxlength = 20;
+      label = "Template ID";
+      format = uppercase;
+   }
+   attribute Owner Text {
+      editable = [false];
+      updatable = [false];
+   }
+   attribute Ownership Enumeration(FinOwnership) {
+      fetch = "ownership_db";
+   }
+   attribute DefaultTemplate Boolean("TRUE", "FALSE") {
+      required = [true];
+      editable = [false];
+      label = "Default";
+   }
+   attribute Module Text {
+      required = [false];
+   }
+   attribute Lu Text {
+      required = [false];
+   }
+
+   array FinSelObjTemplDetArray(Company, ObjectGroupId, TemplateId) to FinSelObjTemplDet(Company, ObjectGroupId, TemplateId);
+
+   action SetPublicDefault {
+      ludependencies = FinSelObjTempl;
+      supportwarnings = [true];
+      parameter Ownership Text;
+      parameter Owner Text;
+   }
+   action ResetPublicDefault {
+      ludependencies = FinSelObjTempl;
+   }
+   action SetPrivateDefault {
+      ludependencies = FinSelObjTempl;
+      supportwarnings = [true];
+      parameter Ownership Text;
+      parameter Owner Text;
+   }
+   action ResetPrivateDefault {
+      ludependencies = FinSelObjTempl;
+   }
+}
+
+@Override
+entity FinSelObjTemplDet {
+   ludependencies = FinSelObjTemplDet, FinSelTemplValues;
+
+   use attributes = SelectionObjectId, SelectionOperator, ValueFrom, ValueTo, ValueFromDate, ValueToDate;
+
+   attribute SelectionOperator Enumeration(FinSelObjectOperator) {
+      label = "Operator";
+   }
+   attribute ItemId Number {
+      required = [false];
+   }
+   attribute ValueFrom Text {
+      label = "From Value";
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute ValueTo Text {
+      label = "To Value";
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute ValuesExist Boolean("TRUE", "FALSE") {
+      required = [true];
+      fetch = "Fin_Sel_Templ_Values_API.Is_Value_Exist(company,object_group_id,template_id,item_id)";
+      label = "Values Exist";
+      editable = [false];
+   }
+
+   reference SelectionObjectIdRef(Company, ObjectGroupId, SelectionObjectId) to FinSelObjectCompany(Company, ObjectGroupId, SelectionObjectId) {
+      label = "Selection Object";
+   }
+   reference ValueFromRef(ValueFrom) dynamic(SelectionObjectId) parent(Company);
+   reference ValueToRef(ValueTo) dynamic(SelectionObjectId) parent(Company);
+}
+
+@Override
+entity FinSelTemplValues {
+   ludependencies = FinSelObjTemplDet, FinSelTemplValues;
+
+   attribute Value Text {
+      fetch = "value";
+      label = "Value";
+      maxlength = 20;
+      required = [true];
+      format = uppercase;
+   }
+   attribute SelectionObjectId Text {
+      fetch = "Fin_Sel_Obj_Templ_Det_API.Get_Selection_Object_Id(company, object_group_id, template_id, item_id)";
+      editable = [false];
+   }
+   attribute Description Text {
+      fetch = "Fin_Sel_Object_API.Get_Sel_Obj_Value_Description(Fin_Sel_Obj_Templ_Det_API.Get_Selection_Object_Id(company, object_group_id, template_id, item_id), value, company)";
+      editable = [false];
+   }
+
+   reference ValueRef(Value) dynamic(SelectionObjectId) parent(Company);
+}
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+function ValidateSelObjValue Structure(SelObjValueInfoStructure) {
+   parameter SelectionObjectId Text;
+   parameter Value Text;
+   parameter Company Text;
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+
+virtual IncludeExcludeValuesVirtual {
+   attribute Company Text;
+   attribute ObjectGroupId Text;
+   attribute TemplateId Text;
+   attribute ItemId Number;
+   attribute SelectionObjectId Text;
+
+   array FinSelTemplValuesArray(Company, ObjectGroupId, TemplateId, ItemId, SelectionObjectId) to FinSelTemplValues(Company, ObjectGroupId, TemplateId, ItemId, SelectionObjectId);
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+
+structure SelObjValueInfoStructure {
+   attribute Description Text;
+   attribute Status Text;
+}

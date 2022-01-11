@@ -1,0 +1,58 @@
+projection AuditFileLogHandling;
+component ACCRUL;
+layer Core;
+description "Audit File Log";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AuditSelectionCriteriaSet for AuditSelectionCriteria {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AuditSelectionCriteria {
+
+   crud = Read;
+   attribute ReportId Number {
+      label = "Report ID";
+   }
+   attribute UserId Text {
+      label = "User ID";
+   }
+   attribute BackgroundJobId Number {
+      label = "Background Job ID";
+   }
+   attribute ReportTypeDb Text;
+
+   reference ReportTypeRef(Company, Country, ReportType) to AuditBasicDataMaster(Company, Country, ReportType) {
+      label = "Report Type";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

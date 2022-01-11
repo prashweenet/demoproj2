@@ -1,0 +1,541 @@
+client AuditInterface;
+component ACCRUL;
+layer Core;
+projection AuditInterfaceHandling;
+include fragment ScheduledTasksCommon;
+@DynamicComponentDependency INTLED
+include fragment InternalLedgerLovSelector;
+include fragment ExtFileTypeUsableSelector;
+include fragment ExtFileTemplateLov2Selector;
+@DynamicComponentDependency GENLED
+include fragment GeneralLedgerReportAssistant;
+@DynamicComponentDependency GENLED
+include fragment GeneralLedgerReportWithCounterAccountAssistant;
+@DynamicComponentDependency GENLED
+include fragment GlBalanceReportSplitByAccountDigitAssistant;
+@DynamicComponentDependency FIXASS
+include fragment FaYearReportAssistant;
+@DynamicComponentDependency INVOIC
+include fragment InvoiceCustomerTypeGroupSelector;
+@DynamicComponentDependency PAYLED
+include fragment CustAgeAnalysisReportDialog;
+@DynamicComponentDependency PAYLED
+include fragment SuppAgeAnalysisReportDialog;
+@DynamicComponentDependency PAYLED
+include fragment CustomerLedgerOpenItemsAssistant;
+@DynamicComponentDependency PAYLED
+include fragment SupplierLedgerOpenItemsAssistant;
+@DynamicComponentDependency PAYLED
+include fragment TrialBalanceReportAssistant;
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+-- gelr:saft_poland, begin
+@DynamicComponentDependency TAXLED
+include fragment ProposalLovSelector;
+@DynamicComponentDependency MPCCOM
+include fragment SiteCompanyLov;
+@DynamicComponentDependency INVENT
+include fragment WarehouseLov;
+@DynamicComponentDependency PAYLED
+include fragment CashAccountLovSelector;
+@DynamicComponentDependency ORDER
+include fragment CustOrdCust6Selector;
+-- gelr:saft_poland, end
+
+@DynamicComponentDependency PAYLED
+warningsenabled = ExecuteTaskExt, CopyFromSelectionTemplate;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AuditFormatsNavEntry parent AccrulNavigator.AuditInterfaceMenu at index 300 {
+      label = "Audit Interface Assistant";
+      assistant TaskAssistant;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+-------------------------------- ASSISTANTS ---------------------------------
+assistant TaskAssistant using TaskVirtualSet {
+   label = "Audit Interface Assistant";
+
+   init command {
+      variable ParamsVar {
+         type = Structure(ParametersStructure);
+      }
+      execute {
+         call GetParametersExt(Company, Contract, ReportType) into ParamsVar;
+         set ScheduleMethodId = ParamsVar.ScheduleMethodId;
+         set ScheduleName = ParamsVar.Description;
+         -- Init parameters
+         set Country = ParamsVar.Country;
+         set ReportType = ParamsVar.ReportType;
+         set ReportTypeDb = ParamsVar.ReportTypeDb;
+         set FileType = ParamsVar.FileType;
+         set FileTemplateId = ParamsVar.FileTemplateId;
+         -- gelr:saft_poland, begin
+         call InitLocalizationFunctionalities(Company) into LocalizationFunctionalityStructure;
+         set SaftPolandEnabled = LocalizationFunctionalityStructure.SaftPoland;
+         -- gelr:saft_poland, end
+      }
+   }
+
+   steps {
+      step {
+         label = "Task Options";
+         group ExecuteOptionGroup;
+         group ParameterGroup;
+         group SelectionRangeGroup;
+         next command {
+            enabled = [(TaskOption = "Schedule" and(ReportTypeDb = "SAF-T" or ReportTypeDb = "FEC")
+            or((TaskOption = "Now" and SaftPolandEnabled = true and ReportTypeDb = "SAF-T" and ReportFormatDb != "KR" and Country != null))
+            and((SelectionRangeType = "Date" and FromDate != null and ToDate != null) or(SelectionRangeType = "Period" and FromYear != null and FromPeriod != null
+            and ToYear != null and ToPeriod != null)))];
+         }
+      }
+      -- gelr:saft_poland, begin
+      step {
+         label = "SAF-T PL Additional Parameters";
+         visible = [SaftPolandEnabled = true and ReportTypeDb = "SAF-T" and ReportFormatDb != "KR"];
+
+         group SafTPlParams;
+         next command {
+            enabled = [TaskOption = "Schedule" and(ReportTypeDb = "SAF-T" or ReportTypeDb = "FEC")];
+         }
+      }
+      -- gelr:saft_poland, end
+      step {
+         label = "Schedule";
+         group SchedulingParametersGroup;
+         group SchedulingStartAndStopDateGroup;
+      }
+      step {
+         label = "Schedule Options";
+         group ScheduledTasksAssistantAdvOpGroup;
+         group ScheduledTasksAssistantStreamsGroup;
+      }
+      final step {
+         description = "${Result}";
+         command NavigateToScheduledTask {
+            visible = [TaskOption = "Schedule" and ReportTypeDb = "SAF-T"];
+         }
+      }
+      cancelled step {
+         description = "Task was cancelled";
+      }
+   }
+
+   finish command {
+      enabled = [(ReportTypeDb = "SAF-T" and Company != null and Country != null and FileType != null and FileTemplateId != null
+      and FromYear != null and ToYear != null and ToPeriod != null and FromPeriod != null and FromDate != null and ToDate != null and not SaftPolandEnabled)
+      or((Company != null and Country != null and ReportTypeDb != null) and((TaskOption = "Now" and not SaftPolandEnabled) or
+      (TaskOption = "Schedule" and ReportTypeDb = "GDPdU") or
+      (TaskOption = "Schedule" and ReportTypeDb = "SAF-T" and ScheduleName != null and
+      (ScheduleOption = "Daily" and ScheduleTime != null) or
+      (ScheduleOption = "Weekly" and ScheduleTime != null and ScheduledDays != null) or
+      (ScheduleOption = "Monthly" and ScheduleTime != null and ScheduledDayNumber > 0 and ScheduledDayNumber < 32) or
+      (ScheduleOption = "Date" and ScheduleDatetime != null) or
+      (ScheduleOption = "Interval" and ScheduleInterval != null) or
+      (ScheduleOption = "Custom" and ExecutionPlan != null)))) or
+      -- gelr:saft_poland, begin
+      (SaftPolandEnabled and ReportTypeDb = "SAF-T" and(((ReportFormatDb = "V7M" or ReportFormatDb = "VAT") and ProposalId != null)
+      or(ReportFormatDb = "FA" and DateTypeClientVal != null and(CustomerId != null or CustomerGroup != null))
+      or(ReportFormatDb = "KR" and Country != null and((SelectionRangeType = "Date" and FromDate != null and ToDate != null) or(SelectionRangeType = "Period" and FromYear != null and FromPeriod != null
+      and ToYear != null and ToPeriod != null)))
+      or(ReportFormatDb = "MAG" and WarehouseId != null and Site != null)
+      or(ReportFormatDb = "WB" and(Currency != null or DateTypeClientVal != null or ShortName != null))))];
+      -- gelr:saft_poland, end
+
+      variable FileVar Text;
+      variable ParameterMsgVar Text;
+      execute {
+         if [TaskOption = "Now" or(TaskOption = "Schedule" and(ReportTypeDb != "SAF-T" or ReReportTypeDb != "FEC"))] {
+            if [ReportTypeDb != "SAF-T" or ReportTypeDb != "FEC"] {
+               if [AuditSource = "GENERAL_LEDGER_ROW_AV"] {
+                  @DynamicComponentDependency GENLED
+                  assistant GeneralLedgerReportAssistant(Company) into(ParameterMsgVar) {
+                     when OK {
+                        exit;
+                     }
+                     when CANCEL {
+                        exit CANCEL;
+                     }
+                  }
+               }
+               if [AuditSource = "GEN_LEDG_COUN_ACC_AV"] {
+                  @DynamicComponentDependency GENLED
+                  assistant GeneralLedgerReportWithCounterAccountAssistant(Company) into(ParameterMsgVar) {
+                     when OK {
+                        exit;
+                     }
+                     when CANCEL {
+                        exit CANCEL;
+                     }
+                  }
+               }
+               if [AuditSource = "BALANCE_REPORT_AV"] {
+                  @DynamicComponentDependency GENLED
+                  assistant GlBalanceReportSplitByAccountDigitAssistant(Company) into(ParameterMsgVar) {
+                     when OK {
+                        exit;
+                     }
+                     when CANCEL {
+                        exit CANCEL;
+                     }
+                  }
+               }
+               if [AuditSource = "FA_YEAR_REPORT_AV"] {
+                  @DynamicComponentDependency FIXASS
+                  assistant FaYearReportAssistant(Company) into(ParameterMsgVar) {
+                     when OK {
+                        exit;
+                     }
+                     when CANCEL {
+                        exit CANCEL;
+                     }
+                  }
+               }
+               if [AuditSource = "CUST_AGE_ANALYSIS_AV"] {
+                  @DynamicComponentDependency PAYLED
+                  dialog CustAgeAnalysisDialog(Company) into(ParameterMsgVar) {
+                     when OK {
+                        exit;
+                     }
+                     when CANCEL {
+                        exit CANCEL;
+                     }
+                  }
+               }
+               if [AuditSource = "CUST_OPEN_ITEM_AV"] {
+                  @DynamicComponentDependency PAYLED
+                  assistant CustLedgOpenItemsAssistant(Company) into(ParameterMsgVar) {
+                     when OK {
+                        exit;
+                     }
+                     when CANCEL {
+                        exit CANCEL;
+                     }
+                  }
+               }
+               if [AuditSource = "CUSTOMER_TRIAL_BALANCE_AV"] {
+                  @DynamicComponentDependency PAYLED
+                  assistant CustomerTrialBalanceReportAssistant(Company) into(ParameterMsgVar) {
+                     when OK {
+                        exit;
+                     }
+                     when CANCEL {
+                        exit CANCEL;
+                     }
+                  }
+               }
+               if [AuditSource = "SUPP_AGE_ANALYSIS_AV"] {
+                  @DynamicComponentDependency PAYLED
+                  dialog SuppAgeAnalysisDialog(Company) into(ParameterMsgVar) {
+                     when OK {
+                        exit;
+                     }
+                     when CANCEL {
+                        exit CANCEL;
+                     }
+                  }
+               }
+               if [AuditSource = "SUP_OPEN_ITEM_AV"] {
+                  @DynamicComponentDependency PAYLED
+                  assistant SuppLedgOpenItemsAssistant(Company) into(ParameterMsgVar) {
+                     when OK {
+                        exit;
+                     }
+                     when CANCEL {
+                        exit CANCEL;
+                     }
+                  }
+               }
+               if [AuditSource = "SUPPLIER_TRIAL_BALANCE_AV"] {
+                  @DynamicComponentDependency PAYLED
+                  assistant SupplierTrialBalanceReportAssistant(Company) into(ParameterMsgVar) {
+                     when OK {
+                        exit;
+                     }
+                     when CANCEL {
+                        exit CANCEL;
+                     }
+                  }
+               }
+            }
+
+            call ExecuteTaskExt(ParameterMsgVar) into FileVar;
+            set Objkey = FileVar;
+            if [Objkey != null] {
+               download "TaskVirtualSet(Objkey=$[Objkey])/XmlFileData";
+               if [ReportTypeDb != "SAF-T" and ReportTypeDb != "FEC"] {
+                  download "TaskVirtualSet(Objkey=$[Objkey])/TextFileData";
+               }
+            }
+            set Result = "Task has been successfully completed.";
+         }
+         else {
+            call ScheduleTask() into ScheduledTask;
+            set ScheduleId = ScheduledTask.ScheduleId;
+            set Result = "Task '${ScheduleName}', assigned with the Id '${ScheduleId}', was successfully scheduled to start ${ScheduledTask.ScheduledDate} at ${ScheduledTask.ScheduledTime}.";
+         }
+      }
+   }
+   cancel command {
+      execute {
+         navigate back;
+      }
+   }
+
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+--------------------------------- SELECTORS ---------------------------------
+
+---------------------------------- GROUPS -----------------------------------
+group ParameterGroup for TaskVirtual {
+   label = "Parameters";
+   lov CompanyFinanceRef with ReferenceCompanyFinanceSelector {
+      search = Company, Description;
+      validate command {
+         variable ParamsVar Structure(ParametersStructure);
+         variable NullDummyVar Text;
+         execute {
+            if [Company = null] {
+               set Country = null;
+               set FileType = null;
+               set ReportType = null;
+               set FileTemplateId = null;
+            }
+            else {
+               set NullDummyVar = null;
+               call GetParametersExt(Company, NullDummyVar, NullDummyVar) into ParamsVar;
+               set Country = ParamsVar.Country;
+               set FileType = ParamsVar.FileType;
+               set ReportType = ParamsVar.ReportType;
+               set ReportTypeDb = ParamsVar.ReportTypeDb;
+               set FileTemplateId = ParamsVar.FileTemplateId;
+            }
+         }
+      }
+
+      description = CompanyFinanceRef.Description;
+   }
+
+   lov CountryRef with ReferenceAuditFormatCountryQuerySelector {
+      validate command {
+         variable ParamsVar Structure(ParametersStructure);
+         variable NullDummyVar Text;
+         execute {
+            if [Country = null] {
+               set FileType = null;
+               set ReportType = null;
+               set FileTemplateId = null;
+            }
+            else {
+               set NullDummyVar = null;
+               call GetParametersExt(Company, Country, NullDummyVar) into ParamsVar;
+               set FileType = ParamsVar.FileType;
+               set ReportType = ParamsVar.ReportType;
+               set ReportTypeDb = ParamsVar.ReportTypeDb;
+               set FileTemplateId = ParamsVar.FileTemplateId;
+            }
+         }
+      }
+   }
+   lov ReportTypeRef with ReferenceAuditFormatReportTypeQuerySelector {
+      validate command {
+         variable ParamsVar Structure(ParametersStructure);
+         execute {
+            if [ReportType != null] {
+               call GetParametersExt(Company, Country, ReportType) into ParamsVar;
+               set FileType = ParamsVar.FileType;
+               set FileTemplateId = ParamsVar.FileTemplateId;
+               set ReportTypeDb = ParamsVar.ReportTypeDb;
+            }
+         }
+      }
+   }
+   field ReportTypeDb {
+      visible = [false];
+      editable = [false];
+   }
+   -- gelr:saft_poland, begin
+   @DynamicComponentDependency EREP
+   field ReportFormat {
+      visible = [SaftPolandEnabled = true];
+      validate command {
+         execute {
+            call GetReportFormatDbValue(ReportFormat) into ReportFormatDb;
+            if[ReportFormatDb = "FA"] {
+               set DateType = "VOU";
+               set DateTypeClientVal = "VOU";
+               set CustomerId = "%";
+               set CustomerGroup = "%";
+            }
+            if[ReportFormatDb = "WB"] {
+               set Currency = "PLN";
+            }
+         }
+      }
+   }
+   -- gelr:saft_poland, end
+
+   lov AuditSourceRef with ReferenceAuditSourceSelector {
+      editable = [ReportTypeDb != "SAF-T" and ReportTypeDb != "FEC"];
+      validate command {
+         variable SourceValuesVar {
+            type = Structure(AuditSourceInfoStructure);
+         }
+         execute {
+            if[AuditSource != null] {
+               call GetAuditSourceInfo(Company, AuditSource) into SourceValuesVar;
+               set LedgerId = SourceValuesVar.LedgerId;
+               set ReportId = SourceValuesVar.ReportId;
+               set DateTitle = SourceValuesVar.DateTitle;
+               if [DateTitle = null] {
+                  set Dummy = "";
+               }
+               else {
+                  set Dummy = " - ";
+               }
+               set SourceType = SourceValuesVar.SourceType;
+               set IsIntled = SourceValuesVar.InternalLedger;
+               set FromDate = SourceValuesVar.FromDate;
+               set ToDate = SourceValuesVar.ToDate;
+            }
+         }
+      }
+   }
+   @DynamicComponentDependency INTLED
+   lov LedgerIdRef with ReferenceInternalLedgerLovSelector {
+      search = LedgerId, Description;
+      editable = [SourceType = "VIEW" and IsIntled = "TRUE"];
+      validate command {
+         variable DummyVar {
+            type = Text;
+         }
+         execute {
+            if[LedgerId != null] {
+               call ValidateLedgerId(Company, LedgerId) into DummyVar;
+            }
+         }
+      }
+      description = LedgerIdRef.Description;
+   }
+   lov FileTypeRef with ReferenceExtFileTypeUsableSelector {
+      editable = [ReportTypeDb = "SAF-T" or ReportTypeDb = "FEC"];
+      validate command {
+         variable TemplateIdVar {
+            type = Text;
+         }
+         execute {
+            call GetTemplateId(FileType) into TemplateIdVar;
+            set FileTemplateId = TemplateIdVar;
+         }
+      }
+   }
+   lov FileTemplateRef with ReferenceExtFileTemplateLov2Selector using GetFileTemplate(FileType) {
+      editable = [ReportTypeDb = "SAF-T" or ReportTypeDb = "FEC"];
+   }
+}
+
+group SelectionRangeGroup for TaskVirtual {
+   label = "Selection ${Dummy} ${DateTitle}";
+   radiogroup SelectionRangeType {
+      editable = [(ReportTypeDb = "SAF-T" or ReportTypeDb = "FEC") or(ReportTypeDb != "SAF-T" and SourceType = "VIEW" and DateTitle != null)];
+   }
+   field FromDate {
+      visible = [SelectionRangeType = "Date"];
+      editable = [(ReportTypeDb = "SAF-T" or ReportTypeDb = "FEC") or(ReportTypeDb != "SAF-T" and SourceType = "VIEW" and DateTitle != null)];
+   }
+   field ToDate {
+      visible = [SelectionRangeType = "Date"];
+      editable = [(ReportTypeDb = "SAF-T" or ReportTypeDb = "FEC") or(ReportTypeDb != "SAF-T" and SourceType = "VIEW" and DateTitle != null)];
+   }
+   field FromYear {
+      visible = [SelectionRangeType = "Period"];
+      editable = [ReportTypeDb = "SAF-T" or ReportTypeDb = "FEC"];
+      size = Small;
+   }
+   field FromPeriod {
+      visible = [SelectionRangeType = "Period"];
+      editable = [ReportTypeDb = "SAF-T" or ReportTypeDb = "FEC"];
+      size = Small;
+   }
+   field ToYear {
+      visible = [SelectionRangeType = "Period"];
+      editable = [ReportTypeDb = "SAF-T" or ReportTypeDb = "FEC"];
+      size = Small;
+   }
+   field ToPeriod {
+      visible = [SelectionRangeType = "Period"];
+      editable = [ReportTypeDb = "SAF-T" or ReportTypeDb = "FEC"];
+      size = Small;
+   }
+}
+
+-- gelr:saft_poland, begin
+group  SafTPlParams for TaskVirtual {
+   label = "SAF-T PL Additional Parameters";
+
+   @DynamicComponentDependency TAXLED
+   lov ProposalIdRef with ReferenceProposalLovSelector using GetSpecificProposals(Company, SelectionRangeType, FromDate, ToDate, FromYear, ToYear, FromPeriod, ToPeriod) {
+      description = ProposalIdRef.Description;
+      visible = [ReportFormatDb = "V7M" or ReportFormatDb = "VAT"];
+   }
+   @DynamicComponentDependency MPCCOM
+   lov SiteRef with ReferenceSiteCompanyLovSelector {
+      visible = [ReportFormatDb = "MAG"];
+   }
+   @DynamicComponentDependency INVENT
+   lov WarehouseIdRef with ReferenceWarehouseLovSelector {
+      visible = [ReportFormatDb = "MAG"];
+   }
+   lov CurrencyRef with ReferenceCurrencyCodeSelector {
+      visible = [ReportFormatDb = "WB"];
+   }
+   @DynamicComponentDependency EREP
+   field DateType {
+      visible = [ReportFormatDb = "FA"];
+      validate command {
+         execute {
+            set DateTypeClientVal = DateType;
+         }
+      }
+   }
+   @DynamicComponentDependency PAYLED
+   lov ShortNameRef with ReferenceCashAccountLovSelector {
+      visible = [ReportFormatDb = "WB"];
+   }
+   @DynamicComponentDependency ORDER
+   lov CustomerIdRef with ReferenceCustOrdCust6Selector {
+      visible = [ReportFormatDb = "FA"];
+   }
+   @DynamicComponentDependency INVOIC
+   lov CustomerGroupRef with ReferenceInvoiceCustomerTypeGroupSelector {
+      visible = [ReportFormatDb = "FA"];
+   }
+}
+-- gelr:saft_poland, end
+----------------------------------- LISTS -----------------------------------
+
+----------------------------------- CARDS -----------------------------------
+
+---------------------------------- DIALOGS ----------------------------------
+
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+
+----------------------------------- TREES -----------------------------------
+
+---------------------------------- PLUGINS ----------------------------------
+
+------------------------------- IMAGE VIEWERS -------------------------------

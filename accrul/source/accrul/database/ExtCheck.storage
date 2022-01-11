@@ -1,0 +1,136 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccrulStorageUtil
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+TABLE ext_voucher_row_tab IS
+      ( company                         VARCHAR2(20)     NOT NULL,
+        accounting_year                 NUMBER(4)        NOT NULL,
+        row_no                          NUMBER           NOT NULL,
+        voucher_type                    VARCHAR2(3)      NOT NULL,
+        account                         VARCHAR2(20)     NOT NULL,
+        load_id                         VARCHAR2(20)     NOT NULL,
+        load_group_item                 VARCHAR2(50)     NULL,
+        code_b                          VARCHAR2(20)     NULL,
+        voucher_no                      NUMBER(10)       NOT NULL,
+        code_c                          VARCHAR2(20)     NULL,
+        transaction_date                DATE             NULL,
+        code_d                          VARCHAR2(20)     NULL,
+        code_e                          VARCHAR2(20)     NULL,
+        code_f                          VARCHAR2(20)     NULL,
+        code_g                          VARCHAR2(20)     NULL,
+        code_h                          VARCHAR2(20)     NULL,
+        code_i                          VARCHAR2(20)     NULL,
+        code_j                          VARCHAR2(20)     NULL,
+        currency_amount                 NUMBER           NULL,
+        currency_debet_amount           NUMBER           NULL,
+        amount                          NUMBER           NULL,
+        currency_credit_amount          NUMBER           NULL,
+        currency_code                   VARCHAR2(3)      NULL,
+        quantity                        NUMBER           NULL,
+        debet_amount                    NUMBER           NULL,
+        process_code                    VARCHAR2(10)     NULL,
+        credit_amount                   NUMBER           NULL,
+        optional_code                   VARCHAR2(20)     NULL,
+        tax_percentage                  NUMBER           NULL,
+        text                            VARCHAR2(200)    NULL,
+        party_type                      VARCHAR2(20)     NULL,
+        party_type_id                   VARCHAR2(20)     NULL,
+        trans_code                      VARCHAR2(100)    NULL,
+        internal_seq_number             NUMBER           NULL,
+        update_error                    VARCHAR2(200)    NULL,
+        reference_number                VARCHAR2(50)     NULL,
+        transfer_id                     VARCHAR2(20)     NULL,
+        reference_serie                 VARCHAR2(50)     NULL,
+        corrected                       VARCHAR2(1)      NULL,
+        rowversion                      DATE             NOT NULL,
+        third_currency_debit_amount     NUMBER           NULL,
+        third_currency_credit_amount    NUMBER           NULL,
+        project_activity_id             NUMBER           NULL,
+        multi_company_id                VARCHAR2(20)     NULL,
+        tax_direction                   VARCHAR2(20)     NULL,
+        tax_amount                      NUMBER           NULL,
+        currency_tax_amount             NUMBER           NULL,
+        tax_base_amount                 NUMBER           NULL,
+        currency_tax_base_amount        NUMBER           NULL,
+        load_type                       NUMBER           NULL,
+        currency_rate                   NUMBER           NULL,
+        currency_rate_type              VARCHAR2(10)     NULL,
+        parallel_curr_rate_type         VARCHAR2(10)     NULL,
+        third_currency_amount           NUMBER           NULL,
+        third_currency_tax_amount       NUMBER           NULL,
+        third_curr_tax_base_amount      NUMBER           NULL,
+        event_date                      DATE             NULL,
+        retroactive_date                DATE             NULL,
+        transaction_reason              VARCHAR2(20)     NULL,
+        deliv_type_id                   VARCHAR2(20)     NULL,
+        record_no                       NUMBER           NULL,
+        reference_row_no                NUMBER           NULL,
+        tax_transaction                 VARCHAR2(5)      NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL  );
+
+
+PRIMARY KEY ext_voucher_row_pk IS ext_voucher_row_tab (company, accounting_year, row_no, voucher_type, load_id, voucher_no);
+
+
+UNIQUE CONSTRAINT ext_voucher_row_rk IS ext_voucher_row_tab (rowkey);
+
+
+INDEX ext_voucher_row_ix1 IS ext_voucher_row_tab (load_group_item, load_id, company);
+
+
+TABLE ext_voucher_tab IS
+      ( company                         VARCHAR2(20)     NOT NULL,
+        voucher_type                    VARCHAR2(3)      NOT NULL,
+        accounting_year                 NUMBER(4)        NOT NULL,
+        load_id                         VARCHAR2(20)     NOT NULL,
+        voucher_no                      NUMBER(10)       NOT NULL,
+        load_group_item                 VARCHAR2(50)     NULL,
+        transaction_date                DATE             NULL,
+        reference_number                VARCHAR2(50)     NULL,
+        voucher_date                    DATE             NULL,
+        user_group                      VARCHAR2(30)     NULL,
+        accounting_period               NUMBER(2)        NULL,
+        date_reg                        DATE             NULL,
+        userid                          VARCHAR2(30)     NULL,
+        correction                      VARCHAR2(1)      NULL,
+        accounting_text_id              VARCHAR2(200)    NULL,
+        update_error                    VARCHAR2(200)    NULL,
+        internal_seq_number             NUMBER           NULL,
+        voucher_text                    VARCHAR2(2000)   NULL,
+        transfer_id                     VARCHAR2(20)     NULL,
+        interim_voucher                 VARCHAR2(1)      NULL,
+        rowstate                        VARCHAR2(20)     NULL,
+        rowtype                         VARCHAR2(30)     NULL,
+        voucher_type_reference          VARCHAR2(3)      NULL,
+        accounting_year_reference       NUMBER(4)        NULL,
+        voucher_no_reference            NUMBER(10)       NULL,
+        rowversion                      DATE             NULL,
+        rowkey                          VARCHAR2(50)     DEFAULT sys_guid() NOT NULL);
+
+
+PRIMARY KEY ext_voucher_pk IS ext_voucher_tab (company, voucher_type, accounting_year, voucher_no, load_id);
+
+
+UNIQUE CONSTRAINT ext_voucher_rk IS ext_voucher_tab (rowkey);
+
+
+INDEX ext_voucher_ix1 IS ext_voucher_tab (load_group_item, load_id, company);
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

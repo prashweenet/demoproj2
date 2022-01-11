@@ -1,0 +1,174 @@
+SET SERVEROUT ON
+
+DECLARE
+   --
+   PROCEDURE New___ (
+      function_id_     IN VARCHAR2,
+      description_     IN VARCHAR2,
+      valid_argument_  IN BOOLEAN,
+      min_num_of_args_ IN NUMBER,
+      max_num_of_args_ IN NUMBER DEFAULT NULL )
+   IS
+      valid_arg_ VARCHAR2(5) := 'FALSE';
+      dummy_     NUMBER;
+      CURSOR exist_control IS
+         SELECT 1
+         FROM   ext_file_function_tab
+         WHERE  function_id = function_id_;
+   BEGIN
+      IF ( valid_argument_ ) THEN
+         valid_arg_ := 'TRUE';
+      END IF;
+      OPEN  exist_control;
+      FETCH exist_control INTO dummy_;
+      IF (exist_control%NOTFOUND) THEN
+         INSERT INTO ext_file_function_tab (
+            function_id,
+            description,
+            valid_argument,
+            min_num_of_args,
+            max_num_of_args,
+            rowversion )
+         VALUES (
+            function_id_,
+            description_,
+            valid_arg_,
+            min_num_of_args_,
+            max_num_of_args_,
+            SYSDATE );
+      ELSE
+         UPDATE ext_file_function_tab SET
+            description     = description_,
+            valid_argument  = valid_arg_,
+            min_num_of_args = min_num_of_args_,
+            max_num_of_args = max_num_of_args_
+         WHERE  function_id = function_id_;
+      END IF;
+      CLOSE exist_control;
+   END New___;
+   --
+BEGIN
+   New___('SUB_STRING',            'SUB_STRING(SourceText,StartPos[,NoOfCharacters])',                         FALSE, 2, 3);
+   New___('FIND_STRING',           'FIND_STRING(SourceText,SearchText[,Position[,Occurance]])',                FALSE, 2, 4);
+   New___('ADD',                   'ADD(NumberA,NumberB,[NumberIfNull])',                                      FALSE, 2, 3);
+   New___('CONCATENATE',           'CONCATENATE(TextA,TextB[,TextC[,TextD]])',                                 FALSE, 2, 4);
+   New___('SUBTRACT',              'SUBTRACT(NumberA,NumberB,[NumberIfNull])',                                 FALSE, 2, 3);
+   New___('MULTIPLY',              'MULTIPLY(NumberA,NumberB,[NumberIfNull])',                                 FALSE, 2, 3);
+   New___('DIVIDE',                'DIVIDE(Numerator,Denominator,[NumberIfNull])',                             FALSE, 2, 3);
+   New___('CHANGE_SIGN',           'CHANGE_SIGN(Number)',                                                      FALSE, 1);
+   New___('RIGHT_TRIM',            'RIGHT_TRIM(SourceText[,Set])',                                             FALSE, 1, 2);
+   New___('LEFT_TRIM',             'LEFT_TRIM(SourceText[,Set])',                                              FALSE, 1, 2);
+   New___('RIGHT_PAD',             'RIGHT_PAD(SourceText,Length[,Set])',                                       FALSE, 2, 3);
+   New___('LEFT_PAD',              'LEFT_PAD(SourceText,Length[,Set])',                                        FALSE, 2, 3);
+   New___('LENGTH',                'LENGTH(SourceText)',                                                       FALSE, 1);
+   New___('IF_ELSE',               'IF_ELSE(SourceText,CompareTo,TrueValue,[CompareTo,TrueValue],FalseValue,[ExitIfTrue])', FALSE, 4, 7);
+   New___('IF_ELSE_CONDITION',     'IF_ELSE_CONDITION(SourceText,Condition,CompareTo,TrueValue,FalseValue,[ExitIfTrue])',   FALSE, 5, 6);
+   New___('IF_EMPTY',              'IF_EMPTY(SourceText,FalseValue)',                                          FALSE, 2, 2);
+   New___('IS_EMPTY',              'IS_EMPTY(SourceText) Return TRUE if empty else FALSE',                     FALSE, 1, 1);
+   New___('REPLACE',               'REPLACE(SourceText,SearchText[,ReplacementText])',                         FALSE, 2, 3);
+   New___('TO_UPPERCASE',          'TO_UPPERCASE(SourceText)',                                                 FALSE, 1);
+   New___('TO_LOWERCASE',          'TO_LOWERCASE(SourceText)',                                                 FALSE, 1);
+   New___('TO_CHAR',               'TO_CHAR(SourceText[,Format])',                                             FALSE, 1, 2);
+   New___('TO_NUMBER',             'TO_NUMBER(SourceText[,Format])',                                           FALSE, 1, 2);
+   New___('FIND_ONE_OF',           'FIND_ONE_OF(SourceText,SearchTexts[,MaxSearchPos])',                       FALSE, 3);
+   New___('LAST_DAY_IN_MONTH',     'LAST_DAY_IN_MONTH(SourceText,DateFormat)',                                 FALSE, 1, 2);
+   --
+   New___('DETAIL_REF',            'DETAIL_REF(DetailRow)',                                                    TRUE,  1);
+   New___('LINE_REF',              'LINE_REF',                                                                 TRUE,  0);
+   New___('PARAMETER_REF',         'PARAMETER_REF(ParameterName)',                                             TRUE,  1);
+   New___('SET_DEFAULT_VALUE',     'SET_DEFAULT_VALUE(DefaultValue[,OverrideValue])',                          TRUE,  1);
+   New___('COLUMN_REF',            'COLUMN_REF(ColumnId[,RecordType])',                                        TRUE,  1, 2);
+   New___('DESTCOL_REF',           'DESTCOL_REF(DestinationColumn)',                                           TRUE,  1);
+   New___('CURRENT_BASE_CURRENCY', 'CURRENT_BASE_CURRENCY',                                                    TRUE,  0);
+   New___('CURRENT_USER',          'CURRENT_USER',                                                             TRUE,  0);
+   New___('CURRENT_COMPANY',       'CURRENT_COMPANY',                                                          TRUE,  0);
+   New___('CURRENT_DATE_TIME',     'CURRENT_DATE_TIME',                                                        TRUE,  0);
+   New___('CURRENT_LOAD_FILE_ID',  'CURRENT_LOAD_FILE_ID',                                                     TRUE,  0);
+   New___('TRANSLATE',             'TRANSLATE(SourceText,SearchValues,ReplacementValues)',                     TRUE,  0);
+   New___('LOOP_MERGE',            'LOOP_MERGE(MergeSeparator)',                                               FALSE, 1);
+   New___('PARAMETER_PUT',         'PARAMETER_PUT(ParameterName,Value)',                                       TRUE,  2, 2);
+   New___('ROUND_NUMBER',          'ROUND_NUMBER(SourceText[,NoOfDecimals])',                                  FALSE, 1, 2);
+   New___('TRUNC_NUMBER',          'TRUNC_NUMBER(SourceText[,NoOfDecimals])',                                  FALSE, 1, 2);
+   New___('IS_NUMBER',             'IS_NUMBER(SourceText)',                                                    FALSE, 1);
+   --
+   New___('CURRENT_DATE',          'CURRENT_DATE([NoOfDaysPlusOrMinus])',                                      FALSE, 0, 1);
+   New___('SIGN_NUMBER',           'SIGN_NUMBER(SourceText)',                                                  FALSE, 1);
+   New___('ABS_NUMBER',            'ABS_NUMBER(SourceText)',                                                   FALSE, 1);
+   New___('FIND_X_ATTR',           'FIND_X_ATTR(SourceText[,TagIdentity][,TagStart][,TagEnd][,ValueEnd])',     TRUE,  1, 5);
+   New___('ADD_LINE_FEED_FIRST',   'ADD_LINE_FEED_FIRST(SourceText)',                                          FALSE, 1);
+   New___('ADD_LINE_FEED_LAST',    'ADD_LINE_FEED_LAST(SourceText)',                                           FALSE, 1);
+   New___('ROW_NUMBER',            'ROW_NUMBER',                                                               TRUE,  0);
+   New___('REMOVE_NOT_NUM',        'REMOVE_NOT_NUM(SourceText[,ExceptCharacters])',                            TRUE,  1, 2);
+   New___('DEF_PAY_DOC_SERIE',     'DEF_PAY_DOC_SERIE(Company,DocType)',                                       TRUE,  2, 2);
+   --
+   COMMIT;
+END;
+/
+
+--------------------------------------------------------------------------------------------------------------------------------------
+PROMPT Insert Instructions for file type
+ 
+DECLARE 
+   row_no_                NUMBER;
+BEGIN 
+ 
+   DELETE FROM Ext_File_Type_Tab WHERE  file_type = 'ExtFileFunctionList';
+   External_File_Utility_API.File_Type_Row('ExtFileFunctionList', 'List of External Files Column Functions', 'ACCRUL', 'TRUE', '', 'EXT_FILE_FUNCTION', '', '', 'External_File_Utility_API.Create_External_Input', 'External_File_Utility_API.Create_External_Output', 'ImportExtFileFunctionList', 'ExportExtFileFunctionList');
+ 
+   DELETE FROM Ext_File_Type_Rec_Tab WHERE  file_type = 'ExtFileFunctionList';
+   External_File_Utility_API.File_Type_Rec_Row('ExtFileFunctionList', '1', 'ExtFileFunctionList', '1', 'TRUE', 'TRUE', 'FALSE', 'EXT_FILE_FUNCTION', 'EXT_FILE_FUNCTION_API', '' );
+ 
+   DELETE FROM Ext_File_Type_Rec_Column_Tab WHERE  file_type = 'ExtFileFunctionList';
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtFileFunctionList', '1', 'DESCRIPTION', 'Description', '1', 'TRUE', 'C2' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtFileFunctionList', '1', 'FUNCTION_ID', 'Function Id', '1', 'TRUE', 'C1' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtFileFunctionList', '1', 'MAX_NUM_OF_ARGS', 'Max Num Of Args', '2', 'FALSE', 'N2' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtFileFunctionList', '1', 'MIN_NUM_OF_ARGS', 'Min Num Of Args', '2', 'TRUE', 'N1' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtFileFunctionList', '1', 'VALID_ARGUMENT', 'Valid Argument', '1', 'TRUE', 'C3' );
+ 
+   DELETE FROM Ext_File_Type_Param_Tab WHERE  file_type = 'ExtFileFunctionList';
+   External_File_Utility_API.File_Type_Param_Row('ExtFileFunctionList', '1', 'FUNCTION_ID', 'Function Id', '', '', '', 'FALSE', '', '1' );
+   External_File_Utility_API.File_Type_Param_Row('ExtFileFunctionList', '2', 'FILE_DIRECTION_DB', 'File Direction', '', '', '', 'FALSE', '', '1' );
+   External_File_Utility_API.File_Type_Param_Row('ExtFileFunctionList', '3', 'ORDER_BY', 'Order By', '', '', '', 'FALSE', '', '1' );
+ 
+   DELETE FROM Ext_Type_Param_Set_Tab WHERE  file_type = 'ExtFileFunctionList';
+   External_File_Utility_API.File_Type_Param_Set_Row('ExtFileFunctionList', '2', 'List of External Files Column Functions Output', 'TRUE' );
+ 
+   DELETE FROM Ext_Type_Param_Per_Set_Tab WHERE  file_type = 'ExtFileFunctionList';
+   External_File_Utility_API.File_Type_Param_Per_Set_Row('ExtFileFunctionList', '2', '1', '%', 'FALSE', 'TRUE', 'TRUE' );
+   External_File_Utility_API.File_Type_Param_Per_Set_Row('ExtFileFunctionList', '2', '2', '2', 'FALSE', 'FALSE', 'FALSE' );
+   External_File_Utility_API.File_Type_Param_Per_Set_Row('ExtFileFunctionList', '2', '3', 'FUNCTION_ID', 'FALSE', 'TRUE', 'TRUE' );
+ 
+ 
+END;
+/
+COMMIT;
+--------------------------------------------------------------------------------------------------------------------------------------
+ 
+--------------------------------------------------------------------------------------------------------------------------------------
+PROMPT Insert Instructions for file template
+ 
+DECLARE 
+   row_no_                NUMBER;
+BEGIN 
+ 
+   DELETE FROM Ext_File_Template_Tab WHERE  file_template_id = 'ExtFileFunctionList';
+   External_File_Utility_API.File_Template_Row('ExtFileFunctionList', 'ExtFileFunctionList', 'List of External Files Column Functions', 'FALSE', 'FIX', '', '.', '', 'YYYY-MM-DD', 'TRUE', 'TRUE', 'TRUE', '', '' );
+ 
+   DELETE FROM Ext_File_Template_Dir_Tab WHERE  file_template_id = 'ExtFileFunctionList';
+   External_File_Utility_API.File_Template_Dir_Row('ExtFileFunctionList', '2', '', '', '', '', '', '', '', '', 'OutExtFileTemplateDir', 'External_File_Utility_API.Create_External_Output', '30', '', 'TRUE', 'TRUE', '1', 'ExtFileFunction.txt', '', '', '', '', '' );
+ 
+   DELETE FROM Ext_File_Template_Detail_Tab WHERE  file_template_id = 'ExtFileFunctionList';
+   DELETE FROM Ext_File_Templ_Det_Func_Tab WHERE  file_template_id = 'ExtFileFunctionList';
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'ExtFileFunctionList', 'ExtFileFunctionList', '1', 'FUNCTION_ID', '', '1', '30', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'ExtFileFunctionList', 'ExtFileFunctionList', '1', 'DESCRIPTION', '', '31', '80', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'ExtFileFunctionList', 'ExtFileFunctionList', '1', 'MIN_NUM_OF_ARGS', '', '81', '100', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'ExtFileFunctionList', 'ExtFileFunctionList', '1', 'MAX_NUM_OF_ARGS', '', '101', '120', '', '', 'FALSE', 'FALSE', '', '' );
+ 
+   DELETE FROM Ext_File_Template_Control_Tab WHERE  file_template_id = 'ExtFileFunctionList';
+ 
+END;
+/
+COMMIT;
+--------------------------------------------------------------------------------------------------------------------------------------
+
+

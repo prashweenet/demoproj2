@@ -1,0 +1,327 @@
+fragment InstantUpdateAssistant;
+component ACCRUL;
+layer Core;
+description "Instant Update Assistant";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+assistant InstantUpdateAssistant using InstUpdHeaderVirtualSet {
+   label = "Instant Update";
+   savemode = OnLostFocus;
+
+   input(Selection);
+   init command {
+      execute {
+         select(InstVouUpdateList, Selection);
+      }
+   }
+
+   steps {
+      step {
+         group InstantUpdateGroup;
+         list InstVouUpdateList using FetchSelectedRecords(Selection, PageSearchContext.PopulateAll) {
+            searchcontext PageSearchContext {
+               defaults = GetSearchContextDefaults();
+            }
+         }
+      }
+      final step {
+      }
+   }
+
+   finish command {
+      label = "OK";
+      enabled = [component.InstVouUpdateList.SelectionCount > 0];
+
+      variable ReturnStructureVar  Structure(ReturnStructure);
+      variable ReturnVoucherYearVar Structure(ReturnVoucherYearStructure);
+      execute {
+         @DynamicComponentDependency GENLED
+         call VouInstantUpdate(component.InstVouUpdateList.Selection) into ReturnStructureVar;
+
+         if [ReturnStructureVar.JouNo != null] {
+            if [ReturnStructureVar.PostToQueue = "TRUE"] {
+               alert("The General Ledger update is posted to the queue with ${ReturnStructureVar.JouNo} job ID.");
+            }
+            else {
+               if [ReturnStructureVar.ErrorCount > 0] {
+                  alert("Journal number ${ReturnStructureVar.JouNo} is completed. ${ReturnStructureVar.ErrorCount} voucher(s) returned to the hold table with status Error.");
+               }
+               else {
+                  alert("Journal number ${ReturnStructureVar.JouNo} is completed.");
+               }
+            }
+         }
+         else {
+            alert("There are some vouchers with status Error. They cannot be approved for update.");
+         }
+
+         if [PrelYearEnd and ReturnStructureVar.JouNo != null] {
+            @DynamicComponentDependency GENLED
+            call PreliminaryYearEndAllowed(Company, ReturnStructureVar.JouNo) into ReturnVoucherYearVar;
+            if [ReturnVoucherYearVar.FromYear = ""] {
+               navigate "assistant/PreliminaryYearEnd/Assistant?$action=InitPreYearEnd{CompanyStr:$[context.Company],FromYearNum:$[ReturnVoucherYearVar.FromYear],ToYearNum:$[ReturnVoucherYearVar.ToYear],AutoUpdateBool:$[UpdatePrelYearEnd]}";
+            }
+            else {
+               alert("An Accounting Year must have Closing Balances set to Preliminary for Automatic Update of Preliminary Year End.");
+            }
+         }
+         refresh;
+         exit OK;
+      }
+   }
+   cancel command {
+      execute {
+         exit OK;
+      }
+   }
+}
+
+searchcontext PageSearchContext for PopulateAllStructure {
+   label = "";
+
+   field PopulateAll {
+      visible = [not PopulateAll];
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+group InstantUpdateGroup for InstUpdHeaderVirtual {
+   label = "";
+   field PrelYearEnd;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list InstVouUpdateList for Voucher {
+   label = "Voucher Selection for GL Update";
+   orderby = VoucherType, VoucherNo;
+
+   lov VoucherTypeRef with ReferenceVoucherTypeSelector {
+      size = Small;
+      format = uppercase;
+   }
+   field VoucherNo;
+   lov AccountingYearRef with ReferenceAccountingYearSelector;
+   lov AccountingPeriodRef with ReferenceAccountingPeriodSelector;
+   lov UseridRef with ReferenceUserFinanceSelector {
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+      format = uppercase;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset InstUpdHeaderVirtualSet for InstUpdHeaderVirtual {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+/*
+@Override
+query VoucherDet {
+   from = "voucher";
+   lu = Voucher;
+   keys = Company, VoucherType, VoucherNo, AccountingYear;
+   where = "VOUCHER_STATUS_DB IN ('Confirmed', 'Cancelled') AND VOUCHER_UPDATED_DB='N' AND VOUCHER_API.Is_Pca_Update_Blocked(COMPANY,FUNCTION_GROUP) = 'FALSE'";
+
+   attribute Company Text;
+   attribute VoucherType Text {
+      required = [true];
+   }
+   attribute VoucherNo Number {
+      label = "Voucher No";
+   }
+   attribute AccountingYear Number;
+   attribute AccountingPeriod Number;
+   attribute Userid Text {
+      label = "User ID";
+   }
+   attribute UserGroup Text;
+
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+   reference AccountingYearRef(Company, AccountingYear) to AccountingYear(Company, AccountingYear) {
+      label = "Accounting Year";
+   }
+   reference AccountingPeriodRef(Company, AccountingYear, AccountingPeriod) to AccountingPeriod(Company, AccountingYear, AccountingPeriod) {
+      label = "Accounting Period";
+   }
+   reference UseridRef(Company, Userid) to UserFinance(Company, Userid) {
+      label = "User ID";
+   }
+}
+*/
+
+@Override
+entity Voucher {
+
+   crud = Read;
+
+   attribute Company Text;
+   attribute VoucherType Text {
+      required = [true];
+   }
+   attribute VoucherNo Number {
+      label = "Voucher No";
+   }
+   attribute AccountingYear Number;
+   attribute AccountingPeriod Number;
+   attribute Userid Text {
+      label = "User ID";
+   }
+   attribute UserGroup Text;
+
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+   reference AccountingYearRef(Company, AccountingYear) to AccountingYear(Company, AccountingYear) {
+      label = "Accounting Year";
+   }
+   reference AccountingPeriodRef(Company, AccountingYear, AccountingPeriod) to AccountingPeriod(Company, AccountingYear, AccountingPeriod) {
+      label = "Accounting Period";
+   }
+   reference UseridRef(Company, Userid) to UserFinance(Company, Userid) {
+      label = "User ID";
+   }
+
+}
+---------------------------------- ACTIONS ----------------------------------
+@DynamicComponentDependency GENLED
+action VouInstantUpdate Structure(ReturnStructure) {
+   initialcheck implementation;
+   parameter Selection Text;
+
+   ludependencies = Voucher;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+@DynamicComponentDependency GENLED
+function PreliminaryYearEndAllowed Structure(ReturnVoucherYearStructure) {
+   parameter Company Text;
+   parameter JournalNo Number;
+}
+
+function GetSearchContextDefaults Structure(PopulateAllStructure);
+
+function FetchSelectedRecords List < Entity(Voucher) > {
+   parameter Selection Text;
+   parameter PopulateAll Boolean;
+}
+function VouchrApproval Text {
+   --ludependencies = Voucher;
+
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter VoucherType Text;
+   parameter VoucherNo Number;
+}
+-------------------------------- STRUCTURES ---------------------------------
+structure InstantUpdateStructure {
+   attribute Company Text;
+   attribute VoucherType Text {
+      required = [true];
+   }
+   attribute VoucherNo Number {
+      label = "Voucher No";
+   }
+   attribute AccountingYear Number;
+   attribute AccountingPeriod Number;
+   attribute Userid Text {
+      label = "User ID";
+   }
+   attribute UserGroup Text;
+}
+
+structure ReturnStructure {
+   attribute ForecastValue Number;
+   attribute JouNo Number;
+   attribute IntSeqNo Number;
+   attribute ErrorCount Number;
+   attribute PostToQueue Text;
+}
+
+structure ReturnVoucherYearStructure {
+   attribute FromYear Number;
+   attribute ToYear Number;
+}
+
+structure PopulateAllStructure {
+   attribute PopulateAll Boolean("TRUE", "FALSE") {
+      required = [true];
+      label = "Show All Approved Vouchers";
+   }
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+virtual InstUpdHeaderVirtual {
+   attribute Company Text;
+   attribute PrelYearEnd Boolean("TRUE", "FALSE") {
+      label = "Automatic Update of Preliminary Year End";
+      required = [true];
+   }
+   array VoucherArray(Company) to Voucher(Company);
+}
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

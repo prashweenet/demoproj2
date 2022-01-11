@@ -1,0 +1,232 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingCtrlAllowedComb
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Code_Part_Db IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(20)'
+   Prompt     = 'Code Part';
+   
+COLUMN Allow_Prepost_Det IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(200)'
+   Enumeration = 'FndBoolean'
+   Prompt     = 'Allow Pre-Posting on Detail level';   
+   
+COLUMN Allow_Prepost_Det_Db IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(20)'
+   Prompt     = 'Allow Pre-Posting on Detail level';   
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Posting_Ctrl_Alwd_Combination IS
+   Prompt = 'Posting_Ctrl_Alwd_Combination'
+SELECT ac.posting_type                                                posting_type,
+       ac.control_type                                                control_type,
+       ac.module                                                      module,
+       ac.code_part                                                   code_part,
+       ac.code_part                                                   code_part_db,
+       pt.module                                                      post_module,
+       pt.sort_order                                                  sort_order,
+       Ctrl_Type_Category_API.Decode(ct.ctrl_type_category)           ctrl_type_category,
+       ct.ctrl_type_category                                          ctrl_type_category_db,
+       NULL                                                           company,
+       pt.ledg_flag                                                   ledg_flag,
+       Posting_Ctrl_Control_Type_API.Get_Description(ac.control_type, 
+                                                     ac.module)       control_type_desc,
+       Posting_Ctrl_Posting_Type_API.Get_Description(ac.posting_type) posting_type_desc,
+       Fnd_Boolean_API.Decode(pt.allow_prepost_det)                   allow_prepost_det,
+       pt.allow_prepost_det                                           allow_prepost_det_db,
+       ac.rowid                                                       objid,
+       ltrim(lpad(to_char(ac.rowversion,'YYYYMMDDHH24MISS'),2000))    objversion
+FROM   posting_ctrl_allowed_comb_tab ac, posting_ctrl_control_type_tab ct, posting_ctrl_posting_type_tab pt
+WHERE  ac.posting_type = pt.posting_type
+AND    ac.control_type = ct.control_type
+AND    ac.module       = ct.module
+UNION ALL
+SELECT cc.posting_type                                                posting_type,
+       cc.comb_control_type                                           control_type,
+       cc.comb_module                                                 module,
+       '*'                                                            code_part,
+       '*'                                                            code_part_db,
+       pt.module                                                      post_module,
+       pt.sort_order                                                  sort_order,
+       Ctrl_Type_Category_API.Decode('COMBINATION')                   ctrl_type_category,
+       'COMBINATION'                                                  ctrl_type_category_db,
+       cc.company                                                     company,
+       pt.ledg_flag                                                   ledg_flag,
+       cc.comb_control_type_desc                                      control_type_desc,
+       Posting_Ctrl_Posting_Type_API.Get_Description(cc.posting_type) posting_type_desc,
+       Fnd_Boolean_API.Decode(pt.allow_prepost_det)                   allow_prepost_det,
+       pt.allow_prepost_det                                           allow_prepost_det_db,
+       NULL                                                           objid,
+       NULL                                                           objversion
+FROM   comb_control_type_tab cc, posting_ctrl_posting_type_tab pt
+WHERE  cc.posting_type = pt.posting_type;
+
+VIEW Posting_Ctrl_Allowed_Value IS
+   Prompt = 'PostingCtrAllowedComb'
+   Code_Part.Flags = 'PMIU-'
+   Control_Type.Flags = 'KMI-L'
+   Control_Type_Desc.Flags = 'A-I-L'
+   Control_Type_Desc.Datatype = 'STRING(100)'
+   Control_Type_Desc.Prompt = 'Description'
+   Module.Flags = 'AMI-L'
+   Module.Datatype = 'STRING(20)'
+SELECT COMB.posting_type                        posting_type,
+       COMB.code_part                           code_part,
+       COMB.control_type                        control_type,
+       nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(COMB.module, TYPE.LU, 'PostingCtrlControlType' || '^' || COMB.control_type), TYPE.description) control_type_desc,
+       COMB.module                              module,
+       POST.allow_prepost_det                   allow_prepost_det_db,
+       COMB.rowid                              objid
+FROM   posting_ctrl_allowed_comb_tab COMB, posting_ctrl_posting_type_tab POST,
+       posting_ctrl_control_type_tab TYPE
+WHERE  COMB.POSTING_TYPE = POST.POSTING_TYPE
+AND    COMB.CONTROL_TYPE = TYPE.CONTROL_TYPE
+UNION
+SELECT COMB.posting_type,
+       'A',
+       COMB.control_type,
+       nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(COMB.module, TYPE.LU, 'PostingCtrlControlType' || '^' || COMB.control_type), TYPE.description),
+       COMB.module,
+       POST.allow_prepost_det            allow_prepost_det_db,
+       COMB.rowid
+FROM   posting_ctrl_allowed_comb_tab COMB, posting_ctrl_posting_type_tab POST,
+       posting_ctrl_control_type_tab TYPE
+WHERE  COMB.POSTING_TYPE = POST.POSTING_TYPE
+AND    COMB.CONTROL_TYPE = TYPE.CONTROL_TYPE
+AND    COMB.CODE_PART = '*'
+UNION
+SELECT COMB.posting_type,
+       'B',
+       COMB.control_type,
+       nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(COMB.module, TYPE.LU, 'PostingCtrlControlType' || '^' || COMB.control_type), TYPE.description),
+       COMB.module,
+       POST.allow_prepost_det            allow_prepost_det_db,
+       COMB.rowid
+FROM   posting_ctrl_allowed_comb_tab COMB, posting_ctrl_posting_type_tab POST,
+       posting_ctrl_control_type_tab TYPE
+WHERE  COMB.POSTING_TYPE = POST.POSTING_TYPE
+AND    COMB.CONTROL_TYPE = TYPE.CONTROL_TYPE
+AND    COMB.CODE_PART = '*'
+UNION
+SELECT COMB.posting_type,
+       'C',
+       COMB.control_type,
+       nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(COMB.module, TYPE.LU, 'PostingCtrlControlType' || '^' || COMB.control_type), TYPE.description),
+       COMB.module,
+       POST.allow_prepost_det            allow_prepost_det_db,
+       COMB.rowid
+FROM   posting_ctrl_allowed_comb_tab COMB, posting_ctrl_posting_type_tab POST,
+       posting_ctrl_control_type_tab TYPE
+WHERE  COMB.POSTING_TYPE = POST.POSTING_TYPE
+AND    COMB.CONTROL_TYPE = TYPE.CONTROL_TYPE
+AND    COMB.CODE_PART = '*'
+UNION
+SELECT COMB.posting_type,
+       'D',
+       COMB.control_type,
+       nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(COMB.module, TYPE.LU, 'PostingCtrlControlType' || '^' || COMB.control_type), TYPE.description),
+       COMB.module,
+       POST.allow_prepost_det            allow_prepost_det_db,
+       COMB.rowid
+FROM   posting_ctrl_allowed_comb_tab COMB, posting_ctrl_posting_type_tab POST,
+       posting_ctrl_control_type_tab TYPE
+WHERE  COMB.POSTING_TYPE = POST.POSTING_TYPE
+AND    COMB.CONTROL_TYPE = TYPE.CONTROL_TYPE
+AND    COMB.CODE_PART = '*'
+UNION
+SELECT COMB.posting_type,
+       'E',
+       COMB.control_type,
+       nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(COMB.module, TYPE.LU, 'PostingCtrlControlType' || '^' || COMB.control_type), TYPE.description),
+       COMB.module,
+       POST.allow_prepost_det            allow_prepost_det_db,
+       COMB.rowid
+FROM   posting_ctrl_allowed_comb_tab COMB, posting_ctrl_posting_type_tab POST,
+       posting_ctrl_control_type_tab TYPE
+WHERE  COMB.POSTING_TYPE = POST.POSTING_TYPE
+AND    COMB.CONTROL_TYPE = TYPE.CONTROL_TYPE
+AND    COMB.CODE_PART = '*'
+UNION
+SELECT COMB.posting_type,
+       'F',
+       COMB.control_type,
+       nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(COMB.module, TYPE.LU, 'PostingCtrlControlType' || '^' || COMB.control_type), TYPE.description),
+       COMB.module,
+       POST.allow_prepost_det            allow_prepost_det_db,
+       COMB.rowid
+FROM   posting_ctrl_allowed_comb_tab COMB, posting_ctrl_posting_type_tab POST,
+       posting_ctrl_control_type_tab TYPE
+WHERE  COMB.POSTING_TYPE = POST.POSTING_TYPE
+AND    COMB.CONTROL_TYPE = TYPE.CONTROL_TYPE
+AND    COMB.CODE_PART = '*'
+UNION
+SELECT COMB.posting_type,
+       'G',
+       COMB.control_type,
+       nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(COMB.module, TYPE.LU, 'PostingCtrlControlType' || '^' || COMB.control_type), TYPE.description),
+       COMB.module,
+       POST.allow_prepost_det            allow_prepost_det_db,
+       COMB.rowid
+FROM   posting_ctrl_allowed_comb_tab COMB, posting_ctrl_posting_type_tab POST,
+       posting_ctrl_control_type_tab TYPE
+WHERE  COMB.POSTING_TYPE = POST.POSTING_TYPE
+AND    COMB.CONTROL_TYPE = TYPE.CONTROL_TYPE
+AND    COMB.CODE_PART = '*'
+UNION
+SELECT COMB.posting_type,
+       'H',
+       COMB.control_type,
+       nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(COMB.module, TYPE.LU, 'PostingCtrlControlType' || '^' || COMB.control_type), TYPE.description),
+       COMB.module,
+       POST.allow_prepost_det            allow_prepost_det_db,
+       COMB.rowid
+FROM   posting_ctrl_allowed_comb_tab COMB, posting_ctrl_posting_type_tab POST,
+       posting_ctrl_control_type_tab TYPE
+WHERE  COMB.POSTING_TYPE = POST.POSTING_TYPE
+AND    COMB.CONTROL_TYPE = TYPE.CONTROL_TYPE
+AND    COMB.CODE_PART = '*'
+UNION
+SELECT COMB.posting_type,
+       'I',
+       COMB.control_type,
+       nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(COMB.module, TYPE.LU, 'PostingCtrlControlType' || '^' || COMB.control_type), TYPE.description),
+       COMB.module,
+       POST.allow_prepost_det            allow_prepost_det_db,
+       COMB.rowid
+FROM   posting_ctrl_allowed_comb_tab COMB, posting_ctrl_posting_type_tab POST,
+       posting_ctrl_control_type_tab TYPE
+WHERE  COMB.POSTING_TYPE = POST.POSTING_TYPE
+AND    COMB.CONTROL_TYPE = TYPE.CONTROL_TYPE
+AND    COMB.CODE_PART = '*'
+UNION
+SELECT COMB.posting_type,
+       'J',
+       COMB.control_type,
+       nvl(Basic_Data_Translation_API.Get_Basic_Data_Translation(COMB.module, TYPE.LU, 'PostingCtrlControlType' || '^' || COMB.control_type), TYPE.description),
+       COMB.module,
+       POST.allow_prepost_det            allow_prepost_det_db,
+       COMB.rowid
+FROM   posting_ctrl_allowed_comb_tab COMB, posting_ctrl_posting_type_tab POST,
+       posting_ctrl_control_type_tab TYPE
+WHERE  COMB.POSTING_TYPE = POST.POSTING_TYPE
+AND    COMB.CONTROL_TYPE = TYPE.CONTROL_TYPE
+AND    COMB.CODE_PART = '*';
+

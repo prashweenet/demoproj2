@@ -1,0 +1,80 @@
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200702  DILDLK  LMM2020R1-260, Modified navigation.
+--  200702  TAJALK  LMM2020R1-270, Bug fixes
+--  200629  ARUFLK  Changed page name to List.
+--  200625  ARUFLK  LMM2020R1-83, Created.
+-----------------------------------------------------------------------------
+
+client AircraftSystem;
+component ADCOM;
+layer Core;
+projection AircraftSystemHandling;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AircraftSystemEntry parent AdcomNavigator.AircraftBasicData at index 300 {
+      label = "Aircraft Systems";
+      page List home AvAircraftSystem;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AvAircraftSystemSet {
+   label = "Aircraft Systems";
+   list AircraftSystemList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AircraftTypeSelector for AvAircraftType {
+   label = "${AircraftTypeCode} - ${AircraftTypeName}";
+   static AircraftTypeCode;
+   static AircraftTypeName;
+}
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AircraftSystemList for AvAircraftSystem {
+
+   lov AircraftTypeRef with AircraftTypeSelector {
+      label = "Aircraft Type";
+      hidekey = [true];
+      description = AircraftTypeRef.AircraftTypeName;
+   }
+   field SystemCode;
+   field SystemName;
+}
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

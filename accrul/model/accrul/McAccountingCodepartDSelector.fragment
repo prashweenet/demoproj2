@@ -1,0 +1,52 @@
+fragment McAccountingCodepartDSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view mc_accounting_codepart_d";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceMcAccountingCodepartDSelector for McAccountingCodepartD {
+   orderby = SortValue;
+   static CodeD;
+   static Description;
+}
+
+@Override
+list McAccountingCodepartDLovList for McAccountingCodepartD {
+   orderby = SortValue;
+}
+
+card McAccountingCodepartDCard for McAccountingCodepartD {
+   label = "";
+   fieldranking CodeD;
+   field CodeD;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query McAccountingCodepartD {
+   from = "mc_accounting_codepart_d";
+   lu = CodeD;
+   keys = Company, CodeD;
+   ludependencies = CodeD;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CodeD Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

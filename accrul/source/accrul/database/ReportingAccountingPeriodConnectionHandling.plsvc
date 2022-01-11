@@ -1,0 +1,19 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ReportingAccountingPeriodConnectionHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Get_Page_Search_Context_Defaults___ RETURN Page_Search_Context_Structure_Rec
+IS
+   rec_ Page_Search_Context_Structure_Rec;
+BEGIN
+	RETURN rec_;
+END Get_Page_Search_Context_Defaults___;

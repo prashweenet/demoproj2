@@ -1,0 +1,132 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingYear
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  131111  Umdolk   PBFI-1318, Refactoring.
+--  170907  Bhhilk   STRFI-9708, Merged Bug 137379.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN From_Accounting_Year IS
+   Flags      = 'PMI--'
+   Datatype   = 'NUMBER'
+   Prompt     = 'From accounting Year';
+
+COLUMN To_Accounting_Year IS
+   Flags      = 'KMI-L'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Accounting Year';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@Override
+VIEW Acc_Year IS
+   Prompt = 'Accounting Year'
+ORDER BY accounting_year;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Year_End_From_Year_Lov IS
+   Prompt = 'Accounting Year'
+SELECT DISTINCT a.company                         company,
+       a.accounting_year                          accounting_year,
+       l.ledger_id                                ledger_id
+FROM   accounting_year_tab a, acc_year_ledger_info_tab l
+WHERE  l.closing_balances  NOT IN ('FB', 'FV'  )
+AND   a.company = l.company
+AND   a.accounting_year = l.accounting_year
+AND    a.accounting_year NOT IN (SELECT DISTINCT accounting_year FROM acc_period_ledger_info_tab p
+                               WHERE p.company           = a.company
+                               AND   p.ledger_id         = l.ledger_id
+                               AND   p.period_status     = 'O')
+AND    l.year_status='O';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Year_End_To_Year_Lov IS
+   Prompt = 'Accounting Year'
+SELECT a.company                                        company,
+       a.accounting_year                                from_accounting_year,
+       (SELECT   MIN(b.accounting_year)
+        FROM     accounting_year_tab b
+        WHERE    b.company         = a.company
+        AND      b.accounting_year > a.accounting_year) to_accounting_year,
+       l.ledger_id                                      ledger_id,
+       a.rowkey                                         objkey
+FROM   accounting_year_tab a, acc_year_ledger_info_tab l
+WHERE  l.closing_balances  NOT IN ('FB', 'FV' )
+AND    a.company = l.company
+AND    a.accounting_year = l.accounting_year
+AND    a.accounting_year NOT IN (SELECT DISTINCT accounting_year 
+                               FROM acc_period_ledger_info_tab p
+                               WHERE  p.company           = a.company
+                               AND    p.ledger_id         = l.ledger_id
+                               AND    p.period_status     = 'O')
+AND    l.year_status='O';
+
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Accounting_Calendar IS
+   Source_Year.Flags = 'A-IU-'   
+   Source_Year.DataType = 'NUMBER'
+   Use_Vou_No_Period.DataType = 'STRING'
+   Use_Vou_No_Period.Flags = 'A----'
+   Vou_Num_Create_Method_Db.Flags = 'A----'
+   Vou_Num_Create_Method_Db.DataType = 'STRING'
+   Vou_Num_Create_Method.Flags = 'A----'
+   Vou_Num_Create_Method.DataType = 'STRING'
+   Acc_Period_Create_Method.Flags = 'A----'
+   Acc_Period_Create_Method.DataType = 'STRING'
+SELECT   'FALSE'                       selected,
+         company                       company, 
+         Company_API.Get_Name(company) name,
+         accounting_year               source_year,
+         accounting_year+1             from_accounting_year,
+         accounting_year+1             to_accounting_year,
+         Company_Finance_API.Get_Use_Vou_No_Period(company) use_vou_no_period,
+         CASE Company_Finance_API.Get_Use_Vou_No_Period(company)
+            WHEN 'TRUE' THEN 'PER_PERIOD'
+            ELSE 'PER_YEAR'                                 
+         END                           vou_num_create_method_db,
+         CASE Company_Finance_API.Get_Use_Vou_No_Period(company)
+            WHEN 'TRUE' THEN 
+               Vou_Series_Create_Method_API.Decode('PER_PERIOD')
+            ELSE 
+               Vou_Series_Create_Method_API.Decode('PER_YEAR')                                 
+         END                           vou_num_create_method,
+         Acc_Period_Create_Method_API.Decode('OPEN') acc_period_create_method,
+         'OPEN'                        acc_period_create_method_db,
+         NULL                          objid,
+         NULL                          objversion
+FROM   accounting_year_tab a 
+WHERE  a.accounting_year = (SELECT MAX(accounting_year) FROM accounting_year_tab where company = a.company);
+
+
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Source_Accounting_Year_Lov IS
+   Company.Flags = 'PMI--'
+   Name.Flags = 'A----'
+   Name.DataType = 'STRING'
+   Source_Year.Flags = 'K-IUL'   
+   Source_Year.DataType = 'NUMBER'
+SELECT   company                       company, 
+         Company_API.Get_Name(company) name,
+         accounting_year               source_year
+FROM   accounting_year_tab a;
+
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Acc_Year_Mc_Lov IS
+SELECT DISTINCT accounting_year
+FROM   accounting_year_tab a
+ORDER BY accounting_year;

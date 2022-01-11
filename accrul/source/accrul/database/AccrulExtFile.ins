@@ -1,0 +1,1471 @@
+---------------------------------------------------------------------
+--
+--  Filename      : AccrulExtFile.ins
+--
+--  Module        : ACCRUL
+--
+--  Purpose       : Inserting parameters external files.
+--                  Note: These parameters are first deleted.
+--
+--  Localization  : Do not localize the description Here.
+--
+--  Date    Sign   History
+--  ------  ----   ---------------------------------------------------
+--  020125  JeGu   Created.
+--  021011  PPerse Merged External Files
+--  040325  Gepelk 2004 SP1 Merge
+--  040726  anpelk FIPR338B Unicode
+--  091106  Jeguse Bug 86411, Added New file type 
+--  100426  Jaralk  bug 89531 Corrected, added new parameter 'CONVERSION_FACTOR_CONSIDERED' for the file type ExtCurrency. 
+--  100430  Jaralk  bug 89531 Corrected, changed the help text of new parameter. 
+--  110630  Sacalk FIDEAGLE-308, Bug 97265 Merged. Modified data type of column PROJECT_ACTIVITY_ID to NUMBER.
+--  111004  AJPELK EASTTWO-15655, Bug 98827 merged. 
+--  120820  Sacalk EDEL-1351, Added columns to STDVOU template to facilitate Add Investment Implementation in FA
+--  130306  Shedlk Bug 108713, Changed OPTIONAL_CODE to TAX_CODE
+--  130419  Hecolk Bug 109590, Removed Date formating for VALID_FROM attribute of STDCURR template details  
+--  130614  MEALLK DANU-1251, Added Parallel Currency parameters to Ext_File_Type_Rec_Column_Tab and Ext_File_Template_Detail_Tab
+--  140325  THPELK PBFI-6236 - LCS Merge (Bug 115427).
+--  140430  Nirylk PBFI-5614, Added deliv_type_id to 'ExtVoucher' and 'STDVOU'
+--  150128  AjPelk PRFI-4489 , Lcs merge bug 120401, added new field CURRENCY_RATE_TYPE 
+--  190819  Kgamlk Bug 149549, Added new seperator to Ext_File_Separator_Tab
+-------------------------------------------------------------------
+
+SET SERVEROUT ON
+
+
+PROMPT AccrulExtFile.ins start here
+
+---------------------------------------------------------------------
+
+-- ***** Ext_File_Type_Tab Start *****
+
+PROMPT Insert records in Ext_File_Type_Tab
+ 
+DECLARE
+   PROCEDURE Attribute_Row_(
+      file_type_             IN Ext_File_Type_Tab.file_type%TYPE, 
+      description_           IN Ext_File_Type_Tab.description%TYPE, 
+      component_             IN Ext_File_Type_Tab.component%TYPE, 
+      system_defined_        IN Ext_File_Type_Tab.system_defined%TYPE, 
+      system_bound_          IN Ext_File_Type_Tab.system_bound%TYPE, 
+      view_name_             IN Ext_File_Type_Tab.view_name%TYPE, 
+      form_name_             IN Ext_File_Type_Tab.form_name%TYPE, 
+      target_default_method_ IN Ext_File_Type_Tab.target_default_method%TYPE,
+      api_to_call_input_     IN Ext_File_Type_Tab.api_to_call_input%TYPE,
+      api_to_call_output_    IN Ext_File_Type_Tab.api_to_call_output%TYPE,
+      input_projection_action_   IN Ext_File_Type_Tab.input_projection_action%TYPE DEFAULT NULL,
+      output_projection_action_  IN Ext_File_Type_Tab.output_projection_action%TYPE DEFAULT NULL)
+   IS
+      newrec_                Ext_File_Type_Tab%ROWTYPE;
+   BEGIN
+      DELETE FROM Ext_File_Type_Tab WHERE  file_type = file_type_;
+      newrec_.File_Type                 := file_type_;
+      newrec_.description               := description_;
+      newrec_.component                 := component_;
+      newrec_.system_defined            := system_defined_;
+      newrec_.system_bound              := system_bound_;
+      newrec_.view_name                 := view_name_;
+      newrec_.form_name                 := form_name_;
+      newrec_.target_default_method     := target_default_method_;
+      newrec_.api_to_call_input         := api_to_call_input_;
+      newrec_.api_to_call_output        := api_to_call_output_;
+      newrec_.input_projection_action   := input_projection_action_;
+      newrec_.output_projection_action  := output_projection_action_;
+      newrec_.rowversion            := sysdate;
+      Ext_File_Type_API.Insert_Lu_Data_Rec__(newrec_);
+   END Attribute_Row_;
+   --
+BEGIN   
+   Attribute_Row_ ('ExtCurrency',   'Currency File',                     'ACCRUL', 'TRUE', 'FALSE', NULL, NULL,               NULL,                                      'Ext_Currency_API.Start_Ext_Currency',             NULL,                                               'LoadExtCurrency',   NULL); 
+   Attribute_Row_ ('ExtVoucher',    'Voucher File',                      'ACCRUL', 'TRUE', 'FALSE', NULL, 'tbwExtLoadParams', 'Ext_Parameters_API.Create_Parameter_Msg', 'Ext_Load_API.Start_Ext_Vouchers',                 NULL,                                               'LoadExtVoucher',    NULL);
+   Attribute_Row_ ('RemoveTrans',   'Remove External File Transactions', 'ACCRUL', 'TRUE', 'FALSE', NULL, NULL,               NULL,                                      NULL,                                              'Ext_File_Trans_API.Remove_Ready_Trans',             NULL,           'RemoveExternalFileTransactions');
+   Attribute_Row_ ('ExtFileExpImp', 'External File Export Import',       'ACCRUL', 'TRUE', 'FALSE', NULL, NULL,               NULL,                                      'External_File_Utility_API.Create_External_Input', 'External_File_Utility_API.Create_External_Output', 'ExtFileImport', 'ExtFileExport');
+   Attribute_Row_ ('DescribeInput', 'Describe Input File',               'ACCRUL', 'TRUE', 'FALSE', NULL, NULL,               NULL,                                      NULL,                                              'External_File_Utility_API.Describe_Input_File',     NULL,           'DescribeInputFile');
+   Attribute_Row_ ('ExtFileInsCreate', 'Create Ext File insert script',  'ACCRUL', 'TRUE', 'FALSE', NULL, NULL,               NULL,                                      NULL,                                              'External_File_Utility_API.File_Type_Create_Export', NULL,           'CreateExtFileInsertScript');
+   --
+END;
+/
+COMMIT;
+
+-- ***** Ext_File_Type_Tab End *****
+
+---------------------------------------------------------------------
+
+-- ***** Ext_File_Type_Rec_Tab Start *****
+
+PROMPT Insert records in Ext_File_Type_Rec_Tab
+ 
+DECLARE
+   PROCEDURE Attribute_Row_(
+      file_type_             IN Ext_File_Type_Rec_Tab.file_type%TYPE, 
+      record_type_id_        IN Ext_File_Type_Rec_Tab.record_type_id%TYPE, 
+      description_           IN Ext_File_Type_Rec_Tab.description%TYPE, 
+      record_set_id_         IN Ext_File_Type_Rec_Tab.record_set_id%TYPE, 
+      first_in_record_set_   IN Ext_File_Type_Rec_Tab.first_in_record_set%TYPE, 
+      last_in_record_set_    IN Ext_File_Type_Rec_Tab.last_in_record_set%TYPE, 
+      mandatory_record_      IN Ext_File_Type_Rec_Tab.mandatory_record%TYPE,
+      view_name_             IN Ext_File_Type_Rec_Tab.view_name%TYPE,
+      input_package_         IN Ext_File_Type_Rec_Tab.input_package%TYPE, 
+      parent_record_type_    IN Ext_File_Type_Rec_Tab.parent_record_type%TYPE)
+   IS
+      newrec_                Ext_File_Type_Rec_Tab%ROWTYPE;
+   BEGIN
+      newrec_.file_type             := file_type_;
+      newrec_.record_type_id        := record_type_id_;
+      newrec_.description           := description_;
+      newrec_.record_set_id         := record_set_id_;
+      newrec_.first_in_record_set   := first_in_record_set_;
+      newrec_.last_in_record_set    := last_in_record_set_;
+      newrec_.mandatory_record      := mandatory_record_;
+      newrec_.parent_record_type    := parent_record_type_;
+      newrec_.view_name             := view_name_;
+      newrec_.input_package         := input_package_;
+      newrec_.rowversion            := SYSDATE;
+      Ext_File_Type_Rec_API.Insert_Lu_Data_Rec__(newrec_);
+   END Attribute_Row_;
+   --
+BEGIN
+   --
+   Attribute_Row_('ExtCurrency',   '1', 'Currency Line',          '1', 'TRUE', 'TRUE', 'FALSE', NULL,                        NULL,                            NULL); 
+   Attribute_Row_('ExtVoucher',    '1', 'Voucher Line',           '1', 'TRUE', 'TRUE', 'FALSE', NULL,                        NULL,                            NULL); 
+   Attribute_Row_('RemoveTrans',   '1', 'Remove Trans',           '1', 'TRUE', 'TRUE', 'FALSE', NULL,                        NULL,                            NULL); 
+   Attribute_Row_('ExtFileExpImp', 'A', 'ExtFileType',            '1', 'TRUE', 'TRUE', 'FALSE', 'EXT_FILE_TYPE',             'Ext_File_Type_API',             NULL); 
+   Attribute_Row_('ExtFileExpImp', 'B', 'ExtFileTypeRec',         '1', 'TRUE', 'TRUE', 'FALSE', 'EXT_FILE_TYPE_REC',         'Ext_File_Type_Rec_API',         NULL); 
+   Attribute_Row_('ExtFileExpImp', 'C', 'ExtFileTypeRecColumn',   '1', 'TRUE', 'TRUE', 'FALSE', 'EXT_FILE_TYPE_REC_COLUMN',  'Ext_File_Type_Rec_Column_API',  NULL); 
+   Attribute_Row_('ExtFileExpImp', 'D', 'ExtFileTemplate',        '1', 'TRUE', 'TRUE', 'FALSE', 'EXT_FILE_TEMPLATE',         'Ext_File_Template_API',         NULL); 
+   Attribute_Row_('ExtFileExpImp', 'E', 'InExtFileTemplateDir',   '1', 'TRUE', 'TRUE', 'FALSE', 'IN_EXT_FILE_TEMPLATE_DIR',  'In_Ext_File_Template_Dir_API',  NULL); 
+   Attribute_Row_('ExtFileExpImp', 'F', 'OutExtFileTemplateDir',  '1', 'TRUE', 'TRUE', 'FALSE', 'OUT_EXT_FILE_TEMPLATE_DIR', 'Out_Ext_File_Template_Dir_API', NULL); 
+   Attribute_Row_('ExtFileExpImp', 'G', 'ExtFileTemplateControl', '1', 'TRUE', 'TRUE', 'FALSE', 'EXT_FILE_TEMPLATE_CONTROL', 'Ext_File_Template_Control_API', NULL); 
+   Attribute_Row_('ExtFileExpImp', 'H', 'ExtFileTemplateDetail',  '1', 'TRUE', 'TRUE', 'FALSE', 'EXT_FILE_TEMPLATE_DETAIL',  'Ext_File_Template_Detail_API',  NULL); 
+   Attribute_Row_('ExtFileExpImp', 'I', 'ExtFileTypeParam',       '1', 'TRUE', 'TRUE', 'FALSE', 'EXT_FILE_TYPE_PARAM',       'Ext_File_Type_Param_API',       NULL); 
+   Attribute_Row_('ExtFileExpImp', 'J', 'ExtTypeParamSet',        '1', 'TRUE', 'TRUE', 'FALSE', 'EXT_TYPE_PARAM_SET',        'Ext_Type_Param_Set_API',        NULL); 
+   Attribute_Row_('ExtFileExpImp', 'K', 'ExtTypeParamPerSet',     '1', 'TRUE', 'TRUE', 'FALSE', 'EXT_TYPE_PARAM_PER_SET',    'Ext_Type_Param_Per_Set_API',    NULL); 
+   Attribute_Row_('ExtFileExpImp', 'L', 'ExtFileTemplDetFunc',    '1', 'TRUE', 'TRUE', 'FALSE', 'EXT_FILE_TEMPL_DET_FUNC',   'Ext_File_Templ_Det_Func_API',   NULL); 
+   Attribute_Row_('DescribeInput', '1', 'Descibe Input Type',     '1', 'TRUE', 'TRUE', 'FALSE', NULL,                        NULL,                            NULL); 
+   DELETE FROM Ext_File_Type_Rec_Tab WHERE  file_type = 'ExtFileInsCreate';
+   Attribute_Row_('ExtFileInsCreate', '1', 'Create insert script', '1', 'TRUE', 'TRUE', 'FALSE', NULL,                        NULL,                            NULL); 
+   --
+END;
+/
+COMMIT;
+    
+-- ***** Ext_File_Type_Rec_Tab End *****
+
+---------------------------------------------------------------------
+    
+-- ***** Ext_File_Type_Rec_Column_Tab Start *****
+
+PROMPT Insert records in Ext_File_Type_Rec_Column_Tab
+
+DECLARE
+   PROCEDURE Attribute_Row_(
+      file_type_          IN VARCHAR2, 
+      record_type_id_     IN VARCHAR2, 
+      column_id_          IN VARCHAR2, 
+      description_        IN VARCHAR2, 
+      data_type_          IN VARCHAR2, 
+      mandatory_          IN VARCHAR2, 
+      destination_column_ IN VARCHAR2 )
+   IS
+      newrec_                Ext_File_Type_Rec_Column_Tab%ROWTYPE;
+   BEGIN
+      newrec_.File_Type           := file_type_;
+      newrec_.Record_type_id      := record_type_id_;
+      newrec_.Column_id           := column_id_;
+      newrec_.Description         := description_;
+      newrec_.Data_type           := data_type_;
+      newrec_.Mandatory           := mandatory_;
+      newrec_.Destination_column  := destination_column_;
+      newrec_.rowversion          := sysdate;
+      Ext_File_Type_Rec_Column_API.Insert_Lu_Data_Rec__(newrec_);
+   END Attribute_Row_;
+
+   PROCEDURE Attribute_Fnc_ (
+      row_no_            IN NUMBER,
+      file_template_id_  IN VARCHAR2,
+      function_no_       IN NUMBER,
+      main_function_     IN VARCHAR2,
+      function_argument_ IN VARCHAR2)
+   IS
+   BEGIN
+      INSERT
+         INTO ext_file_templ_det_func_tab (
+            file_template_id,
+            row_no,
+            function_no,
+            function_argument,
+            main_function,
+            rowversion)
+         VALUES (
+            file_template_id_,
+            row_no_,
+            function_no_,
+            function_argument_,
+            main_function_,
+            SYSDATE);
+      EXCEPTION
+         WHEN dup_val_on_index THEN
+            NULL;      
+   END  Attribute_Fnc_;
+BEGIN
+   
+   -- External Currencies Start
+   DELETE FROM Ext_File_Type_Rec_Column_Tab WHERE  file_type = 'ExtCurrency';
+   Attribute_Row_('ExtCurrency', '1', 'CURRENCY_CODE',               'Currency Code',                '1', 'TRUE', 'C1');
+   Attribute_Row_('ExtCurrency', '1', 'CURRENCY_RATE',               'Currency Rate',                '2', 'TRUE', 'N1');
+   Attribute_Row_('ExtCurrency', '1', 'VALID_FROM',                  'Valid From',                   '3', 'TRUE', 'D1');
+   -- External Currencies End
+   
+   -- External Vouchers Start
+   DELETE FROM Ext_File_Type_Rec_Column_Tab WHERE  file_type = 'ExtVoucher';
+   Attribute_Row_('ExtVoucher', '1', 'ACCOUNT',                      'Account',                      '1', 'TRUE',  'C1');
+   Attribute_Row_('ExtVoucher', '1', 'CODE_B',                       'Code B',                       '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtVoucher', '1', 'CODE_C',                       'Code C',                       '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtVoucher', '1', 'CODE_D',                       'Code D',                       '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtVoucher', '1', 'CODE_E',                       'Code E',                       '1', 'FALSE', 'C5');
+   Attribute_Row_('ExtVoucher', '1', 'CODE_F',                       'Code F',                       '1', 'FALSE', 'C6');
+   Attribute_Row_('ExtVoucher', '1', 'CODE_G',                       'Code G',                       '1', 'FALSE', 'C7');
+   Attribute_Row_('ExtVoucher', '1', 'CODE_H',                       'Code H',                       '1', 'FALSE', 'C8');
+   Attribute_Row_('ExtVoucher', '1', 'CODE_I',                       'Code I',                       '1', 'FALSE', 'C9');
+   Attribute_Row_('ExtVoucher', '1', 'CODE_J',                       'Code J',                       '1', 'FALSE', 'C10');
+   Attribute_Row_('ExtVoucher', '1', 'CURRENCY_CODE',                'Currency Code',                '1', 'FALSE', 'C11');
+   Attribute_Row_('ExtVoucher', '1', 'PROCESS_CODE',                 'Process Code',                 '1', 'FALSE', 'C12');
+   Attribute_Row_('ExtVoucher', '1', 'TAX_CODE',                     'Tax Code',                     '1', 'FALSE', 'C13'); 
+   Attribute_Row_('ExtVoucher', '1', 'TEXT',                         'Text',                         '1', 'FALSE', 'C14');
+   Attribute_Row_('ExtVoucher', '1', 'PARTY_TYPE_ID',                'Party Type Id',                '1', 'FALSE', 'C15');
+   Attribute_Row_('ExtVoucher', '1', 'REFERENCE_NUMBER',             'Reference Number',             '1', 'FALSE', 'C16');
+   Attribute_Row_('ExtVoucher', '1', 'REFERENCE_SERIE',              'Reference Serie',              '1', 'FALSE', 'C17');
+   Attribute_Row_('ExtVoucher', '1', 'TRANS_CODE',                   'Trans Code',                   '1', 'FALSE', 'C18');
+   Attribute_Row_('ExtVoucher', '1', 'LOAD_GROUP_ITEM',              'Load Group Item',              '1', 'FALSE', 'C19');
+   Attribute_Row_('ExtVoucher', '1', 'VOUCHER_TYPE',                 'Voucher Type',                 '1', 'FALSE', 'C20');
+   Attribute_Row_('ExtVoucher', '1', 'TAX_DIRECTION',                'Tax Direction',                '1', 'FALSE', 'C21');
+   Attribute_Row_('ExtVoucher', '1', 'SIGN_AMOUNT',                  'Sign Amount',                  '1', 'FALSE', 'C22');
+   Attribute_Row_('ExtVoucher', '1', 'SIGN_QUANTITY',                'Sign Quantity',                '1', 'FALSE', 'C23');
+   Attribute_Row_('ExtVoucher', '1', 'TRANSACTION_REASON',           'Transaction Reason ',          '1', 'FALSE', 'C24');
+   Attribute_Row_('ExtVoucher', '1', 'COMPANY',                      'Company',                      '1', 'FALSE', 'C70');
+   Attribute_Row_('ExtVoucher', '1', 'DELIVERY_TYPE_ID',             'Delivery Type Id',             '1', 'FALSE', 'C71');
+   Attribute_Row_('ExtVoucher', '1', 'VOUCHER_NO',                   'Voucher No',                   '2', 'FALSE', 'N1');
+   Attribute_Row_('ExtVoucher', '1', 'ACCOUNTING_YEAR',              'Accounting Year',              '2', 'FALSE', 'N2');
+   Attribute_Row_('ExtVoucher', '1', 'CURRENCY_DEBIT_AMOUNT',        'Currency Debit Amount',        '2', 'FALSE', 'N3');
+   Attribute_Row_('ExtVoucher', '1', 'CURRENCY_CREDIT_AMOUNT',       'Currency Credit Amount',       '2', 'FALSE', 'N4');
+   Attribute_Row_('ExtVoucher', '1', 'CURRENCY_AMOUNT',              'Currency Amount',              '2', 'FALSE', 'N5');
+   Attribute_Row_('ExtVoucher', '1', 'DEBIT_AMOUNT',                 'Debit Amount',                 '2', 'FALSE', 'N6');
+   Attribute_Row_('ExtVoucher', '1', 'CREDIT_AMOUNT',                'Credit Amount',                '2', 'FALSE', 'N7');
+   Attribute_Row_('ExtVoucher', '1', 'AMOUNT',                       'Amount',                       '2', 'FALSE', 'N8');
+   Attribute_Row_('ExtVoucher', '1', 'QUANTITY',                     'Quantity',                     '2', 'FALSE', 'N9');
+   Attribute_Row_('ExtVoucher', '1', 'THIRD_CURRENCY_DEBIT_AMOUNT',  'Third Currency Debit Amount',  '2', 'FALSE', 'N10');
+   Attribute_Row_('ExtVoucher', '1', 'THIRD_CURRENCY_CREDIT_AMOUNT', 'Third Currency Credit Amount', '2', 'FALSE', 'N11');
+   Attribute_Row_('ExtVoucher', '1', 'TAX_AMOUNT',                   'Tax Amount',                   '2', 'FALSE', 'N12');
+   Attribute_Row_('ExtVoucher', '1', 'CURRENCY_TAX_AMOUNT',          'Currency Tax Amount',          '2', 'FALSE', 'N13');
+   Attribute_Row_('ExtVoucher', '1', 'PROJECT_ACTIVITY_SEQ_NO',      'Project Activity Seq No',      '2', 'FALSE', 'N14');
+   Attribute_Row_('ExtVoucher', '1', 'THIRD_CURRENCY_AMOUNT',        'Third Currency Amount',        '2', 'FALSE', 'N15');
+   Attribute_Row_('ExtVoucher', '1', 'THIRD_CURRENCY_TAX_AMOUNT',    'Third Currency Tax Amount',    '2', 'FALSE', 'N16');
+   Attribute_Row_('ExtVoucher', '1', 'TRANSACTION_DATE',             'Transaction Date',             '3', 'FALSE', 'D1');
+   Attribute_Row_('ExtVoucher', '1', 'EVENT_DATE',                   'Event Date',                   '3', 'FALSE', 'D2');
+   Attribute_Row_('ExtVoucher', '1', 'RETROACTIVE_DATE',             'Retoractive Date',             '3', 'FALSE', 'D3');
+   Attribute_Row_('ExtVoucher', '1', 'CURRENCY_RATE_TYPE',           'Currency Rate Type',           '1', 'FALSE', 'C72');
+   Attribute_Row_('ExtVoucher', '1', 'PARALLEL_CURR_RATE_TYPE',      'Parallel Currency Rate Type',  '1', 'FALSE', 'C73');   
+   Attribute_Row_('ExtVoucher', '1', 'PARTY_TYPE',                   'Party Type',                   '1', 'FALSE', 'C74');
+
+   -- External Vouchers End
+
+   -- Remove Transactions Start
+   DELETE FROM Ext_File_Type_Rec_Column_Tab WHERE  file_type = 'RemoveTrans';
+   Attribute_Row_('RemoveTrans', '1', 'FILE_TYPE',         'File Type',                    '1', 'FALSE', 'C1');
+   Attribute_Row_('RemoveTrans', '1', 'FILE_TEMPLATE_ID',  'File Template Id',             '1', 'FALSE', 'C2');
+   Attribute_Row_('RemoveTrans', '1', 'FILE_DIRECTION',    'File Direction',               '1', 'FALSE', 'C3');
+   Attribute_Row_('RemoveTrans', '1', 'STATE',             'State',                        '1', 'FALSE', 'C4');
+   Attribute_Row_('RemoveTrans', '1', 'REMOVE_COMPLETE',   'Remove Complete',              '1', 'FALSE', 'C5');
+   Attribute_Row_('RemoveTrans', '1', 'LOAD_FILE_ID',      'Load File Id',                 '2', 'FALSE', 'N1');
+   Attribute_Row_('RemoveTrans', '1', 'REMOVE_DAYS',       'Remove Days',                  '2', 'FALSE', 'N2');
+   Attribute_Row_('RemoveTrans', '1', 'NO_OF_RECORDS',     'No Of Records',                '2', 'FALSE', 'N3');
+   Attribute_Row_('RemoveTrans', '1', 'LOG_DATE',          'Log Date',                     '3', 'FALSE', 'D1');
+   Attribute_Row_('RemoveTrans', '1', 'REMOVE_DATE',       'Remove Date',                  '3', 'FALSE', 'D2');
+   -- Remove Transactions End
+   
+   -- Export/Import External Files Start
+   DELETE FROM Ext_File_Type_Rec_Column_Tab WHERE  file_type = 'ExtFileExpImp';
+   Attribute_Row_('ExtFileExpImp', 'A', 'FILE_TYPE',             'File Type',             '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'A', 'DESCRIPTION',           'Description',           '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtFileExpImp', 'A', 'COMPONENT',             'Component',             '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'A', 'SYSTEM_DEFINED',        'System Defined',        '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtFileExpImp', 'A', 'VIEW_NAME',             'View Name',             '1', 'FALSE', 'C5');
+   Attribute_Row_('ExtFileExpImp', 'A', 'FORM_NAME',             'Form Name',             '1', 'FALSE', 'C6');
+   Attribute_Row_('ExtFileExpImp', 'A', 'TARGET_DEFAULT_METHOD', 'Target Default Method', '1', 'FALSE', 'C7');
+   Attribute_Row_('ExtFileExpImp', 'A', 'INPUT_PACKAGE',         'Input Package',         '1', 'FALSE', 'C8');
+   Attribute_Row_('ExtFileExpImp', 'A', 'API_TO_CALL_INPUT',     'Api To Call Input',     '1', 'FALSE', 'C9');
+   Attribute_Row_('ExtFileExpImp', 'A', 'API_TO_CALL_OUTPUT',    'Api To Call Output',    '1', 'FALSE', 'C10');
+   Attribute_Row_('ExtFileExpImp', 'A', 'LINE_TYPE',             'Line Type',             '1', 'FALSE', 'C70');
+            
+   Attribute_Row_('ExtFileExpImp', 'B', 'FILE_TYPE',           'File Type',           '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'B', 'RECORD_TYPE_ID',      'Record Type Id',      '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtFileExpImp', 'B', 'RECORD_SET_ID',       'Record Set Id',       '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'B', 'FIRST_IN_RECORD_SET', 'First In Record Set', '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtFileExpImp', 'B', 'LAST_IN_RECORD_SET',  'Last In Record Set',  '1', 'FALSE', 'C5');
+   Attribute_Row_('ExtFileExpImp', 'B', 'DESCRIPTION',         'Description',         '1', 'FALSE', 'C6');
+   Attribute_Row_('ExtFileExpImp', 'B', 'MANDATORY_RECORD',    'Mandatory Record',    '1', 'FALSE', 'C7');
+   Attribute_Row_('ExtFileExpImp', 'B', 'PARENT_RECORD_TYPE',  'Parent Record Type',  '1', 'FALSE', 'C8');
+   Attribute_Row_('ExtFileExpImp', 'B', 'VIEW_NAME',           'View Name',           '1', 'FALSE', 'C9');
+   Attribute_Row_('ExtFileExpImp', 'B', 'INPUT_PACKAGE',       'Input Package',       '1', 'FALSE', 'C10');
+   Attribute_Row_('ExtFileExpImp', 'B', 'LINE_TYPE',           'Line Type',           '1', 'FALSE', 'C70');
+   
+   Attribute_Row_('ExtFileExpImp', 'C', 'FILE_TYPE',          'File Type',          '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'C', 'RECORD_TYPE_ID',     'Record Type Id',     '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtFileExpImp', 'C', 'COLUMN_ID',          'Column Id',          '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'C', 'MANDATORY',          'Mandatory',          '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtFileExpImp', 'C', 'DESTINATION_COLUMN', 'Destination Column', '1', 'FALSE', 'C5');
+   Attribute_Row_('ExtFileExpImp', 'C', 'DESCRIPTION',        'Description',        '1', 'FALSE', 'C6');
+   Attribute_Row_('ExtFileExpImp', 'C', 'DATA_TYPE',          'Data Type',          '1', 'FALSE', 'C7');
+   Attribute_Row_('ExtFileExpImp', 'C', 'DATA_TYPE_DB',       'Data Type',          '1', 'FALSE', 'C8');
+   Attribute_Row_('ExtFileExpImp', 'C', 'LINE_TYPE',          'Line Type',          '1', 'FALSE', 'C70');
+   
+   Attribute_Row_('ExtFileExpImp', 'D', 'FILE_TEMPLATE_ID',  'File Template Id',  '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'D', 'SYSTEM_DEFINED',    'System Defined',    '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtFileExpImp', 'D', 'DESCRIPTION',       'Description',       '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'D', 'ACTIVE_DEFINITION', 'Active Definition', '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtFileExpImp', 'D', 'VALID_DEFINITION',  'Valid Definition',  '1', 'FALSE', 'C5');
+   Attribute_Row_('ExtFileExpImp', 'D', 'SEPARATED',         'Separated',         '1', 'FALSE', 'C6');
+   Attribute_Row_('ExtFileExpImp', 'D', 'DECIMAL_SYMBOL',    'Decimal Symbol',    '1', 'FALSE', 'C7');
+   Attribute_Row_('ExtFileExpImp', 'D', 'DATE_FORMAT',       'Date Format',       '1', 'FALSE', 'C8');
+   Attribute_Row_('ExtFileExpImp', 'D', 'SEPARATOR_ID',      'Separator Id',      '1', 'FALSE', 'C9');
+   Attribute_Row_('ExtFileExpImp', 'D', 'TEXT_QUALIFIER',    'Text Qualifier',    '1', 'FALSE', 'C10');
+   Attribute_Row_('ExtFileExpImp', 'D', 'FILE_TYPE',         'File Type',         '1', 'FALSE', 'C11');
+   Attribute_Row_('ExtFileExpImp', 'D', 'LINE_TYPE',         'Line Type',         '1', 'FALSE', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'D', 'DENOMINATOR',       'Denominator',       '2', 'FALSE', 'N1');
+   Attribute_Row_('ExtFileExpImp', 'D', 'DATE_NLS_CALENDAR', 'Date Nls Calendar', '1', 'FALSE', 'C12');
+   Attribute_Row_('ExtFileExpImp', 'D', 'FILE_FORMAT',       'File Format',       '1', 'FALSE', 'C13');
+   
+   Attribute_Row_('ExtFileExpImp', 'E', 'FILE_TEMPLATE_ID',          'File Template Id',          '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'E', 'FILE_DIRECTION',            'File Direction',            '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtFileExpImp', 'E', 'FILE_DIRECTION_DB',         'File Direction',            '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'E', 'API_TO_CALL',               'Api To Call',               '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtFileExpImp', 'E', 'LOG_SKIPPED_LINES',         'Log Skipped Lines',         '1', 'FALSE', 'C5');
+   Attribute_Row_('ExtFileExpImp', 'E', 'LOG_INVALID_LINES',         'Log Invalid Lines',         '1', 'FALSE', 'C6');
+   Attribute_Row_('ExtFileExpImp', 'E', 'SKIP_ALL_BLANKS',           'Skip All Blanks',           '1', 'FALSE', 'C7');
+   Attribute_Row_('ExtFileExpImp', 'E', 'SKIP_INITIAL_BLANKS',       'Skip Initial Blanks',       '1', 'FALSE', 'C8');
+   Attribute_Row_('ExtFileExpImp', 'E', 'ALLOW_RECORD_SET_REPEAT',   'Allow Record Set Repeat',   '1', 'FALSE', 'C9');
+   Attribute_Row_('ExtFileExpImp', 'E', 'ALLOW_ONE_RECORD_SET_ONLY', 'Allow One Record Set Only', '1', 'FALSE', 'C10');
+   Attribute_Row_('ExtFileExpImp', 'E', 'ABORT_IMMEDIATLY',          'Abort Immediatly',          '1', 'FALSE', 'C11');
+   Attribute_Row_('ExtFileExpImp', 'E', 'LOAD_FILE_TYPE_LIST',       'Load File Type List',       '1', 'FALSE', 'C12');
+   Attribute_Row_('ExtFileExpImp', 'E', 'FILE_NAME',                 'File Name',                 '1', 'FALSE', 'C13');
+   Attribute_Row_('ExtFileExpImp', 'E', 'BACKUP_FILE_PATH',          'Backup File Path',          '1', 'FALSE', 'C14');
+   Attribute_Row_('ExtFileExpImp', 'E', 'BACKUP_FILE_PATH_SERVER',   'Backup File Path Server',   '1', 'FALSE', 'C15');
+   Attribute_Row_('ExtFileExpImp', 'E', 'FILE_PATH',                 'Input File Path Client',    '1', 'FALSE', 'C16');
+   Attribute_Row_('ExtFileExpImp', 'E', 'FILE_PATH_SERVER',          'Input File Path Server',    '1', 'FALSE', 'C17');
+   Attribute_Row_('ExtFileExpImp', 'E', 'REMOVE_COMPLETE',           'Remove Complete',           '1', 'FALSE', 'C18');
+   Attribute_Row_('ExtFileExpImp', 'E', 'FILE_TYPE',                 'File Type',                 '1', 'FALSE', 'C19');
+   Attribute_Row_('ExtFileExpImp', 'E', 'CHARACTER_SET',             'Character Set',             '1', 'FALSE', 'C20');
+   Attribute_Row_('ExtFileExpImp', 'E', 'API_TO_CALL_UNP_BEFORE',    'Api Before Unpack',         '1', 'FALSE', 'C21');
+   Attribute_Row_('ExtFileExpImp', 'E', 'API_TO_CALL_UNP_AFTER',     'Api After Unpack',          '1', 'FALSE', 'C22');
+   Attribute_Row_('ExtFileExpImp', 'E', 'LINE_TYPE',                 'Line Type',                 '1', 'FALSE', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'E', 'REMOVE_DAYS',               'Remove Days',               '2', 'FALSE', 'N1');
+   
+   Attribute_Row_('ExtFileExpImp', 'F', 'FILE_TEMPLATE_ID',      'File Template Id',        '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'F', 'FILE_DIRECTION',        'File Direction',          '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtFileExpImp', 'F', 'FILE_DIRECTION_DB',     'File Direction',          '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'F', 'API_TO_CALL',           'Api To Call',             '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtFileExpImp', 'F', 'FILE_NAME',             'File Name',               '1', 'FALSE', 'C5');
+   Attribute_Row_('ExtFileExpImp', 'F', 'NUMBER_OUT_FILL_VALUE', 'Number Out Fill Value',   '1', 'FALSE', 'C6');
+   Attribute_Row_('ExtFileExpImp', 'F', 'OVERWRITE_FILE',        'Overwrite File',          '1', 'FALSE', 'C7');
+   Attribute_Row_('ExtFileExpImp', 'F', 'CREATE_HEADER',         'Create Header',           '1', 'FALSE', 'C8');
+   Attribute_Row_('ExtFileExpImp', 'F', 'NAME_OPTION',           'Name Option',             '1', 'FALSE', 'C9');
+   Attribute_Row_('ExtFileExpImp', 'F', 'NAME_OPTION_DB',        'Name Option',             '1', 'FALSE', 'C10');
+   Attribute_Row_('ExtFileExpImp', 'F', 'FILE_PATH',             'Output File Path Client', '1', 'FALSE', 'C11');
+   Attribute_Row_('ExtFileExpImp', 'F', 'FILE_PATH_SERVER',      'Output File Path Server', '1', 'FALSE', 'C12');
+   Attribute_Row_('ExtFileExpImp', 'F', 'REMOVE_COMPLETE',       'Remove Complete',         '1', 'FALSE', 'C13');
+   Attribute_Row_('ExtFileExpImp', 'F', 'FILE_TYPE',             'File Type',               '1', 'FALSE', 'C14');
+   Attribute_Row_('ExtFileExpImp', 'F', 'CHARACTER_SET',         'Character Set',           '1', 'FALSE', 'C15');
+   Attribute_Row_('ExtFileExpImp', 'F', 'LINE_TYPE',             'Line Type',               '1', 'FALSE', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'F', 'REMOVE_DAYS',           'Remove Days',             '2', 'FALSE', 'N1');
+   
+   Attribute_Row_('ExtFileExpImp', 'G', 'FILE_TEMPLATE_ID',   'File Template Id',    '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'G', 'FILE_DIRECTION',     'File Direction',      '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtFileExpImp', 'G', 'FILE_DIRECTION_DB',  'File Direction',      '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'G', 'CONTROL_STRING',     'Control String',      '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtFileExpImp', 'G', 'DESTINATION_COLUMN', 'Destination Column',  '1', 'FALSE', 'C5');
+   --Attribute_Row_('ExtFileExpImp', 'G', 'STRING_EVALUATE',    'String Evaluate',     '1', 'FALSE', 'C6');
+   --Attribute_Row_('ExtFileExpImp', 'G', 'STRING_EVALUATE_DB', 'String Evaluate',     '1', 'FALSE', 'C7');
+   Attribute_Row_('ExtFileExpImp', 'G', 'CONDITION',          'Condition',           '1', 'FALSE', 'C8');
+   Attribute_Row_('ExtFileExpImp', 'G', 'CONDITION_DB',       'Condition',           '1', 'FALSE', 'C9');
+   Attribute_Row_('ExtFileExpImp', 'G', 'FILE_TYPE',          'File Type',           '1', 'FALSE', 'C10');
+   Attribute_Row_('ExtFileExpImp', 'G', 'RECORD_TYPE_ID',     'Record Type Id',      '1', 'FALSE', 'C11');
+   Attribute_Row_('ExtFileExpImp', 'G', 'LINE_TYPE',          'Line Type',           '1', 'FALSE', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'G', 'ROW_NO',             'Row No',              '2', 'FALSE', 'N1');
+   Attribute_Row_('ExtFileExpImp', 'G', 'GROUP_NO',           'Group No',            '2', 'FALSE', 'N2');
+   Attribute_Row_('ExtFileExpImp', 'G', 'COLUMN_NO',          'Column No',           '2', 'FALSE', 'N3');
+   Attribute_Row_('ExtFileExpImp', 'G', 'START_POSITION',     'Start Position',      '2', 'FALSE', 'N4');
+   Attribute_Row_('ExtFileExpImp', 'G', 'END_POSITION',       'End Position',        '2', 'FALSE', 'N5');
+   Attribute_Row_('ExtFileExpImp', 'G', 'NO_OF_LINES',        'No Of Lines',         '2', 'FALSE', 'N6');
+   
+   Attribute_Row_('ExtFileExpImp', 'H', 'FILE_TEMPLATE_ID',   'File Template Id', '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'H', 'DATE_FORMAT',        'Date Format',      '1', 'FALSE', 'C2');
+   -- Keep DEFAULT_VALUE for compatibility backwards
+   Attribute_Row_('ExtFileExpImp', 'H', 'DEFAULT_VALUE',      'Default Value',    '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'H', 'CONTROL_COLUMN',     'Control Column',   '1', 'FALSE', 'C4');
+   -- Keep STRING_EVALUATE for compatibility backwards
+   Attribute_Row_('ExtFileExpImp', 'H', 'STRING_EVALUATE',    'String Evaluate',  '1', 'FALSE', 'C5');
+   -- Keep STRING_EVALUATE_DB for compatibility backwards
+   Attribute_Row_('ExtFileExpImp', 'H', 'STRING_EVALUATE_DB', 'String Evaluate',  '1', 'FALSE', 'C6');
+   Attribute_Row_('ExtFileExpImp', 'H', 'FILE_TYPE',          'File Type',        '1', 'FALSE', 'C7');
+   Attribute_Row_('ExtFileExpImp', 'H', 'RECORD_TYPE_ID',     'Record Type Id',   '1', 'FALSE', 'C8');
+   Attribute_Row_('ExtFileExpImp', 'H', 'COLUMN_ID',          'Column Id',        '1', 'FALSE', 'C9');
+   Attribute_Row_('ExtFileExpImp', 'H', 'HIDE_COLUMN',        'Hide Column',      '1', 'FALSE', 'C10');
+   Attribute_Row_('ExtFileExpImp', 'H', 'LINE_TYPE',          'Line Type',        '1', 'FALSE', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'H', 'ROW_NO',             'Row No',           '2', 'FALSE', 'N1');
+   Attribute_Row_('ExtFileExpImp', 'H', 'COLUMN_NO',          'Column No',        '2', 'FALSE', 'N2');
+   Attribute_Row_('ExtFileExpImp', 'H', 'START_POSITION',     'Start Position',   '2', 'FALSE', 'N3');
+   Attribute_Row_('ExtFileExpImp', 'H', 'END_POSITION',       'End Position',     '2', 'FALSE', 'N4');
+   Attribute_Row_('ExtFileExpImp', 'H', 'DENOMINATOR',        'Denominator',      '2', 'FALSE', 'N5');
+   Attribute_Row_('ExtFileExpImp', 'H', 'COLUMN_SORT',        'Column Sort',      '2', 'FALSE', 'N6');
+   
+   Attribute_Row_('ExtFileExpImp', 'I', 'FILE_TYPE',        'File Type',        '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'I', 'PARAM_ID',         'Param Id',         '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtFileExpImp', 'I', 'DESCRIPTION',      'Description',      '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'I', 'LOV_VIEW',         'Lov View',         '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtFileExpImp', 'I', 'ENUMERATE_METHOD', 'Enumerate Method', '1', 'FALSE', 'C5');
+   Attribute_Row_('ExtFileExpImp', 'I', 'VALIDATE_METHOD',  'Validate Method',  '1', 'FALSE', 'C6');
+   Attribute_Row_('ExtFileExpImp', 'I', 'BROWSABLE_FIELD',  'Browsable Field',  '1', 'FALSE', 'C7');
+   Attribute_Row_('ExtFileExpImp', 'I', 'HELP_TEXT',        'Help Text',        '1', 'FALSE', 'C8');
+   Attribute_Row_('ExtFileExpImp', 'I', 'DATA_TYPE',        'Data Type',        '1', 'FALSE', 'C9');
+   Attribute_Row_('ExtFileExpImp', 'I', 'DATA_TYPE_DB',     'Data Type',        '1', 'FALSE', 'C10');
+   Attribute_Row_('ExtFileExpImp', 'I', 'LINE_TYPE',        'Line Type',        '1', 'FALSE', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'I', 'PARAM_NO',         'Param No',         '2', 'FALSE', 'N1');
+   
+   Attribute_Row_('ExtFileExpImp', 'J', 'SET_ID',         'Set Id',         '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'J', 'FILE_TYPE',      'File Type',      '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtFileExpImp', 'J', 'DESCRIPTION',   'Description',     '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'J', 'SET_ID_DEFAULT', 'Set Id Default', '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtFileExpImp', 'J', 'LINE_TYPE',      'Line Type',      '1', 'FALSE', 'C70');
+   
+   Attribute_Row_('ExtFileExpImp', 'K', 'FILE_TYPE',         'File Type',         '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'K', 'SET_ID',            'Set Id',            '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtFileExpImp', 'K', 'DEFAULT_VALUE',     'Default Value',     '1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'K', 'MANDATORY_PARAM',   'Mandatory Param',   '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtFileExpImp', 'K', 'SHOW_AT_LOAD',      'Show At Load',      '1', 'FALSE', 'C5');
+   Attribute_Row_('ExtFileExpImp', 'K', 'INPUTABLE_AT_LOAD', 'Inputable At Load', '1', 'FALSE', 'C6');
+   Attribute_Row_('ExtFileExpImp', 'K', 'LINE_TYPE',         'Line Type',         '1', 'FALSE', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'K', 'PARAM_NO',          'Param No',          '2', 'FALSE', 'N1');
+   
+   Attribute_Row_('ExtFileExpImp', 'L', 'FILE_TEMPLATE_ID',   'File Template Id', '1', 'FALSE', 'C1');
+   Attribute_Row_('ExtFileExpImp', 'L', 'MAIN_FUNCTION',      'Main Function',    '1', 'FALSE', 'C2');
+   Attribute_Row_('ExtFileExpImp', 'L', 'FUNCTION_ARGUMENT',  'Function Argument','1', 'FALSE', 'C3');
+   Attribute_Row_('ExtFileExpImp', 'L', 'FILE_TYPE',          'File Type',        '1', 'FALSE', 'C4');
+   Attribute_Row_('ExtFileExpImp', 'L', 'LINE_TYPE',          'Line Type',        '1', 'FALSE', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'L', 'ROW_NO',             'Row No',           '2', 'FALSE', 'N1');
+   Attribute_Row_('ExtFileExpImp', 'L', 'FUNCTION_NO',        'Function No',      '2', 'FALSE', 'N2');
+   
+-- Export/Import External Files End
+
+   -- Describe Input Start
+   Attribute_Row_('DescribeInput', '1', 'LINE',      'Line',                 '1', 'FALSE', 'C1');
+   -- Describe Input End
+
+   DELETE FROM Ext_File_Type_Rec_Column_Tab WHERE  file_type = 'ExtFileInsCreate';
+   Attribute_Row_('ExtFileInsCreate', '1', 'LINE',      'Line',                 '1', 'FALSE', 'C1');
+
+END;
+/
+
+COMMIT;
+
+-- ***** Ext_File_Type_Rec_Column_Tab End *****
+
+---------------------------------------------------------------------
+    
+-- ***** Ext_File_Template_Tab Start *****
+
+PROMPT Insert record in Ext_File_Template_Tab 
+
+DECLARE
+   PROCEDURE Attribute_Row_(
+      file_type_             IN Ext_File_Template_Tab.file_type%TYPE, 
+      file_template_id_      IN Ext_File_Template_Tab.file_template_id%TYPE, 
+      description_           IN Ext_File_Template_Tab.description%TYPE, 
+      separated_             IN Ext_File_Template_Tab.separated%TYPE, 
+      file_format_           IN Ext_File_Template_Tab.file_format%TYPE,
+      separator_id_          IN Ext_File_Template_Tab.separator_id%TYPE, 
+      decimal_symbol_        IN Ext_File_Template_Tab.decimal_symbol%TYPE,
+      denominator_           IN Ext_File_Template_Tab.denominator%TYPE, 
+      date_format_           IN Ext_File_Template_Tab.date_format%TYPE, 
+      system_defined_        IN Ext_File_Template_Tab.system_defined%TYPE, 
+      active_definition_     IN Ext_File_Template_Tab.active_definition%TYPE, 
+      valid_definition_      IN Ext_File_Template_Tab.valid_definition%TYPE, 
+      date_nls_calendar_     IN Ext_File_Template_Tab.date_nls_calendar%TYPE,
+      text_qualifier_        IN Ext_File_Template_Tab.text_qualifier%TYPE DEFAULT NULL)
+   IS
+      newrec_                Ext_File_Template_Tab%ROWTYPE;
+   BEGIN
+      newrec_.file_type             := file_type_;
+      newrec_.file_template_id      := file_template_id_;
+      newrec_.description           := description_;
+      newrec_.system_defined        := system_defined_;
+      newrec_.active_definition     := active_definition_;
+      newrec_.valid_definition      := valid_definition_;
+      newrec_.separated             := separated_;
+      newrec_.file_format           := file_format_;
+      newrec_.decimal_symbol        := decimal_symbol_;
+      newrec_.date_format           := date_format_;
+      newrec_.denominator           := denominator_;
+      newrec_.date_nls_calendar     := date_nls_calendar_;
+      newrec_.separator_id          := separator_id_;
+      newrec_.text_qualifier        := text_qualifier_;
+      newrec_.rowversion            := SYSDATE;
+      Ext_File_Template_API.Insert_Lu_Data_Rec__(newrec_);
+   END Attribute_Row_;
+   --
+BEGIN
+   --
+   Attribute_Row_('ExtCurrency',   'STDCURR',       'Standard Currency File',             'TRUE',  'SEP', '1',  '.',  NULL,       'YYYY-MM-DD', 'TRUE',  'TRUE',  'TRUE', NULL);
+   Attribute_Row_('ExtCurrency',   'STDFICURR',     'Finnish Currency File',              'FALSE', 'FIX', NULL, NULL, '10000000', 'YYYYMMDD',   'TRUE',  'FALSE', 'TRUE', NULL);
+   Attribute_Row_('ExtVoucher',    'STDVOU',        'Standard Voucher File',              'TRUE',  'SEP', '1',  '.',  NULL,       'YYYY-MM-DD', 'TRUE',  'TRUE',  'TRUE', NULL);
+   Attribute_Row_('RemoveTrans',   'RemoveTrans',   'Remove External File Transactions',  'FALSE', 'FIX', NULL, NULL, NULL,       'YYYY-MM-DD', 'TRUE',  'TRUE',  'TRUE', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'External File Export Import',        'TRUE',  'SEP', '3',  '.',  NULL,       'YYYY-MM-DD', 'TRUE',  'TRUE',  'TRUE', NULL);
+   Attribute_Row_('DescribeInput', 'DescribeInput', 'Describe Input File',                'FALSE', 'FIX', NULL, '.',  NULL,       'YYYY-MM-DD', 'TRUE',  'TRUE',  'TRUE', NULL);
+   DELETE FROM Ext_File_Template_Tab WHERE  file_template_id = 'ExtFileInsCreate';
+   Attribute_Row_('ExtFileInsCreate', 'ExtFileInsCreate', 'Create Ext File insert script', 'FALSE', 'FIX', NULL, '.',  NULL,       'YYYY-MM-DD', 'TRUE',  'TRUE',  'TRUE', NULL);
+   --
+END;
+/
+COMMIT;
+
+-- ***** Ext_File_Template_Tab End *****
+
+---------------------------------------------------------------------
+
+-- ***** Ext_File_Template_Dir_Tab Start *****
+
+PROMPT Insert records in Ext_File_Template_Dir_Tab 
+
+DECLARE
+   PROCEDURE Attribute_Row_(
+      file_template_id_          IN VARCHAR2, 
+      file_direction_            IN VARCHAR2,
+      log_skipped_lines_         IN VARCHAR2,
+      log_invalid_lines_         IN VARCHAR2,
+      skip_all_blanks_           IN VARCHAR2,
+      skip_initial_blanks_       IN VARCHAR2,
+      allow_record_set_repeat_   IN VARCHAR2,
+      allow_one_record_set_only_ IN VARCHAR2,
+      abort_immediatly_          IN VARCHAR2,
+      load_file_type_list_       IN VARCHAR2,
+      rowtype_                   IN VARCHAR2,
+      api_to_call_               IN VARCHAR2,
+      remove_days_               IN NUMBER,
+      remove_complete_           IN VARCHAR2,
+      overwrite_file_            IN VARCHAR2,
+      create_header_             IN VARCHAR2,
+      name_option_               IN VARCHAR2,
+      character_set_             IN VARCHAR2 DEFAULT NULL,
+      api_to_call_unp_before_    IN VARCHAR2 DEFAULT NULL,
+      api_to_call_unp_after_     IN VARCHAR2 DEFAULT NULL )
+   IS
+      dummy_                        NUMBER;
+      CURSOR exist_control IS
+         SELECT 1
+         FROM   Ext_File_Template_Dir_Tab
+         WHERE  file_template_id = file_template_id_
+         AND    file_direction   = file_direction_;
+   BEGIN
+      OPEN exist_control;
+      FETCH exist_control INTO dummy_;
+      IF (exist_control%NOTFOUND) THEN
+         BEGIN
+            INSERT INTO Ext_File_Template_Dir_Tab 
+               (file_template_id,
+                file_direction,
+                log_skipped_lines,
+                log_invalid_lines,
+                skip_all_blanks,
+                skip_initial_blanks,
+                allow_record_set_repeat,
+                allow_one_record_set_only,
+                abort_immediatly,
+                load_file_type_list,
+                rowtype,
+                api_to_call,
+                remove_days,
+                remove_complete,
+                overwrite_file,
+                create_header,
+                name_option,
+                character_set,
+                api_to_call_unp_before,
+                api_to_call_unp_after,
+                Rowversion)
+            VALUES
+               (file_template_id_, 
+                file_direction_,
+                log_skipped_lines_,
+                log_invalid_lines_,
+                skip_all_blanks_,
+                skip_initial_blanks_,
+                allow_record_set_repeat_,
+                allow_one_record_set_only_,
+                abort_immediatly_,
+                load_file_type_list_,
+                rowtype_,
+                api_to_call_,
+                remove_days_,
+                remove_complete_,
+                overwrite_file_,
+                create_header_,
+                name_option_,
+                character_set_,
+                REPLACE(api_to_call_unp_before_,'"',CHR(39)),
+                REPLACE(api_to_call_unp_after_,'"',CHR(39)),
+                SYSDATE);
+         EXCEPTION
+            WHEN dup_val_on_index THEN
+               NULL;      
+         END;
+      ELSE
+         UPDATE Ext_File_Template_Dir_Tab SET
+            log_skipped_lines          = log_skipped_lines_,
+            log_invalid_lines          = log_invalid_lines_,
+            skip_all_blanks            = skip_all_blanks_,
+            skip_initial_blanks        = skip_initial_blanks_,
+            allow_record_set_repeat    = allow_record_set_repeat_,
+            allow_one_record_set_only  = allow_one_record_set_only_,
+            abort_immediatly           = abort_immediatly_,
+            load_file_type_list        = load_file_type_list_,
+            rowtype                    = rowtype_,
+            api_to_call                = api_to_call_,
+            overwrite_file             = overwrite_file_,
+            create_header              = create_header_,
+            name_option                = name_option_,
+            character_set              = character_set_,
+            api_to_call_unp_before     = REPLACE(api_to_call_unp_before_,'"',CHR(39)),
+            api_to_call_unp_after      = REPLACE(api_to_call_unp_after_,'"',CHR(39))
+         WHERE  file_template_id = file_template_id_
+         AND    file_direction   = file_direction_;
+      END IF;
+   END Attribute_Row_;
+BEGIN
+   
+   -- External Currencies Start
+   Attribute_Row_('STDCURR',   '1', 'TRUE', 'TRUE', 'FALSE', 'FALSE', 'TRUE', 'FALSE', 'FALSE', 'All Types^*','InExtFileTemplateDir', 'Ext_Currency_API.Start_Ext_Currency', NULL, 'FALSE', NULL, NULL, NULL);
+   Attribute_Row_('STDFICURR', '1', 'TRUE', 'TRUE', 'FALSE', 'FALSE', 'TRUE', 'FALSE', 'FALSE', 'All Types^*','InExtFileTemplateDir', 'Ext_Currency_API.Start_Ext_Currency', NULL, 'FALSE', NULL, NULL, NULL);
+   -- External Currencies End
+      
+   -- External Vouchers Start
+   Attribute_Row_('STDVOU',  '1', 'TRUE', 'TRUE', 'FALSE', 'FALSE', 'TRUE', 'FALSE', 'FALSE', 'All Types^*','InExtFileTemplateDir', 'Ext_Load_API.Start_Ext_Vouchers',     NULL, 'FALSE', NULL, NULL, NULL);
+   -- External Vouchers End
+
+   -- Remove Transactions Start
+   Attribute_Row_('RemoveTrans',  '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,'OutExtFileTemplateDir', 'Ext_File_Trans_API.Remove_Ready_Trans',     '0', 'TRUE', 'TRUE', 'TRUE', '3');
+   -- Remove Transactions End
+
+   -- Export/Import External Files Start
+   Attribute_Row_('ExtFileExpImp',  '1', 'TRUE', 'TRUE', 'FALSE', 'FALSE', 'TRUE', 'FALSE', 'FALSE', 'All Types^*', 'InExtFileTemplateDir',  'External_File_Utility_API.Create_External_Input',                  NULL, 'FALSE', NULL,   NULL,   NULL );
+   Attribute_Row_('ExtFileExpImp',  '2', NULL,   NULL,   NULL,    NULL,    NULL,   NULL,    NULL,    NULL,          'OutExtFileTemplateDir', 'External_File_Utility_API.Create_External_Output', '0',  'TRUE',  'TRUE', 'TRUE', '1');
+   -- Export/Import External Files End
+
+   -- Descibe Input Start
+   Attribute_Row_('DescribeInput',  '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,'OutExtFileTemplateDir', 'External_File_Utility_API.Describe_Input_File',     '0', 'TRUE', 'TRUE', 'FALSE', '1');
+   -- Descibe Input End
+
+   DELETE FROM Ext_File_Template_Dir_Tab WHERE  file_template_id = 'ExtFileInsCreate';
+   Attribute_Row_('ExtFileInsCreate',  '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,'OutExtFileTemplateDir', 'External_File_Utility_API.File_Type_Create_Export',     '0', 'TRUE', 'TRUE', 'FALSE', '1');
+
+END;
+/
+
+COMMIT;
+
+-- ***** Ext_File_Template_Dir_Tab End *****
+
+---------------------------------------------------------------------
+    
+-- ***** Ext_File_Template_Detail_Tab Start *****
+
+PROMPT Insert records in Ext_File_Template_Detail_Tab 
+
+DECLARE
+   row_no_                NUMBER;
+   PROCEDURE Attribute_Row_(
+      row_no_             IN OUT NUMBER,
+      file_template_id_   IN VARCHAR2, 
+      file_type_          IN VARCHAR2, 
+      record_type_id_     IN VARCHAR2, 
+      column_id_          IN VARCHAR2, 
+      column_no_          IN NUMBER, 
+      start_position_     IN NUMBER, 
+      end_position_       IN NUMBER, 
+      denominator_        IN NUMBER, 
+      date_format_        IN VARCHAR2, 
+      control_column_     IN VARCHAR2,
+      hide_column_        IN VARCHAR2 DEFAULT 'FALSE',
+      column_sort_        IN NUMBER   DEFAULT NULL,
+      max_length_         IN NUMBER   DEFAULT NULL)
+   IS
+      dummy_                 NUMBER;
+      CURSOR exist_control IS
+         SELECT 1
+         FROM   ext_file_template_detail_tab
+         WHERE  file_template_id = file_template_id_
+         AND    record_type_id   = record_type_id_
+         AND    column_id        = column_id_;
+      CURSOR get_rowno IS
+         SELECT NVL(MAX(row_no),0)
+         FROM   ext_file_template_detail_tab
+         WHERE  file_template_id = file_template_id_ ;
+   BEGIN
+      OPEN exist_control;
+      FETCH exist_control INTO dummy_;
+      IF (exist_control%NOTFOUND) THEN
+         BEGIN
+            OPEN get_rowno;
+            FETCH get_rowno INTO row_no_;
+            IF (get_rowno%NOTFOUND) THEN
+               row_no_ := 0;
+            END IF;
+            CLOSE get_rowno;
+            row_no_ := row_no_ + 1;
+            INSERT INTO Ext_File_Template_Detail_Tab 
+               (file_template_id,
+                row_no, 
+                file_type, 
+                record_type_id, 
+                column_id, 
+                column_no, 
+                start_position, 
+                end_position, 
+                denominator, 
+                date_format, 
+                control_column,
+                hide_column,
+                column_sort,
+                max_length,
+                rowversion)
+            VALUES
+               (file_template_id_,
+                row_no_,
+                file_type_, 
+                record_type_id_, 
+                column_id_, 
+                column_no_, 
+                start_position_, 
+                end_position_, 
+                denominator_, 
+                date_format_, 
+                control_column_,
+                hide_column_,
+                column_sort_,
+                max_length_,
+                SYSDATE);
+         EXCEPTION
+            WHEN dup_val_on_index THEN
+               NULL;      
+         END;
+      END IF;
+      CLOSE exist_control;
+   END Attribute_Row_;
+   --
+   PROCEDURE Attribute_Fnc_ (
+      row_no_            IN NUMBER,
+      file_template_id_  IN VARCHAR2,
+      function_no_       IN NUMBER,
+      main_function_     IN VARCHAR2,
+      function_argument_ IN VARCHAR2)
+   IS
+   BEGIN
+      INSERT
+         INTO ext_file_templ_det_func_tab (
+            file_template_id,
+            row_no,
+            function_no,
+            function_argument,
+            main_function,
+            rowversion)
+         VALUES (
+            file_template_id_,
+            row_no_,
+            function_no_,
+            function_argument_,
+            main_function_,
+            SYSDATE);
+      EXCEPTION
+         WHEN dup_val_on_index THEN
+            NULL;      
+   END Attribute_Fnc_;
+   --
+BEGIN
+   
+   -- External Currencies Start
+   -- Detail definition Standard Currency File 
+   DELETE FROM Ext_File_Template_Detail_Tab WHERE file_template_id = 'STDCURR';
+   DELETE FROM Ext_File_Templ_Det_Func_Tab  WHERE file_template_id = 'STDCURR';
+   Attribute_Row_(row_no_, 'STDCURR', 'ExtCurrency', '1', 'CURRENCY_CODE', 1, NULL, NULL, NULL, NULL,         'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDCURR', 'ExtCurrency', '1', 'CURRENCY_RATE', 2, NULL, NULL, NULL, NULL,         'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDCURR', 'ExtCurrency', '1', 'VALID_FROM',    3, NULL, NULL, NULL, NULL,         'FALSE', 'FALSE', NULL);
+   -- Detail definition Finnish Currency File 
+   DELETE FROM Ext_File_Template_Detail_Tab WHERE file_template_id = 'STDFICURR';
+   DELETE FROM Ext_File_Templ_Det_Func_Tab  WHERE file_template_id = 'STDFICURR';
+   Attribute_Row_(row_no_, 'STDFICURR', 'ExtCurrency', '1', 'CURRENCY_CODE', NULL, 26, 28, NULL,       NULL,       'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDFICURR', 'ExtCurrency', '1', 'CURRENCY_RATE', NULL, 32, 44, '10000000', NULL,       'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDFICURR', 'ExtCurrency', '1', 'VALID_FROM',    NULL, 8, 15,  NULL,       'YYYYMMDD', 'FALSE', 'FALSE', NULL);
+   -- External Currencies End
+   
+   -- External Vouchers Start
+   DELETE FROM Ext_File_Template_Detail_Tab WHERE file_template_id = 'STDVOU';
+   DELETE FROM Ext_File_Templ_Det_Func_Tab  WHERE file_template_id = 'STDVOU';
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'VOUCHER_NO',                   1,  NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'ACCOUNTING_YEAR',              2,  NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'ACCOUNT',                      3,  NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CODE_B',                       4,  NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CODE_C',                       5,  NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CODE_D',                       6,  NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CODE_E',                       7,  NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CODE_F',                       8,  NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CODE_G',                       9,  NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CODE_H',                       10, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CODE_I',                       11, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CODE_J',                       12, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CURRENCY_CODE',                13, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CURRENCY_DEBIT_AMOUNT',        14, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CURRENCY_CREDIT_AMOUNT',       15, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CURRENCY_AMOUNT',              16, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'DEBIT_AMOUNT',                 17, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CREDIT_AMOUNT',                18, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'AMOUNT',                       19, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'QUANTITY',                     20, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'PROCESS_CODE',                 21, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'DELIVERY_TYPE_ID',             22, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'TAX_CODE',		                23, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'PROJECT_ACTIVITY_SEQ_NO',      24, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'TEXT',                         25, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'PARTY_TYPE_ID',                26, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'REFERENCE_NUMBER',             27, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'REFERENCE_SERIE',              28, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'TRANS_CODE',                   29, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'THIRD_CURRENCY_DEBIT_AMOUNT',  30, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'THIRD_CURRENCY_CREDIT_AMOUNT', 31, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'TRANSACTION_DATE',             32, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'LOAD_GROUP_ITEM',              33, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'TAX_DIRECTION',                34, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'TAX_AMOUNT',                   35, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CURRENCY_TAX_AMOUNT',          36, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'VOUCHER_TYPE',                 37, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'EVENT_DATE',                   38, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'RETROACTIVE_DATE',             39, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'TRANSACTION_REASON',           40, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'THIRD_CURRENCY_AMOUNT',        41, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'THIRD_CURRENCY_TAX_AMOUNT',    42, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Fnc_(row_no_, 'STDVOU', 1, 'TO_UPPERCASE', 'COLUMN_REF');
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'CURRENCY_RATE_TYPE',           43, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'STDVOU', 'ExtVoucher', '1', 'PARALLEL_CURR_RATE_TYPE',      44, NULL, NULL, NULL, NULL, 'FALSE', 'FALSE', NULL);
+   
+
+   -- External Vouchers End
+
+   -- Remove Transactions Start
+   DELETE FROM Ext_File_Template_Detail_Tab WHERE file_template_id = 'RemoveTrans';
+   DELETE FROM Ext_File_Templ_Det_Func_Tab  WHERE file_template_id = 'RemoveTrans';
+   Attribute_Row_(row_no_, 'RemoveTrans', 'RemoveTrans', '1', 'LOAD_FILE_ID',     NULL,   1,  12, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'RemoveTrans', 'RemoveTrans', '1', 'FILE_TYPE',        NULL,  16,  30, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'RemoveTrans', 'RemoveTrans', '1', 'FILE_TEMPLATE_ID', NULL,  31,  50, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'RemoveTrans', 'RemoveTrans', '1', 'FILE_DIRECTION',   NULL,  51,  65, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'RemoveTrans', 'RemoveTrans', '1', 'STATE',            NULL,  66,  80, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'RemoveTrans', 'RemoveTrans', '1', 'LOG_DATE',         NULL,  81,  95, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'RemoveTrans', 'RemoveTrans', '1', 'REMOVE_DAYS',      NULL,  96, 110, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'RemoveTrans', 'RemoveTrans', '1', 'REMOVE_DATE',      NULL, 116, 130, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'RemoveTrans', 'RemoveTrans', '1', 'NO_OF_RECORDS',    NULL, 131, 150, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'RemoveTrans', 'RemoveTrans', '1', 'REMOVE_COMPLETE',  NULL, 156, 170, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   -- Remove Transactions End
+   
+   -- Export/Import External Files Start      
+   DELETE FROM Ext_File_Template_Detail_Tab WHERE file_template_id = 'ExtFileExpImp';
+   DELETE FROM Ext_File_Templ_Det_Func_Tab  WHERE file_template_id = 'ExtFileExpImp';
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'A', 'LINE_TYPE',             1, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+      Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'A');
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'A', 'FILE_TYPE',             2, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'A', 'DESCRIPTION',           3, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'A', 'COMPONENT',             4, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'A', 'SYSTEM_DEFINED',        5, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'A', 'VIEW_NAME',             6, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'A', 'FORM_NAME',             7, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'A', 'TARGET_DEFAULT_METHOD', 8, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'A', 'INPUT_PACKAGE',         9, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'A', 'API_TO_CALL_INPUT',    10, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'A', 'API_TO_CALL_OUTPUT',   11, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'B', 'LINE_TYPE',           1,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+      Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'B');
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'B', 'FILE_TYPE',           2,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'B', 'INPUT_PACKAGE',       3,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'B', 'RECORD_TYPE_ID',      4,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'B', 'RECORD_SET_ID',       5,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'B', 'FIRST_IN_RECORD_SET', 6,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'B', 'LAST_IN_RECORD_SET',  7,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'B', 'DESCRIPTION',         8,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'B', 'MANDATORY_RECORD',    9,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'B', 'PARENT_RECORD_TYPE',  10, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'B', 'VIEW_NAME',           11, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'C', 'LINE_TYPE',          1, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+      Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'C');
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'C', 'FILE_TYPE',          2, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'C', 'RECORD_TYPE_ID',     3, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'C', 'COLUMN_ID',          4, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'C', 'MANDATORY',          5, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'C', 'DESTINATION_COLUMN', 6, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'C', 'DESCRIPTION',        7, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   --Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'C', 'DATA_TYPE',          8, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'C', 'DATA_TYPE_DB',       9, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'LINE_TYPE',         1,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+      Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'D');
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'FILE_TYPE',         2,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'FILE_TEMPLATE_ID',  3,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'TEXT_QUALIFIER',    4,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'SYSTEM_DEFINED',    5,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'DESCRIPTION',       6,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'ACTIVE_DEFINITION', 7,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'VALID_DEFINITION',  8,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'SEPARATED',         9,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'DECIMAL_SYMBOL',    10, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'DATE_FORMAT',       11, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'SEPARATOR_ID',      12, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'DENOMINATOR',       13, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'DATE_NLS_CALENDAR', 14, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'D', 'FILE_FORMAT',       15, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'LINE_TYPE',                 1,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+      Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'E');
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'FILE_TYPE',                 2,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'FILE_TEMPLATE_ID',          3,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'ALLOW_ONE_RECORD_SET_ONLY', 4,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'ABORT_IMMEDIATLY',          5,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);                                                                                                                         
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'LOAD_FILE_TYPE_LIST',       6,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'FILE_NAME',                 7,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'BACKUP_FILE_PATH',          8,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'BACKUP_FILE_PATH_SERVER',   9,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'FILE_PATH',                 10, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'FILE_PATH_SERVER',          11, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'REMOVE_COMPLETE',           12, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'FILE_DIRECTION',            13, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'FILE_DIRECTION_DB',         14, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'API_TO_CALL',               15, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'LOG_SKIPPED_LINES',         16, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'LOG_INVALID_LINES',         17, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'SKIP_ALL_BLANKS',           18, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'SKIP_INITIAL_BLANKS',       19, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'ALLOW_RECORD_SET_REPEAT',   20, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'REMOVE_DAYS',               21, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'CHARACTER_SET',             22, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'API_TO_CALL_UNP_BEFORE',    23, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'API_TO_CALL_UNP_AFTER',     24, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'LINE_TYPE',             1,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+      Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'F');
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'FILE_TYPE',             2,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'FILE_TEMPLATE_ID',      3,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'NAME_OPTION_DB',        4,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'FILE_PATH',             5,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'FILE_PATH_SERVER',      6,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'REMOVE_COMPLETE',       7,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'FILE_DIRECTION',        8,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'FILE_DIRECTION_DB',     9,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'API_TO_CALL',           10, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'FILE_NAME',             11, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'NUMBER_OUT_FILL_VALUE', 12, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'OVERWRITE_FILE',        13, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'CREATE_HEADER',         14, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'NAME_OPTION',           15, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'F', 'REMOVE_DAYS',           16, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'E', 'CHARACTER_SET',         17, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'LINE_TYPE',          1,  nULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+         Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'G');                                            
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'FILE_TYPE',          2,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'FILE_TEMPLATE_ID',   3,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'RECORD_TYPE_ID',     4,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'FILE_DIRECTION',     5,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'FILE_DIRECTION_DB',  6,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'CONTROL_STRING',     7,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'DESTINATION_COLUMN', 8,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'STRING_EVALUATE',    9,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'STRING_EVALUATE_DB', 10, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'CONDITION',          11, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'CONDITION_DB',       12, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'ROW_NO',             13, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'GROUP_NO',           14, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'COLUMN_NO',          15, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'START_POSITION',     16, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'END_POSITION',       17, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'G', 'NO_OF_LINES',        18, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'LINE_TYPE',          1,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+      Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'H');
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'FILE_TYPE',          2,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'FILE_TEMPLATE_ID',   3,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'DATE_FORMAT',        4,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'DEFAULT_VALUE',      5,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'CONTROL_COLUMN',     6,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'STRING_EVALUATE',    7,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'STRING_EVALUATE_DB', 8,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'RECORD_TYPE_ID',     9,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'COLUMN_ID',          10, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'ROW_NO',             11, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'COLUMN_NO',          12, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'START_POSITION',     13, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'END_POSITION',       14, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'DENOMINATOR',        15, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'HIDE_COLUMN',        16, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'H', 'COLUMN_SORT',        17, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'LINE_TYPE',        1,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+      Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'I');                                          
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'FILE_TYPE',        2,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'DATA_TYPE_DB',     3,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'DESCRIPTION',      4,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'PARAM_ID',         5,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'LOV_VIEW',         6,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'ENUMERATE_METHOD', 7,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'VALIDATE_METHOD',  8,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'BROWSABLE_FIELD',  9,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'HELP_TEXT',        10, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'DATA_TYPE',        11, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'I', 'PARAM_NO',         12, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'J', 'LINE_TYPE',      1, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+      Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'J');
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'J', 'FILE_TYPE',      2, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'J', 'SET_ID',         3, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'J', 'DESCRIPTION',    4, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'J', 'SET_ID_DEFAULT', 5, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'K', 'LINE_TYPE',         1, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+      Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'K');
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'K', 'FILE_TYPE',         2, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'K', 'SET_ID',            3, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'K', 'DEFAULT_VALUE',     4, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'K', 'MANDATORY_PARAM',   5, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'K', 'SHOW_AT_LOAD',      6, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'K', 'INPUTABLE_AT_LOAD', 7, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'K', 'PARAM_NO',          8, NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'L', 'LINE_TYPE',          1,  nULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+      Attribute_Fnc_(row_no_, 'ExtFileExpImp', 1, 'SET_DEFAULT_VALUE', 'L');                                            
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'L', 'FILE_TEMPLATE_ID',   2,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'L', 'ROW_NO',             3,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'L', 'FUNCTION_NO',        4,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'L', 'MAIN_FUNCTION',      5,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'L', 'FUNCTION_ARGUMENT',  6,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   Attribute_Row_(row_no_, 'ExtFileExpImp', 'ExtFileExpImp', 'L', 'FILE_TYPE',          7,  NULL, NULL, NULL,  NULL, 'FALSE', 'FALSE', NULL);
+   -- Export/Import External Files End
+   
+END;
+/
+
+COMMIT;
+
+-- ***** Ext_File_Template_Detail_Tab End *****
+
+---------------------------------------------------------------------
+    
+-- ***** Ext_File_Template_Control_Tab Start *****
+
+PROMPT Insert records in Ext_File_Template_Control_Tab 
+
+DECLARE
+   PROCEDURE Attribute_Row_(
+      file_template_id_    IN VARCHAR2, 
+      file_type_           IN VARCHAR2, 
+      record_type_id_      IN VARCHAR2, 
+      row_no_              IN NUMBER, 
+      file_direction_      IN VARCHAR2,
+      group_no_            IN NUMBER, 
+      condition_           IN VARCHAR2, 
+      column_no_           IN NUMBER, 
+      start_position_      IN NUMBER, 
+      end_position_        IN NUMBER, 
+      control_string_      IN VARCHAR2,
+      destination_column_  IN VARCHAR2,
+      no_of_lines_         IN NUMBER   DEFAULT NULL )
+   IS
+      dummy_                        NUMBER;
+      CURSOR exist_control IS
+         SELECT 1
+         FROM   Ext_File_Template_Control_Tab
+         WHERE  file_template_id = file_template_id_
+         AND    file_direction   = file_direction_
+         AND    row_no           = row_no_;
+   BEGIN
+      OPEN exist_control;
+      FETCH exist_control INTO dummy_;
+      IF (exist_control%NOTFOUND) THEN
+         BEGIN
+            INSERT INTO Ext_File_Template_Control_Tab 
+               (file_template_id, 
+                file_type, 
+                record_type_id, 
+                row_no,
+                file_direction, 
+                group_no, 
+                condition, 
+                column_no, 
+                start_position, 
+                end_position, 
+                control_string,
+                destination_column,
+                no_of_lines, 
+                Rowversion)
+            VALUES
+               (file_template_id_, 
+                file_type_, 
+                record_type_id_, 
+                row_no_,
+                file_direction_, 
+                group_no_, 
+                condition_, 
+                column_no_, 
+                start_position_, 
+                end_position_, 
+                control_string_,
+                destination_column_,
+                no_of_lines_, 
+                SYSDATE);
+         EXCEPTION
+            WHEN dup_val_on_index THEN
+               NULL;      
+         END;
+      ELSE
+         UPDATE Ext_File_Template_Control_Tab SET
+            record_type_id     = record_type_id_,
+            file_type          = file_type_,
+            group_no           = group_no_,
+            condition          = condition_,
+            column_no          = column_no_,
+            start_position     = start_position_,
+            end_position       = end_position_,
+            control_string     = control_string_,
+            destination_column = destination_column_,
+            no_of_lines        = no_of_lines_
+         WHERE  file_template_id = file_template_id_
+         AND    file_direction   = file_direction_
+         AND    row_no           = row_no_;
+      END IF;         
+   END Attribute_Row_;
+   --
+BEGIN
+   --
+   -- External Currencies Start
+   -- Control definition Finnish Currency File 
+   DELETE FROM Ext_File_Template_Control_Tab WHERE  file_template_id = 'STDFICURR';
+   Attribute_Row_('STDFICURR', 'ExtCurrency', '1', 1, '1', '1', '2', NULL, 1,   7, 'VK01001', NULL);
+   Attribute_Row_('STDFICURR', 'ExtCurrency', '1', 2, '1', '1', '2', NULL, 22, 25, '0001',    NULL);
+   Attribute_Row_('STDFICURR', 'ExtCurrency', '1', 3, '1', '1', '2', NULL, 29, 31, 'EUR',     NULL);
+   -- External Currencies End
+
+   -- Export/Import External Files Start
+   DELETE FROM Ext_File_Template_Control_Tab WHERE  file_template_id = 'ExtFileExpImp';
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'A', 1,  '1', '1',  '2', 1,    NULL, NULL, 'A', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'B', 2,  '1', '2',  '2', 1,    NULL, NULL, 'B', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'C', 3,  '1', '3',  '2', 1,    NULL, NULL, 'C', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'D', 4,  '1', '4',  '2', 1,    NULL, NULL, 'D', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'E', 5,  '1', '5',  '2', 1,    NULL, NULL, 'E', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'F', 6,  '1', '6',  '2', 1,    NULL, NULL, 'F', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'G', 7,  '1', '7',  '2', 1,    NULL, NULL, 'G', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'H', 8,  '1', '8',  '2', 1,    NULL, NULL, 'H', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'I', 9,  '1', '9',  '2', 1,    NULL, NULL, 'I', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'J', 10, '1', '10', '2', 1,    NULL, NULL, 'J', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'K', 11, '1', '11', '2', 1,    NULL, NULL, 'K', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'L', 12, '1', '12', '2', 1,    NULL, NULL, 'L', NULL);
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'A', 1,  '2', '1',  '2', NULL, NULL, NULL, 'A', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'B', 2,  '2', '2',  '2', NULL, NULL, NULL, 'B', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'C', 3,  '2', '3',  '2', NULL, NULL, NULL, 'C', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'D', 4,  '2', '4',  '2', NULL, NULL, NULL, 'D', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'E', 5,  '2', '5',  '2', NULL, NULL, NULL, 'E', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'F', 6,  '2', '6',  '2', NULL, NULL, NULL, 'F', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'G', 7,  '2', '7',  '2', NULL, NULL, NULL, 'G', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'H', 8,  '2', '8',  '2', NULL, NULL, NULL, 'H', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'I', 9,  '2', '9',  '2', NULL, NULL, NULL, 'I', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'J', 10, '2', '10', '2', NULL, NULL, NULL, 'J', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'K', 11, '2', '11', '2', NULL, NULL, NULL, 'K', 'C70');
+   Attribute_Row_('ExtFileExpImp', 'ExtFileExpImp', 'L', 12, '2', '12', '2', NULL, NULL, NULL, 'L', 'C70');
+   -- Export/Import External Files End
+END;
+/
+
+COMMIT;
+
+-- ***** Ext_File_Template_Control_Tab End *****
+
+---------------------------------------------------------------------
+
+-- ***** Ext_File_Separator_Tab Start *****
+
+PROMPT Insert records in Ext_File_Separator_Tab 
+
+DECLARE
+   newrec_      Ext_File_Separator_Tab%ROWTYPE;
+BEGIN   
+   newrec_.separator_id          := '1';
+   newrec_.description           := 'Semicolon';
+   newrec_.separator             := ';';
+   newrec_.separator_ascii       := '59';
+   newrec_.rowversion            := sysdate;
+   Ext_File_Separator_API.Insert_Lu_Data_Rec__(newrec_);
+   newrec_.separator_id          := '2';
+   newrec_.description           := 'Tab';
+   newrec_.separator             := '	';
+   newrec_.separator_ascii       := '9';
+   newrec_.rowversion            := sysdate;
+   Ext_File_Separator_API.Insert_Lu_Data_Rec__(newrec_);
+   newrec_.separator_id          := '3';
+   newrec_.description           := 'Hash mark';
+   newrec_.separator             := '#';
+   newrec_.separator_ascii       := '35';
+   newrec_.rowversion            := sysdate;
+   Ext_File_Separator_API.Insert_Lu_Data_Rec__(newrec_);
+   newrec_.separator_id          := 'LF';
+   newrec_.description           := 'Line Feed';
+   newrec_.separator             := CHR(13) || CHR(10);
+   newrec_.separator_ascii       := '';
+   newrec_.rowversion            := sysdate;
+   Ext_File_Separator_API.Insert_Lu_Data_Rec__(newrec_);
+   newrec_.separator_id          := ':';
+   newrec_.description           := 'Colon';
+   newrec_.separator             := ':';
+   newrec_.separator_ascii       := '58';
+   newrec_.rowversion            := sysdate;
+   Ext_File_Separator_API.Insert_Lu_Data_Rec__(newrec_);
+END;
+/
+COMMIT;
+
+-- ***** Ext_File_Separator_Tab End *****
+
+---------------------------------------------------------------------
+
+-- ***** Ext_File_Type_Param_Tab Start *****
+
+PROMPT Insert records in Ext_File_Type_Param_Tab 
+
+DECLARE
+   PROCEDURE Attribute_Row_(
+      file_type_          IN VARCHAR2, 
+      param_no_           IN NUMBER, 
+      param_id_           IN VARCHAR2, 
+      description_        IN VARCHAR2, 
+      lov_view_           IN VARCHAR2, 
+      enumerate_method_   IN VARCHAR2, 
+      validate_method_    IN VARCHAR2, 
+      browsable_field_    IN VARCHAR2, 
+      help_text_          IN VARCHAR2, 
+      data_type_          IN VARCHAR2 )
+   IS
+      newrec_      Ext_File_Type_Param_Tab%ROWTYPE;
+   BEGIN
+      newrec_.File_Type           := file_type_;
+      newrec_.param_no            := param_no_;
+      newrec_.param_id            := param_id_;
+      newrec_.Description         := description_;
+      newrec_.lov_view            := lov_view_;
+      newrec_.enumerate_method    := enumerate_method_;
+      newrec_.validate_method     := validate_method_;
+      newrec_.browsable_field     := browsable_field_;
+      newrec_.help_text           := help_text_;
+      newrec_.data_type           := data_type_;
+      newrec_.validate_method     := validate_method_;
+      newrec_.rowversion          := sysdate;
+      Ext_File_Type_Param_API.Insert_Lu_Data_Rec__(newrec_);
+   END Attribute_Row_;
+   --
+BEGIN   
+   --
+   --Attribute_Row_(file_type_, param_no_, param_id_,           description_,             lov_view_,                           enumerate_method_,           validate_method_,                                    browsable_field_, help_text_, data_type_);
+   
+   DELETE FROM Ext_File_Type_Param_Tab WHERE  file_type = 'ExtVoucher';
+   Attribute_Row_('ExtVoucher',    1, 'COMPANY',                'Company',                'COMPANY_FINANCE',                   NULL,                        'Company_Finance_API.Exist(COMPANY)',                'FALSE', NULL,             '1');
+   Attribute_Row_('ExtVoucher',    2, 'USER_ID',                'User Id',                'USER_FINANCE(COMPANY)',             NULL,                        'User_Finance_API.Exist(COMPANY,USERID)',            'FALSE', NULL,             '1');
+   Attribute_Row_('ExtVoucher',    3, 'LOAD_TYPE',              'Load_Type',              'EXT_PARAMETERS(COMPANY)',           NULL,                        'Ext_Parameters_API.Exist(COMPANY,LOAD_TYPE)',       'FALSE', NULL,             '1');
+   Attribute_Row_('ExtVoucher',    4, 'LOAD_DATE',              'Load Date',              NULL,                                NULL,                        'Ext_File_Message_API.Is_Date_Format_Ok(LOAD_DATE)', 'FALSE', NULL,             '3');
+   Attribute_Row_('ExtVoucher',    5, 'USER_GROUP',             'User Group',             'USER_GROUP_MEMBER_FINANCE2(COMPANY,USER_ID)', NULL,              'User_Group_Member_Finance_API.Exist(COMPANY,USER_GROUP,USER_ID)', 'FALSE', '', '1');
+   Attribute_Row_('ExtVoucher',    6, 'CHECK_WHEN_LOADED',      'Check When Loaded',      NULL,                                'Fnd_Boolean_API.Enumerate', NULL,                                                'FALSE', 'TRUE/FALSE',     '1');
+   Attribute_Row_('ExtVoucher',    7, 'CREATE_WHEN_CHECKED',    'Create When Checked',    NULL,                                'Fnd_Boolean_API.Enumerate', NULL,                                                'FALSE', 'TRUE/FALSE',     '1');
+   
+   DELETE FROM Ext_File_Type_Param_Tab WHERE  file_type = 'ExtCurrency';
+   Attribute_Row_('ExtCurrency',   1, 'TASK_ID',                'Task Id',                'EXT_CURRENCY_TASK',                  NULL,                        'Ext_Currency_Task_API.Exist(TASK_ID)',              'FALSE', NULL,         '1');
+   Attribute_Row_('ExtCurrency',   2, 'COMPANY',                'Company',                'COMPANY_FINANCE',                    NULL,                        'Company_Finance_API.Exist(COMPANY)',                'FALSE', NULL,         '1');
+   Attribute_Row_('ExtCurrency',   3, 'CURRENCY_TYPE',          'Currency Type',          'CURRENCY_TYPE3(COMPANY)',             NULL,                        'Currency_Type_API.Exist(COMPANY,CURRENCY_TYPE)',    'FALSE', NULL,         '1');
+   Attribute_Row_('ExtCurrency',   4, 'BASE_CURRENCY',          'Base Currency',          NULL,                                 NULL,                        'Currency_Code_API.Exist(COMPANY,BASE_CURRENCY)',    'FALSE', NULL,         '1');
+   Attribute_Row_('ExtCurrency',   5, 'RATES_INVERTED',         'Rates Inverted',         NULL,                                 'Fnd_Boolean_API.Enumerate', NULL,                                                'FALSE', 'TRUE/FALSE', '1');
+   Attribute_Row_('ExtCurrency',   6, 'CONVERSION_FACTOR_CONSIDERED',     'Conversion Factor Considered',         NULL,         'Finance_Yes_No_API.Enumerate', NULL,                                              'NO',  'Yes - Conversion Factor is already considered in the file.', '1');
+   
+   DELETE FROM Ext_File_Type_Param_Tab WHERE  file_type = 'ExtFileExpImp';
+   Attribute_Row_('ExtFileExpImp', 1, 'FILE_TYPEX',             'File Type',              'EXT_FILE_TYPE_USABLE',               NULL,                        NULL,                                                'FALSE', NULL,         '1');
+   Attribute_Row_('ExtFileExpImp', 2, 'FILE_TEMPLATE_IDX',      'File Template',          'EXT_FILE_TEMPLATE_LOV2(FILE_TYPEX)', NULL,                        NULL,                                                'FALSE', NULL,         '1');
+   Attribute_Row_('ExtFileExpImp', 3, 'EXPORT_FILE_TYPE',       'Export File Type',       NULL,                                 'Fnd_Boolean_API.Enumerate', NULL,                                                'FALSE', 'TRUE/FALSE', '1');
+   Attribute_Row_('ExtFileExpImp', 4, 'EXPORT_FILE_TEMPLATE',   'Export File Template',   NULL,                                 'Fnd_Boolean_API.Enumerate', NULL,                                                'FALSE', 'TRUE/FALSE', '1');
+   Attribute_Row_('ExtFileExpImp', 5, 'FILE_DIRECTION_DB',      'File Direction',         NULL,                                 NULL,                        NULL,                                                'FALSE', NULL,         '1');
+   Attribute_Row_('ExtFileExpImp', 6, 'FILE_TYPEY',             'New File Type',         'EXT_FILE_TYPE_USABLE',                NULL,                        NULL,                                                'FALSE', NULL,         '1');
+   Attribute_Row_('ExtFileExpImp', 7, 'FILE_TEMPLATE_IDY',      'New File Template',     'EXT_FILE_TEMPLATE_LOV2',              NULL,                        NULL,                                                'FALSE', NULL,         '1');
+
+   DELETE FROM Ext_File_Type_Param_Tab WHERE  file_type = 'DescribeInput';
+   Attribute_Row_('DescribeInput', 1, 'FILE_TEMPLATE_IDX',      'File Template',          'IN_EXT_FILE_TEMPLATE_DIR_LOV',       NULL,                        NULL,                                                'FALSE', NULL,         '1');
+   
+   DELETE FROM Ext_File_Type_Param_Tab WHERE  file_type = 'RemoveTrans';
+   Attribute_Row_('RemoveTrans',   1, 'FILE_TYPEX',             'File Type',              'EXT_FILE_TYPE_USABLE',               NULL,                        NULL,                                                'FALSE', NULL,         '1');
+   Attribute_Row_('RemoveTrans',   2, 'FILE_TEMPLATE_IDX',      'File Template',          'EXT_FILE_TEMPLATE_LOV2(FILE_TYPEX)', NULL,                        NULL,                                                'FALSE', NULL,         '1');
+   Attribute_Row_('RemoveTrans',   3, 'REMOVE_ALL_LOAD_STATES', 'Remove All Load States', NULL,                                 'Fnd_Boolean_API.Enumerate', NULL,                                                'FALSE', 'TRUE/FALSE', '1');
+   
+   DELETE FROM Ext_File_Type_Param_Tab WHERE  file_type = 'ExtFileInsCreate';
+   Attribute_Row_('ExtFileInsCreate',   1, 'FILE_TYPEX',             'File Type',              'EXT_FILE_TYPE_USABLE',               NULL,                        NULL,                                                'FALSE', NULL,         '1');
+   Attribute_Row_('ExtFileInsCreate',   2, 'FILE_TEMPLATE_IDX',      'File Template',          'EXT_FILE_TEMPLATE_LOV2(FILE_TYPEX)', NULL,                        NULL,                                                'FALSE', NULL,         '1');
+
+END;
+/
+COMMIT;
+
+-- ***** Ext_File_Type_Param_Tab End *****
+
+---------------------------------------------------------------------
+
+-- ***** Ext_Type_Param_Set_Tab Start *****
+
+PROMPT Insert records in Ext_Type_Param_Set_Tab 
+
+DECLARE
+   PROCEDURE Attribute_Row_(
+      file_type_          IN VARCHAR2, 
+      set_id_             IN NUMBER, 
+      description_        IN VARCHAR2, 
+      set_id_default_     IN VARCHAR2 )
+   IS
+      newrec_      Ext_Type_Param_Set_Tab%ROWTYPE;
+   BEGIN
+      newrec_.file_type           := file_type_;
+      newrec_.set_id              := set_id_;
+      newrec_.description         := description_;
+      newrec_.set_id_default      := set_id_default_;
+      newrec_.rowversion          := SYSDATE;
+      Ext_Type_Param_Set_API.Insert_Lu_Data_Rec__(newrec_);
+   END Attribute_Row_;
+   --
+BEGIN 
+   --  
+   -- Attribute_Row_(file_type_,   set_id_, description_,                   set_id_default_);
+   -- 
+   Attribute_Row_('ExtVoucher',    '1',     'External Voucher Default Set', 'TRUE');
+
+   Attribute_Row_('ExtCurrency',   '1',     'Based On File Name',           'TRUE');
+   Attribute_Row_('ExtCurrency',   '2',     'Based On Task Id',             'FALSE');
+
+   Attribute_Row_('ExtFileExpImp', '1',     'External File Export',         'TRUE');
+   Attribute_Row_('ExtFileExpImp', '2',     'External File Import',         'FALSE');
+   
+   Attribute_Row_('DescribeInput', '1',     'Describe Input File',          'TRUE');
+   
+   Attribute_Row_('RemoveTrans',   '1',     'Remove Transactions',          'TRUE');
+   
+   DELETE FROM Ext_Type_Param_Set_Tab WHERE  file_type = 'ExtFileInsCreate';
+   Attribute_Row_('ExtFileInsCreate',  '1',     'External File Insert Script',          'TRUE');
+END;
+/
+COMMIT;
+
+-- ***** Ext_Type_Param_Set_Tab End *****
+
+---------------------------------------------------------------------
+
+-- ***** Ext_Type_Param_Per_Set_Tab Start *****
+
+PROMPT Insert records in Ext_Type_Param_Per_Set_Tab 
+
+DECLARE
+   PROCEDURE Attribute_Row_(
+      file_type_          IN VARCHAR2, 
+      set_id_             IN NUMBER, 
+      param_no_           IN NUMBER, 
+      default_value_      IN VARCHAR2, 
+      mandatory_param_    IN VARCHAR2, 
+      show_at_load_       IN VARCHAR2, 
+      inputable_at_load_  IN VARCHAR2 )
+   IS
+      newrec_      Ext_Type_Param_Per_Set_Tab%ROWTYPE;
+   BEGIN
+   INSERT
+      INTO ext_type_param_per_set_tab (
+         file_type,
+         param_no,
+         set_id,
+         default_value,
+         mandatory_param,
+         show_at_load,
+         inputable_at_load,
+         rowversion)
+      VALUES (
+         file_type_,
+         param_no_,
+         set_id_,
+         default_value_,
+         mandatory_param_,
+         show_at_load_,
+         inputable_at_load_,
+         SYSDATE);
+   END Attribute_Row_;
+   --
+BEGIN   
+   --
+   -- Attribute_Row_(file_type_,   set_id_, param_no_, default_value_,     mandatory_, show_,   inputable_);
+   
+   DELETE FROM Ext_Type_Param_Per_Set_Tab 
+   WHERE  file_type = 'ExtVoucher' AND set_id = '1';
+   Attribute_Row_('ExtVoucher',    '1',      1,         '<COMPANY>',       'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtVoucher',    '1',      2,         '<USER_ID>',       'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtVoucher',    '1',      3,         '<LOAD_TYPE>',     'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtVoucher',    '1',      4,         '<SYSDATE>',       'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtVoucher',    '1',      5,         '<USER_GROUP>',    'FALSE',    'TRUE',  'TRUE');
+   Attribute_Row_('ExtVoucher',    '1',      6,         'FALSE',           'FALSE',    'TRUE',  'TRUE');
+   Attribute_Row_('ExtVoucher',    '1',      7,         'FALSE',           'FALSE',    'TRUE',  'TRUE');
+
+   DELETE FROM Ext_Type_Param_Per_Set_Tab 
+   WHERE  file_type = 'ExtCurrency' AND set_id IN ('1','2');
+   Attribute_Row_('ExtCurrency',   '1',      2,         '<COMPANY>',       'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtCurrency',   '1',      3,         '<CURR_TYPE>',     'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtCurrency',   '1',      4,         '<BASE_CURRENCY>', 'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtCurrency',   '1',      5,         '<CURR_INVERT>',   'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtCurrency',   '1',      6,         'N',            'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtCurrency',   '2',      1,         NULL,              'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtCurrency',   '2',      4,         '<BASE_CURRENCY>', 'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtCurrency',   '2',      5,         '<CURR_INVERT>',   'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtCurrency',   '2',      6,         'N',            'TRUE',     'TRUE',  'TRUE');
+
+   DELETE FROM Ext_Type_Param_Per_Set_Tab 
+   WHERE  file_type = 'ExtFileExpImp' AND set_id IN ('1','2');
+   Attribute_Row_('ExtFileExpImp', '1',      1,         NULL,              'FALSE',    'TRUE',  'TRUE');
+   Attribute_Row_('ExtFileExpImp', '1',      2,         '%',               'FALSE',    'TRUE',  'TRUE');
+   Attribute_Row_('ExtFileExpImp', '1',      3,         'TRUE',            'FALSE',    'TRUE',  'TRUE');
+   Attribute_Row_('ExtFileExpImp', '1',      4,         'TRUE',            'FALSE',    'TRUE',  'TRUE');
+   Attribute_Row_('ExtFileExpImp', '1',      5,         '2',               'FALSE',    'FALSE', 'FALSE');
+   Attribute_Row_('ExtFileExpImp', '2',      6,         NULL,              'FALSE',    'TRUE',  'TRUE');
+   Attribute_Row_('ExtFileExpImp', '2',      7,         NULL,              'FALSE',    'TRUE',  'TRUE');
+   Attribute_Row_('ExtFileExpImp', '2',      5,         '1',               'FALSE',    'FALSE', 'FALSE');
+   
+   DELETE FROM Ext_Type_Param_Per_Set_Tab 
+   WHERE  file_type = 'DescribeInput' AND set_id = '1';
+   Attribute_Row_('DescribeInput', '1',      1,         NULL,              'TRUE',     'TRUE',  'TRUE');
+
+   DELETE FROM Ext_Type_Param_Per_Set_Tab 
+   WHERE  file_type = 'RemoveTrans' AND set_id = '1';
+   Attribute_Row_('RemoveTrans',   '1',      1,         '%',               'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('RemoveTrans',   '1',      2,         '%',               'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('RemoveTrans',   '1',      3,         'FALSE',           'TRUE',     'TRUE',  'TRUE');
+
+   DELETE FROM Ext_Type_Param_Per_Set_Tab WHERE  file_type = 'ExtFileInsCreate';
+   Attribute_Row_('ExtFileInsCreate',   '1',      1,         NULL,           'TRUE',     'TRUE',  'TRUE');
+   Attribute_Row_('ExtFileInsCreate',   '1',      2,         NULL,           'TRUE',     'TRUE',  'TRUE');
+
+END;
+/
+COMMIT;
+
+-- ***** Ext_Type_Param_Per_Set_Tab End *****
+
+---------------------------------------------------------------------
+
+PROMPT AccrulExtFile.ins end here
+
+---------------------------------------------------------------------

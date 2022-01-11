@@ -1,0 +1,72 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  CurrencyCode
+--  Component:  ACCRUL
+--  LU:         DimCurrencyCode
+--
+--  File     :  DimCurrencyCodeDm.api
+--  Purpose  :  Create DATA MART dimension view DIM_CURRENCY_CODE_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   -------------------------------------------------
+--  090715  RORALK Created for 75 core version of IFS BA
+--------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_CURRENCY_CODE
+DEFINE VIEW       = DIM_CURRENCY_CODE_DM
+DEFINE MV         = CURRENCY_CODE_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimCurrencyCode
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.id                                                                                        id,
+       a.company                                                                                   company,
+       a.code                                                                                      code,
+       (SELECT substr(Iso_Currency_API.Get_Description(currency_code) ,1,200) FROM dual)           description,
+       a.conversion_factor                                                                         conversion_factor,
+       a.no_of_decimals_in_amt                                                                     no_of_decimals_in_amt,
+       a.no_of_decimals_in_rate                                                                    no_of_decimals_in_rate,
+       a.emu_currency_from_date                                                                    emu_currency_from_date,
+       a.inverted                                                                                  inverted
+FROM CURRENCY_CODE_MV a, DIM_ISO_CURRENCY_DM b
+WHERE a.code = b.code
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Currency Code^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(3)/UPPERCASE^PROMPT=Currency^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(800)^PROMPT=Description^';
+   COMMENT ON COLUMN &VIEW..CONVERSION_FACTOR
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=Conversion Factor^';
+COMMENT ON COLUMN &VIEW..NO_OF_DECIMALS_IN_AMT
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=No of decimals in amount^';
+COMMENT ON COLUMN &VIEW..NO_OF_DECIMALS_IN_RATE
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=No of decimals in rate^';
+COMMENT ON COLUMN &VIEW..EMU_CURRENCY_FROM_DATE
+   IS 'FLAGS=A-IUL^DATATYPE=DATE^PROMPT=Emu currency from date^';
+COMMENT ON COLUMN &VIEW..INVERTED
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(5)^PROMPT=Inverted quotation when reference currency^';
+   
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

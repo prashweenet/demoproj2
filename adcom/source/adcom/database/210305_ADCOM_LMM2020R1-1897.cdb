@@ -1,0 +1,33 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210305_ADCOM_LMM2020R1-1897.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210305   satglk  Created
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+PROMPT Starting 210305_ADCOM_LMM2020R1-1897.cdb
+PROMPT Increased the length of table column DESCRIPTION of TABLE AV_FAULT_TAB
+EXEC Installation_SYS.Log_Detail_Time_Stamp('ADCOM', '210305_ADCOM_LMM2020R1-1897.cdb', 'Timestamp_1');
+
+DECLARE
+   columns_       Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'DESCRIPTION', 'VARCHAR2(500)', 'Y');
+   Database_SYS.Alter_Table('AV_FAULT_TAB', columns_, TRUE);
+   COMMIT;
+END;
+/
+
+EXEC Installation_SYS.Log_Detail_Time_Stamp('ADCOM', '210305_ADCOM_LMM2020R1-1897.cdb', 'Done');
+PROMPT Finished with 210305_ADCOM_LMM2020R1-1897.cdb
+
+SET SERVEROUTPUT OFF

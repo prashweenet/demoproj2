@@ -1,0 +1,69 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  AccountingProcessCode
+--  Component:  ACCRUL
+--  LU:         AccountProcessCode
+--
+--  File     :  DimAccountingProcessCodeDm.api
+--  Purpose  :  Create DATA MART dimension view DIM_ACCOUNTING_PROCESS_CODE_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   -------------------------------------------------
+--  090715  RORALK Created for 75 core version of IFS BA
+--------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_ACCOUNTING_PROCESS_CODE
+DEFINE VIEW       = DIM_ACCOUNTING_PROCESS_CODE_DM
+DEFINE MV         = ACCOUNTING_PROCESS_CODE_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = AccountProcessCode
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.id                                              id,
+       a.company                                         company,
+       a.code                                            code,
+       SUBSTR(NVL((SELECT description
+      FROM ACC_PROCESS_CODE_TRANSL_MV b
+      WHERE b.company         = a.company
+      AND   b.translation_key = a.code
+      AND   b.lu              = 'AccountProcessCode'
+      AND   b.language_code   =
+      (SELECT language
+      FROM FND_SESSION)),a.description),1,100)           description,
+       a.valid_from                                      valid_from,
+       a.valid_until                                     valid_until
+FROM &MV a
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Account Process Code^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(10)/UPPERCASE^PROMPT=Process Code^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Description^';
+   COMMENT ON COLUMN &VIEW..VALID_FROM
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Valid From^';
+COMMENT ON COLUMN &VIEW..VALID_UNTIL
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Valid Until^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

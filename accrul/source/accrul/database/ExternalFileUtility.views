@@ -1,0 +1,25 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalFileUtility
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Ext_File_Xml IS
+   Prompt = 'External File XML File'
+SELECT 
+ load_file_id  load_file_id,
+ clob_file     clob_file,
+ rowid         objid
+FROM EXT_FILE_XML_FILE_TAB;

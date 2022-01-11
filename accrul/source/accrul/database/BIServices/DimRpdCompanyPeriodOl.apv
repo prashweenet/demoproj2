@@ -1,0 +1,125 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  RpdCompanyPeriod
+--  Component:  ACCRUL
+--  LU:         DimRpdCompanyPeriod
+--
+--  File     :  DimRpdCompanyPeriodOl.api
+--  Purpose  :  Create ON LINE dimension view DIM_RPD_COMPANY_PERIOD_OL
+--  Note     :  NOTE that NULL identity handling is not required for OL views
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+----------------------------------------------------------------------------- 
+--  Date    Sign   History
+--  ------  ----   ----------------------------------------------------------
+--  111207  SJayLK Created
+----------------------------------------------------------------------------- 
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_RPD_COMPANY_PERIOD
+DEFINE VIEW       = DIM_RPD_COMPANY_PERIOD_OL
+DEFINE TAB        = RPD_COMPANY_PERIOD_TAB
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimRpdCompanyPeriod
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT d.company || '^' || TO_CHAR(d.accounting_date, 'YYYY-MM-DD')                                              id,
+       d.company                                                                                                 company,
+       reporting_date                                                                                            code,
+       d.company || '^' ||TO_CHAR(d.reporting_date, 'YYYY-MM-DD')                                                alt_dim_id,
+       d.rpd_id || '^' || d.company || '^' || TO_CHAR(d.accounting_date, 'YYYY-MM-DD', 'NLS_CALENDAR=Gregorian') id_with_rpd_id,
+       d.rpd_id || '^' || d.company || '^' || TO_CHAR(d.reporting_date, 'YYYY-MM-DD', 'NLS_CALENDAR=Gregorian')  alt_dim_id_with_rpd_id,
+       d.rpd_id                                                                                                  rpd_id,
+       i.description                                                                                             rpd_id_description,
+       d.rpd_year                                                                                                rpd_year,
+       d.rpd_period                                                                                              rpd_period,
+       p.year_period_str                                                                                         year_period_str,
+       d.reporting_date                                                                                          reporting_date,
+       d.accounting_date                                                                                         accounting_date,
+       p.from_date                                                                                               from_date,
+       p.until_date                                                                                              until_date,
+       p.year_period_num                                                                                         year_period_num,
+       p.string_attribute1                                                                                       string_attribute1,
+       p.string_attribute2                                                                                       string_attribute2,
+       p.string_attribute3                                                                                       string_attribute3,
+       p.string_attribute4                                                                                       string_attribute4,
+       p.string_attribute5                                                                                       string_attribute5,
+       p.number_attribute1                                                                                       number_attribute1,
+       p.number_attribute2                                                                                       number_attribute2,
+       p.number_attribute3                                                                                       number_attribute3,
+       p.number_attribute4                                                                                       number_attribute4,
+       p.number_attribute5                                                                                       number_attribute5
+FROM RPD_COMPANY_PERIOD_DET_TAB d,RPD_IDENTITY_TAB i,RPD_PERIOD_TAB p
+WHERE i.rpd_id     = d.rpd_id
+   AND p.rpd_id     = d.rpd_id
+   AND p.rpd_year   = d.rpd_year
+   AND p.rpd_period = d.rpd_period
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Company Reporting Period^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=DATE/UPPERCASE^PROMPT=Reporting Date^';
+COMMENT ON COLUMN &VIEW..ALT_DIM_ID
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=ALT_DIM_ID^';
+   COMMENT ON COLUMN &VIEW..ID_WITH_RPD_ID
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=ID^';
+   COMMENT ON COLUMN &VIEW..ALT_DIM_ID_WITH_RPD_ID
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(200)^PROMPT=ALT_DIM_ID^';
+   COMMENT ON COLUMN &VIEW..RPD_ID
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Reporting Period Definition ID^';
+   COMMENT ON COLUMN &VIEW..RPD_ID_DESCRIPTION
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(200)^PROMPT=Reporting Period Definition Description^';
+   COMMENT ON COLUMN &VIEW..RPD_YEAR
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=Reporting Year^';
+COMMENT ON COLUMN &VIEW..RPD_PERIOD
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=Reporting Period^';
+COMMENT ON COLUMN &VIEW..YEAR_PERIOD_STR
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(10)^PROMPT=Reporting Year Period^';
+   COMMENT ON COLUMN &VIEW..REPORTING_DATE
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Reporting Date^';
+COMMENT ON COLUMN &VIEW..ACCOUNTING_DATE
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Accounting Date^';
+COMMENT ON COLUMN &VIEW..FROM_DATE
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Reporting Period From Date^';
+COMMENT ON COLUMN &VIEW..UNTIL_DATE
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Reporting Period Until Date^';
+COMMENT ON COLUMN &VIEW..YEAR_PERIOD_NUM
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=Reporting Year Period Number Representation^';
+COMMENT ON COLUMN &VIEW..STRING_ATTRIBUTE1
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=String Attribute 1^';
+   COMMENT ON COLUMN &VIEW..STRING_ATTRIBUTE2
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=String Attribute 2^';
+   COMMENT ON COLUMN &VIEW..STRING_ATTRIBUTE3
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=String Attribute 3^';
+   COMMENT ON COLUMN &VIEW..STRING_ATTRIBUTE4
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=String Attribute 4^';
+   COMMENT ON COLUMN &VIEW..STRING_ATTRIBUTE5
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=String Attribute 5^';
+   COMMENT ON COLUMN &VIEW..NUMBER_ATTRIBUTE1
+   IS 'FLAGS=A-IUL^DATATYPE=NUMBER^PROMPT=Number Attribute 1^';
+COMMENT ON COLUMN &VIEW..NUMBER_ATTRIBUTE2
+   IS 'FLAGS=A-IUL^DATATYPE=NUMBER^PROMPT=Number Attribute 2^';
+COMMENT ON COLUMN &VIEW..NUMBER_ATTRIBUTE3
+   IS 'FLAGS=A-IUL^DATATYPE=NUMBER^PROMPT=Number Attribute 3^';
+COMMENT ON COLUMN &VIEW..NUMBER_ATTRIBUTE4
+   IS 'FLAGS=A-IUL^DATATYPE=NUMBER^PROMPT=Number Attribute 4^';
+COMMENT ON COLUMN &VIEW..NUMBER_ATTRIBUTE5
+   IS 'FLAGS=A-IUL^DATATYPE=NUMBER^PROMPT=Number Attribute 5^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE TAB
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

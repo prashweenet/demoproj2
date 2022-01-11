@@ -1,0 +1,24 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CombinationControlTypesHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Get_Cct_Enabled___(
+   posting_type_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   cct_enabled_ VARCHAR2(5);
+BEGIN
+   cct_enabled_ := Posting_Ctrl_Posting_Type_API.Cct_Enabled(posting_type_);
+   IF (cct_enabled_ = 'FALSE') THEN 
+      Error_SYS.Record_Access_Blocked(lu_name_, 'NOTALLOWED: Posting Type :P1 is not allowed to use in Combination Control Types', posting_type_);
+   END IF;
+   RETURN NULL;
+END Get_Cct_Enabled___;

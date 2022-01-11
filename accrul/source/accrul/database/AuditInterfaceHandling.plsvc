@@ -1,0 +1,566 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AuditInterfaceHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Get_Parameters_Ext___(
+   company_     IN VARCHAR2,
+   country_     IN VARCHAR2,
+   report_type_ IN VARCHAR2) RETURN Parameters_Structure_Rec
+IS
+   method_name_         VARCHAR2(200);
+   rec_                 Parameters_Structure_Rec;
+   company_changed_     BOOLEAN := FALSE;
+BEGIN
+   Company_Finance_API.Exist(company_);
+   method_name_            := 'SAFT_REPORTING_UTIL_API.GENERATE_REPORT_BATCH__';
+   rec_.schedule_method_id := Batch_Schedule_Method_API.Get_Schedule_Method_Id(method_name_);
+   rec_.description        := Batch_Schedule_Method_API.Get_Description(rec_.schedule_method_id);
+   
+   IF (country_ IS NULL  AND report_type_ IS NULL) THEN
+      company_changed_ := TRUE;
+   END IF;
+   IF (country_ IS NULL) THEN      
+      rec_.country := Audit_Format_API.Get_Default_Country(company_);      
+      IF (rec_.country IS NULL) THEN
+         Error_SYS.Record_General(lu_name_, 'NODEFAUDITCOUNTRY: There is no default audit format specified in company :P1', company_);
+      END IF;
+   ELSE
+      rec_.country := country_;
+   END IF;
+   
+   IF (report_type_ IS NULL) THEN
+      IF (company_changed_) THEN
+         rec_.report_type := Audit_Format_API.Get_Def_Report_Type(company_, rec_.COUNTRY);
+      ELSE
+         rec_.report_type := Audit_Format_API.Get_Report_Type(company_, rec_.COUNTRY);
+      END IF;
+      Audit_Format_API.Audit_Format_Exist(company_, rec_.COUNTRY, rec_.REPORT_TYPE);
+      rec_.report_type_db := Audit_Report_Types_API.Encode(rec_.REPORT_TYPE);
+   ELSE
+      rec_.report_type := report_type_;
+      rec_.report_type_db := Audit_Report_Types_API.Encode(rec_.REPORT_TYPE);
+   END IF;
+   
+   IF (rec_.country IS NOT NULL AND rec_.report_type IS NOT NULL) THEN
+      Audit_Format_API.Get_External_File_Info__(rec_.file_type, rec_.file_template_id, company_, rec_.country, rec_.report_type); 
+   END IF;
+   
+   RETURN rec_;
+END Get_Parameters_Ext___;
+
+-- gelr:saft_poland, begin
+@DynamicComponentDependency EREP
+FUNCTION Get_Report_Format_Db_Value___(
+   report_format_ IN VARCHAR2) RETURN VARCHAR2
+IS
+BEGIN  
+   RETURN report_format_;
+END Get_Report_Format_Db_Value___;
+-- gelr:saft_poland, end
+
+FUNCTION Construct_Param_Attr___ (
+   virt_rec_ IN OUT Task_Virtual_Rec) RETURN VARCHAR2
+IS
+   attr_             VARCHAR2(32000);   
+   server_dir_       VARCHAR2(2000);
+   server_path_sep_  VARCHAR2(1);
+   xml_file_name_    VARCHAR2(1000);
+BEGIN
+   IF NOT Validate___(virt_rec_.company, virt_rec_.country, virt_rec_.report_type_db, virt_rec_.file_type, virt_rec_.file_template_id, virt_rec_.selection_range_type,
+                      virt_rec_.from_date, virt_rec_.to_date, virt_rec_.from_year, virt_rec_.from_period, virt_rec_.to_year, virt_rec_.to_period,
+                      virt_rec_.source_type, virt_rec_.audit_source, virt_rec_.date_title, virt_rec_.is_intled, virt_rec_.ledger_id) THEN
+      RETURN '';
+   END IF;
+   
+   IF (virt_rec_.task_option = 'Schedule' AND virt_rec_.report_type_db = 'SAF-T') THEN
+      Saft_Reporting_Util_API.Validate_Basic_Data__(virt_rec_.company, virt_rec_.country, virt_rec_.report_type);
+      
+      server_dir_       := Audit_Format_API.Get_Output_File_Dir_Server(virt_rec_.company, virt_rec_.country, virt_rec_.report_type);
+      server_path_sep_  := NVL(Accrul_Attribute_API.Get_Attribute_Value ('SERVER_PATH_SEPARATOR'),'\');
+      xml_file_name_    := Saft_Reporting_Util_API.Generate_File_Name__(virt_rec_.company);
+      virt_rec_.path    := server_dir_ || server_path_sep_ || xml_file_name_;
+   END IF;
+   
+   -- gelr:audit_file_france, begin
+   IF (virt_rec_.task_option = 'Schedule' AND virt_rec_.report_type_db = 'FEC') THEN
+      server_dir_       := Audit_Format_API.Get_Output_File_Dir_Server(virt_rec_.COMPANY, virt_rec_.COUNTRY, virt_rec_.REPORT_TYPE);
+      server_path_sep_  := NVL(Accrul_Attribute_API.Get_Attribute_Value ('SERVER_PATH_SEPARATOR'),'\');
+      xml_file_name_    := SUBSTR(Company_API.Get_Association_No(virt_rec_.COMPANY), 0 ,9) || 'FEC' || TO_CHAR(sysdate, 'YYYYMMDD') || '.XML';
+      virt_rec_.PATH    := server_dir_ || server_path_sep_ || xml_file_name_;
+   END IF;
+   -- gelr:audit_file_france, end
+   
+   Client_SYS.Add_To_Attr('COMPANY', virt_rec_.company, attr_);
+   Client_SYS.Add_To_Attr('COUNTRY', virt_rec_.country, attr_);
+   Client_SYS.Add_To_Attr('REPORT_TYPE', virt_rec_.report_type, attr_);
+   Client_SYS.Add_To_Attr('FILE_TYPE', virt_rec_.file_type, attr_);
+   Client_SYS.Add_To_Attr('FILE_TEMPLATE', virt_rec_.file_template_id, attr_);
+   Client_SYS.Add_To_Attr('PATH', virt_rec_.path, attr_);
+   Client_SYS.Add_To_Attr('BATCH', CASE virt_rec_.task_option WHEN 'Schedule' THEN 'TRUE' ELSE 'FALSE' END, attr_);
+   IF NOT(virt_rec_.from_date IS NULL AND virt_rec_.to_date IS NULL) THEN
+      Client_SYS.Add_To_Attr('FROM_DATE', TO_CHAR(virt_rec_.from_date, Client_SYS.trunc_date_format_), attr_);
+      Client_SYS.Add_To_Attr('TO_DATE', TO_CHAR(virt_rec_.to_date, Client_SYS.trunc_date_format_), attr_);
+   ELSE
+      Client_SYS.Add_To_Attr('FROM_DATE', TO_CHAR(Accounting_Period_API.Get_Date_From(virt_rec_.company, virt_rec_.from_year, virt_rec_.from_period), Client_SYS.trunc_date_format_), attr_);
+      Client_SYS.Add_To_Attr('TO_DATE', TO_CHAR(Accounting_Period_API.Get_Date_Until(virt_rec_.company, virt_rec_.to_year, virt_rec_.to_period), Client_SYS.trunc_date_format_), attr_);
+   END IF;
+   RETURN attr_;
+END Construct_Param_Attr___;
+
+FUNCTION Get_Audit_Source_Info___(
+   company_      IN VARCHAR2,
+   audit_source_ IN VARCHAR2) RETURN Audit_Source_Info_Structure_Rec
+IS
+   pub_rec_        Audit_Source_API.Public_Rec;
+   audit_info_rec_ Audit_Source_Info_Structure_Rec;
+BEGIN
+   Audit_Source_API.Exist(audit_source_ );
+   pub_rec_ :=  Audit_Source_API.Get(audit_source_);
+   IF (pub_rec_.source_type = 'REPORT') THEN 
+      audit_info_rec_.report_id := Audit_Source_API.Get_Report_Id(audit_source_ );
+   END IF;
+   IF (pub_rec_.internal_ledger = 'TRUE') THEN
+      $IF Component_Intled_SYS.INSTALLED $THEN
+         audit_info_rec_.ledger_id := Internal_Ledger_User_API.Get_Default_Ledger(company_ , Fnd_Session_API.Get_Fnd_User);
+      $ELSE
+         audit_info_rec_.ledger_id := NULL;
+      $END
+   END IF;
+   audit_info_rec_.date_title := Audit_Source_Column_API.Get_Selection_Date_Title(audit_source_);
+   audit_info_rec_.source_type := pub_rec_.source_type;
+   audit_info_rec_.internal_ledger := pub_rec_.internal_ledger;
+   
+   IF (audit_info_rec_.source_type = 'VIEW') THEN
+      IF (audit_info_rec_.date_title IS NULL) THEN
+         audit_info_rec_.from_date := NULL;
+         audit_info_rec_.to_date := NULL;
+      ELSE
+         audit_info_rec_.from_date := TO_DATE('1/1/1990', 'dd/mm/yyyy');
+         audit_info_rec_.to_date := TO_DATE('31/12/2099', 'dd/mm/yyyy');
+      END IF;
+   END IF;
+   
+   RETURN audit_info_rec_;
+END Get_Audit_Source_Info___;
+
+FUNCTION Validate_Ledger_Id___(
+   company_   IN VARCHAR2,
+   ledger_id_ IN VARCHAR2) RETURN VARCHAR2
+IS
+   valid_ledger_id_  VARCHAR2(5);
+BEGIN
+   $IF Component_Intled_SYS.INSTALLED $THEN
+      valid_ledger_id_ := Internal_Ledger_API.Ledger_Id_Exist_User(company_, ledger_id_);
+   $ELSE
+      valid_ledger_id_ := NULL;
+   $END
+   IF (valid_ledger_id_ = 'FALSE') THEN 
+      Error_SYS.Record_General(lu_name_, 'INVALIDLID: Invalid Ledger ID');
+   END IF;
+   RETURN 'TRUE';
+END Validate_Ledger_Id___;
+
+FUNCTION Get_Template_Id___(
+   file_type_ IN VARCHAR2) RETURN VARCHAR2
+IS
+   template_id_ VARCHAR2(30);
+BEGIN
+   template_id_ := Ext_File_Template_API.Get_File_Template_Id(file_type_);
+   RETURN template_id_;
+END Get_Template_Id___;
+
+FUNCTION Execute_Task_Ext___ (
+   key_            IN  Task_Virtual_Key,
+   parameter_msg_  IN  VARCHAR2,
+   info$_          OUT VARCHAR2) RETURN VARCHAR2
+IS
+   virt_rec_         Task_Virtual_Rec;   
+   arguments_        VARCHAR2(32000);
+   objkey_           VARCHAR2(50) := NULL;
+   parameter_attr_   VARCHAR2(32000);
+BEGIN   
+   virt_rec_ := Get_Record___(key_);   
+   arguments_ := Construct_Param_Attr___(virt_rec_);
+   --   Validate___(virt_rec_.schedule_method_id, arguments_);                                  -- Can't run the standard Scheduled Task pattern, for why
+   --   Batch_Schedule_Method_API.Execute_Online__(virt_rec_.schedule_method_id, arguments_);   -- there's nothing to validate not can't we run the registered method.
+   parameter_attr_ := Message_SYS.Get_Attr_From_Message(parameter_msg_);
+   objkey_ := Generate_Output___(virt_rec_, parameter_attr_, info$_);
+   Cleanup_Task_Virtual___(key_);
+   RETURN objkey_;
+END Execute_Task_Ext___;
+
+FUNCTION Generate_Output___ (
+   virt_rec_       IN  Task_Virtual_Rec,
+   parameter_attr_ IN  VARCHAR2,
+   info$_          OUT VARCHAR2) RETURN VARCHAR2
+IS   
+   company_          ${PROJECTION}_task_virtual_vrt.company%TYPE := virt_rec_.company;
+   country_          ${PROJECTION}_task_virtual_vrt.country%TYPE := virt_rec_.country;
+   report_type_db_   ${PROJECTION}_task_virtual_vrt.report_type%TYPE := virt_rec_.report_type_db;   
+   file_type_        ${PROJECTION}_task_virtual_vrt.file_type%TYPE := virt_rec_.file_type;
+   file_template_id_ ${PROJECTION}_task_virtual_vrt.file_template_id%TYPE := virt_rec_.file_template_id;   
+   from_date_        ${PROJECTION}_task_virtual_vrt.from_date%TYPE := virt_rec_.from_date;
+   from_year_        ${PROJECTION}_task_virtual_vrt.from_year%TYPE := virt_rec_.from_year;
+   from_period_      ${PROJECTION}_task_virtual_vrt.from_period%TYPE := virt_rec_.from_period;
+   to_date_          ${PROJECTION}_task_virtual_vrt.to_date%TYPE := virt_rec_.to_date;
+   until_year_       ${PROJECTION}_task_virtual_vrt.to_year%TYPE := virt_rec_.to_year;
+   until_period_     ${PROJECTION}_task_virtual_vrt.to_period%TYPE := virt_rec_.to_period;
+   source_type_      ${PROJECTION}_task_virtual_vrt.source_type%TYPE := virt_rec_.source_type;
+   audit_source_     ${PROJECTION}_task_virtual_vrt.audit_source%TYPE := virt_rec_.audit_source;
+   is_intled_        ${PROJECTION}_task_virtual_vrt.is_intled%TYPE := virt_rec_.is_intled;
+   ledger_id_        ${PROJECTION}_task_virtual_vrt.ledger_id%TYPE := virt_rec_.ledger_id;
+   -- gelr:saft_poland, begin
+   $IF Component_Erep_SYS.INSTALLED $THEN
+      report_format_    ${PROJECTION}_task_virtual_vrt.report_format%TYPE := virt_rec_.report_format;
+      date_type_        ${PROJECTION}_task_virtual_vrt.date_type%TYPE := virt_rec_.date_type;
+   $END
+   proposal_id_      ${PROJECTION}_task_virtual_vrt.proposal_id%TYPE := virt_rec_.proposal_id;   
+   site_             ${PROJECTION}_task_virtual_vrt.site%TYPE := virt_rec_.site;
+   warehouse_        ${PROJECTION}_task_virtual_vrt.warehouse_id%TYPE := virt_rec_.warehouse_id;
+   currency_         ${PROJECTION}_task_virtual_vrt.currency%TYPE := virt_rec_.currency;   
+   short_name_       ${PROJECTION}_task_virtual_vrt.short_name%TYPE := virt_rec_.short_name;
+   customer_id_      ${PROJECTION}_task_virtual_vrt.customer_id%TYPE := virt_rec_.customer_id;
+   customer_group_   ${PROJECTION}_task_virtual_vrt.customer_group%TYPE := virt_rec_.customer_group;
+   -- gelr:saft_poland, end
+   
+   objkey_          VARCHAR2(50) := NULL;
+   xml_blob_data_   BLOB;
+   txt_blob_data_   BLOB;
+   xml_clob_data_   CLOB;
+   txt_clob_data_   CLOB;
+   txt_clob_data2_  CLOB;
+   error_exists_    VARCHAR2(2000);
+   job_id_          NUMBER;
+   objid_           VARCHAR2(2000);
+   from_            DATE;
+   until_           DATE;
+   xml_file_name_   VARCHAR2(200);
+   txt_file_name_   VARCHAR2(200);
+   dummy_objids_    VARCHAR2(2000);
+   ptr1_            NUMBER;
+   ptr2_            NUMBER;
+   background_job_  VARCHAR2(5) := 'FALSE';
+   report_id_       VARCHAR2(2000);
+   report_attr_     VARCHAR2(32000) := NULL;
+BEGIN
+   IF (report_type_db_ = 'SAF-T' OR report_type_db_ = 'FEC') THEN         
+      IF (from_date_ IS NULL AND to_date_ IS NULL) THEN
+         Get_Date_Range___(from_, until_, company_, from_year_, from_period_, until_year_, until_period_);
+         IF (from_ IS NULL OR until_ IS NULL) THEN
+            Error_SYS.Record_General(lu_name_, 'ERROR1: Date Range Error');
+            RETURN objkey_;
+         END IF;
+      ELSE
+         from_ := from_date_;
+         until_ := to_date_;
+      END IF;
+      IF (report_type_db_ = 'SAF-T') THEN
+         -- gelr:saft_poland, begin
+         IF (Company_Localization_Info_API.Get_Parameter_Value_Db(company_, 'SAFT_POLAND') = Fnd_Boolean_API.DB_TRUE) THEN
+            $IF Component_Erep_SYS.INSTALLED $THEN
+               xml_file_name_ := 'JPK_'||report_format_ || '_' || TO_CHAR(sysdate, 'YYYYMMDDHH24MISS') || '.XML';
+               
+               Jpk_Reporting_Util_API.Generate_Jpk_Report(  objid_, 
+                                                            company_, 
+                                                            country_, 
+                                                            Audit_Report_Types_API.Decode(report_type_db_),
+                                                            report_format_,
+                                                            file_type_,
+                                                            file_template_id_,
+                                                            '',
+                                                            'FALSE',
+                                                            from_,
+                                                            until_,
+                                                            NULL,
+                                                            NULL,
+                                                            proposal_id_,
+                                                            site_,
+                                                            warehouse_,
+                                                            currency_,
+                                                            date_type_,
+                                                            short_name_,
+                                                            customer_id_,
+                                                            customer_group_);
+            $ELSE
+               NULL;
+            $END                                             
+         ELSE            
+            xml_file_name_ := Saft_Reporting_Util_API.Generate_File_Name__(company_);
+            Saft_Reporting_Util_API.Generate_Output(error_exists_, job_id_, objid_, company_, country_, Audit_Report_Types_API.Decode(report_type_db_), file_type_, file_template_id_, '', 'FALSE', from_, until_);
+         END IF;
+         -- gelr:saft_poland, end
+      -- gelr:audit_file_france, begin   
+      ELSIF(report_type_db_ = 'FEC') THEN
+         xml_file_name_ := SUBSTR(Company_API.Get_Association_No(virt_rec_.COMPANY), 0 ,9) || 'FEC' || TO_CHAR(sysdate, 'YYYYMMDD') || '.XML';
+         $IF Component_Erep_SYS.INSTALLED $THEN
+            Fr_Audit_Reporting_Util_API.Generate_Fr_Report(error_exists_, objid_, company_, country_, Audit_Report_Types_API.Decode(report_type_db_), file_type_, file_template_id_, '', 'FALSE', from_, until_);
+         $END    
+      END IF;
+      -- gelr:audit_file_france, end
+      
+      Get_Clob_Data(xml_clob_data_, report_type_db_, objid_);
+      xml_blob_data_ := External_File_Utility_API.Clob_To_Blob(xml_clob_data_);  
+      Insert_To_Virtual___(objkey_, company_, report_type_db_, xml_file_name_, xml_blob_data_);
+      IF (error_exists_ = 'TRUE') THEN
+         Client_SYS.Add_Info(lu_name_, 'XMLERROROCCURED: An error occurred while generating the XML file. Please refer the partially generated XML file for more details.');
+         info$_ := Client_SYS.Get_All_Info();
+      END IF; 
+      External_File_Utility_API.Clear_Temp_Data_();
+      RETURN objkey_;
+   END IF;
+   
+   background_job_ := CASE virt_rec_.task_option = 'Schedule' WHEN TRUE THEN 'TRUE' ELSE 'FALSE' END;
+   IF (source_type_ = 'REPORT') THEN
+      report_id_ := Audit_Source_API.Get_Report_Id(audit_source_);
+      IF (report_id_ IS NOT NULL) THEN
+         Client_SYS.Add_To_Attr('REPORT_ID', report_id_, report_attr_);
+      END IF;
+      Audit_Util_API.Generate_Report_Output(objid_, job_id_, company_, country_, audit_source_, report_attr_, parameter_attr_, background_job_);
+   ELSE      
+      Audit_Util_API.Generate_Output(objid_, job_id_, country_, audit_source_, company_, from_date_, to_date_, background_job_, CASE is_intled_ WHEN 'TRUE' THEN ledger_id_ ELSE NULL END);
+      IF (background_job_ = 'TRUE') THEN
+         Client_SYS.Add_Info(lu_name_, 'BCKGROUNDJOB: Background Job :P1 is started.', job_id_);
+         info$_ := Client_SYS.Get_All_Info();
+      END IF;      
+   END IF;
+   
+   IF (virt_rec_.task_option = 'Schedule') THEN
+      RETURN objkey_; 
+   END IF;
+   
+   -- This code block is only relevant when Task Option = 'Now'
+   xml_file_name_ := audit_source_ || '_I.xml';
+   txt_file_name_ := audit_source_ || '.txt';
+   
+   -- Handling multiple objids
+   ptr1_         := INSTR(objid_ , ';');
+   dummy_objids_ := objid_;
+   objid_        := SUBSTR(objid_, 1, ptr1_ - 1);
+   ptr2_         := INSTR(dummy_objids_, ';', ptr1_ + 1);
+   
+   -- Get xml data
+   Get_Clob_Data(xml_clob_data_, report_type_db_, objid_);
+   xml_blob_data_ := External_File_Utility_API.Clob_To_Blob(xml_clob_data_);
+   -- Get txt data
+   Get_Clob_Data(txt_clob_data_, report_type_db_, objid_, TRUE);
+   IF (ptr2_ > 0) THEN           
+      dummy_objids_ := SUBSTR(dummy_objids_, ptr1_ + 1);  
+      ptr1_         := INSTR(dummy_objids_ , ';');
+      WHILE (ptr1_ > 0) LOOP              
+         objid_        := SUBSTR(dummy_objids_, 1, ptr1_ - 1);
+         dummy_objids_ := SUBSTR(dummy_objids_, ptr1_ + 1);
+         ptr1_         := INSTR(dummy_objids_ , ';');
+         
+         -- clob appending
+         Get_Clob_Data(txt_clob_data2_, report_type_db_, objid_, TRUE);
+         DBMS_LOB.APPEND(txt_clob_data_, txt_clob_data2_);
+         txt_clob_data2_ := EMPTY_CLOB();
+      END LOOP;
+   END IF; 
+   txt_blob_data_ := External_File_Utility_API.Clob_To_Blob(txt_clob_data_);
+   Insert_To_Virtual___(objkey_, company_, report_type_db_, xml_file_name_, xml_blob_data_, txt_file_name_, txt_blob_data_);
+   RETURN objkey_;
+   
+END Generate_Output___;
+
+FUNCTION Validate___(
+   company_          IN VARCHAR2,
+   country_          IN VARCHAR2,
+   report_type_db_   IN VARCHAR2,
+   file_type_        IN VARCHAR2,
+   file_template_id_ IN VARCHAR2,
+   selection_range_  IN VARCHAR2,
+   from_date_        IN DATE,
+   until_date_       IN DATE,
+   from_year_        IN NUMBER,
+   from_period_      IN NUMBER,
+   until_year_       IN NUMBER,
+   until_period_     IN NUMBER,
+   source_type_      IN VARCHAR2,
+   audit_source_     IN VARCHAR2,
+   date_title_       IN VARCHAR2,
+   is_intled_        IN VARCHAR2,
+   ledger_id_        IN VARCHAR2) RETURN BOOLEAN
+IS
+BEGIN
+   IF (company_ IS NULL OR country_ IS NULL OR report_type_db_ IS NULL) THEN
+      Error_SYS.Record_General(lu_name_, 'KEYSNULL: Company, Country or Report type cannot be null.');
+      RETURN FALSE;
+   END IF;
+   
+   IF (report_type_db_ = 'SAF-T' OR report_type_db_ = 'FEC') THEN
+      IF (file_type_ IS NULL) THEN
+         Error_SYS.Record_General(lu_name_, 'FILENULL: File Type cannot be null.');
+         RETURN FALSE;
+      END IF;
+      IF (file_template_id_ IS NULL) THEN
+         Error_SYS.Record_General(lu_name_, 'FILETEMPNULL: File Template cannot be null.');
+         RETURN FALSE;
+      END IF;
+      IF (selection_range_ = 'Date') THEN 
+         IF (from_date_ IS NULL OR until_date_ IS NULL) THEN
+            Error_SYS.Record_General(lu_name_, 'DATERANGEERR: Both Dates need values.');
+            RETURN FALSE;
+         END IF;
+      ELSE 
+         IF (from_year_ IS NULL OR from_period_ IS NULL OR until_year_ IS NULL OR until_period_ IS NULL) THEN 
+            Error_SYS.Record_General(lu_name_, 'PERIODRANGEERR: Period Range is incomplete.');
+            RETURN FALSE;
+         END IF;
+         Validate_Year_Period_Selection___(company_, from_year_, from_period_, until_year_, until_period_);
+      END IF;
+      Validate_Date_Period_Selection___(selection_range_, from_date_, until_date_, from_year_, from_period_, until_year_, until_period_);
+      RETURN TRUE;
+   END IF;
+   IF (audit_source_ IS NULL) THEN
+      Error_SYS.Record_General(lu_name_, 'AUDITSOURCENULL: Audit source cannot be null.');
+      RETURN FALSE;
+   ELSE
+      IF NOT Database_SYS.View_Active(audit_source_) THEN
+         Error_SYS.Record_General(lu_name_, 'AUDITSOURCEINACTIVE: Audit source :P1 is not available in an active module.', audit_source_);
+         RETURN FALSE;
+      END IF;
+   END IF;
+   IF (source_type_ = 'VIEW') THEN
+      IF (date_title_ IS NOT NULL AND (from_date_ IS NULL OR until_date_ IS NULL)) THEN
+         Error_SYS.Record_General(lu_name_, 'DATERANGEERR: Both Dates need values.');
+         RETURN FALSE;
+      END IF;
+      IF (date_title_ IS NOT NULL) THEN
+         Validate_Date_Period_Selection___(selection_range_, from_date_, until_date_, from_year_, from_period_, until_year_, until_period_);
+      END IF;
+      IF (is_intled_ = 'TRUE' AND ledger_id_ IS NULL) THEN
+         Error_SYS.Record_General(lu_name_, 'LEDGERIDNULL: Ledger Id cannot be null.');
+         RETURN FALSE;
+      END IF;
+      RETURN TRUE;
+   ELSE 
+      RETURN TRUE;
+   END IF;
+   Error_SYS.Record_General(lu_name_, 'INFOMISSING: All mandatory fields must be filled.');
+   RETURN FALSE;
+END Validate___;
+
+PROCEDURE Get_Date_Range___(
+   from_date_    IN OUT DATE,
+   until_date_   IN OUT DATE,
+   company_      IN     VARCHAR2,
+   from_year_    IN     NUMBER,
+   from_period_  IN     NUMBER,
+   until_year_   IN     NUMBER,
+   until_period_ IN     NUMBER)
+IS
+BEGIN
+   from_date_  := Accounting_Period_API.Get_Date_From(company_, from_year_, from_period_);
+   until_date_ := Accounting_Period_API.Get_Date_Until(company_, until_year_, until_period_);
+END Get_Date_Range___;
+
+PROCEDURE Get_Clob_Data(
+   clob_data_      IN OUT CLOB,
+   report_type_db_ IN     VARCHAR2,
+   objid_          IN     VARCHAR2,
+   text_data_      IN     BOOLEAN DEFAULT FALSE)
+IS
+   CURSOR get_saft_clob IS 
+      SELECT clob_file
+      FROM   ext_file_xml
+      WHERE  objid = objid_;
+   CURSOR get_audit_source_xml IS
+      SELECT xml_data
+      FROM   audit_storage
+      WHERE  objid = objid_;
+   CURSOR get_audit_source_txt IS
+      SELECT data
+      FROM   audit_storage
+      WHERE  objid = objid_;
+BEGIN
+   IF (report_type_db_ = 'SAF-T' OR report_type_db_= 'FEC') THEN
+      OPEN  get_saft_clob;
+      FETCH get_saft_clob INTO clob_data_;
+      CLOSE get_saft_clob;
+   ELSE   
+      IF (text_data_) THEN
+         OPEN  get_audit_source_txt;
+         FETCH get_audit_source_txt INTO clob_data_;
+         CLOSE get_audit_source_txt;
+      ELSE 
+         OPEN  get_audit_source_xml;
+         FETCH get_audit_source_xml INTO clob_data_;
+         CLOSE get_audit_source_xml;
+      END IF;
+   END IF;
+END Get_Clob_Data;
+
+PROCEDURE Insert_To_Virtual___(
+   objkey_           OUT VARCHAR2,
+   company_          IN  VARCHAR2,
+   report_type_db_   IN  VARCHAR2,
+   xml_file_name_    IN  VARCHAR2,
+   xml_file_data_    IN  BLOB,
+   txt_file_name_    IN  VARCHAR2 DEFAULT NULL,
+   txt_file_data_    IN  BLOB DEFAULT NULL)
+IS
+   rec_  Task_Virtual_Rec;
+BEGIN
+   rec_.objkey  := sys_guid();
+   objkey_ := rec_.objkey ;
+   rec_.company := company_;
+   rec_.xml_file_name := xml_file_name_;
+   rec_.xml_mime_type := 'application/xslt+xml';
+   rec_.xml_file_data := xml_file_data_;  
+   IF (report_type_db_ != 'SAF-T') THEN
+      rec_.text_file_name := txt_file_name_;
+      rec_.txt_mime_type  := 'text/plain';
+      rec_.text_file_data := txt_file_data_;
+   END IF;
+   CRUD_Create___(rec_);
+END Insert_To_Virtual___;
+
+PROCEDURE Validate_Date_Period_Selection___ (
+   selection_range_ IN VARCHAR2,
+   from_date_       IN DATE,
+   until_date_      IN DATE,
+   from_year_       IN NUMBER,
+   from_period_     IN NUMBER,
+   to_year_         IN NUMBER,
+   to_period_       IN NUMBER) 
+IS
+   from_concat_  NUMBER;
+   to_concat_    NUMBER;
+BEGIN
+   IF (selection_range_ = 'Date') THEN
+      IF (from_date_ > until_date_) THEN
+         Error_SYS.Record_General(lu_name_, 'INVALIDFROMTODATE: Date From should be Less than OR Equal to Until Date');
+      END IF;
+   ELSIF(selection_range_ = 'Period') THEN 
+      IF (from_year_ > to_year_) THEN
+         Error_SYS.Record_General(lu_name_, 'INVALIDFROMTOYEAR: Until Year must be later than From Year');
+      END IF; 
+      from_concat_ := from_year_ * 100 + from_period_;
+      to_concat_   := to_year_ * 100 + to_period_;
+      IF (from_concat_ > to_concat_) THEN
+         Error_SYS.Record_General(lu_name_, 'INVALIDFROMTOPERIOD: Until Period must be later than From Period');
+      END IF;
+   END IF;
+END Validate_Date_Period_Selection___;
+
+PROCEDURE Validate_Year_Period_Selection___ (
+   company_     IN VARCHAR2,
+   from_year_   IN NUMBER,
+   from_period_ IN NUMBER,
+   to_year_     IN NUMBER,
+   to_period_   IN NUMBER) 
+IS 
+BEGIN
+   Accounting_Period_API.Exist(company_, from_year_, from_period_);
+   Accounting_Period_API.Exist(company_, to_year_, to_period_);
+END Validate_Year_Period_Selection___;

@@ -1,0 +1,71 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingControlHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Get_Code_Part___(
+   company_   IN VARCHAR2,
+   code_name_ IN VARCHAR2 )  RETURN VARCHAR2
+IS
+   code_part_  VARCHAR2(1);
+BEGIN
+   Accounting_Code_Parts_API.Get_Code_Part(code_part_, company_, code_name_);
+   RETURN code_part_;
+END Get_Code_Part___;
+
+FUNCTION Get_Ctrl_Type_Allowed_Value___(
+   company_            IN VARCHAR2,
+   code_part_          IN VARCHAR2,
+   posting_type_       IN VARCHAR2,
+   control_type_       IN VARCHAR2,
+   ctrl_type_category_ IN VARCHAR2 ) RETURN Ctrl_Type_Allowed_Value_Structure_Rec
+IS
+   rec_                          Ctrl_Type_Allowed_Value_Structure_Rec;
+   dummy_control_type_category_  VARCHAR2(100);
+BEGIN
+   Ctrl_Type_Allowed_Value_API.Get_Allowed_Info__(rec_.module,
+                                                  dummy_control_type_category_,
+                                                  rec_.ctrl_type_category,
+                                                  rec_.control_type_desc,
+                                                  company_,
+                                                  code_part_,
+                                                  posting_type_,
+                                                  control_type_,
+                                                  Ctrl_Type_Category_API.Decode(ctrl_type_category_));  
+   RETURN rec_;
+END Get_Ctrl_Type_Allowed_Value___;
+
+@Override
+PROCEDURE CRUD_Default_Copy___ (
+   rec_ IN OUT Posting_Ctrl_Rec )
+IS
+BEGIN
+   super(rec_);
+   rec_.code_name := Accounting_Code_Parts_API.Get_Code_Name(rec_.company, rec_.code_part);
+END CRUD_Default_Copy___;
+
+@Override
+PROCEDURE CRUD_Default_Copy___ (
+   objid_  IN  VARCHAR2,
+   key_    IN  Posting_Ctrl_Key,
+   values_ IN  Copy_Values_Rec,
+   attr_   OUT VARCHAR2,
+   info_   OUT VARCHAR2 )
+IS
+  pc_valid_from_ DATE; 
+BEGIN
+   pc_valid_from_:= key_.pc_valid_from;
+   super(objid_, key_, values_, attr_, info_);
+   IF (Client_SYS.Item_Exist('PC_VALID_FROM', attr_)) THEN
+      attr_ := Client_SYS.Remove_Attr('PC_VALID_FROM',attr_);
+      Client_SYS.Add_To_Attr('PC_VALID_FROM', pc_valid_from_, attr_);
+   END IF;
+END CRUD_Default_Copy___;

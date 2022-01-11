@@ -1,0 +1,594 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvExeTask
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200423  SatGlk  AD-1089, Added unit tests for PublishPackageFaultWithNewWPError___, Build_JSON_Obj_for_Batch_API___
+--  210325  spatlk  AD-1132,Added PublishRequestPartCompleteTaskWithtPartReqError___.
+--  201202  majslk  LMM2020R1-1022, Added unit test for Check_Insert___
+--  200904  majslk  LMM2020R1-1022, Added unit tests for Get_Aircraft()
+--  200902  TAJALK  LMM2020R1-1014 - Added tests for Sync_State_Handle___, Post_Sync_Action
+--  200812  SEVHLK  LMM2020R1-691, Added unit test for Pre_Sync_Action.
+--  200707  dildlk  LMM2020R1-17, Added unit tests for Is_Wp_Assigned() and Get_Task_Id().
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+
+UNITTEST "Is_Wp_Assigned should return TRUE when the fault assinged to a work package" FOR
+   FUNCTION Is_Wp_Assigned (
+      fault_id_ IN     NUMBER ) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_tab
+   VALUES
+      |task_id|fault_id |aircraft_wp_id|
+      |1      |1        |1             |
+      |2      |2        |NULL          |
+
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | fault_id_ |
+      | 'TRUE'    |  1        |
+      | 'FALSE'   |  2        |
+      | 'FALSE'   |  3        |
+   LOOP
+      --Insert your test code here
+      return_ := Is_Wp_Assigned(fault_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Task_Id should return task id when fault id is given" FOR
+   FUNCTION Get_Task_Id (
+      fault_id_ IN     NUMBER ) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_tab
+   VALUES
+      |fault_id |task_id|
+      |1        |1      |
+      |2        |3      |
+   END VALUES;
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | fault_id_ |
+      | 1         |  1        |
+      | 3         |  2        |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Task_Id(fault_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable aircraft_tab
+   VALUES
+      | aircraft_id | mx_unique_key |
+      | 1           |'MXAIRCRAFTKEY1'|
+   END VALUES;
+
+   @MockTable av_fault_tab
+   VALUES
+      | aircraft_id | mx_unique_key | fault_id |
+      | 1           | 'MXFAULTKEY1' | 1        |
+   END VALUES;
+
+   @MockTable av_aircraft_work_package_tab
+   VALUES
+      | aircraft_id | mx_unique_key | aircraft_work_package_id |
+      | 1           | 'MXWPKEY1'    | 1                        |
+   END VALUES;
+
+   @MockTable av_config_slot_position_tab
+   VALUES
+      | mx_unique_key      | config_slot_position_code |
+      | 'MXCONFIGSLOTKEY1' | 1                         |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_     VARCHAR2(2000);
+   expected1_   VARCHAR2(2000);
+   expected2_   VARCHAR2(2000);
+   expected3_   VARCHAR2(2000);
+   expected4_   VARCHAR2(2000);
+   expected5_   VARCHAR2(2000);
+   expected6_   VARCHAR2(2000);
+   expected7_   VARCHAR2(2000);
+   expected8_   VARCHAR2(2000);
+   expected9_   VARCHAR2(2000);
+   expected10_  VARCHAR2(2000);
+   expected11_  VARCHAR2(2000);
+   expected12_  VARCHAR2(2000);
+   expected13_  VARCHAR2(2000);
+   expected14_  VARCHAR2(2000);
+   expected15_  VARCHAR2(2000);
+
+
+
+BEGIN
+   FOR
+      | attr_ |
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'WITH_AIRCRAFT_KEY'|
+      | 'WORK_PACKAGE_UNIQUE_KEY'||chr(31)||'MXWPKEY1'||chr(30)||'WITH_WP_KEY'|
+      | 'CONFIG_SLOT_UNIQUE_KEY'||chr(31)||'MXCONFIGSLOTKEY1'||chr(30)||'WITH_CONFIG_SLOT_KEY'|
+      | 'FAULT_UNIQUE_KEY'||chr(31)||'MXFAULTKEY1'||chr(30)||'WITH_FAULT_KEY'|
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'WORK_PACKAGE_UNIQUE_KEY'||chr(31)||'MXWPKEY1'||chr(30)||'WITH_AIRCRAFT_WP_KEY'|
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'CONFIG_SLOT_UNIQUE_KEY'||chr(31)||'MXCONFIGSLOTKEY1'||chr(30)||'WITH_AIRCRAFT_CONFIG_KEY'|
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'FAULT_UNIQUE_KEY'||chr(31)||'MXFAULTKEY1'||chr(30)||'WITH_AIRCRAFT_FAULT_KEY'|
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'WORK_PACKAGE_UNIQUE_KEY'||chr(31)||'MXWPKEY1'||chr(30)||'CONFIG_SLOT_UNIQUE_KEY'||chr(31)||'MXCONFIGSLOTKEY1'||chr(30)||'WITH_AIRCRAFT_WP_CONFIG_KEY'|
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'WORK_PACKAGE_UNIQUE_KEY'||chr(31)||'MXWPKEY1'||chr(30)||'FAULT_UNIQUE_KEY'||chr(31)||'MXFAULTKEY1'||chr(30)||'WITH_AIRCRAFT_WP_FAULT_KEY'|
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'WORK_PACKAGE_UNIQUE_KEY'||chr(31)||'MXWPKEY1'||chr(30)||'CONFIG_SLOT_UNIQUE_KEY'||chr(31)||'MXCONFIGSLOTKEY1'||chr(30)||'FAULT_UNIQUE_KEY'||chr(31)||'MXFAULTKEY1'||chr(30)||'WITH_ALL_KEYS'|
+      | 'WORK_PACKAGE_UNIQUE_KEY'||chr(31)||'MXWPKEY1'||chr(30)||'CONFIG_SLOT_UNIQUE_KEY'||chr(31)||'MXCONFIGSLOTKEY1'||chr(30)||'WITH_WP_CONFIG_KEY'|
+      | 'WORK_PACKAGE_UNIQUE_KEY'||chr(31)||'MXWPKEY1'||chr(30)||'FAULT_UNIQUE_KEY'||chr(31)||'MXFAULTKEY1'||chr(30)||'WITH_WP_FAULT_KEY'|
+      | 'WORK_PACKAGE_UNIQUE_KEY'||chr(31)||'MXWPKEY1'||chr(30)||'CONFIG_SLOT_UNIQUE_KEY'||chr(31)||'MXCONFIGSLOTKEY1'||chr(30)||'FAULT_UNIQUE_KEY'||chr(31)||'MXFAULTKEY1'||chr(30)||'WITH_WP_CONFIG_FAULT_KEY'|
+      | 'CONFIG_SLOT_UNIQUE_KEY'||chr(31)||'MXCONFIGSLOTKEY1'||chr(30)||'FAULT_UNIQUE_KEY'||chr(31)||'MXFAULTKEY1'||chr(30)||'WITH_CONFIG_FAULT_KEY'|
+      | 'BARCODE'||chr(31)||'T40S001EB8E'||chr(30)||'WITH_BARCODE'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_AIRCRAFT_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30);
+      expected2_ := 'WITH_WP_KEY'||'AIRCRAFT_WP_ID'||chr(31)||'1'||chr(30);
+      expected3_ := 'WITH_CONFIG_SLOT_KEY'||'CONFIG_SLOT_POSITION_CODE'||chr(31)||'1'||chr(30);
+      expected4_ := 'WITH_FAULT_KEY'||'FAULT_ID'||chr(31)||'1'||chr(30);
+      expected5_ := 'WITH_AIRCRAFT_WP_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30)||'AIRCRAFT_WP_ID'||chr(31)||'1'||chr(30);
+      expected6_ := 'WITH_AIRCRAFT_CONFIG_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30)||'CONFIG_SLOT_POSITION_CODE'||chr(31)||'1'||chr(30);
+      expected7_ := 'WITH_AIRCRAFT_FAULT_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30)||'FAULT_ID'||chr(31)||'1'||chr(30);
+      expected8_ := 'WITH_AIRCRAFT_WP_CONFIG_KEY'|| 'AIRCRAFT_ID'||chr(31)||'1'||chr(30)||'AIRCRAFT_WP_ID'||chr(31)||'1'||chr(30)||'CONFIG_SLOT_POSITION_CODE'||chr(31)||'1'||chr(30);
+      expected9_ := 'WITH_AIRCRAFT_WP_FAULT_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30)||'AIRCRAFT_WP_ID'||chr(31)||'1'||chr(30)||'FAULT_ID'||chr(31)||'1'||chr(30);
+      expected10_:= 'WITH_ALL_KEYS'|| 'AIRCRAFT_ID'||chr(31)||'1'||chr(30)||'AIRCRAFT_WP_ID'||chr(31)||'1'||chr(30)||'CONFIG_SLOT_POSITION_CODE'||chr(31)||'1'||chr(30)||'FAULT_ID'||chr(31)||'1'||chr(30);
+      expected11_:= 'WITH_WP_CONFIG_KEY'||'AIRCRAFT_WP_ID'||chr(31)||'1'||chr(30)||'CONFIG_SLOT_POSITION_CODE'||chr(31)||'1'||chr(30);
+      expected12_:= 'WITH_WP_FAULT_KEY'||'AIRCRAFT_WP_ID'||chr(31)||'1'||chr(30)||'FAULT_ID'||chr(31)||'1'||chr(30);
+      expected13_:= 'WITH_WP_CONFIG_FAULT_KEY'||'AIRCRAFT_WP_ID'||chr(31)||'1'||chr(30)||'CONFIG_SLOT_POSITION_CODE'||chr(31)||'1'||chr(30)||'FAULT_ID'||chr(31)||'1'||chr(30);
+      expected14_:= 'WITH_CONFIG_FAULT_KEY'||'CONFIG_SLOT_POSITION_CODE'||chr(31)||'1'||chr(30)||'FAULT_ID'||chr(31)||'1'||chr(30);
+      expected15_:= 'BARCODE'||chr(31)||'T40S001EB8E'||chr(30)||'WITH_BARCODE'||'NATURAL_KEY'||chr(31)||'T40S001EB8E'||chr(30);
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_AIRCRAFT_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_WP_KEY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_CONFIG_SLOT_KEY%' THEN
+         ASSERT output1_ = expected3_ MESSAGE 'Expected '||expected3_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_FAULT_KEY%' THEN
+         ASSERT output1_ = expected4_ MESSAGE 'Expected '||expected4_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_AIRCRAFT_WP_KEY%' THEN
+         ASSERT output1_ = expected5_ MESSAGE 'Expected '||expected5_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_AIRCRAFT_CONFIG_KEY%' THEN
+         ASSERT output1_ = expected6_ MESSAGE 'Expected '||expected6_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_AIRCRAFT_FAULT_KEY%' THEN
+         ASSERT output1_ = expected7_ MESSAGE 'Expected '||expected7_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_AIRCRAFT_WP_CONFIG_KEY%' THEN
+         ASSERT output1_ = expected8_ MESSAGE 'Expected '||expected8_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_AIRCRAFT_WP_FAULT_KEY%' THEN
+         ASSERT output1_ = expected9_ MESSAGE 'Expected '||expected9_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_ALL_KEYS%' THEN
+         ASSERT output1_ = expected10_ MESSAGE 'Expected '||expected10_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_WP_CONFIG_KEY%' THEN
+         ASSERT output1_ = expected11_ MESSAGE 'Expected '||expected11_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_WP_FAULT_KEY%' THEN
+         ASSERT output1_ = expected12_ MESSAGE 'Expected '||expected12_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_WP_CONFIG_FAULT_KEY%' THEN
+         ASSERT output1_ = expected13_ MESSAGE 'Expected '||expected13_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_CONFIG_FAULT_KEY%' THEN
+         ASSERT output1_ = expected14_ MESSAGE 'Expected '||expected14_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_BARCODE%' THEN
+         ASSERT output1_ = expected15_ MESSAGE 'Expected '||expected15_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Sync_State_Handle___  should correct the incoming state based on the current state" FOR
+   PROCEDURE Sync_State_Handle___(
+      current_rowstate_  IN     VARCHAR2,
+      incoming_rowstate_ IN     VARCHAR2,
+      input_objid_       IN     VARCHAR2,
+      input_objversion_  IN     VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage  Av_Exe_Task_API
+   PROCEDURE Start__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('INWORK1', 'COMPLETE1')     MESSAGE 'Expected '||'INWORK1,COMPLETE1'||' but  was '||objid_;
+   END Start__;
+
+   @MockPackage  Av_Exe_Task_API
+   PROCEDURE To_Complete__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT  objid_ IN  ('COMPLETE1', 'COMPLETE2')     MESSAGE 'Expected '||'COMPLETE1,COMPLETE2'||' but  was '||objid_;
+   END To_Complete__;
+
+   @MockPackage  Av_Exe_Task_API
+   PROCEDURE Defer__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('DEFER1', 'ACTIVE1')    MESSAGE 'Expected '||'DEFER1,ACTIVE1'||' but  was '||objid_;
+   END Defer__;
+
+   @MockPackage  Av_Exe_Task_API
+   PROCEDURE Schedule__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT VARCHAR2,
+      attr_       IN OUT VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+      rec_ av_exe_task_tab%ROWTYPE;
+   BEGIN
+      ASSERT   objid_     IN  ('ACTIVE1', 'INWORK1', 'COMPLETE1')    MESSAGE 'Expected '||'ACTIVE1,INWORK1,COMPLETE1'||' but  was '||objid_;
+   END Schedule__;
+IS
+   --Insert your test variables here
+BEGIN
+   FOR
+      | current_rowstate_ | incoming_rowstate_ | input_objid_ | input_objversion_ |
+      | 'Active'          |  'ACTV'            |  'NOTAPP1'   |  'A'              |
+      | 'Active'          |  'FORECAST'        |  'NOTAPP5'   |  'A'              |
+      | 'InWork'          |  'IN WORK'         |  'NOTAPP2'   |  'A'              |
+      | 'Completed'       |  'COMPLETE'        |  'NOTAPP3'   |  'A'              |
+      | 'Removed'         |  'CFDEFER'         |  'NOTAPP4'   |  'A'              |
+      | 'Active'          |  'IN WORK'         |  'INWORK1'   |  'A'              |
+      | 'Active'          |  'INSPREQ'         |  'INWORK1'   |  'A'              |
+      | 'Active'          |  'PAUSE'           |  'INWORK1'   |  'A'              |
+      | 'Active'          |  'COMPLETE'        |  'COMPLETE1' |  'A'              |
+      | 'Active'          |  'ERROR'           |  'COMPLETE1' |  'A'              |
+      | 'Active'          |  'CFDEFER'         |  'DEFER1'    |  'A'              |
+      | 'InWork'          |  'COMPLETE'        |  'COMPLETE2' |  'A'              |
+      | 'InWork'          |  'ERROR'           |  'COMPLETE2' |  'A'              |
+      | 'InWork'          |  'ACTV'            |  'ACTIVE1'   |  'A'              |
+      | 'InWork'          |  'FORECAST'        |  'ACTIVE1'   |  'A'              |
+      | 'Removed'         |  'ACTV'            |  'ACTIVE1'   |  'A'              |
+      | 'Removed'         |  'FORECAST'        |  'ACTIVE1'   |  'A'              |
+      | 'Removed'         |  'IN WORK'         |  'INWORK1'   |  'A'              |
+      | 'Removed'         |  'INSPREQ'         |  'INWORK1'   |  'A'              |
+      | 'Removed'         |  'PAUSE'           |  'INWORK1'   |  'A'              |
+      | 'Removed'         |  'COMPLETE'        |  'COMPLETE1' |  'A'              |
+      | 'Removed'         |  'ERROR'           |  'COMPLETE1' |  'A'              |
+   LOOP
+      --Insert your test code here
+      Sync_State_Handle___(current_rowstate_, incoming_rowstate_, input_objid_, input_objversion_);
+      --Insert your assertions here
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Post_Sync_Action should correct the incoming state based on the current state" FOR
+   PROCEDURE Post_Sync_Action(
+      objid_      IN     VARCHAR2,
+      objversion_ IN     VARCHAR2,
+      attr_       IN     VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage  Av_Exe_Task_API
+   FUNCTION Get_Object_By_Id___ (
+      objid_ IN     VARCHAR2 ) RETURN av_exe_task_tab%ROWTYPE
+   IS
+      rec_         av_exe_task_tab%ROWTYPE;
+   BEGIN
+      CASE objid_
+      WHEN 'NOTAPP1' THEN
+         rec_.task_id := 1;
+         RETURN rec_;
+      WHEN 'NOTAPP2' THEN
+         rec_.task_id := 2;
+         RETURN rec_;
+      WHEN 'NOTAPP3' THEN
+         rec_.task_id := 3;
+         RETURN rec_;
+      WHEN 'NOTAPP4' THEN
+         rec_.task_id := 4;
+         RETURN rec_;
+      WHEN 'INWORK1' THEN
+         rec_.task_id := 5;
+         RETURN rec_;
+      WHEN 'COMPLETE1' THEN
+         rec_.task_id := 6;
+         RETURN rec_;
+      WHEN 'DEFER1' THEN
+         rec_.task_id := 7;
+         RETURN rec_;
+      WHEN 'COMPLETE2' THEN
+         rec_.task_id := 8;
+         RETURN rec_;
+      END CASE ;
+
+      RETURN NULL;
+END Get_Object_By_Id___;
+
+@MockPackage  Av_Exe_Task_API
+FUNCTION Get_Objstate (
+   task_id_ IN     NUMBER ) RETURN VARCHAR2
+IS
+BEGIN
+   CASE task_id_
+   WHEN 1 THEN
+      RETURN 'Active';
+   WHEN 2 THEN
+      RETURN 'InWork';
+   WHEN 3 THEN
+      RETURN 'Completed';
+   WHEN 4 THEN
+      RETURN 'Removed';
+   WHEN 5 THEN
+      RETURN 'Active';
+   WHEN 6 THEN
+      RETURN 'Active';
+   WHEN 7 THEN
+      RETURN 'Active';
+   WHEN 8 THEN
+      RETURN 'InWork';
+   END CASE ;
+
+   RETURN NULL;
+END Get_Objstate;
+
+@MockPackage  Av_Exe_Task_API
+PROCEDURE Sync_State_Handle___(
+   current_rowstate_  IN     VARCHAR2,
+   incoming_rowstate_ IN     VARCHAR2,
+   input_objid_       IN     VARCHAR2,
+   input_objversion_  IN     VARCHAR2)
+IS
+BEGIN
+   ASSERT  current_rowstate_ IN  ('Active', 'InWork', 'Completed', 'Removed')  MESSAGE 'Expected '||'Active,InWork,Completed,InWork,Removed'||' but  was '||current_rowstate_;
+   ASSERT  incoming_rowstate_ IN  ('ACTV', 'IN WORK', 'COMPLETE', 'CFDEFER')     MESSAGE 'Expected '||'ACTV,IN WORK,CANCEL,COMPLETE,CFDEFER'||' but  was '||incoming_rowstate_;
+END Sync_State_Handle___;
+IS
+--Insert your test variables here
+BEGIN
+FOR
+   | objid_      | objversion_ | attr_                                   |
+   | 'NOTAPP1'   |  'A'        | 'ROWSTATE'||chr(31)||'ACTV'||chr(30)    |
+   | 'NOTAPP2'   |  'A'        | 'ROWSTATE'||chr(31)||'IN WORK'||chr(30) |
+   | 'NOTAPP3'   |  'A'        | 'ROWSTATE'||chr(31)||'COMPLETE'||chr(30)|
+   | 'NOTAPP4'   |  'A'        | 'ROWSTATE'||chr(31)||'CFDEFER'||chr(30) |
+   | 'INWORK1'   |  'A'        | 'ROWSTATE'||chr(31)||'IN WORK'||chr(30) |
+   | 'COMPLETE1' |  'A'        | 'ROWSTATE'||chr(31)||'COMPLETE'||chr(30)|
+   | 'DEFER1'    |  'A'        | 'ROWSTATE'||chr(31)||'CFDEFER'||chr(30) |
+   | 'COMPLETE2' |  'A'        | 'ROWSTATE'||chr(31)||'COMPLETE'||chr(30)|
+LOOP
+   --Insert your test code here
+   Post_Sync_Action(objid_, objversion_, attr_);
+   --Insert your assertions here
+END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Aircraft should concatinate the reg_code and aircraft_type_name" FOR
+   FUNCTION Get_Aircraft(
+      aircraft_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable aircraft_tab
+   VALUES
+      | reg_code | aircraft_type_code | aircraft_id |
+      | '219'    | 'B747-400'         | 1           |
+      | '218'    | 'B737-200'         | 3           |
+      | '210'    | 'A380-000'         | 2           |
+      | '216'    | 'F-16'             | 4           |
+   END VALUES;
+
+   @MockTable av_aircraft_type_tab
+   VALUES
+      | aircraft_type_name     | aircraft_type_code |
+      | 'Boeing 747-400'       | 'B747-400'         |
+      | 'Boeing 737-200'       | 'B737-200'         |
+      | 'Airbus A380-000'      | 'A380-000'         |
+      | 'F-16 Fighting Falcon' | 'F-16'             |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_                      | aircraft_id_ |
+      | '219 (Boeing 747-400)'         |  1           |
+      | '218 (Boeing 737-200)'         |  3           |
+      | '210 (Airbus A380-000)'        |  2           |
+      | '216 (F-16 Fighting Falcon)'   |  4           |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Aircraft(aircraft_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+
+UNITTEST "Check_Insert___ should assign generated sequence value for Task id when inserting new record" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_exe_task_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   test_rec1_  av_exe_task_tab%ROWTYPE;
+   test_rec2_  av_exe_task_tab%ROWTYPE;
+   output_  Indicator_Rec;
+BEGIN
+   test_rec1_.task_id               := NULL;
+   test_rec1_.aircraft_id           := 'YOW';
+   test_rec1_.fault_id              := NULL;
+   test_rec1_.task_type             := 'ADHOC';
+   test_rec1_.task_name             := 'Task1';
+   test_rec1_.sched_start_date_time := TO_DATE('2020-12-21 05:00:00', 'yyyy-mm-dd HH:MI:SS');
+   test_rec1_.sched_end_date_time   := TO_DATE('2020-12-22 05:00:00', 'yyyy-mm-dd HH:MI:SS');
+   test_rec1_.estimated_duration    := 24;
+   test_rec1_.aircraft_wp_id        := 2;
+   test_rec1_.barcode               := 'T40S001EB9C';
+   test_rec1_.assigned_user         := 'IFSAPP';
+
+   test_rec2_.task_id               := 5000;
+
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.task_id IS NULL THEN
+         newrec_.task_id := TASK_ID_SEQ.NEXTVAL;
+         ASSERT newrec_.task_id IS NOT NULL MESSAGE 'Returned '||newrec_.task_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "PublishRequestPartCompleteTaskWithtPartReqError___ should return Error task alt Id not found." FOR
+   FUNCTION CompleteTaskWithtPartReqError___ (
+      payload_ IN     VARCHAR2) RETURN VARCHAR2;
+USING
+IS
+   return_     VARCHAR2(2000);
+   expected_   VARCHAR2(2000);
+   input_      VARCHAR2(2000);
+BEGIN
+   input_ := '{
+   "status": 400,
+   "detail": null,
+   "message": "Task alternate id [F14202B1953B477199049D43735A39B6] is invalid",
+   "errorCode": "UNKNOWN"}';
+   expected_ := 'MXCOMPLETEERR: Maintenix task completion failed with error - Task alternate id [F14202B1953B477199049D43735A39B6] is invalid';
+   return_ := CompleteTaskWithtPartReqError___(input_);
+
+   ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+
+END UNITTEST;
+
+UNITTEST "PublishPackageFaultWithNewWPError___ should raise any error when the response body has an error" FOR
+   FUNCTION PublishPackageFaultWithNewWPError___ (
+      payload_        IN     CLOB,
+      aircraft_wp_id_ IN     NUMBER,
+      barcode_        IN     VARCHAR2,
+      location_code_  IN     VARCHAR2) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Aircraft_Work_Package_API
+   PROCEDURE Update_Barcode (
+      wp_id_   IN     NUMBER,
+      barcode_ IN     VARCHAR2 )
+   IS
+      expt_barcode_pass_    VARCHAR2(80) := 'T40S000HEKS';
+      expt_barcode_fail_    VARCHAR2(80) := NULL;
+   BEGIN
+      IF(wp_id_ = 122) THEN
+         ASSERT barcode_ = expt_barcode_pass_ MESSAGE 'Expected '|| expt_barcode_pass_ ||' but returned '|| barcode_;
+      ELSIF (wp_id_ IN (123, 124, 125, 126)) THEN
+         ASSERT barcode_ = expt_barcode_fail_ MESSAGE 'Expected '|| expt_barcode_fail_ ||' but returned '|| barcode_;
+      END IF;
+	END Update_Barcode;
+IS
+   --Insert your test variables here
+   return_         VARCHAR2(2000);
+   expected_       VARCHAR2(2000);
+   response_pass_  CLOB := '{"apiCalls":[{"response":{"body":[{"id":"2C618C50CC15401F9FD9842E58534A28","type":"LINE","countryCode":null,"name":"ATL Line Maintenance","code":"ATL/LINE","timeZoneCode":"America/New_York","timeZoneUserCode":"EST","capabilities":[],"parentId":"9D3310A378FA46C292A35AB012E38FBC","stateCode":null,"supply":false}],"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["c814afc4-f5fd-435a-87db-2805d09f0d6a"],"Content-Length":["279"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"erp/location?code=ATL/LINE","method":"GET"}},{"response":{"body":{"drivingTaskId":null,"lastModifiedDate":"2021-04-20T16:53:38Z","inventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","classMode":null,"aircraftId":"99F4ECD0F6594F29BE075A97B052DC7C","externalId":null,"endDate":null,"warrantyNote":null,"number":"WO - 1371137","barcode":"T40S000HEKS","locationId":"2C618C50CC15401F9FD9842E58534A28","creationDate":"2021-04-20T16:53:38Z","issueAccountId":null,"schedStartDate":"2002-06-30T04:00:00Z","schedEndDate":"2002-07-01T01:07:12Z","actualStartDate":null,"revisionDate":"2021-04-20T16:53:38Z","dueDate":null,"description":null,"highestInventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","taskCode":null,"subClass":null,"heavyMaintenanceBool":false,"usageRemainingQuantity":0.0,"dueDataType":null,"statusDescription":"Active","workscopeGeneratedBool":false,"requestParts":false,"taskClass":"CHECK","workTypes":null,"status":"ACTV","id":"4D293D49215E4CABB07E1716E319E679","name":"MY WP _ Test 002"},"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["facf088a-33bd-41a1-9ee1-04647d641173"],"Content-Length":["925"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{"name":"MY WP _ Test 002","status":"ACTV","inventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","taskClass":"CHECK","schedEndDate":"2002-07-01T01:07:12Z","schedStartDate":"2002-06-30T04:00:00Z","locationId":"2C618C50CC15401F9FD9842E58534A28"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/work/pkg","method":"POST"}},{"response":{"body":[{"id":"481F85B516E040D68605CB05E34A6A6A","barcode":"T40S000HEKR","priority":null,"status":"ACTV","name":"WW-1288","statusDescription":"Active","taskClass":"CORR","subclass":null,"workTypes":null,"softDeadline":false,"etopsSignificant":false,"workPackageId":null,"inventoryId":"37420C59A76B4F66A116082C94373EE5","taskDefnId":null,"instructions":null,"faultSeverity":"UNKNOWN","taskClassMode":"REQ","taskWorkOrderLineNo":null,"workPackageCommitLineOrder":null,"description":null,"configSlot":"12-00","revisionDate":"2021-04-20T16:53:32Z","actualStartDate":null,"scheduledStartDate":null,"scheduledEndDate":null,"creationDate":"2021-04-20T16:53:32Z","taskType":"Fault","duration":"0","partGroupId":null,"warrantyNote":null,"externalKey":null,"schedulePriorityCode":"NONE","impacts":null,"jobCardDetails":null,"blockDetails":null,"endDate":null,"taskCode":null,"parentId":null,"parentTaskClass":null,"userSubclass":null,"parentAssemblyId":"F050931413FC4574A830FB96877CBEEB","drivingDeadline":null,"usageSnapshots":null,"toolRequirements":null,"foundFaultIds":null,"zones":null,"panels":null,"issueToAccountId":null,"originatorCode":null,"minimumPlanningYield":8E+1,"reasonForRemovalCode":null,"locationId":null,"measurements":null,"actions":null,"partRequirements":[],"labour":[{"id":"B829F4A94694438EA0CD5E217E70F7B7","taskId":"481F85B516E040D68605CB05E34A6A6A","skillCode":"LBR","stageCode":"ACTV","workPerformed":{"userId":null,"actualHours":0.0,"scheduledHours":0.0,"adjustedBillingHours":0.0,"statusCode":"ACTV"},"certificationRequired":false,"certification":null,"independentInspectionRequired":false,"independentInspection":null}],"historic":false}],"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["dd97133b-c5f1-46be-8cdd-d964b545fb60"],"Content-Length":["1651"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{"workPackageId":"4D293D49215E4CABB07E1716E319E679"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/task?barcode=T40S000HEKR","method":"GET"}},{"response":{"body":{"id":"481F85B516E040D68605CB05E34A6A6A","barcode":"T40S000HEKR","priority":null,"status":"ACTV","name":"WW-1288","statusDescription":"Active","taskClass":"CORR","subclass":null,"workTypes":null,"softDeadline":false,"etopsSignificant":false,"workPackageId":"4D293D49215E4CABB07E1716E319E679","inventoryId":"37420C59A76B4F66A116082C94373EE5","taskDefnId":null,"instructions":null,"faultSeverity":"UNKNOWN","taskClassMode":"REQ","taskWorkOrderLineNo":null,"workPackageCommitLineOrder":null,"description":null,"configSlot":"12-00","revisionDate":"2021-04-20T16:53:41Z","actualStartDate":null,"scheduledStartDate":"2002-07-21T04:00:00Z","scheduledEndDate":"2002-07-21T04:00:00Z","creationDate":"2021-04-20T16:53:32Z","taskType":"Fault","duration":"0","partGroupId":null,"warrantyNote":null,"externalKey":null,"schedulePriorityCode":"NONE","impacts":null,"jobCardDetails":null,"blockDetails":null,"endDate":"2002-07-21T04:00:00Z","taskCode":null,"parentId":"4D293D49215E4CABB07E1716E319E679","parentTaskClass":"CHECK","userSubclass":null,"parentAssemblyId":"F050931413FC4574A830FB96877CBEEB","drivingDeadline":null,"usageSnapshots":null,"toolRequirements":null,"foundFaultIds":null,"zones":null,"panels":null,"issueToAccountId":null,"originatorCode":null,"minimumPlanningYield":8E+1,"reasonForRemovalCode":null,"locationId":null,"measurements":null,"actions":null,"partRequirements":[],"labour":[{"id":"B829F4A94694438EA0CD5E217E70F7B7","taskId":"481F85B516E040D68605CB05E34A6A6A","skillCode":"LBR","stageCode":"ACTV","workPerformed":{"userId":null,"actualHours":0.0,"scheduledHours":0.0,"adjustedBillingHours":0.0,"statusCode":"ACTV"},"certificationRequired":false,"certification":null,"independentInspectionRequired":false,"independentInspection":null}],"historic":false},"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["9e8ef343-a36d-41f2-adf1-8aff2f9241f0"],"Content-Length":["1766"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{"workPackageId":"4D293D49215E4CABB07E1716E319E679","scheduledStartDate":"2002-07-21T04:00:00Z"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/task/481F85B516E040D68605CB05E34A6A6A","method":"PUT"}},{"response":{"body":{"drivingTaskId":null,"lastModifiedDate":"2021-04-20T16:53:42Z","inventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","classMode":null,"aircraftId":"99F4ECD0F6594F29BE075A97B052DC7C","externalId":null,"endDate":null,"warrantyNote":null,"number":"WO - 1371137","barcode":"T40S000HEKS","locationId":"2C618C50CC15401F9FD9842E58534A28","creationDate":"2021-04-20T16:53:38Z","issueAccountId":null,"schedStartDate":"2002-06-30T04:00:00Z","schedEndDate":"2002-07-01T01:07:12Z","actualStartDate":null,"revisionDate":"2021-04-20T16:53:42Z","dueDate":null,"description":null,"highestInventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","taskCode":null,"subClass":null,"heavyMaintenanceBool":false,"usageRemainingQuantity":0.0,"dueDataType":null,"statusDescription":"Commit","workscopeGeneratedBool":true,"requestParts":true,"taskClass":"CHECK","workTypes":null,"status":"COMMIT","id":"4D293D49215E4CABB07E1716E319E679","name":"MY WP _ Test 002"},"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["57255515-f0c2-4810-a6ef-63fa66db7383"],"Content-Length":["925"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{"status":"COMMIT"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/work/pkg/4D293D49215E4CABB07E1716E319E679","method":"PUT"}}]}';
+   expected_pass_  VARCHAR2(2000) := 'SUCCESS';
+
+   response_fail1_ CLOB := '{"apiCalls":[{"response":{"body":[],"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["727394b7-9084-4253-a3e6-fbd452ccd9ea"],"Content-Length":["2"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"erp/location?code=ATL/LINEPL","method":"GET"}},{"response":{"body":{"status":400,"detail":null,"message":"Unexpected error tranforming API request. Cause: No results for path: $[0][id]","errorCode":"UNKNOWN"},"headers":null,"status":{"code":400,"reason":"Bad Request","family":"CLIENT_ERROR"}},"request":{"body":{"name":"MY WP _ Test 002","status":"ACTV","inventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","taskClass":"CHECK","schedEndDate":"2002-07-01T01:07:12Z","schedStartDate":"2002-06-30T04:00:00Z","locationId":"{result=0:$.[0].id}"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/work/pkg","method":"POST"}},{"response":{"body":{"status":400,"detail":null,"message":"Unexpected error tranforming API request. Cause: No results for path: $[id]","errorCode":"UNKNOWN"},"headers":null,"status":{"code":400,"reason":"Bad Request","family":"CLIENT_ERROR"}},"request":{"body":{"workPackageId":"{result=1:$.id}"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/task?barcode=T40S000HEKR","method":"GET"}},{"response":{"body":{"status":400,"detail":null,"message":"Unexpected error tranforming API request. Cause: Unable to apply URL path transformation [$.[0].id] to URL maintenance/exec/task/{result=2:$.[0].id}. Cause: Filter: [0][id] can only be applied to arrays. Current context is: {status=400, detail=null, message=Unexpected error tranforming API request. Cause: No results for path: $[id], errorCode=UNKNOWN}","errorCode":"UNKNOWN"},"headers":null,"status":{"code":400,"reason":"Bad Request","family":"CLIENT_ERROR"}},"request":{"body":{"workPackageId":"{result=1:$.id}","scheduledStartDate":"2002-07-21T04:00:00Z"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/task/{result=2:$.[0].id}","method":"PUT"}},{"response":{"body":{"status":400,"detail":null,"message":"Unexpected error tranforming API request. Cause: Unable to apply URL path transformation [$.id] to URL maintenance/exec/work/pkg/{result=1:$.id}. Cause: No results for path: $[id]","errorCode":"UNKNOWN"},"headers":null,"status":{"code":400,"reason":"Bad Request","family":"CLIENT_ERROR"}},"request":{"body":{"status":"COMMIT"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/work/pkg/{result=1:$.id}","method":"PUT"}}]}';
+   expected_fail1_ VARCHAR2(2000) := 'MXNOLOCERR: LOCATION_CODE ATL/LINEPL not found';
+
+   response_fail2_ CLOB := '{"apiCalls":[{"response":{"body":[{"id":"2C618C50CC15401F9FD9842E58534A28","type":"LINE","countryCode":null,"name":"ATL Line Maintenance","code":"ATL/LINE","timeZoneCode":"America/New_York","timeZoneUserCode":"EST","capabilities":[],"parentId":"9D3310A378FA46C292A35AB012E38FBC","stateCode":null,"supply":false}],"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["f4e4ac1a-0cfa-45a5-aff6-02d3f7bc6761"],"Content-Length":["279"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"erp/location?code=ATL/LINE","method":"GET"}},{"response":{"body":{"status":500,"detail":"An unexpected error occurred","message":"com.mxi.mx.common.exception.MxRuntimeException: Inventory and class are mandatory.","errorCode":"UNKNOWN"},"headers":{"Content-Type":["application/problem+json"],"X-Correlation-ID":["604875b6-ad04-4a2a-9264-1fac445bca5b"],"Content-Length":["171"]},"status":{"code":500,"reason":"Internal Server Error","family":"SERVER_ERROR"}},"request":{"body":{"name":"MY WP _ Test 002","status":"ACTV","inventoryId":"","taskClass":"CHECK","schedEndDate":"2002-07-01T01:07:12Z","schedStartDate":"2002-06-30T04:00:00Z","locationId":"2C618C50CC15401F9FD9842E58534A28"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/work/pkg","method":"POST"}},{"response":{"body":{"status":400,"detail":null,"message":"Unexpected error tranforming API request. Cause: No results for path: $[id]","errorCode":"UNKNOWN"},"headers":null,"status":{"code":400,"reason":"Bad Request","family":"CLIENT_ERROR"}},"request":{"body":{"workPackageId":"{result=1:$.id}"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/task?barcode=T40S000HEKR","method":"GET"}},{"response":{"body":{"status":400,"detail":null,"message":"Unexpected error tranforming API request. Cause: Unable to apply URL path transformation [$.[0].id] to URL maintenance/exec/task/{result=2:$.[0].id}. Cause: Filter: [0][id] can only be applied to arrays. Current context is: {status=400, detail=null, message=Unexpected error tranforming API request. Cause: No results for path: $[id], errorCode=UNKNOWN}","errorCode":"UNKNOWN"},"headers":null,"status":{"code":400,"reason":"Bad Request","family":"CLIENT_ERROR"}},"request":{"body":{"workPackageId":"{result=1:$.id}","scheduledStartDate":"2002-07-21T04:00:00Z"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/task/{result=2:$.[0].id}","method":"PUT"}},{"response":{"body":{"status":400,"detail":null,"message":"Unexpected error tranforming API request. Cause: Unable to apply URL path transformation [$.id] to URL maintenance/exec/work/pkg/{result=1:$.id}. Cause: No results for path: $[id]","errorCode":"UNKNOWN"},"headers":null,"status":{"code":400,"reason":"Bad Request","family":"CLIENT_ERROR"}},"request":{"body":{"status":"COMMIT"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/work/pkg/{result=1:$.id}","method":"PUT"}}]}';
+   expected_fail2_ VARCHAR2(2000) := 'MXPACKAGEFAULTERR: Maintenix packaging fault failed with error - com.mxi.mx.common.exception.MxRuntimeException: Inventory and class are mandatory.';
+
+   response_fail3_ CLOB := '{"apiCalls":[{"response":{"body":[{"id":"2C618C50CC15401F9FD9842E58534A28","type":"LINE","countryCode":null,"name":"ATL Line Maintenance","code":"ATL/LINE","timeZoneCode":"America/New_York","timeZoneUserCode":"EST","capabilities":[],"parentId":"9D3310A378FA46C292A35AB012E38FBC","stateCode":null,"supply":false}],"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["23fffd26-7967-418a-8f5a-90b91f57c90c"],"Content-Length":["279"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"erp/location?code=ATL/LINE","method":"GET"}},{"response":{"body":{"drivingTaskId":null,"lastModifiedDate":"2021-04-20T17:06:44Z","inventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","classMode":null,"aircraftId":"99F4ECD0F6594F29BE075A97B052DC7C","externalId":null,"endDate":null,"warrantyNote":null,"number":"WO - 1371138","barcode":"T40S000HEKT","locationId":"2C618C50CC15401F9FD9842E58534A28","creationDate":"2021-04-20T17:06:44Z","issueAccountId":null,"schedStartDate":"2002-06-30T04:00:00Z","schedEndDate":"2002-07-01T01:07:12Z","actualStartDate":null,"revisionDate":"2021-04-20T17:06:44Z","dueDate":null,"description":null,"highestInventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","taskCode":null,"subClass":null,"heavyMaintenanceBool":false,"usageRemainingQuantity":0.0,"dueDataType":null,"statusDescription":"Active","workscopeGeneratedBool":false,"requestParts":false,"taskClass":"CHECK","workTypes":null,"status":"ACTV","id":"5E46D8546B1047938959AD55EB4AB5CF","name":"MY WP _ Test 002"},"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["7cb226bd-8af6-4665-8eb0-5a38159d3d10"],"Content-Length":["925"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{"name":"MY WP _ Test 002","status":"ACTV","inventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","taskClass":"CHECK","schedEndDate":"2002-07-01T01:07:12Z","schedStartDate":"2002-06-30T04:00:00Z","locationId":"2C618C50CC15401F9FD9842E58534A28"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/work/pkg","method":"POST"}},{"response":{"body":[],"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["18adaf57-8bac-4544-b443-c205f8b22e18"],"Content-Length":["2"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{"workPackageId":"5E46D8546B1047938959AD55EB4AB5CF"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/task?barcode=T40S000HEKRPL","method":"GET"}},{"response":{"body":{"status":400,"detail":null,"message":"Unexpected error tranforming API request. Cause: Unable to apply URL path transformation [$.[0].id] to URL maintenance/exec/task/{result=2:$.[0].id}. Cause: No results for path: $[0][id]","errorCode":"UNKNOWN"},"headers":null,"status":{"code":400,"reason":"Bad Request","family":"CLIENT_ERROR"}},"request":{"body":{"workPackageId":"{result=1:$.id}","scheduledStartDate":"2002-07-21T04:00:00Z"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/task/{result=2:$.[0].id}","method":"PUT"}},{"response":{"body":{"drivingTaskId":null,"lastModifiedDate":"2021-04-20T17:06:45Z","inventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","classMode":null,"aircraftId":"99F4ECD0F6594F29BE075A97B052DC7C","externalId":null,"endDate":null,"warrantyNote":null,"number":"WO - 1371138","barcode":"T40S000HEKT","locationId":"2C618C50CC15401F9FD9842E58534A28","creationDate":"2021-04-20T17:06:44Z","issueAccountId":null,"schedStartDate":"2002-06-30T04:00:00Z","schedEndDate":"2002-07-01T01:07:12Z","actualStartDate":null,"revisionDate":"2021-04-20T17:06:44Z","dueDate":null,"description":null,"highestInventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","taskCode":null,"subClass":null,"heavyMaintenanceBool":false,"usageRemainingQuantity":0.0,"dueDataType":null,"statusDescription":"Commit","workscopeGeneratedBool":false,"requestParts":true,"taskClass":"CHECK","workTypes":null,"status":"COMMIT","id":"5E46D8546B1047938959AD55EB4AB5CF","name":"MY WP _ Test 002"},"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["393f0d7e-cd16-4fdf-a37f-62fe3ff63a67"],"Content-Length":["926"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{"status":"COMMIT"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/work/pkg/5E46D8546B1047938959AD55EB4AB5CF","method":"PUT"}}]}';
+   expected_fail3_ VARCHAR2(2000) := 'MXNOTSKBCODEERR: BARCODE T40S000HEKRPL not found';
+
+   response_fail4_ CLOB := '{"apiCalls":[{"response":{"body":[{"id":"2C618C50CC15401F9FD9842E58534A28","type":"LINE","countryCode":null,"name":"ATL Line Maintenance","code":"ATL/LINE","timeZoneCode":"America/New_York","timeZoneUserCode":"EST","capabilities":[],"parentId":"9D3310A378FA46C292A35AB012E38FBC","stateCode":null,"supply":false}],"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["0c85c89f-26c8-47e7-93c4-07c7e0405d40"],"Content-Length":["279"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"erp/location?code=ATL/LINE","method":"GET"}},{"response":{"body":{"drivingTaskId":null,"lastModifiedDate":"2021-04-20T17:09:45Z","inventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","classMode":null,"aircraftId":"99F4ECD0F6594F29BE075A97B052DC7C","externalId":null,"endDate":null,"warrantyNote":null,"number":"WO - 1371139","barcode":"T40S000HEKU","locationId":"2C618C50CC15401F9FD9842E58534A28","creationDate":"2021-04-20T17:09:45Z","issueAccountId":null,"schedStartDate":"2002-06-30T04:00:00Z","schedEndDate":"2002-07-01T01:07:12Z","actualStartDate":null,"revisionDate":"2021-04-20T17:09:45Z","dueDate":null,"description":null,"highestInventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","taskCode":null,"subClass":null,"heavyMaintenanceBool":false,"usageRemainingQuantity":0.0,"dueDataType":null,"statusDescription":"Active","workscopeGeneratedBool":false,"requestParts":false,"taskClass":"CHECK","workTypes":null,"status":"ACTV","id":"64952021E38F43D2BD0EF1FE2E0F185E","name":"MY WP _ Test 002"},"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["33958d01-c065-415f-aebb-070145db7eb8"],"Content-Length":["925"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{"name":"MY WP _ Test 002","status":"ACTV","inventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","taskClass":"CHECK","schedEndDate":"2002-07-01T01:07:12Z","schedStartDate":"2002-06-30T04:00:00Z","locationId":"2C618C50CC15401F9FD9842E58534A28"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/work/pkg","method":"POST"}},{"response":{"body":[{"id":"481F85B516E040D68605CB05E34A6A6A","barcode":"T40S000HEKR","priority":null,"status":"ACTV","name":"WW-1288","statusDescription":"Active","taskClass":"CORR","subclass":null,"workTypes":null,"softDeadline":false,"etopsSignificant":false,"workPackageId":"4D293D49215E4CABB07E1716E319E679","inventoryId":"37420C59A76B4F66A116082C94373EE5","taskDefnId":null,"instructions":null,"faultSeverity":"UNKNOWN","taskClassMode":"REQ","taskWorkOrderLineNo":"1","workPackageCommitLineOrder":1,"description":null,"configSlot":"12-00","revisionDate":"2021-04-20T16:53:41Z","actualStartDate":null,"scheduledStartDate":"2002-07-21T04:00:00Z","scheduledEndDate":"2002-07-21T04:00:00Z","creationDate":"2021-04-20T16:53:32Z","taskType":"Fault","duration":"0","partGroupId":null,"warrantyNote":null,"externalKey":null,"schedulePriorityCode":"NONE","impacts":null,"jobCardDetails":null,"blockDetails":null,"endDate":"2002-07-21T04:00:00Z","taskCode":null,"parentId":"4D293D49215E4CABB07E1716E319E679","parentTaskClass":"CHECK","userSubclass":null,"parentAssemblyId":"F050931413FC4574A830FB96877CBEEB","drivingDeadline":null,"usageSnapshots":null,"toolRequirements":null,"foundFaultIds":null,"zones":null,"panels":null,"issueToAccountId":null,"originatorCode":null,"minimumPlanningYield":8E+1,"reasonForRemovalCode":null,"locationId":"2C618C50CC15401F9FD9842E58534A28","measurements":null,"actions":null,"partRequirements":[],"labour":[{"id":"B829F4A94694438EA0CD5E217E70F7B7","taskId":"481F85B516E040D68605CB05E34A6A6A","skillCode":"LBR","stageCode":"ACTV","workPerformed":{"userId":null,"actualHours":0.0,"scheduledHours":0.0,"adjustedBillingHours":0.0,"statusCode":"ACTV"},"certificationRequired":false,"certification":null,"independentInspectionRequired":false,"independentInspection":null}],"historic":false}],"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["9dbcf88d-0421-4462-a34c-f8745a564bda"],"Content-Length":["1794"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{"workPackageId":"64952021E38F43D2BD0EF1FE2E0F185E"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/task?barcode=T40S000HEKR","method":"GET"}},{"response":{"body":{"id":"481F85B516E040D68605CB05E34A6A6A","barcode":"T40S000HEKR","priority":null,"status":"ACTV","name":"WW-1288","statusDescription":"Active","taskClass":"CORR","subclass":null,"workTypes":null,"softDeadline":false,"etopsSignificant":false,"workPackageId":"64952021E38F43D2BD0EF1FE2E0F185E","inventoryId":"37420C59A76B4F66A116082C94373EE5","taskDefnId":null,"instructions":null,"faultSeverity":"UNKNOWN","taskClassMode":"REQ","taskWorkOrderLineNo":null,"workPackageCommitLineOrder":null,"description":null,"configSlot":"12-00","revisionDate":"2021-04-20T17:09:48Z","actualStartDate":null,"scheduledStartDate":"2002-06-30T04:00:00Z","scheduledEndDate":"2002-06-30T04:00:00Z","creationDate":"2021-04-20T16:53:32Z","taskType":"Fault","duration":"0","partGroupId":null,"warrantyNote":null,"externalKey":null,"schedulePriorityCode":"NONE","impacts":null,"jobCardDetails":null,"blockDetails":null,"endDate":null,"taskCode":null,"parentId":"64952021E38F43D2BD0EF1FE2E0F185E","parentTaskClass":"CHECK","userSubclass":null,"parentAssemblyId":"F050931413FC4574A830FB96877CBEEB","drivingDeadline":null,"usageSnapshots":null,"toolRequirements":null,"foundFaultIds":null,"zones":null,"panels":null,"issueToAccountId":null,"originatorCode":null,"minimumPlanningYield":8E+1,"reasonForRemovalCode":null,"locationId":null,"measurements":null,"actions":null,"partRequirements":[],"labour":[{"id":"B829F4A94694438EA0CD5E217E70F7B7","taskId":"481F85B516E040D68605CB05E34A6A6A","skillCode":"LBR","stageCode":"ACTV","workPerformed":{"userId":null,"actualHours":0.0,"scheduledHours":0.0,"adjustedBillingHours":0.0,"statusCode":"ACTV"},"certificationRequired":false,"certification":null,"independentInspectionRequired":false,"independentInspection":null}],"historic":false},"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["035cf66a-b052-485b-8860-80a9b34d5668"],"Content-Length":["1748"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{"workPackageId":"64952021E38F43D2BD0EF1FE2E0F185E","scheduledStartDate":"2002-07-21T04:00:00Z"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/task/481F85B516E040D68605CB05E34A6A6A","method":"PUT"}},{"response":{"body":{"drivingTaskId":null,"lastModifiedDate":"2021-04-20T17:09:49Z","inventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","classMode":null,"aircraftId":"99F4ECD0F6594F29BE075A97B052DC7C","externalId":null,"endDate":null,"warrantyNote":null,"number":"WO - 1371139","locationId":"2C618C50CC15401F9FD9842E58534A28","creationDate":"2021-04-20T17:09:45Z","issueAccountId":null,"schedStartDate":"2002-06-30T04:00:00Z","schedEndDate":"2002-07-01T01:07:12Z","actualStartDate":null,"revisionDate":"2021-04-20T17:09:49Z","dueDate":null,"description":null,"highestInventoryId":"99F4ECD0F6594F29BE075A97B052DC7C","taskCode":null,"subClass":null,"heavyMaintenanceBool":false,"usageRemainingQuantity":0.0,"dueDataType":null,"statusDescription":"Commit","workscopeGeneratedBool":true,"requestParts":true,"taskClass":"CHECK","workTypes":null,"status":"COMMIT","id":"64952021E38F43D2BD0EF1FE2E0F185E","name":"MY WP _ Test 002"},"headers":{"Content-Type":["application/json"],"X-Correlation-ID":["85533a83-9ef2-43bf-b0c8-937b9e4f0618"],"Content-Length":["925"]},"status":{"code":200,"reason":"OK","family":"SUCCESSFUL"}},"request":{"body":{"status":"COMMIT"},"headers":{"Maintenix-API-Transaction-Mode":["NONE"],"Content-Type":["application/json"]},"url":"maintenance/exec/work/pkg/64952021E38F43D2BD0EF1FE2E0F185E","method":"PUT"}}]}';
+   expected_fail4_ VARCHAR2(2000) := 'MXNOBARCODEERR: Work Package Barcode not found in response';
+BEGIN
+   FOR
+      | expected_       | payload_        | aircraft_wp_id_ | barcode_        | location_code_   |
+      | expected_pass_  | response_pass_  |  122            | 'T40S000HEKR'   | 'ATL/LINE'       |
+      | expected_fail1_ | response_fail1_ |  123            | 'T40S000HEKR'   | 'ATL/LINEPL'     |
+      | expected_fail2_ | response_fail2_ |  124            | 'T40S000HEKR'   | 'ATL/LINE'       |
+      | expected_fail3_ | response_fail3_ |  125            | 'T40S000HEKRPL' | 'ATL/LINE'       |
+      | expected_fail4_ | response_fail4_ |  126            | 'T40S000HEKR'   | 'ATL/LINE'       |
+   LOOP
+      --Insert your test code here
+      return_ := PublishPackageFaultWithNewWPError___(payload_, aircraft_wp_id_, barcode_, location_code_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Build_JSON_Obj_for_Batch_API___ should build JSON object for Batch API call when the REST parameters are passed" FOR
+   FUNCTION Build_JSON_Obj_for_Batch_API___(
+      rest_method_       IN     VARCHAR2,
+      rest_endpoint_url_ IN     VARCHAR2,
+      json_body_         IN     JSON_OBJECT_T DEFAULT NULL) RETURN JSON_OBJECT_T;
+USING
+   --Insert your mock directives and mock return variables here
+IS
+   --Insert your test variables here
+   return_              JSON_OBJECT_T;
+   expected_            VARCHAR2(2000);
+   expected_jo_str_1_   VARCHAR2(2000) := '{"request":{"method":"GET","headers":{"Content-Type":["application/json"]},"url":"erp/location?code=ATL/LINE","body":{}}}';
+   jo_2_                JSON_OBJECT_T  := JSON_OBJECT_T.parse('{"name": "MY WP _ Test 005","status": "ACTV","inventoryId": "FFB869870A47438DA7E3534A5921618D","taskClass": "CHECK","schedEndDate": "2021-04-28T01:10:10Z","schedStartDate": "2021-04-27T04:00:00Z","locationId": "{result=0:$.[0].id}"}');
+   expected_jo_str_2_   VARCHAR2(2000) := '{"request":{"method":"POST","headers":{"Content-Type":["application/json"]},"url":"maintenance/exec/work/pkg","body":{"name":"MY WP _ Test 005","status":"ACTV","inventoryId":"FFB869870A47438DA7E3534A5921618D","taskClass":"CHECK","schedEndDate":"2021-04-28T01:10:10Z","schedStartDate":"2021-04-27T04:00:00Z","locationId":"{result=0:$.[0].id}"}}}';
+BEGIN
+   FOR
+      | expected_          | rest_method_ | rest_endpoint_url_               | json_body_ |
+      | expected_jo_str_1_ |  'GET'       | 'erp/location?code=ATL/LINE'     | NULL       |
+      | expected_jo_str_2_ |  'POST'      | 'maintenance/exec/work/pkg'      | jo_2_      |
+   LOOP
+      --Insert your test code here
+      return_ := Build_JSON_Obj_for_Batch_API___(rest_method_, rest_endpoint_url_, json_body_);
+      --Insert your assertions here
+      ASSERT return_.to_string = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_.to_string;
+   END LOOP;
+END UNITTEST;

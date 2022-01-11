@@ -1,0 +1,122 @@
+client ReportingPeriods;
+component ACCRUL;
+layer Core;
+projection ReportingPeriodsHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry BIReportingPeriodsNavEntry parent AccrulNavigator.BIReportingPeriodsMenu at index 200 {
+      label = "Reporting Periods";
+      page Form home RpdYear;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using RpdYearSet {
+   label = "Reporting Periods";
+
+   crudactions {
+      edit {
+         enabled = [false];
+      }
+   }
+
+   selector ReportingYearSelector;
+   group ReportingYearGroup;
+   list RpdPeriodList(RpdPeriodsArray);
+
+   command AccPerConnFromHeaderCommand;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command AccPerConnFromHeaderCommand for RpdYear {
+   label = "Accounting Period Connection";
+   mode = SelectedRecords;
+   enabled = [RpdId != null];
+   execute {
+      navigate "page/ReportingAccountingPeriodConnection/Form?searchcontext=RpdYear:$[RpdYear]&$filter=RpdId eq $[RpdId]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ReportingYearSelector for RpdYear {
+   orderby = RpdId, RpdYear;
+   label = "${RpdId} - ${RpdIdRef.Description} - ${RpdYear}";
+   field RpdId;
+   field RpdIdRef.Description;
+   field RpdYear;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ReportingYearGroup for RpdYear {
+   label = "";
+
+   lov RpdIdRef with ReferenceRpdIdentitySelector {
+      search = RpdId, Description;
+      description = RpdIdRef.Description;
+   }
+   field RpdYear;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list RpdPeriodList for RpdPeriod {
+   label = "Reporting Periods";
+
+   field RpdPeriod;
+   daterangefield {
+      startdate FromDate;
+      enddate UntilDate;
+      label = "Valid";
+   }
+   field YearPeriodNum {
+      editable = [false];
+   }
+   field StringAttribute1;
+   field StringAttribute2;
+   field StringAttribute3;
+   field StringAttribute4;
+   field StringAttribute5;
+   field NumberAttribute1;
+   field NumberAttribute2;
+   field NumberAttribute3;
+   field NumberAttribute4;
+   field NumberAttribute5;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

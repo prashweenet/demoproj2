@@ -1,0 +1,123 @@
+--  Date      Sign    History
+--  --------  ------  -----------------------------------------------------
+--  210112    LAHNLK  LMM2020R1-1481, Modified.
+--  201125    SatGlk  LMM2020R1-1442 - Removed WorkPackageStatus enum and used entity default state enum.
+--  201124    SatGlk  LMM2020R1-1214 - Used entitys default state enum for AvExeTask
+--  201123    SatGlk  LMM2020R1-1214 - Removed unused enumeration TaskStatus
+--  200630    ROSDLK  LMM2020R1-77, Created.
+-----------------------------------------------------------------------------
+
+projection WorkPackageDetailsHandling;
+component ADCOM;
+layer Core;
+description "Manage work package details (Basic Data)";
+category Users;
+include fragment AircraftLovSelector;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset WorkPackageSet for AvAircraftWorkPackage;
+entityset ExeTaskSet for AvExeTask;
+entityset FaultSet for AvFault;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvAircraftWorkPackage {
+   ludependencies = AvAircraftWorkPackage, Aircraft, AvMaintenanceLocation;
+
+   attribute IsHistoric  Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+
+   attribute IsReleaseToService  Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+
+   attribute AircraftWorkPackageId Number {
+      required = [false];
+   }
+
+   attribute SchedStartDateTime Timestamp;
+   attribute SchedEndDateTime Timestamp;
+   attribute ActualStartDateTime Timestamp;
+   attribute ActualEndDateTime Timestamp;
+
+   attribute Objstate Enumeration(AvAircraftWorkPackageState) {
+      fetch = "objstate";
+      label = "State";
+      maxlength = 50;
+      editable = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+
+   reference AircraftRef(AircraftId) to AircraftLov(AircraftId);
+   reference MaintenanceLocationRef(LocationCode) to AvMaintenanceLocation(LocationCode);
+   array TaskArray(AircraftWorkPackageId) to AvExeTask(AircraftWpId);
+   array FaultsArray(AircraftId) to AvFault(AircraftId);
+}
+
+
+@Override
+entity AvExeTask {
+   attribute TaskId Number {
+      required = [false];
+   }
+   attribute TaskCode Text;
+   attribute TaskName Text;
+   attribute SchedStartDateTime Timestamp;
+   attribute SchedEndDateTime Timestamp;
+
+   attribute Objstate Enumeration(AvExeTaskState) {
+      fetch = "objstate";
+      label = "State";
+      maxlength = 50;
+      editable = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+
+   attribute MaterialAvailability Text {
+      fetch = "Av_Exe_Task_Part_Request_API.Get_Material_Availability(task_id)";
+   }
+
+   reference AircraftRef(AircraftId) to AircraftLov(AircraftId);
+}
+
+@Override
+entity AvFault {
+   where = "Objstate = 'Open' OR Objstate = 'Deferred' ";
+   attribute FaultCode Text;
+   attribute Description Text;
+   attribute Barcode Text;
+   attribute AircraftId Number;
+   attribute FoundOnDate Timestamp;
+
+   reference AircraftRef(AircraftId) to AircraftLov(AircraftId);
+   reference AircraftSubSystemRef(SubSystemId) to AvAircraftSubSystem(SubSystemId);
+
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

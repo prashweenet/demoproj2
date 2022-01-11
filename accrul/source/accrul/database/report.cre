@@ -1,0 +1,138 @@
+----------------------------------------------------------------------------
+---
+---  Filename      : report.cre
+---
+---  Module        : ACCRUL
+---
+---  Purpose       : Installation script for report tables.
+--- 
+---  Localization  : No translation needed.
+---
+---  Date     Sign   History
+---  ------   ----   -------------------------------------------------------
+---  980923   AsRe   Added localization information.
+---  990831   FaME   Added header information.
+--   000214   Bren   Added CONTROL_TYPE_VALUE_DESC to POSTING_CTRL_DETAIL_RPT.  
+--   001128   BmEk   Rearranged the code (moved the added columns for table
+--                   Posting_Ctrl_Rpt and Posting_Ctrl_Detail_Rpt up to the
+--                   create table statements).
+--   141205   Kagalk PRFI-3934, Merge Bug 119966, Add columns to Posting_Ctrl_Detail_Rpt, Posting_Ctrl_Detail_Spec_Rpt.
+--   160215   Clstlk STRFI-1179 Merged Bug 127145,Modify column length in POSTING_CTRL_RPT and POSTING_CTRL_DETAIL_RPT.
+----------------------------------------------------------------------------
+SET SERVEROUT ON
+
+CREATE TABLE POSTING_CTRL_RPT (
+   RESULT_KEY                    NUMBER            NOT NULL,
+   ROW_NO                        NUMBER            NOT NULL,
+   MODULE                        VARCHAR2(20),
+   COMPANY                       VARCHAR2(20),
+   POSTING_TYPE                  VARCHAR2(10),
+   CODE_PART                     VARCHAR2(1),
+   OVERRIDE                      VARCHAR2(1),
+   CONTROL_TYPE                  VARCHAR2(10),
+   DEFAULT_VALUE                 VARCHAR2(10),
+   DESCRIPTION                   VARCHAR2(100),
+   POSTING_TYPE_DESC             VARCHAR2(100),
+   CONTROL_TYPE_DESC             VARCHAR2(100),
+   DEFAULT_VAL_DESC              VARCHAR2(100), 
+   CODE_PART_DESC                VARCHAR2(100),
+   CONTROL_NAME                  VARCHAR2(200),
+   DEFAULT_NO_VALUE              VARCHAR2(30),
+   DEFAULT_NO_VALUE_DESC         VARCHAR2(300),
+   VALID_FROM                    DATE
+   ) TABLESPACE &IFSAPP_REPORT_DATA;
+
+ALTER TABLE POSTING_CTRL_RPT ADD (
+CONSTRAINT POSTING_CTRL_RPT_PK
+   PRIMARY KEY (RESULT_KEY,ROW_NO)
+   USING INDEX TABLESPACE &IFSAPP_REPORT_INDEX);
+
+COMMENT ON TABLE POSTING_CTRL_RPT IS
+   'CHILDREN=^';
+
+CREATE TABLE POSTING_CTRL_DETAIL_RPT (
+   RESULT_KEY                 NUMBER         NOT NULL,
+   ROW_NO                     NUMBER         NOT NULL,
+   PARENT_ROW_NO              NUMBER         NOT NULL,
+   CONTROL_TYPE_VALUE         VARCHAR2(100),
+   CONTROL_TYPE_VALUE2        VARCHAR2(100),
+   CODE_PART_VALUE            VARCHAR2(10),
+   VALID_FROM                 DATE,
+--   VALID_UNTIL                DATE,
+   CONTROL_TYPE_VALUE_DESC    VARCHAR2(4000),
+   CONTROL_TYPE_VALUE_DESC2   VARCHAR2(4000),
+   CODE_PART_VALUE_DESC       VARCHAR2(100),
+   SPEC_CONTROL_TYPE          VARCHAR2(10),
+   SPEC_CONTROL_TYPE_DESC     VARCHAR2(200)
+   ) TABLESPACE &IFSAPP_REPORT_DATA;
+     
+
+ALTER TABLE POSTING_CTRL_DETAIL_RPT ADD (
+CONSTRAINT POSTING_CTRL_DETAIL_RPT_PK
+   PRIMARY KEY (RESULT_KEY,ROW_NO)
+   USING INDEX TABLESPACE &IFSAPP_REPORT_INDEX);
+
+COMMENT ON TABLE POSTING_CTRL_DETAIL_RPT IS
+   'CHILDREN=^';
+   
+CREATE TABLE POSTING_CTRL_DETAIL_SPEC_RPT (
+   RESULT_KEY                 NUMBER         NOT NULL,
+   ROW_NO                     NUMBER         NOT NULL,
+   HEAD_ROW_NO                NUMBER         NOT NULL,
+   DETAIL_ROW_NO              NUMBER         NOT NULL,   
+   CONTROL_TYPE_VALUE         VARCHAR2(100),
+   CONTROL_TYPE_VALUE_DESC    VARCHAR2(4000),
+   CONTROL_TYPE_VALUE2        VARCHAR2(100),
+   CONTROL_TYPE_VALUE_DESC2   VARCHAR2(4000),   
+   CODE_PART_VALUE            VARCHAR2(10),
+   CODE_PART_VALUE_DESC       VARCHAR2(100)
+   ) TABLESPACE &IFSAPP_REPORT_DATA;
+
+ALTER TABLE POSTING_CTRL_DETAIL_SPEC_RPT ADD (
+CONSTRAINT POSTING_CTRL_DETAIL_SPEC_RPK
+   PRIMARY KEY (RESULT_KEY,ROW_NO)
+   USING INDEX TABLESPACE &IFSAPP_REPORT_INDEX);
+
+COMMENT ON TABLE POSTING_CTRL_DETAIL_SPEC_RPT IS
+   'CHILDREN=^';
+
+-- ************************* Report Concept Modifications Start **********************
+-- This part should be the last in execution after all the RPT tables are created
+
+-- create RPV Views
+DECLARE
+   PROCEDURE Create_RPV_View (
+      table_name_ IN VARCHAR2,
+      view_name_  IN VARCHAR2,
+      lu_         IN VARCHAR2,
+      prompt_     IN VARCHAR2,
+      module_     IN VARCHAR2)
+   IS
+      stmt_      VARCHAR2(2000);
+      err_text_  VARCHAR2(200);
+   BEGIN
+      stmt_  := 'CREATE OR REPLACE VIEW ' || view_name_ ||' AS ' ||
+                  ' SELECT * ' ||
+                  ' FROM ' || table_name_ || ' t ' ||
+                  ' WHERE EXISTS (SELECT 1 FROM allowed_report a ' ||
+                                ' WHERE a.result_key = t.result_key) '||
+                  ' WITH read only';
+      dbms_output.put_line (' Creating View ' || view_name_ );
+      EXECUTE IMMEDIATE stmt_;      
+      stmt_ := 'COMMENT ON TABLE '||view_name_||' IS ''LU='||lu_||'^PROMPT='||prompt_||'^MODULE='||module_||'^''';      
+      EXECUTE IMMEDIATE stmt_;      
+   EXCEPTION
+      WHEN OTHERS THEN
+         err_text_ := substr(SQLERRM, 1, 200);
+         dbms_output.put_line (' Following Error occured while creating view ' || view_name_);
+         dbms_output.put_line (err_text_);
+   END;
+BEGIN
+   -- For postdet.rdf
+   Create_RPV_View('POSTING_CTRL_RPT', 'POSTING_CTRL_RPV','PostingCtrlDetailRep','PostingCtrlDetailRep','ACCRUL');
+   Create_RPV_View('POSTING_CTRL_DETAIL_RPT', 'POSTING_CTRL_DETAIL_RPV','PostingCtrlDetailRep','PostingCtrlDetailRep','ACCRUL');
+   Create_RPV_View('POSTING_CTRL_DETAIL_SPEC_RPT', 'POSTING_CTRL_DETAIL_SPEC_RPV','PostingCtrlDetailRep','PostingCtrlDetailRep','ACCRUL');   
+END;
+/
+
+-- ************************* Report Concept Modifications End **********************

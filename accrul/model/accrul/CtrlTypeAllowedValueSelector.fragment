@@ -1,0 +1,61 @@
+fragment CtrlTypeAllowedValueSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ctrl_type_allowed_value";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCtrlTypeAllowedValueSelector for CtrlTypeAllowedValue {
+   static ControlType;
+   static ControlTypeDesc;
+}
+
+card CtrlTypeAllowedValueCard for CtrlTypeAllowedValue {
+   label = "";
+   fieldranking ControlType;
+   field ControlType;
+   field ControlTypeDesc;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CtrlTypeAllowedValue {
+   from = "ctrl_type_allowed_value";
+   lu = CombControlType;
+   keys = Company, PostingType, CodePart, ControlType;
+   ludependencies = CtrlTypeAllowedValue;
+   attribute Company Text {
+      lovcolumn = [false];
+   }
+   attribute PostingType Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CodePart Text {
+      lovcolumn = [false];
+   }
+   attribute ControlType Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute ControlTypeDesc Text {
+      label = "Description";
+      lovcolumn = [true];
+   }
+   attribute Module Text {
+      lovcolumn = [true];
+   }
+   attribute CtrlTypeCategory Enumeration(CtrlTypeCategory) {
+      label = "Control Type Category";
+      lovcolumn = [true];
+      fetch = "ctrl_type_category_db";
+   }
+   attribute AllowPrepostDetDb Text {
+      label = "Allow Pre-Posting on Detail level";
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

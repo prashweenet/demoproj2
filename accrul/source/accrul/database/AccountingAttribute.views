@@ -1,0 +1,36 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingAttribute
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+VIEW ACCOUNTING_ATTRIBUTE2 IS
+   Prompt = 'Accounting Attributes 2'
+   company.Flags = 'PMI--'
+   company.Datatype = 'STRING(200)'
+   company.Prompt = 'Company'
+SELECT
+       company                        company,
+       attribute                      attribute,
+       description                    description,
+       code_part                      code_part,
+       ACCOUNTING_CODE_PARTS_API.GET_NAME(COMPANY,CODE_PART) code_name,
+       rowkey                         objkey,
+       to_char(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   accounting_attribute_tab
+WHERE  code_part = 'A';

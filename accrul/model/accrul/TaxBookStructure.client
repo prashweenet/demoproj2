@@ -1,0 +1,437 @@
+client TaxBookStructure;
+component ACCRUL;
+layer Core;
+projection TaxBookStructureHandling;
+warningsenabled = TaxBookStructureLevel;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TaxBookStructureNavEntry parent AccrulNavigator.TaxMenu at index 300 {
+      label = "Tax Book Structure";
+      tree Tree;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page TaxBookStructure using TaxBookStructureSet {
+   selector TaxBookStructSelector;
+   group TaxBookStructureGroup bind TaxBookStructSelector;
+   --StructureId as the 3rd parameter is sent as a dummy value
+   list UnUsedTaxBooksList using FetchTaxBookValues(Company, StructureId, StructureId) {
+      preselect = [false];
+   }
+
+   command CreateNewStructureCommand;
+   command CreateNewLevelsNodesCommand;
+}
+
+page TaxBookStructureItem using TaxBookStructureItemSet {
+   label = "Tax Book Structure";
+
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+
+   searchcontext PageSearchContext {
+      defaults = FetchPageSearchContextDefaults(StructureItemType);
+   }
+   selector TaxBookStructItemSelector;
+   group TaxBookStructureItemGroup bind TaxBookStructItemSelector;
+   tabs {
+      tab {
+         label = "Not Used Tax Books";
+         visible = [StructureItemType = "Node"];
+         list TaxBookList using FetchTaxBookValues(Company, StructureId, NodeIdRef.NameValue);
+      }
+      tab {
+         label = "Used Tax Books";
+         visible = [StructureItemType = "Node"];
+         list TaxBookStructItemList using FetchUsedTaxBookValues(Company, StructureId, NodeIdRef.NameValue);
+      }
+      tab {
+         label = "Used Tax Books";
+         visible = [StructureItemType = "TaxBook"];
+         list TaxBookStructItemList using FetchUsedTaxBookValues(Company, StructureId, NodeIdRef.ItemAbove);
+      }
+   }
+}
+
+searchcontext PageSearchContext for PageSearchContextStructure {
+   label = "";
+   field StructureItemType {
+      visible = [false];
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+assistant Assistant using TaxBookStructureVirtualSet {
+   label = "Create and Modify Levels and Nodes";
+   savemode = OnLostFocus;
+
+   input(Company, StructureId);
+
+   steps {
+      step {
+
+         label = "Levels";
+         list TaxBookStructureLevelList(TaxBookStructureLevelArray);
+      }
+
+      step {
+         label = "Nodes";
+         list TaxBookStructureItemList(TaxBookStructureItemArray);
+      }
+
+      final step {
+      }
+   }
+
+   finish command {
+      execute {
+         if [component.Assistant.IsModal] {
+            exit OK;
+         }
+         else {
+            navigate back;
+         }
+      }
+
+   }
+   cancel command {
+      execute {
+         if [component.Assistant.IsModal] {
+            exit CANCEL;
+         }
+         else {
+            navigate back;
+         }
+      }
+   }
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+command CreateNewStructureCommand for TaxBookStructure {
+   mode = Global;
+
+   label = "Create New Structure";
+
+   execute {
+      dialog CreateNewStructure(Company) {
+         when CANCEL {
+            exit CANCEL;
+         }
+      }
+   }
+}
+
+command CreateNewLevelsNodesCommand for TaxBookStructure {
+   label = "Create and Modify Levels and Nodes";
+  -- enabled = [component.TaxBookStructure.IsTreeOpened = true];
+
+   execute {
+      assistant Assistant(Company, StructureId) {
+         when OK {
+            exit OK;
+         }
+      }
+   }
+}
+
+command MoveItemsCommand for TaxBookStructureItem {
+   execute {
+      call MoveItems(source.Company, source.StructureId, source.NameValue, source.ItemAbove, destination.NameValue);
+   }
+}
+
+command ConnectValuesCommand for TaxBook {
+   label = "Connect";
+   mode = SelectedRecords;
+   enabled = [searchcontext.PageSearchContext.StructureItemType = "Node"];
+
+   variable ActionVar;
+   variable CompanyVar;
+
+   bulkexecute {
+      set ActionVar = "CONNECT";
+      set CompanyVar = "${context.Company}";
+      bulkcall ConnectDisconnectValues(CompanyVar, StructId, ItemAbove, TaxBookId, ActionVar, searchcontext.PageSearchContext.StructureItemType);
+   }
+}
+
+command DisconnectValuesCommand for TaxBookStructureItem {
+   label = "Disconnect";
+   mode = SelectedRecords;
+   enabled = [searchcontext.PageSearchContext.StructureItemType = "Node"];
+
+   variable ActionVar;
+   variable CompanyVar;
+   variable StructureIdVar;
+   variable ItemAboveVar;
+
+   bulkexecute {
+      set ActionVar = "DISCONNECT";
+      set CompanyVar = "${context.Company}";
+       //! TODO: ussolk <StructureIdVar, ItemAboveVar can be removed once TEUXX-10801 is fixed>
+      set StructureIdVar = null;
+      set SortValueVar = null;
+      call ConnectDisconnectValues(CompanyVar, StructureIdVar, ItemAboveVar, Selection, ActionVar, searchcontext.PageSearchContext.StructureItemType);
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector TaxBookStructSelector for TaxBookStructure {
+   label = "${StructureId} - ${Description} ";
+
+   static StructureId;
+   static Description;
+}
+
+selector TaxBookStructItemSelector for TaxBookStructureItem {
+   static Company;
+   static StructureIdRef.StructureId;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group TaxBookStructureGroup for TaxBookStructure {
+   label = "";
+
+   field StructureId;
+   field Description;
+}
+
+group TaxBookStructureItemGroup for TaxBookStructureItem {
+   label = "";
+
+   lov NodeIdRef with ReferenceTaxBookStructureItemSelector {
+      label = "Structure Node/Tax Book Value";
+      description = Description;
+      editable = [false];
+   }
+   lov LevelIdRef with ReferenceTaxBookStructureLevelSelector {
+      search = LevelId, Description;
+      description = LevelIdRef.Description;
+      editable = [false];
+   }
+
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list TaxBookList for TaxBook {
+   label = "Not Used Tax Books";
+
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+
+   lov TaxBookIdRef with ReferenceTaxBookSelector using FetchTaxBookValues(Company, StructureId, StructureId) {
+      search = TaxBookId, Description;
+      description = TaxBookIdRef.Description;
+   }
+
+   command ConnectValuesCommand;
+}
+
+list UnUsedTaxBooksList for TaxBook {
+   label = "Not Used Tax Books";
+
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+
+   lov TaxBookIdRef with ReferenceTaxBookSelector using FetchTaxBookValues(Company, StructureId, StructureId) {
+      search = TaxBookId, Description;
+      description = TaxBookIdRef.Description;
+   }
+
+}
+
+list TaxBookStructItemList for TaxBookStructureItem {
+   label = "";
+
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+
+   lov NodeIdRef with TaxBookStructureItemSelector using FetchUsedTaxBookValues(Company, StructureId, NameValue) {
+      label = "Tax Book ID";
+      description = Description;
+      size = Large;
+   }
+
+   command DisconnectValuesCommand;
+}
+
+list TaxBookStructureLevelList for TaxBookStructureLevel {
+   label = "";
+   preselect = [false];
+
+   crudactions {
+      new {
+         enabled = [parent.NodeCount = 0];
+      }
+   }
+
+   field LevelId;
+   field Description;
+   field LevelAboveRef;
+}
+
+list TaxBookStructureItemList for TaxBookStructureItem {
+   preselect = [false];
+
+   label = "";
+
+   field NameValue;
+   field Description;
+   lov LevelIdRef with ReferenceTaxBookStructureLevelSelector {
+      search = LevelId, Description;
+      description = LevelIdRef.Description;
+      validate command {
+         execute {
+            set StructureItemType = "Node";
+         }
+      }
+   }
+   field ItemAboveRef;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+dialog CreateNewStructure for NewTaxBookStructure {
+   label = "New Structure";
+   input(Company);
+   group TaxBookStructureGroup;
+
+   command Ok {
+      enabled = [StructureId != null and Description != null];
+      variable CompanyVar;
+      execute {
+         set CompanyVar = "${context.Company}";
+         call CreateNewStructure(CompanyVar, StructureId, Description);
+         navigate "tree/TaxBookStructure/Tree?contexts=Company:$[CompanyVar]&$filter=StructureId eq $[StructureId]";
+      }
+   }
+   command Cancel {
+      execute {
+         exit CANCEL;
+      }
+   }
+}
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+tree Tree using TaxBookStructureSet {
+   label = "Tax Book Structure";
+
+   selector TaxBookStructSelector;
+   command CreateNewStructureCommand;
+
+   rootnode TaxBookStructure {
+      label = "${StructureId}";
+      navigate {
+         page TaxBookStructure {
+            filter(StructureId, StructureId);
+            filter(Company, Company);
+         }
+      }
+
+      iconset {
+         icon "account-type";
+         emphasis Complementary2 = [StructureItemType = "Node"];
+      }
+
+      connections {
+         node  TaxBookStructureItem(TaxBookStructureTopNodeArray);
+      }
+   }
+
+   node TaxBookStructureItem for TaxBookStructureItem {
+      label = "${NameValue} - ${Description}";
+
+      navigate {
+         page  TaxBookStructureItem {
+            filter(NameValue, NameValue);
+            filter(Company, Company);
+            filter(StructureId, StructureId);
+         }
+      }
+
+      iconset {
+         icon "account-type" {
+            expression = [StructureItemType = "Node"];
+         }
+         icon "document";
+         emphasis Complementary2 = [StructureItemType = "Node"];
+         emphasis Complementary3 = [StructureItemType = "TaxBook"];
+      }
+
+      connections {
+         node TaxBookStructureItem(TaxBookStructureItemArray);
+      }
+
+      onmove {
+         when TaxBookStructureItem command MoveItemsCommand;
+      }
+   }
+}
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

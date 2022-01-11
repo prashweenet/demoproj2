@@ -1,0 +1,32 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: FunctionGroup
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Function_Group_Int IS
+   Prompt = 'Function Group Int'
+   Function_Group.Flags = 'KMIUL'
+   Function_Group.Datatype = 'STRING(10)'
+SELECT function_group                                                             function_group,
+       NVL(RTRIM(RPAD(BASIC_DATA_TRANSLATION_API.Get_Basic_Data_Translation('ACCRUL','FunctionGroup',function_group),100)),description)  description,
+       rowid                                                                     objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                                                                objversion,
+       rowkey                                                                    objkey
+FROM   function_group_tab
+WHERE  function_group IN ('A', 'K', 'M', 'Q', 'R', 'X', 'Z', 'PPC', 'P' , 'H' , 'YE');
+

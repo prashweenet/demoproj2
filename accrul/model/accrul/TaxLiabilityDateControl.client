@@ -1,0 +1,110 @@
+client TaxLiabilityDateControl;
+component ACCRUL;
+layer Core;
+projection TaxLiabilityDateControlHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TaxLiabilityDateControlNavEntry parent AccrulNavigator.TaxMenu at index 700 {
+      label = "Tax Liability Date Control";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using TaxLiabilityDateCtrlSet {
+   label = "Tax Liability Date Control";
+   crudactions {
+      new {
+         enabled = [Company = null];
+      }
+   }
+
+   singleton TaxLiabilityDateCtrlSingleton;
+   group TaxLiabilityDateControlGroup;
+   list TaxLiabltyDateExceptionList(TaxLiabltyDateExceptionArray);
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+singleton TaxLiabilityDateCtrlSingleton for TaxLiabilityDateCtrl;
+
+
+---------------------------------- GROUPS -----------------------------------
+group TaxLiabilityDateControlGroup for TaxLiabilityDateCtrl {
+   label = "";
+
+   field CustomerLiabilityDate;
+   field PaymentsLiabilityDate;
+   field SupplierLiabilityDate;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list TaxLiabltyDateExceptionList for TaxLiabltyDateException {
+   label = "Tax Liability Date Exception";
+
+   lov FeeCodeRef with ReferenceStatutoryFeeSelector {
+      search = FeeCode, Description;
+      size = Large;
+      description = FeeCodeRef.Description;
+   }
+   field FeeCodeRef.FeeRate {
+      label = "Tax %";
+      size = Small;
+   }
+   field CustomerLiabilityDate {
+      label = "Customer Debit Invoice";
+   }
+   field CustomerCrdtLiabltyDate;
+   field SupplierLiabilityDate;
+   field FeeCodeRef.VatDisbursed {
+      label = "Tax Method Tax Disburst";
+   }
+   field FeeCodeRef.VatReceived {
+      label = "Tax Method Tax Received";
+   }
+}
+
+@Override
+list StatutoryFeeLovList for StatutoryFee {
+   static Description {
+      label = "Description";
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

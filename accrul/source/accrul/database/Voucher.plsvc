@@ -1,0 +1,167 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     Voucher
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Get_Int_Man_Info___ (
+   company_        IN VARCHAR2,
+   account_        IN VARCHAR2,
+   voucher_date_   IN DATE,
+   voucher_type_   IN VARCHAR2) RETURN Int_Manual_Structure_Rec
+IS
+   rec_               Int_Manual_Structure_Rec;
+BEGIN
+   $IF Component_Intled_SYS.INSTALLED $THEN
+      IF (Voucher_Type_API.Get_Use_Manual(company_, voucher_type_) = 'TRUE') THEN
+         rec_.ledger_ids := Internal_Voucher_Util_Pub_API.Check_If_Not_Excluded_Manual(company_,
+                                                                                       account_,
+                                                                                       voucher_date_,
+                                                                                       voucher_type_);
+         
+         IF (rec_.ledger_ids IS NOT NULL) THEN
+            rec_.int_manual_sequence := Internal_Ledger_Util_Pub_API.Get_Next_Int_Manual_Post_Seq;
+         END IF;
+      END IF;
+   $END
+   RETURN rec_;
+END Get_Int_Man_Info___;
+
+FUNCTION Acc_Year_Period_Info___(
+   company_      IN VARCHAR2,
+   voucher_date_ IN DATE,
+   user_group_   IN VARCHAR2) RETURN Accounting_Year_Period_Info_Struct_Rec
+IS
+   temp_accounting_year_   NUMBER := 0;
+   temp_accounting_period_ NUMBER := 0;
+   rec_                    Accounting_Year_Period_Info_Struct_Rec; 
+BEGIN
+   Accounting_Period_API.Get_Accounting_Year(rec_.accounting_year, rec_.accounting_period, company_, voucher_date_, user_group_);
+   Accounting_Period_API.Get_YearPer_For_YearEnd_User( temp_accounting_year_, temp_accounting_period_, company_,user_group_,voucher_date_);
+   IF (temp_accounting_year_ != 0 AND temp_accounting_period_ != 0) THEN 
+      rec_.accounting_year          := temp_accounting_year_;
+      rec_.accounting_period        := temp_accounting_period_;
+   END IF;
+   rec_.acc_period_description   := Accounting_Period_API.Get_Period_Description(company_,rec_.accounting_year,rec_.accounting_period);
+   RETURN rec_;
+END Acc_Year_Period_Info___;
+
+FUNCTION Voucher_Header_Info___ (
+   company_         IN VARCHAR2,
+   accounting_year_ IN NUMBER,
+   user_group_      IN VARCHAR2,
+   voucher_type_    IN VARCHAR2 ) RETURN Voucher_Header_Info_Structure_Rec
+IS
+   rec_        Voucher_Header_Info_Structure_Rec;
+   voucher_type_rec_ Voucher_Type_API.Public_Rec;
+BEGIN
+   rec_.authorize_level := Voucher_Type_User_Group_API.Get_Authorize_Level_Db(company_, accounting_year_, user_group_, voucher_type_); 
+   voucher_type_rec_ := Voucher_Type_API.Get(company_, voucher_type_);
+   rec_.automatic       := NVL(voucher_type_rec_.automatic_allot, 'N');
+   rec_.function_group  := Voucher_Type_API.Get_Voucher_Group(company_,voucher_type_);
+   rec_.simulation_voucher    := voucher_type_rec_.Simulation_Voucher; 
+   rec_.use_apporval_workflow := voucher_type_rec_.Use_Approval_Workflow; 
+   rec_.separate_user_approval := voucher_type_rec_.Separate_User_Approval;
+   RETURN rec_;
+END Voucher_Header_Info___;
+
+FUNCTION Get_Tax_Handling_Value___(
+   company_      IN VARCHAR2,
+   account_      IN VARCHAR2,
+   voucher_date_ IN DATE,
+   tax_code_     IN VARCHAR2,
+   tax_direction_ IN VARCHAR2,
+   tax_percentage_ IN NUMBER) RETURN Tax_Values_Structure_Rec
+IS
+   rec_                    Tax_Values_Structure_Rec;
+   tax_direction_client_   VARCHAR2(100);
+   tax_handling_value_     accounting_code_part_value_tab.tax_handling_value%TYPE;
+BEGIN 
+   
+   tax_handling_value_ := Account_API.Get_Tax_Handling_Value_Db(company_, account_);    
+   IF (tax_handling_value_ IS NOT NULL AND tax_handling_value_ != 'BLOCKED') THEN
+      Tax_Handling_Util_API.Fetch_Default_Tax_Code_On_Acc(rec_.tax_code,
+                                                          tax_direction_client_,
+                                                          rec_.tax_type,
+                                                          rec_.tax_percentage,
+                                                          company_,
+                                                          account_,
+                                                          voucher_date_);
+      
+      IF (tax_direction_client_ IS NOT NULL ) THEN         
+         rec_.tax_direction:= Tax_Direction_API.Encode(tax_direction_client_);
+      ELSE
+         rec_.tax_direction:= NULL;
+      END IF;
+     
+      IF (rec_.tax_code IS NULL AND tax_code_ IS NOT NULL) THEN
+         rec_.tax_code := tax_code_;
+         rec_.tax_percentage := tax_percentage_;
+         rec_.tax_direction := tax_direction_;         
+         rec_ := Fetch_Validate_Tax_Code___(company_, account_, rec_.tax_code);
+      END IF;     
+   ELSE
+      rec_.tax_code := NULL;
+      rec_.tax_percentage := NULL;
+      rec_.tax_direction := NULL;      
+   END IF;  
+	RETURN rec_;
+END Get_Tax_Handling_Value___;
+
+FUNCTION Automatic_Voucher_Balance___ (
+	company_          IN VARCHAR2,
+	voucher_type_     IN VARCHAR2,
+	function_group_   IN VARCHAR2) RETURN VARCHAR2
+IS
+BEGIN
+	RETURN Voucher_Type_Detail_API.Get_Automatic_Vou_Balance(company_, voucher_type_, function_group_);
+END Automatic_Voucher_Balance___;
+
+
+FUNCTION Get_D_Voucher_Type___ (
+   company_      IN VARCHAR2,
+   user_group_   IN VARCHAR2,
+   acc_year_     IN NUMBER) RETURN VARCHAR2
+IS
+   vou_type_ VARCHAR2(3);
+BEGIN
+	Voucher_Type_User_Group_API.Get_Default_Voucher_Type(vou_type_,
+                                                        company_,
+                                                        user_group_,
+                                                        acc_year_,
+                                                        'D');
+   RETURN vou_type_;
+END Get_D_Voucher_Type___;
+
+
+FUNCTION Get_Voucher_Type_Info___ (
+	company_ IN VARCHAR2,
+	user_group_ IN VARCHAR2,
+	accounting_year_ IN NUMBER,
+	voucher_number_ IN NUMBER,
+	function_group_ IN VARCHAR2,
+	voucher_type_ IN VARCHAR2) RETURN Voucher_Type_Structure_Rec
+IS
+   vou_type_info_ Voucher_Type_Structure_Rec;
+   vou_exist_ VARCHAR2(5);
+   
+BEGIN
+   vou_exist_ := Voucher_API.Is_Voucher_Exist(company_, voucher_type_,accounting_year_, voucher_number_);
+   vou_type_info_.function_group := function_group_;
+   vou_type_info_.voucher_type   := voucher_type_;
+   IF (vou_exist_ = 'FALSE') THEN
+      vou_type_info_.function_group := NVL(function_group_, 'M');
+      IF (vou_type_info_.function_group IN ('M', 'Q', 'K')) THEN
+         Voucher_Type_User_Group_API.Get_Default_Voucher_Type(vou_type_info_.voucher_type, company_, user_group_, accounting_year_, 'M');
+      END IF;
+   END IF;
+   RETURN vou_type_info_;
+END Get_Voucher_Type_Info___;
+

@@ -1,0 +1,104 @@
+client UsersPerUserGroup;
+component ACCRUL;
+layer Core;
+projection UsersPerUserGroupHandling;
+warningsenabled = UserGroupMemberFinance, UserGroupFinance;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry UsersPerUserGroupNavEntry parent AccrulNavigator.UserRelatedDataMenu at index 300 {
+      label = "Users per User Group";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using UserGroupFinanceSet {
+   label = "Users per User Group";
+   selector UserGroupFinanceSelector;
+   list UserGroupMemberFinanceList(UserGroupMemberFinanceArray);
+
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command SetDefaultCommand for UserGroupMemberFinance {
+   label = "Set Default";
+   enabled = [DefaultGroupDb != true];
+
+   execute {
+      call DoSetDefault();
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector UserGroupFinanceSelector for UserGroupFinance {
+   label = "${UserGroup} - ${Description}";
+   orderby = UserGroup;
+
+   static Company {
+      visible = [false];
+      searchable = false;
+   }
+   static UserGroup;
+   static Description {
+      label = "Description";
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list UserGroupMemberFinanceList for UserGroupMemberFinance {
+   orderby = Userid;
+
+   lov UseridRef with ReferenceUserFinanceSelector {
+      search = Userid, Description;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+      description = UseridRef.Description;
+   }
+   field DefaultGroupDb {
+      size = Large;
+   }
+   command SetDefaultCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

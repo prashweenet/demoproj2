@@ -1,0 +1,89 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistFlight
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201008  themlk  DISO2020R1-410, UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PRIVATE METHODS ----------------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable aircraft_tab
+   VALUES
+      | aircraft_id | serial_number |aircraft_type_code|
+      | 1           | 'S001'        |'ASMBL_CD'        |
+   END VALUES;
+
+   @MockTable av_airport_tab
+   VALUES
+      |airport_id | mx_unique_key |
+      | 2         | 'MXKEY2'      |
+      | 3         | 'MXKEY3'      |
+   END VALUES;
+
+   @MockTable av_hist_usage_record_tab
+   VALUES
+      | usage_record_id | usage_record_alt_id |
+      | 1               | 'USG01'             |
+   END VALUES;
+
+   @MockTable av_hist_flight_tab
+   VALUES
+      | flight_id |  flight_leg_alt_id | departure_airport_id | arrival_airport_id |aircraft_id | usage_record_id |
+      | 1         | 'FLEG1'            | 2                    | 3                  | 1          | 1               |
+   END VALUES;
+
+IS
+   output1_  VARCHAR2(2000);
+   expected1_   VARCHAR2(2000);
+   expected2_   VARCHAR2(2000);
+   expected3_   VARCHAR2(2000);
+   expected4_   VARCHAR2(2000);
+
+BEGIN
+   FOR
+      | attr_ |
+      |'SERIAL_NO_OEM'||chr(31)||'S001' ||chr(30)||'AIRCRAFT_TYPE_CODE'||chr(31)||'ASMBL_CD' ||chr(30)||'WITH_AIRCRAFT_ID'|
+      |'DEPARTURE_AIRPORT_UNIQUE_KEY'||chr(31)||'MXKEY2'||chr(30)||'WITH_DEPARTURE_AIRPORT_UNIQUE_KEY'|
+      |'ARRIVAL_AIRPORT_UNIQUE_KEY'||chr(31)||'MXKEY3'||chr(30)||'WITH_ARRIVAL_AIRPORT_UNIQUE_KEY'|
+      |'USAGE_RECORD_UNIQUE_KEY'||chr(31)||'USG01'||chr(30)||'WITH_USAGE_RECORD_ID'|
+   LOOP
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_AIRCRAFT_ID'||'AIRCRAFT_ID'||chr(31)||'1' ||chr(30)||'FLIGHT_LEG_ALT_ID'||chr(31)||'' ||chr(30);
+      expected2_ := 'WITH_DEPARTURE_AIRPORT_UNIQUE_KEY'||'DEPARTURE_AIRPORT_ID'||chr(31)||'2'||chr(30)||'FLIGHT_LEG_ALT_ID'||chr(31)||''||chr(30);
+      expected3_ := 'WITH_ARRIVAL_AIRPORT_UNIQUE_KEY'||'ARRIVAL_AIRPORT_ID'||chr(31)||'3'||chr(30)||'FLIGHT_LEG_ALT_ID'||chr(31)||''||chr(30);
+      expected4_ := 'WITH_USAGE_RECORD_ID'||'FLIGHT_LEG_ALT_ID'||chr(31)||''||chr(30);
+
+      IF attr_ LIKE '%WITH_AIRCRAFT_ID%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%DEPARTURE_AIRPORT_UNIQUE_KEY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_ARRIVAL_AIRPORT_UNIQUE_KEY%' THEN
+         ASSERT output1_ = expected3_ MESSAGE 'Expected '||expected3_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_USAGE_RECORD_ID%' THEN
+         ASSERT output1_ = expected4_ MESSAGE 'Expected '||expected4_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+
+

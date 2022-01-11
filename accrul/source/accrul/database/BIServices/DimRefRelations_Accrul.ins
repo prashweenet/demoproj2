@@ -1,0 +1,52 @@
+-----------------------------------------------------------------------------
+--  Component  : ACCRUL
+--
+--  Filensame  : DimRefRelations_Accrul.ins
+--
+--  Purpose    : Register References for Dimensions
+--               
+--
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   ----------------------------------------------------------
+--  110621  SJayLK  Created.
+--  111214  Anwese  Updated.
+--  160106  Umdolk  Added Additional code part dimensions.
+-----------------------------------------------------------------------------
+BEGIN
+
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CompanyFinance',        'DIM_COMPANY');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('Account',               'DIM_ACCOUNT');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeB',                 'DIM_CODE_B');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeC',                 'DIM_CODE_C');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeD',                 'DIM_CODE_D');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeE',                 'DIM_CODE_E');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeF',                 'DIM_CODE_F');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeG',                 'DIM_CODE_G');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeH',                 'DIM_CODE_H');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeI',                 'DIM_CODE_I');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeJ',                 'DIM_CODE_J');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CounterPartOne',        'DIM_COUNTER_PART_ONE');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CounterPartTwo',        'DIM_COUNTER_PART_TWO');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeN',                 'DIM_CODE_N');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeO',                 'DIM_CODE_O');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeP',                 'DIM_CODE_P');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeQ',                 'DIM_CODE_Q');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeR',                 'DIM_CODE_R');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeS',                 'DIM_CODE_S');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeT',                 'DIM_CODE_T');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CodeT',                 'DIM_CODE_T');  
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CurrencyCode',          'DIM_CURRENCY_CODE');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('CurrencyType',          'DIM_CURRENCY_RATE_TYPE');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('TaxBook',               'DIM_TAX_BOOK');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('StatutoryFee',          'DIM_TAXCODE');   
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('VoucherType',           'DIM_VOUCHER_TYPE');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('AccountingPeriod',      'DIM_ACCOUNTING_PERIOD');
+   Xlr_Dim_Ref_Relations_API.Reg_Dim_Ref_Relation('AccountProcessCode',    'DIM_ACCOUNTING_PROCESS_CODE');
+       
+END;
+/
+
+COMMIT;
+
+

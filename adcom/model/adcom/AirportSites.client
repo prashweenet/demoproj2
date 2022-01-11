@@ -1,0 +1,74 @@
+--  Date        Sign    History
+--  ----------  ------  -----------------------------------------------------
+--  200703      TAJALK  LMM2020R1-98, Changes
+--  200702      TAJALK  LMM2020R1-270, Bug fixes
+--  200629      TAJALK  LMM2020R1-98, Created.
+-----------------------------------------------------------------------------
+client AirportSites;
+component ADCOM;
+layer Core;
+
+projection AirportSiteHandling;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry NavAirportSitesNavEntry parent AdcomNavigator.BasicData at index 150 {
+      label = "Airport Sites";
+      page List home AvAirportSite;
+   }
+}
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AirportSiteSet {
+   label = "Airport Sites";
+   list AirportSiteList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AirportSelector for AvAirport {
+   label = "${IataCode} - ${AirportName}";
+   static IataCode;
+   static AirportName;
+}
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AirportSiteList for AvAirportSite {
+   lov AirportRef with AirportSelector {
+      label = "Airport";
+      description = AirportRef.IataCode;
+      hidekey = [true];
+   }
+   field Site;
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

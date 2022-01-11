@@ -1,0 +1,99 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ApproveVouchersHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Get_Default_Vals___(
+   company_ IN VARCHAR2 ) RETURN Vou_Info_Structure_Rec   
+IS
+   rec_     Vou_Info_Structure_Rec;
+BEGIN
+   rec_.company    := company_;
+   rec_.user_group   := User_Group_Member_Finance_API.Get_Default_Group(company_, Fnd_Session_API.Get_Fnd_User);
+   rec_.user_id      := Fnd_Session_API.Get_Fnd_User;
+   rec_.voucher_date := SYSDATE;
+   RETURN rec_;
+END Get_Default_Vals___; 
+
+PROCEDURE Vouch_Approval___ (
+   company_         IN VARCHAR2,
+	accounting_year_ IN NUMBER,
+	voucher_type_    IN VARCHAR2,
+	voucher_no_      IN NUMBER,
+	user_group_      IN VARCHAR2 )
+IS 
+   amount_             NUMBER;
+   sum_debit_amount_   NUMBER;
+   sum_credit_amount_  NUMBER; 
+   approver_           VARCHAR2(100);
+   user_               VARCHAR2(100);
+   approved_           BOOLEAN := FALSE;
+   app_vou_exist_      BOOLEAN := FALSE;
+   vou_status_         VARCHAR2(100);
+   all_info_           VARCHAR2(2000);
+   temp_param_         VARCHAR2(5000);
+   accounting_period_  NUMBER;
+   userid_             VARCHAR2(30);
+   app_vou_count_      NUMBER := 0;
+   app_info_           VARCHAR2(2000);
+BEGIN
+   accounting_period_ := Voucher_API.Get_Accounting_Period (company_, accounting_year_, voucher_type_, voucher_no_);
+   sum_debit_amount_  := Voucher_API.Get_Sum(company_, accounting_year_, voucher_type_, voucher_no_,'debit');
+   sum_credit_amount_ := Voucher_API.Get_Sum(company_, accounting_year_, voucher_type_, voucher_no_, 'credit');
+   amount_            := nvl(sum_debit_amount_, 0) -  nvl(sum_credit_amount_,0);
+   user_              := Fnd_Session_API.Get_Fnd_User;
+   userid_            := Voucher_API.Get_Userid(company_, accounting_year_, voucher_type_, voucher_no_);
+   
+   IF (amount_ != 0) THEN 
+      temp_param_ := temp_param_ || voucher_no_ || ',';
+   ELSE 
+      Voucher_Type_API.Check_Access_Privilege(approver_, company_, voucher_type_);
+
+      IF (((approver_ = 'TRUE') AND (user_ != userid_)) OR approver_ = 'FALSE') THEN
+         Voucher_API.Approve_Voucher__(company_, accounting_year_, voucher_type_, voucher_no_, user_group_);
+         all_info_   := CLIENT_SYS.Get_All_Info;   
+         Client_SYS.clear_Info;
+         vou_status_ := Voucher_API.Get_Objstate(company_, accounting_year_, voucher_type_, voucher_no_);
+
+         app_info_ := SUBSTR(all_info_, 6, 1);
+         approved_ := TRUE;
+         IF (app_info_ = 'N') THEN 
+            approved_ := FALSE;
+         END IF;   
+         
+         IF (approved_) THEN 
+            IF ((NOT app_vou_exist_) AND vou_status_ = 'Confirmed') THEN
+               app_vou_exist_ := TRUE;
+            END IF;
+         END IF;
+      ELSE 
+         app_vou_count_ := app_vou_count_ + 1;
+      END IF;
+   END IF;
+   
+   IF (app_vou_count_ >= 1) THEN 
+      Error_SYS.Record_General(lu_name_,'ENTERPERMS: There are voucher(s) that cannot be approved by :P1 user since the connected voucher type(s) is defined with the option Separate User Approval.', userid_);
+   END IF; 
+   IF (temp_param_ IS NOT NULL) THEN 
+      Error_SYS.Record_General(lu_name_,'VOUNOTBAL: Some of the vouchers are not in balance. They cannot be approved for update.');
+   END IF;
+   IF (app_info_ = 'N') THEN 
+      Error_SYS.Record_General(lu_name_,'NOTAPPADD: Vouchers created outside financials are not possible to be approved before manual postings are added.');
+   END IF; 
+END Vouch_Approval___; 
+
+
+FUNCTION Is_Genled_Active___ RETURN BOOLEAN
+IS
+   
+BEGIN
+	RETURN Dictionary_SYS.Component_Is_Active('GENLED');
+END Is_Genled_Active___;

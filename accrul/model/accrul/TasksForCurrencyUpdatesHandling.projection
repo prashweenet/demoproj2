@@ -1,0 +1,71 @@
+projection TasksForCurrencyUpdatesHandling;
+component ACCRUL;
+layer Core;
+description "Tasks For Currency Updates";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtCurrencyTaskSet for ExtCurrencyTask;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtCurrencyTask {
+   attribute TaskId Text {
+      label = "Task ID";
+   }
+
+   array ExtCurrencyTaskDetailsArray(TaskId) to ExtCurrencyTaskDetail(TaskId);
+}
+
+@Override
+entity ExtCurrencyTaskDetail {
+   crud = Create, Delete, Read;
+   supportwarnings = [true];
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference CurrencyTypeRef(Company, CurrencyType) to CurrencyType3Query(Company, CurrencyType) {
+      label = "Currency Type";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query CurrencyType3Query {
+   from = "CURRENCY_TYPE3";
+   lu = CurrencyType;
+   keys = Company, CurrencyType;
+
+   attribute Company Text;
+   attribute CurrencyType Text;
+   attribute Description Text {
+      label = "Currency Rate Type Description";
+   }
+   attribute RefCurrencyCode Text;
+   attribute RateTypeCategory Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

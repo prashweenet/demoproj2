@@ -1,0 +1,104 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 200506      Smallk  gelr:accounting_xml_data, Added to support Global Extension Functionalities.
+----------------------------------------------------------------------------------------------------
+
+client SatAccountGroups;
+component ACCRUL;
+layer Core;
+projection SatAccountGroupsHandling;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry SatAcctGroupsNavEntry parent AccrulNavigator.CodeStringMenu at index 550 {
+      label = "SAT Account Groups";
+      page List home SatAccountGroup;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using SatAccountGroupSet {
+   label = "SAT Account Groups";
+   list SatAccountGroupList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand for SatAccountGroup {
+   label = "Translation";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'SatAccountGroup' and AttributeKey eq $[SatAccountGroup]";
+   }
+}
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list SatAccountGroupList for SatAccountGroup {
+   field SatAccountGroup {
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+   field SatLevel;
+
+   badge Objstate {
+      size = Small;
+      label = "Validity";
+      style = TextOnly;
+
+      emphasis StateActive = [Objstate = "Active"];
+      emphasis StateHidden = [Objstate = "Hidden"];
+      emphasis StateBlocked = [Objstate = "Blocked"];
+   }
+   command TranslationCommand;
+   commandgroup DataValidityCmdGroup {
+      command SetActive {
+         mode = SelectedRecords;
+      }
+      command SetHidden {
+         label = "Hide";
+         mode = SelectedRecords;
+      }
+      command SetBlocked {
+         label = "Block";
+         mode = SelectedRecords;
+      }
+   }
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

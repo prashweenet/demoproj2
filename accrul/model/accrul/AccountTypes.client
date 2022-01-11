@@ -1,0 +1,253 @@
+client AccountTypes;
+component ACCRUL;
+layer Core;
+projection AccountTypesHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AccountTypeNavEntry parent AccrulNavigator.CodeStringMenu at index 400 {
+      label = "Account Types";
+      page Form home AccountType;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AccountTypes {
+   label = "Account Types";
+   selector AccountTypeNewSelector using AccountTypes;
+   group AccountTypeHeaderGroup;
+   group DefaultCodePartDemandGroup;
+   group DefaultBudgetCodePartDemandGroup;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ConfirmUpdateAccount for AccountType {
+   variable OldRecord;
+
+   bulkexecute {
+      call GetRecordBeforeModify(Record.Company, Record.AccntType) into OldRecord;
+      if [UpdateCount = 1] {
+         if[(Record.ReqCodeBDefault != OldRecord.ReqCodeBDefault) or
+         (Record.ReqCodeCDefault != OldRecord.ReqCodeCDefault) or
+         (Record.ReqCodeDDefault != OldRecord.ReqCodeDDefault) or
+         (Record.ReqCodeEDefault != OldRecord.ReqCodeEDefault) or
+         (Record.ReqCodeFDefault != OldRecord.ReqCodeFDefault) or
+         (Record.ReqCodeGDefault != OldRecord.ReqCodeGDefault) or
+         (Record.ReqCodeHDefault != OldRecord.ReqCodeHDefault) or
+         (Record.ReqCodeIDefault != OldRecord.ReqCodeIDefault) or
+         (Record.ReqCodeJDefault != OldRecord.ReqCodeJDefault) or
+         (Record.ReqQuantityDefault != OldRecord.ReqQuantityDefault) or
+         (Record.ProcessCodeDefault != OldRecord.ProcessCodeDefault) or
+         (Record.TextDefault != OldRecord.TextDefault) or
+         (Record.ReqBudCodeBDefault != OldRecord.ReqBudCodeBDefault) or
+         (Record.ReqBudCodeCDefault != OldRecord.ReqBudCodeCDefault) or
+         (Record.ReqBudCodeDDefault != OldRecord.ReqBudCodeDDefault) or
+         (Record.ReqBudCodeEDefault != OldRecord.ReqBudCodeEDefault) or
+         (Record.ReqBudCodeFDefault != OldRecord.ReqBudCodeFDefault) or
+         (Record.ReqBudCodeGDefault != OldRecord.ReqBudCodeGDefault) or
+         (Record.ReqBudCodeHDefault != OldRecord.ReqBudCodeHDefault) or
+         (Record.ReqBudCodeIDefault != OldRecord.ReqBudCodeIDefault) or
+         (Record.ReqBudCodeJDefault != OldRecord.ReqBudCodeJDefault) or
+         (Record.ReqBudQuantityDefault != OldRecord.ReqBudQuantityDefault)] {
+            messagebox("Question", question, "Do you want to update Code Part Demands for all existing accounts according to your changes?") {
+               when "Yes" {
+                  bulkset Action = true;
+               }
+               when "No" {
+                  exit;
+               }
+            }
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector AccountTypeNewSelector for AccountType {
+   label = "${AccntType} - ${Description}";
+   crudactions {
+      before command ConfirmUpdateAccount;
+   }
+   static AccntType;
+   static Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group AccountTypeHeaderGroup for AccountType {
+   label = "";
+   field Company {
+      visible = [false];
+   }
+   field AccntType {
+      format = uppercase;
+   }
+   field Description {
+      size = Large;
+   }
+   field LogicalAccountType {
+      size = Small;
+   }
+}
+
+group DefaultCodePartDemandGroup for AccountType {
+   label = "Default Code Part Demands";
+   field ReqCodeBDefault {
+      label = "${context.Company.CodeBName}";
+      editable = [context.Company.CodeBUsed = "Y"];
+      size = Small;
+   }
+   field ReqCodeCDefault {
+      label = "${context.Company.CodeCName}";
+      editable = [context.Company.CodeCUsed = "Y"];
+      size = Small;
+   }
+   field ReqCodeDDefault {
+      label = "${context.Company.CodeDName}";
+      editable = [context.Company.CodeDUsed = "Y"];
+      size = Small;
+   }
+   field ReqCodeEDefault {
+      label = "${context.Company.CodeEName}";
+      editable = [context.Company.CodeEUsed = "Y"];
+      size = Small;
+   }
+   field ReqCodeFDefault {
+      label = "${context.Company.CodeFName}";
+      editable = [context.Company.CodeFUsed = "Y"];
+      size = Small;
+   }
+   field ReqCodeGDefault {
+      label = "${context.Company.CodeGName}";
+      editable = [context.Company.CodeGUsed = "Y"];
+      size = Small;
+   }
+   field ReqCodeHDefault {
+      label = "${context.Company.CodeHName}";
+      editable = [context.Company.CodeHUsed = "Y"];
+      size = Small;
+   }
+   field ReqCodeIDefault {
+      label = "${context.Company.CodeIName}";
+      editable = [context.Company.CodeIUsed = "Y"];
+      size = Small;
+   }
+   field ReqCodeJDefault {
+      label = "${context.Company.CodeJName}";
+      editable = [context.Company.CodeJUsed = "Y"];
+      size = Small;
+   }
+   field ReqQuantityDefault {
+      label = "Quantity";
+      size = Small;
+   }
+   field ProcessCodeDefault {
+      label = "Process Code";
+      size = Small;
+   }
+   field TextDefault {
+      label = "Text";
+      size = Small;
+   }
+}
+
+group DefaultBudgetCodePartDemandGroup for AccountType {
+   label = "Default Budget Code Part Demands";
+   field ReqBudCodeBDefault {
+      label = "${context.Company.CodeBName}";
+      editable = [context.Company.CodeBUsed = "Y"];
+      size = Small;
+      filterlabel = "Budget - ${context.Company.CodeBName}";
+   }
+   field ReqBudCodeCDefault {
+      label = "${context.Company.CodeCName}";
+      editable = [context.Company.CodeCUsed = "Y"];
+      size = Small;
+      filterlabel = "Budget - ${context.Company.CodeCName}";
+   }
+   field ReqBudCodeDDefault {
+      label = "${context.Company.CodeDName}";
+      editable = [context.Company.CodeDUsed = "Y"];
+      size = Small;
+      filterlabel = "Budget - ${context.Company.CodeDName}";
+   }
+   field ReqBudCodeEDefault {
+      label = "${context.Company.CodeEName}";
+      editable = [context.Company.CodeEUsed = "Y"];
+      size = Small;
+      filterlabel = "Budget - ${context.Company.CodeEName}";
+   }
+   field ReqBudCodeFDefault {
+      label = "${context.Company.CodeFName}";
+      editable = [context.Company.CodeFUsed = "Y"];
+      size = Small;
+      filterlabel = "Budget - ${context.Company.CodeFName}";
+   }
+   field ReqBudCodeGDefault {
+      label = "${context.Company.CodeGName}";
+      editable = [context.Company.CodeGUsed = "Y"];
+      size = Small;
+      filterlabel = "Budget - ${context.Company.CodeGName}";
+   }
+   field ReqBudCodeHDefault {
+      label = "${context.Company.CodeHName}";
+      editable = [context.Company.CodeHUsed = "Y"];
+      size = Small;
+      filterlabel = "Budget - ${context.Company.CodeHName}";
+   }
+   field ReqBudCodeIDefault {
+      label = "${context.Company.CodeIName}";
+      editable = [context.Company.CodeIUsed = "Y"];
+      size = Small;
+      filterlabel = "Budget - ${context.Company.CodeIName}";
+   }
+   field ReqBudCodeJDefault {
+      label = "${context.Company.CodeJName}";
+      editable = [context.Company.CodeJUsed = "Y"];
+      size = Small;
+      filterlabel = "Budget - ${context.Company.CodeJName}";
+   }
+   field ReqBudQuantityDefault {
+      label = "Quantity";
+      size = Small;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

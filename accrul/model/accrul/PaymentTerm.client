@@ -1,0 +1,425 @@
+client PaymentTerm;
+component ACCRUL;
+layer Core;
+projection PaymentTermHandling;
+
+include fragment CopyToCompaniesAssistant;
+include fragment LocalizationControlCenterHandler;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry PaymentTermDetailsNavEntry parent AccrulNavigator.PaymentTermsMenu at index 100 {
+      label = "Payment Term";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using PaymentTermSet {
+   label = "Payment Term";
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+   --editmode = Inline;
+   initcontext PageInitContext;
+   selector PayTermSelector;
+   arrange {
+      group PaymentTermDetailsGroup;
+      group SelectionGroup;
+   }
+   list PaymentTermDetailsList(PaymentTermDetailsArray);
+   --list PaymentTermDetailsList(PaymentTermDetailsArray) {
+      --copyoncruddefault(parent.computed.InstNum, parent.computed.DummyDayFrom, parent.computed.DummyDayTo) to(InstallmentNumber, DayFrom, DayTo);
+      --copyoncruddefault(parent.computed.MaxInstNum) to(InstallmentNumber);
+   --}
+
+   command AutomaticInstallmentPlanCommand;
+   command CopyToCompaniesCommand;
+}
+
+initcontext PageInitContext {
+   parameter ItPaymentFormatsEnabled Boolean;
+   init command {
+      execute {
+          -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set ItPaymentFormatsEnabled = LocalizationFunctionalityStructure.ItPaymentFormats;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command AutomaticInstallmentPlanCommand for PaymentTermDetails {
+   label = "Automatic Installment Plan";
+   enabled = [component.PaymentTermDetailsList.RowCount < 1];
+   mode = Global;
+   execute {
+      dialog InstallmentPlanDialog(Company, PayTermId, 0, 0) {
+         when OK {
+            exit;
+         }
+         when CANCEL {
+            exit CANCEL;
+         }
+      }
+   }
+}
+
+command CopyToCompaniesCommand for PaymentTerm {
+   label = "Copy to Companies";
+   enabled = [true];
+   variable CurrentCompanyVar;
+
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PaymentTerm", "MANUAL", Selection, "Payment_Term_API") {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand for PaymentTerm {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "PaymentTerm") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PaymentTerm", "AUTOMATIC", SelectionVar, "Payment_Term_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+command AutoCopyToCompanies1Command for PaymentTermDetails {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "PaymentTermDetails") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0 and UpdateCount = 0 and DeleteCount = 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0 and CreateCount = 0 and DeleteCount = 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0 and CreateCount = 0 and UpdateCount = 0] {
+            set SelectionVar = DeleteList;
+         }
+         if[UpdateCount > 0 and DeleteCount > 0 and CreateCount = 0] {
+            set SelectionVar = "${UpdateList};${DeleteList}";
+         }
+         if[CreateCount > 0 and DeleteCount > 0 and UpdateCount = 0] {
+            set SelectionVar = "${CreateList};${DeleteList}";
+         }
+         if[CreateCount > 0 and UpdateCount > 0 and DeleteCount = 0] {
+            set SelectionVar = "${CreateList};${UpdateList}";
+         }
+         if[CreateCount > 0 and UpdateCount > 0 and DeleteCount > 0] {
+            set SelectionVar = "${UpdateList};${CreateList};${DeleteList}";
+         }
+
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PaymentTermDetails", "AUTOMATIC", SelectionVar, "Payment_Term_Details_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+command PaymentTermDiscountsCommand for PaymentTermDetails {
+   label = "Payment Term Discount";
+   enabled = [true];
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/PaymentTermDiscount/Form?$contexts=Company:$[Company]&$filter=PayTermId eq $[PayTermId] and InstallmentNumber eq $[InstallmentNumber]";
+   }
+}
+
+command CopyToCompanies1Command for PaymentTermDetails {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   enabled = [component.PaymentTermDetailsList.RowCount > 0];
+   variable CurrentCompanyVar;
+
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "PaymentTermDetails", "MANUAL", Selection, "Payment_Term_Details_API") {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector PayTermSelector for PaymentTerm {
+   label = "${PayTermId} - ${Description}";
+
+   static PayTermId;
+   static Description {
+      label = "Description";
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group PaymentTermDetailsGroup for PaymentTerm {
+   label = "Payment Information";
+
+   field PayTermId;
+   field Description {
+      size = Large;
+   }
+   field VatDistribution;
+}
+
+group SelectionGroup for PaymentTerm {
+   label = "Parameter Selection";
+
+   field BlockForDirectDebiting;
+   field UseCommercialYear;
+   field ConsiderPayVacPeriod;
+   field ExcludeCreditLimit;
+   field SuppressAmount;
+   @DynamicComponentDependency FIXASS
+   field CashDiscFixassAcqValue {
+      validate command {
+         variable DummyVar {
+            type = Text;
+         }
+         execute {
+            call GetReductCashDisc(Company, CashDiscFixassAcqValue) into DummyVar;
+         }
+      }
+   }
+   field PrintSwissQRCode;
+
+//   computedfield MaxInstNum {
+//      label = "Max Installment Number";
+//      value = "#{PaymentTermDetailsArray.max(InstallmentNumber)}";
+//      type = Number;
+//      size = Small;
+//   }
+//   computedfield InstNum {
+//      label = "Next Installment Number";
+//      value = "#{computed.MaxInstNum == PaymentTermDetailsArray.InstallmentNumber ? (PaymentTermArray.DayFrom == 1 ? (PaymentTermArray.DayTo == 31 ? computed.MaxInstNum + 1: computed.MaxInstNum): computed.MaxInstNum) : computed.MaxInstNum}";
+//      --value = "#{PaymentTermDetailsArray.max(ermArray.DayFrom == 1 ? (PaymentTermArray.DayTo == 31) ? computed.MaxInstNum + 1: computed.MaxInstNum): computed.MaxInstNum) : computed.MaxInstNum}";
+//      type = Number;
+//      size = Small;
+//   }
+//   computedfield DummyDayFrom {
+//      label = "Next Day From";
+//      value = "#{PaymentTermDetailsArray.DayFrom}";
+//      type = Number;
+//      size = Small;
+//   }
+//   computedfield DummyDayTo {
+//      label = "Next Day To";
+//      value = "#{PaymentTermDetailsArray.DayTo}";
+//      type = Number;
+//      size = Small;
+//   }
+}
+
+group InstallmentGroup for PaymentTermDetailsStructure {
+   label = "Installments";
+
+   field NoOfInstallments;
+   field NoOfFreeDelivMonths;
+   field DaysToDueDate;
+   field DueDay1;
+   field DueDay2;
+   field DueDay3;
+   field EndOfMonth;
+}
+
+group PaymentGroup for PaymentTermDetailsStructure {
+   label = "";
+
+   field InstituteId {
+      format = uppercase;
+      label = "Payment Institute";
+      lovswitch {
+         when [(WayId != null)] {
+            @DynamicComponentDependency PAYLED
+            lov InstituteIdPerWayRef with ReferencePaymentInstitutePerWayIdSelector;
+         }
+         when [true] {
+            @DynamicComponentDependency PAYLED
+            lov InstituteIdRef with ReferencePaymentInstituteSelector;
+         }
+      }
+   }
+   field WayId {
+      format = uppercase;
+      label = "Payment Method";
+      lovswitch {
+         when [InstituteId != null] {
+            @DynamicComponentDependency PAYLED
+            lov WayIdPerInstituteRef with ReferencePaymentWayPerInstitute3Selector;
+         }
+         when [true] {
+            @DynamicComponentDependency PAYLED
+            lov WayIdRef with ReferencePaymentWaySelector;
+         }
+      }
+   }
+}
+
+----------------------------------- LISTS -----------------------------------
+list PaymentTermDetailsList for PaymentTermDetails {
+   label = "Installments";
+   orderby = InstallmentNumber;
+   --multiselect = [true];
+   --editmode = SingleRowEdit;
+   savemode = Buffer;
+   crudactions {
+      after command AutoCopyToCompanies1Command;
+   }
+
+   field InstallmentNumber;
+   field DayFrom;
+   field DayTo;
+   field FreeDeliveryMonths;
+   field DaysToDueDate;
+   field EndOfMonth {
+      size = Small;
+   }
+   field DueDate1 {
+      validate command {
+         execute {
+            if [DueDate1 = null] {
+               set DueDate2 = null;
+               set DueDate3 = null;
+            }
+         }
+      }
+   }
+   field DueDate2 {
+      validate command {
+         execute {
+            if [DueDate2 = null] {
+               set DueDate3 = null;
+            }
+         }
+      }
+   }
+   field DueDate3;
+   field NetAmountPercentage {
+      editable = [DayFrom = 1];
+   }
+   field InstituteId {
+      size = Small;
+      format = uppercase;
+      lovswitch {
+         when [WayId = null] {
+            @DynamicComponentDependency PAYLED
+            lov InstituteIdRef with ReferencePaymentInstituteSelector;
+         }
+         when [WayId != null] {
+            @DynamicComponentDependency PAYLED
+            lov InstituteIdPerWayRef with ReferencePaymentInstitutePerWayIdSelector;
+         }
+      }
+   }
+   field WayId {
+      size = Small;
+      format = uppercase;
+      lovswitch {
+         when [InstituteId = null] {
+            @DynamicComponentDependency PAYLED
+            lov WayIdRef with ReferencePaymentWaySelector;
+         }
+         when [InstituteId != null] {
+            @DynamicComponentDependency PAYLED
+            lov WayIdPerInstituteRef with ReferencePaymentWayPerInstitute3Selector;
+         }
+      }
+   }
+   field DiscountSpecified {
+      size = Small;
+   }
+   field CollectiveRiba {
+      size = Small;
+      columnexclude = [not initcontext.ItPaymentFormatsEnabled];
+   }
+
+   command PaymentTermDiscountsCommand;
+   command CopyToCompanies1Command;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+dialog InstallmentPlanDialog for PaymentTermDetailsStructure {
+   label = "Automatic Installment Plan";
+
+   input(Company, PayTermId, NoOfFreeDelivMonths, DaysToDueDate);
+
+   group InstallmentGroup;
+   group PaymentGroup;
+
+   command Ok;
+   command Cancel;
+}
+
+command Ok for PaymentTermDetailsStructure {
+   enabled = [NoOfInstallments != null];
+
+   execute {
+      call CreateAutomaticPaymentPlan(Company, PayTermId, NoOfInstallments, NoOfFreeDelivMonths, DaysToDueDate, InstituteId, WayId, EndOfMonth, DueDay1, DueDay2, DueDay3);
+      exit OK;
+   }
+}
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

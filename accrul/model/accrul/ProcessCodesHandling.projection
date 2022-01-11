@@ -1,0 +1,45 @@
+projection ProcessCodesHandling;
+component ACCRUL;
+layer Core;
+description "Process Codes";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountProcessCodeSet for AccountProcessCode {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountProcessCode {
+   attribute Description Text {
+      label = "Process Code Description";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

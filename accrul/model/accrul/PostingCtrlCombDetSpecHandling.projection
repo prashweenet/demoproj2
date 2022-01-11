@@ -1,0 +1,138 @@
+projection PostingCtrlCombDetSpecHandling;
+component ACCRUL;
+layer Core;
+description "Posting Control Combination Detail Specification";
+category Users;
+include fragment AccountingCodePartValueLovSelector;
+include fragment AccountingCodePartsUsed2Selector;
+include fragment CopyToCompaniesAssistant;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PostingCtrlDetailSet for PostingCtrlDetail {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity PostingCtrlDetail {
+   crud = Read;
+   supportwarnings = [true];
+
+   attribute PostingType Text {
+      editable = [false];
+   }
+   attribute PcValidFrom Date {
+      label = "PC Valid From";
+      editable = [false];
+   }
+   attribute CodeNameDummy Text {
+      label = "Code Part Name";
+      fetch = "Accounting_Code_Parts_API.Get_Name(company, code_part)";
+   }
+   attribute CodeName Text {
+      format = lowercase;
+   }
+   attribute SpecControlType Text {
+      label = "Specification Control Type";
+      required = [true];
+      editable = [false];
+   }
+   attribute SpecDefaultValue Text {
+      label = "Default Value No Details";
+      maxlength = 20;
+   }
+   attribute SpecDefaultValueNoCt Text {
+      label = "Default Value No CT Value";
+   }
+   attribute Module Text {
+      label = "Specification Module";
+      format = uppercase;
+   }
+   attribute CtrlType1Desc Text {
+      fetch = "Comb_Control_Type_API.Get_Control_Type1_Desc(Company, Posting_Type, Spec_Control_Type)";
+   }
+   attribute CtrlType2Desc Text {
+      fetch = "Comb_Control_Type_API.Get_Control_Type2_Desc(Company, Posting_Type, Spec_Control_Type)";
+   }
+
+   reference PostingTypeRef(PostingType) to PostingCtrlPostingType(PostingType);
+   reference CodePartRef(Company, CodePart) to AccountingCodeParts(Company, CodePart) {
+      label = "Code Part";
+   }
+   reference ControlTypeRef(Company, PostingType, CodePart, PcValidFrom, ControlTypeValue, ValidFrom, ControlType) to PostingCtrlDetail(Company, PostingType, CodePart, PcValidFrom, ControlTypeValue, ValidFrom, ControlType) {
+      label = "Control Type";
+   }
+   reference SpecControlTypeRef(Company, PostingType, CodePart, PcValidFrom, ControlTypeValue, ValidFrom, SpecControlType) to PostingCtrlDetail(Company, PostingType, CodePart, PcValidFrom, ControlTypeValue, ValidFrom, SpecControlType) {
+      label = "Specification Control Type";
+   }
+   array PostCtrlCombDetSpecArray(Company, PostingType, CodePart, PcValidFrom, ControlTypeValue, ValidFrom, SpecControlType) to PostingCtrlCombDetSpec(Company, PostingType, CodePart, PcValidFrom, ControlTypeValue, ValidFrom, SpecCombControlType);
+}
+
+@Override
+entity PostingCtrlCombDetSpec {
+
+   attribute PcValidFrom Date {
+      label = "PC Valid From";
+   }
+   attribute SpecModule1 Text {
+      label = "Module1";
+   }
+   attribute SpecModule2 Text {
+      label = "Module2";
+   }
+   attribute SpecControlType1 Text {
+      label = "Control Type 1";
+   }
+   attribute SpecControlType2 Text {
+      label = "Control Type 2";
+   }
+   attribute SpecControlType1Value Text {
+      label = "Control Type 1 Value";
+   }
+   attribute SpecControlType2Value Text {
+      label = "Control Type 2 Value";
+   }
+   attribute SpecControlType1ValueDesc Text {
+      label = "Description";
+      fetch = "Posting_Ctrl_Control_Type_API.Get_Control_Type_Value_Desc(Company, spec_control_type1, spec_control_type1_value, spec_module1, Valid_From)";
+      editable = [false];
+      required = [false];
+   }
+   attribute SpecControlType2ValueDesc Text {
+      label = "Description";
+      fetch = "Posting_Ctrl_Control_Type_API.Get_Control_Type_Value_Desc(Company, spec_control_type2, spec_control_type2_value, spec_module2, Valid_From)";
+      editable = [false];
+      required = [false];
+   }
+
+   reference CtrlType1ValueRef(SpecControlType1Value) dynamic(SpecControlType1) parent(Company);
+   reference CtrlType2ValueRef(SpecControlType2Value) dynamic(SpecControlType2) parent(Company);
+   reference CodePartValueRef(Company, CodePart, CodePartValue) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Code Part Value";
+   }
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetControlTypeDescription Text {
+   parameter Company Text;
+   parameter ControlType Text;
+   parameter ControlTypeValue Text;
+   parameter Module Text;
+   parameter ValidFrom Date;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------
+

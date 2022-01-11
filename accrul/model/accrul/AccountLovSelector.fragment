@@ -1,0 +1,72 @@
+fragment AccountLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view account_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccountLovSelector for AccountLov {
+   orderby = DisplayOrder, SortValue;
+   static Value {
+      label = "${context.Company.CodeAName}";
+   }
+   static Description;
+}
+
+@Override
+list AccountLovLovList for AccountLov {
+   orderby = DisplayOrder, SortValue;
+   static Value {
+      label = "${context.Company.CodeAName}";
+   }
+}
+
+card AccountLovCard for AccountLov {
+   label = "";
+   fieldranking Value;
+   field Value {
+      label = "${context.Company.CodeAName}";
+   }
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccountLov {
+   from = "account_lov";
+   lu = Account;
+   keys = Company, Value;
+   ludependencies = Account;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Value Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Type Text {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [false];
+   }
+   attribute ValidUntil Date {
+      lovcolumn = [false];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute DisplayOrder Text {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

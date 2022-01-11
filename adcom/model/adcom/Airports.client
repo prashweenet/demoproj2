@@ -1,0 +1,48 @@
+--------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  ---------------------------------------------------------------
+-- 201125      LAHNLK  LMM2020R1-1441,label changes
+-- 2020-06-25  KAWJLK  LMM2020R1-186, Arranging the order of attributes
+-- 2020-06-23  DILDLK  LMM2020R1-80, UI Changes.
+-- 2020-06-19  SatGlk  LMM2020R1-72, Removed AirportId field.
+-- 2020-06-16  SatGlk  LMM2020R1-72, Implemented
+--------------------------------------------------------------------------------------
+
+client Airports;
+component ADCOM;
+layer Core;
+projection AirportsHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AirportsNavEntry parent AdcomNavigator.BasicData at index 100 {
+      label = "Airports";
+      page List home AvAirport;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AirportSet {
+   label = "Airports";
+   list AirportsOvwList;
+}
+
+----------------------------------- LISTS -----------------------------------
+list AirportsOvwList for AvAirport {
+   field AirportName;
+   field IataCode {
+      label = "IATA Code";
+   }
+   field IcaoCode {
+      label = "ICAO Code";
+   }
+   field ArrivalOffset {
+      label = "Show Inbound Turns for the Next(Hours)";
+   }
+   field DepartureOffset {
+      label = "Show All Turns for the last(Hours)";
+   }
+   field FaultsOffset {
+      label = "Show Closed Faults for the last(Months)";
+   }
+}

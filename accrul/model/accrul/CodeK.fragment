@@ -1,0 +1,56 @@
+fragment CodeK;
+component ACCRUL;
+layer Core;
+description "Contains Common Client Code and Projection Logic for Code K";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand for CounterPartOne {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'CounterPartOne' and AttributeKey eq $[CounterPartOneId]";
+   }
+}
+----------------------------------- LISTS -----------------------------------
+list CounterPartOne for CounterPartOne {
+   field CounterPartOneId {
+      size = Small;
+   }
+   field Description;
+   @DynamicComponentDependency GROCON
+   lov ReportingEntityRef with ReferenceReportingEntitySelector {
+      label = "Reporting Entity";
+      search = ReportingEntity, Description;
+      description = ReportingEntityRef.Description;
+      size = Large;
+   }
+   @DynamicComponentDependency GROCON
+   field ReportingEntityRef.ReportingEntityType {
+      size = Large;
+      label = "Reporting Entity Type";
+   }
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid Period";
+   }
+   command TranslationCommand;
+}
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+@Override
+entity CounterPartOne {
+   attribute CounterPartOneId Text {
+      label = "${context.Company.CodeKName}";
+   }
+   attribute Description Text {
+      label = "Description";
+   }
+   @DynamicComponentDependency GROCON
+   reference ReportingEntityRef(Company, ReportingEntity) to ReportingEntity(MasterCompany, ReportingEntity) {
+      label = "Reporting Entity";
+   }
+}

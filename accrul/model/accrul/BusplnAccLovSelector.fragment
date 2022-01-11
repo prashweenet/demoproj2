@@ -1,0 +1,49 @@
+fragment BusplnAccLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view buspln_acc_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceBusplnAccLovSelector for BusplnAccLov {
+   static Value;
+   static Description;
+}
+
+card BusplnAccLovCard for BusplnAccLov {
+   label = "";
+   fieldranking Value;
+   field Value;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query BusplnAccLov {
+   from = "buspln_acc_lov";
+   lu = Account;
+   keys = Company, Value;
+   ludependencies = Account;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Value Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute Type Text {
+      lovcolumn = [true];
+   }
+   attribute LogicalAccountType Enumeration(AccountTypeValue) {
+      lovcolumn = [false];
+      fetch = "logical_account_type_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

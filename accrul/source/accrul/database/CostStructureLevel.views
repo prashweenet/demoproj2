@@ -1,0 +1,45 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CostStructureLevel
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@Override
+VIEW Cost_Structure_Level IS
+ CONNECT BY company = PRIOR company
+ AND cost_structure_id = PRIOR cost_structure_id
+ AND level_above = PRIOR level_id
+ START WITH level_above IS NULL;
+
+VIEW Cost_Structure_Level_Ch IS
+   Prompt = 'Cost Breakdown Structure Level'
+   Company.Flags = 'PMI--'
+   Cost_Structure_Id.Ref = 'CostStructure(company)'
+   Level_No.Flags = 'AMI--'
+   Level_Id.Flags = 'K-IUL'
+   Description.Flags = 'A-IUL'
+   Level_Above.Flags = 'A-IUL'
+   Level_Above.Ref = 'CostStructureLevel(company,cost_structure_id)'
+SELECT company                        company,
+       cost_structure_id              cost_structure_id,
+       level_no                       level_no,
+       level_id                       level_id,
+       description                    description,
+       bottom_level                   bottom_level,
+       level_above                    level_above,
+       rowid                         objid,
+       to_char(rowversion,'YYYYMMDDHH24MISS')                    objversion,
+       rowkey                        objkey
+FROM   cost_structure_level_tab;

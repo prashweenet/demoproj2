@@ -1,0 +1,19 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtFileCompanyDefault
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+PRIMARY KEY ext_file_company_default_pk IS ext_file_company_default_tab (company, file_type, user_id);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

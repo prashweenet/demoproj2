@@ -1,0 +1,86 @@
+client AuditSources;
+component ACCRUL;
+layer Core;
+projection AuditSourcesHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AuditSourcesNavEntry parent AccrulNavigator.AuditInterfaceBasicDataMenu at index 200 {
+      label = "Audit Sources";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AuditSourceSet {
+   label = "Audit Sources";
+   list AuditSourceList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command SourceColumnsCommand {
+   label = "Source Columns";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/AuditSourceColumn/Form?$filter=AuditSource eq $[AuditSource]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AuditSourceList for AuditSource {
+   field AuditSource;
+   field Description {
+      size = Large;
+   }
+   field SourceType;
+   field InternalLedgerDb {
+      size = Small;
+   }
+   field SystemDefinedDb {
+      size = Small;
+   }
+
+   command SourceColumnsCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

@@ -1,0 +1,458 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvFault
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210329  SatGlk  AD-1066, Added unit test for Update_API_Fault
+--  201202  aruflk  LMM2020R1-1022, Added unit test for Check_Insert___().
+--  201006  lahnlk  LMM2020R1-427, added Get_Closed_Fault_Offset_Date
+--  201002  majslk  LMM2020R1-1182, Added Get_Found_Faults_Count.
+--  200902  TAJALK  LMM2020R1-1014 - Added tests for Sync_State_Handle___, Post_Sync_Action
+--  200812  SEVHLK  Added tests for PRE_SYNC_ACTION method.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable aircraft_tab
+   VALUES
+      | aircraft_id | mx_unique_key |
+      | 1           | 'MXAIRCRAFTKEY1'|
+   END VALUES;
+
+   @MockTable av_flight_tab
+   VALUES
+      | aircraft_id | mx_unique_key | flight_id |
+      | 1           | 'MXFLIGHTKEY1'| 1         |
+   END VALUES;
+
+   @MockTable av_exe_task_tab
+   VALUES
+      | aircraft_id | mx_unique_key | task_id |
+      | '1'         | 'MXTASKKEY1'  | 1       |
+   END VALUES;
+
+   @MockTable av_aircraft_sub_system_tab
+   VALUES
+      | mx_unique_key | sub_system_id |
+      | 'MXTASKKEY1'  | 1             |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_    VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+   expected2_  VARCHAR2(2000);
+   expected3_  VARCHAR2(2000);
+   expected4_  VARCHAR2(2000);
+   expected5_  VARCHAR2(2000);
+   expected6_  VARCHAR2(2000);
+   expected7_  VARCHAR2(2000);
+   expected8_  VARCHAR2(2000);
+   expected9_  VARCHAR2(2000);
+   expected10_  VARCHAR2(2000);
+   expected11_  VARCHAR2(2000);
+   expected12_  VARCHAR2(2000);
+
+BEGIN
+   FOR
+      | attr_ |
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'WITH_AIRCRAFT_KEY'|
+      | 'FLIGHT_UNIQUE_KEY'||chr(31)||'MXFLIGHTKEY1'||chr(30)||'WITH_FLIGHT_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY1'||chr(30)||'WITH_TASK_KEY'|
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'FLIGHT_UNIQUE_KEY'||chr(31)||'MXFLIGHTKEY1'||chr(30)||'WITH_AIRCRAFT_FLIGHT_KEY'|
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'FLIGHT_UNIQUE_KEY'||chr(31)||'MXFLIGHTKEY1'||chr(30)||'WITH_AIRCRAFT_FLIGHT_SYSTEM_KEY'|
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY1'||chr(30)||'WITH_AIRCRAFT_SYSTEM_TASK_KEYS'|
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'WITH_AIRCRAFT_SYSTEM_KEY'|
+      | 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'MXAIRCRAFTKEY1'||chr(30)||'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY1'||chr(30)||'WITH_AIRCRAFT_TASK_KEY'|
+      | 'FLIGHT_UNIQUE_KEY'||chr(31)||'MXFLIGHTKEY1'||chr(30)||'WITH_FLIGHT_SYSTEM_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY1'||chr(30)||'WITH_TASK_SYSTEM_KEY'|
+      | 'BARCODE'||chr(31)||'T40S001EB8E'||chr(30)||'WITH_BARCODE'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_:=  'WITH_AIRCRAFT_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30);
+      expected2_:=  'WITH_FLIGHT_KEY'||'FOUND_ON_ID'||chr(31)||'1'||chr(30);
+      expected4_:=  'WITH_TASK_KEY'||'FOUND_ON_ID'||chr(31)||'1'||chr(30);
+      expected5_:=  'WITH_AIRCRAFT_FLIGHT_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30)||'FOUND_ON_ID'||chr(31)||'1'||chr(30);
+      expected6_:=  'WITH_AIRCRAFT_FLIGHT_SYSTEM_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30)||'FOUND_ON_ID'||chr(31)||'1'||chr(30);
+      expected7_:=  'WITH_AIRCRAFT_SYSTEM_TASK_KEYS'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30)||'FOUND_ON_ID'||chr(31)||'1'||chr(30);
+      expected8_:=  'WITH_AIRCRAFT_SYSTEM_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30);
+      expected9_:=  'WITH_AIRCRAFT_TASK_KEY'||'AIRCRAFT_ID'||chr(31)||'1'||chr(30)||'FOUND_ON_ID'||chr(31)||'1'||chr(30);
+      expected10_:= 'WITH_FLIGHT_SYSTEM_KEY'||'FOUND_ON_ID'||chr(31)||'1'||chr(30);
+      expected11_:= 'WITH_TASK_SYSTEM_KEY'||'FOUND_ON_ID'||chr(31)||'1'||chr(30);
+      expected12_:= 'BARCODE'||chr(31)||'T40S001EB8E'||chr(30)||'WITH_BARCODE'||'NATURAL_KEY'||chr(31)||'T40S001EB8E'||chr(30);
+
+
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_AIRCRAFT_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_FLIGHT_KEY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_TASK_KEY%' THEN
+         ASSERT output1_ = expected4_ MESSAGE 'Expected '||expected4_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_AIRCRAFT_FLIGHT_KEY%' THEN
+         ASSERT output1_ = expected5_ MESSAGE 'Expected '||expected5_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_AIRCRAFT_FLIGHT_SYSTEM_KEY%' THEN
+         ASSERT output1_ = expected6_ MESSAGE 'Expected '||expected6_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_AIRCRAFT_SYSTEM_TASK_KEYS%' THEN
+         ASSERT output1_ = expected7_ MESSAGE 'Expected '||expected7_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_AIRCRAFT_SYSTEM_KEY%' THEN
+         ASSERT output1_ = expected8_ MESSAGE 'Expected '||expected8_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_AIRCRAFT_TASK_KEY%' THEN
+         ASSERT output1_ = expected9_ MESSAGE 'Expected '||expected9_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_FLIGHT_SYSTEM_KEY%' THEN
+         ASSERT output1_ = expected10_ MESSAGE 'Expected '||expected10_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_TASK_SYSTEM_KEY%' THEN
+         ASSERT output1_ = expected11_ MESSAGE 'Expected '||expected11_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_BARCODE%' THEN
+         ASSERT output1_ = expected12_ MESSAGE 'Expected '||expected12_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Sync_State_Handle___ should correct the incoming state based on the current state" FOR
+   PROCEDURE Sync_State_Handle___(
+      current_rowstate_  IN     VARCHAR2,
+      incoming_rowstate_ IN     VARCHAR2,
+      input_objid_       IN     VARCHAR2,
+      input_objversion_  IN     VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage  Av_Fault_API
+   PROCEDURE Defer__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('CFDEFER1')     MESSAGE 'Expected '||'CFDEFER1'||' but  was '||objid_;
+   END Defer__;
+
+   @MockPackage  Av_Fault_API
+   PROCEDURE Complete__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT  objid_ IN  ('CFCERT1')     MESSAGE 'Expected '||'CFCERT1'||' but  was '||objid_;
+   END Complete__;
+IS
+   --Insert your test variables here
+BEGIN
+   FOR
+      | current_rowstate_ | incoming_rowstate_ | input_objid_ | input_objversion_ |
+      | 'Open'            |  'CFACTV'          |  'NOTAPP1'   |  'A'              |
+      | 'Deferred'        |  'CFDEFER'         |  'NOTAPP2'   |  'A'              |
+      | 'Closed'          |  'CFCERT'          |  'NOTAPP3'   |  'A'              |
+      | 'Open'            |  'CFDEFER'         |  'CFDEFER1'  |  'A'              |
+      | 'Open'            |  'CFCERT'          |  'CFCERT1'   |  'A'              |
+      | 'Deferred'        |  'CFCERT'          |  'CFCERT1'   |  'A'              |
+      | 'Open'            |  'CFERR'           |  'CFCERT1'   |  'A'              |
+      | 'Deferred'        |  'CFERR'           |  'CFCERT1'   |  'A'              |
+      | 'Open'            |  'CFNFF'           |  'CFCERT1'   |  'A'              |
+      | 'Deferred'        |  'CFNFF'           |  'CFCERT1'   |  'A'              |
+   LOOP
+      --Insert your test code here
+      Sync_State_Handle___(current_rowstate_, incoming_rowstate_, input_objid_, input_objversion_);
+      --Insert your assertions here
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Post_Sync_Action should correct the incoming state based on the current state" FOR
+   PROCEDURE Post_Sync_Action(
+      objid_      IN     VARCHAR2,
+      objversion_ IN     VARCHAR2,
+      attr_       IN     VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage  Av_Fault_API
+   FUNCTION Get_Object_By_Id___ (
+      objid_ IN     VARCHAR2 ) RETURN av_fault_tab%ROWTYPE
+   IS
+      rec_         av_fault_tab%ROWTYPE;
+   BEGIN
+      CASE objid_
+      WHEN 'NOTAPP1' THEN
+         rec_.fault_id := 1;
+         RETURN rec_;
+      WHEN 'NOTAPP2' THEN
+         rec_.fault_id := 2;
+         RETURN rec_;
+      WHEN 'NOTAPP3' THEN
+         rec_.fault_id := 3;
+         RETURN rec_;
+      WHEN 'CFDEFER1' THEN
+         rec_.fault_id := 4;
+         RETURN rec_;
+      WHEN 'CFCERT1' THEN
+         rec_.fault_id := 5;
+         RETURN rec_;
+      WHEN 'CFCERT2' THEN
+         rec_.fault_id := 6;
+         RETURN rec_;
+      END CASE ;
+
+      RETURN NULL;
+END Get_Object_By_Id___;
+
+@MockPackage  Av_Fault_API
+FUNCTION Get_Objstate (
+   fault_id_ IN     NUMBER ) RETURN VARCHAR2
+IS
+BEGIN
+   CASE fault_id_
+   WHEN 1 THEN
+      RETURN 'Open';
+   WHEN 2 THEN
+      RETURN 'Deferred';
+   WHEN 3 THEN
+      RETURN 'Closed';
+   WHEN 4 THEN
+      RETURN 'Open';
+   WHEN 5 THEN
+      RETURN 'Open';
+   WHEN 6 THEN
+      RETURN 'Deferred';
+   END CASE ;
+
+   RETURN NULL;
+END Get_Objstate;
+
+@MockPackage  Av_Fault_API
+PROCEDURE Sync_State_Handle___(
+   current_rowstate_  IN     VARCHAR2,
+   incoming_rowstate_ IN     VARCHAR2,
+   input_objid_       IN     VARCHAR2,
+   input_objversion_  IN     VARCHAR2)
+IS
+BEGIN
+   ASSERT  current_rowstate_ IN  ('Open', 'Deferred', 'Closed')  MESSAGE 'Expected '||'Open,Deferred,Closed'||' but  was '||current_rowstate_;
+   ASSERT  incoming_rowstate_ IN  ('CFACTV', 'CFDEFER', 'CFCERT')     MESSAGE 'Expected '||'CFACTV,CFDEFER,CFCERT'||' but  was '||incoming_rowstate_;
+END Sync_State_Handle___;
+IS
+--Insert your test variables here
+BEGIN
+FOR
+   | objid_      | objversion_ | attr_                                   |
+   | 'NOTAPP1'   |  'A'        | 'ROWSTATE'||chr(31)||'CFACTV'||chr(30)  |
+   | 'NOTAPP2'   |  'A'        | 'ROWSTATE'||chr(31)||'CFDEFER'||chr(30) |
+   | 'NOTAPP3'   |  'A'        | 'ROWSTATE'||chr(31)||'CFCERT'||chr(30)  |
+   | 'CFDEFER1'  |  'A'        | 'ROWSTATE'||chr(31)||'CFDEFER'||chr(30) |
+   | 'CFCERT1'   |  'A'        | 'ROWSTATE'||chr(31)||'CFCERT'||chr(30)  |
+   | 'CFCERT2'   |  'A'        | 'ROWSTATE'||chr(31)||'CFCERT'||chr(30)  |
+LOOP
+   --Insert your test code here
+   Post_Sync_Action(objid_, objversion_, attr_);
+   --Insert your assertions here
+END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Found_Faults_Count should return Task type found fault count for given task id" FOR
+   FUNCTION Get_Found_Faults_Count (
+      task_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_tab
+   VALUES
+      | found_on_id | found_on_type |
+      | 1           | 'TASK'        |
+      | 2           | 'FAULT'       |
+      | 1           | 'TASK'        |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | task_id_ |
+      | 2         |  1       |
+      | 0         |  2       |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Found_Faults_Count(task_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Closed_Fault_Offset_Date should return configured closed offset date for given airport" FOR
+   FUNCTION Get_Closed_Fault_Offset_Date (
+      signed_by_user_ IN     VARCHAR2,
+      fault_id_       IN     NUMBER) RETURN TIMESTAMP;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Airport_API
+   FUNCTION Get_Faults_Offset (
+      airport_id_ IN     NUMBER )  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN CASE airport_id_
+      WHEN 1 THEN 3
+      WHEN 3 THEN 3
+      WHEN 4 THEN 5
+   END;
+END Get_Faults_Offset;
+
+@MockPackage Av_Airport_For_User_API
+FUNCTION Get_Airport_Id (
+   identity_ IN     VARCHAR2 )  RETURN  NUMBER
+IS
+BEGIN
+   RETURN CASE identity_
+   WHEN 'ALAIN' THEN 3
+   WHEN 'IFSAPP' THEN 1
+   WHEN 'BEN' THEN 5
+END;
+   END Get_Airport_Id;
+
+@MockPackage Av_Fault_API
+FUNCTION Get_Objstate (
+   fault_id_ IN     NUMBER )  RETURN  VARCHAR2
+IS
+BEGIN
+   RETURN CASE fault_id_
+   WHEN 1 THEN 'Closed'
+   WHEN 5 THEN 'Closed'
+   WHEN 3 THEN 'Open'
+   WHEN 4 THEN 'Closed'
+END;
+   END Get_Objstate;
+
+@MockTable dual
+VALUES
+   |dummy|
+   |1    |
+END VALUES;
+
+IS
+--Insert your test variables here
+return_   TIMESTAMP;
+expected_ TIMESTAMP;
+BEGIN
+FOR
+   | expected_ | signed_by_user_ | fault_id_ |
+   |    add_months(sysdate,(-3))  |  'IFSAPP'       |  1        |
+   |    add_months(sysdate,(-3))  |  'IFSAPP'       |  5        |
+LOOP
+   --Insert your test code here
+   return_ := Get_Closed_Fault_Offset_Date(signed_by_user_, fault_id_);
+   --Insert your assertions here
+   ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+END LOOP;
+END UNITTEST;
+
+UNITTEST "Check_Insert___ should genarate next sequence value when adding a new record." FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_fault_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   test_rec1_  av_fault_tab%ROWTYPE;
+   test_rec2_  av_fault_tab%ROWTYPE;
+   output_  Indicator_Rec;
+
+BEGIN
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.fault_id IS NULL THEN
+         newrec_.fault_id := av_fault_seq.NEXTVAL;
+         ASSERT newrec_.fault_id IS NOT NULL MESSAGE 'Returned '||newrec_.fault_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Update_API_Fault should handle fault duplicates when fault_id and barcode is passed" FOR
+   PROCEDURE Update_API_Fault (
+      fault_id_ IN     NUMBER,
+      barcode_  IN     VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_tab
+   VALUES
+      | barcode      | fault_id | mx_unique_key     | found_by_user |
+      | 'T000EM9M'   | 31635    | ''                | 'EBURNETT'    |
+      | 'T000EM9M'   | 31636    | '1000300:1222838' | 'EBURNETT'    |
+   END VALUES;
+
+   @MockPackage Av_Fault_API
+   PROCEDURE Delete_Fault_Rec (
+      fault_id_ IN     NUMBER )
+   IS
+      expected_fault_id_ NUMBER := 31636;
+   BEGIN
+      ASSERT fault_id_ IN (expected_fault_id_) MESSAGE 'Expected '|| expected_fault_id_ ||' but  was '|| fault_id_;
+   END;
+
+   @MockPackage Av_Fault_API
+   PROCEDURE Get_Id_Version_By_Keys___ (
+      objid_      IN OUT VARCHAR2,
+      objversion_ IN OUT VARCHAR2,
+      fault_id_   IN     NUMBER )
+   IS
+      expected_fault_id_ NUMBER := 31635;
+   BEGIN
+      ASSERT fault_id_ IN (expected_fault_id_) MESSAGE 'Expected '|| expected_fault_id_ || ' but  was '|| fault_id_;
+   END Get_Id_Version_By_Keys___;
+
+   @MockPackage Av_Fault_API
+   PROCEDURE Modify__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT VARCHAR2,
+      attr_       IN OUT VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+      expected_attr_     VARCHAR2(32000) := 'MX_UNIQUE_KEY'||chr(31)||'1000300:1222838'||chr(30)||'FOUND_BY_USER'||chr(31)||'EBURNETT'||chr(30);
+   BEGIN
+      ASSERT attr_ IN (expected_attr_) MESSAGE 'Expected '|| expected_attr_ || ' but  was '|| attr_;
+   END;
+IS
+   --Insert your test variables here
+BEGIN
+   FOR
+      | fault_id_ | barcode_   |
+      | 31635     | 'T000EM9M' |
+   LOOP
+      --Insert your test code here
+      Update_API_Fault(fault_id_, barcode_);
+      --Insert your assertions here
+   END LOOP;
+END UNITTEST;

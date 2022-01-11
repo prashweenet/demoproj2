@@ -1,0 +1,113 @@
+projection UserGroupPerVoucherSeriesHandling;
+component ACCRUL;
+layer Core;
+description "User Group Per Voucher Series";
+category Users;
+
+include fragment VoucherTypeDetailLovSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherNoSerialYearSet for VoucherNoSerialYrQuery {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity VoucherTypeUserGroup {
+   attribute AuthorizeLevel Enumeration(AuthorizeLevel) {
+      label = "Authorization Level";
+   }
+   attribute DefaultTypeDb Boolean("Y", "N") {
+      label = "Default Type";
+      required = [true];
+      insertable = [true];
+   }
+   attribute DefaultType Text {
+      fetch = "default_type";
+      required = [false];
+      insertable = [false];
+      implementationtype = "VARCHAR2(20)";
+   }
+   attribute VoucherTypeDesc Text {
+      implementationtype = "VARCHAR2(100)";
+      maxlength = 100;
+   }
+
+
+   reference UserGroupRef(Company, UserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "User Group";
+   }
+   reference FunctionGroupRef(Company, VoucherType, FunctionGroup) to VoucherTypeDetailLovQuery(Company, VoucherType, FunctionGroup) {
+      label = "Function Group";
+   }
+
+   action DoSetDefault {
+      ludependencies = VoucherTypeUserGroup;
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query VoucherNoSerialYrQuery {
+   from = "voucher_no_serial_yr";
+   lu = VoucherNoSerial;
+   keys = Company, VoucherType, AccountingYear, Period;
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute AccountingYearUsed Number;
+   attribute Period Number {
+      label = "Period";
+   }
+   attribute SerieFrom Number {
+      label = "From Number";
+   }
+   attribute SerieUntil Number {
+      label = "Until Number";
+   }
+
+   reference CompanyFinanceRef(Company) to CompanyFinance(Company);
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+
+   array VoucherTypeUserGroupArray(Company, VoucherType, AccountingYear) to VoucherTypeUserGroup(Company, VoucherType, AccountingYear);
+}
+
+query VoucherTypeDetailLovQuery {
+   from = "voucher_type_detail_lov";
+   lu = VoucherTypeDetail;
+   keys = Company, VoucherType, FunctionGroup;
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute FunctionGroup Text;
+   attribute Description Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

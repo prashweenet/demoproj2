@@ -1,0 +1,24 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PaymentTermDetails
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Payment_Method IS
+   Flags      = 'A-IU-'
+   Datatype   = 'STRING(20)'
+   Prompt     = 'Payment Method';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------

@@ -1,0 +1,98 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistUsageRecord
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  201009  themlk  DISO2020R1-425, Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in
+--  200915  themlk  DISCOP2020R1-123, New, Modify, Get_Objects_By_Keys, Get_Usage_Record_Id
+--  200827  kapalk  Pre Sync Action
+--  200918  waislk  DISO2020R1-297, Added Get methods to fetch data to use in data migration jobs
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- PUBLIC DECLARATIONS ------------------------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Hist_Usage_Data_API
+   PROCEDURE Modify (
+      newrec_         IN OUT AV_HIST_USAGE_DATA_TAB%ROWTYPE,
+      lock_mode_wait_ IN     BOOLEAN DEFAULT TRUE )
+   IS
+   BEGIN
+      NULL;
+   END Modify;
+
+   @MockPackage Av_Hist_Flight_API
+   PROCEDURE Modify (
+      newrec_         IN OUT AV_HIST_FLIGHT_TAB%ROWTYPE,
+      lock_mode_wait_ IN     BOOLEAN DEFAULT TRUE )
+   IS
+   BEGIN
+      NULL;
+   END Modify;
+
+   @MockTable av_inventory_tab
+   VALUES
+      | inventory_id |inventory_serial_no_oem|part_no_oem|manufacture_code|barcode|
+      | 1            |'serial001'            |'part001'  |'manufacture001'|'barcode001'|
+   END VALUES;
+
+   @MockTable av_hist_usage_record_tab
+   VALUES
+      | inventory_id | usage_record_id | usage_record_alt_id |
+      | 1            | 1               | 'USGREC001'         |
+   END VALUES;
+
+   @MockTable av_hist_usage_data_tab
+   VALUES
+      | inventory_id | usage_record_id | usage_data_id |usage_data_alt_id |
+      | 1            | 1               | 1             |'USGDATA001'      |
+   END VALUES;
+
+   @MockTable av_hist_flight_tab
+   VALUES
+      | flight_id | usage_record_id | flight_leg_alt_id |
+      | 1         | 1               | 'FLEG01'          |
+   END VALUES;
+
+IS
+   output1_  VARCHAR2(2000);
+   expected1_   VARCHAR2(2000);
+   expected2_   VARCHAR2(2000);
+   expected3_   VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      |'INVENTORY_SERIAL_NO_OEM'||chr(31)||'serial001'||chr(30)||'PART_NO_OEM'||chr(31)||'part001' ||chr(30)||'MANUFACTURE_CODE'||chr(31)||'manufacture001'||chr(30)||'BARCODE'||chr(31)||'barcode001'||chr(30)||'WITH_INVENTORY_ID'|
+      |'MX_UNIQUE_KEY'||chr(31)||'USGREC001'||chr(30)||'WITH_USAGE_RECORD_ALT_ID'|
+      |'MX_UNIQUE_KEY'||chr(31)||'USGREC001'||chr(30)||'WITH_PARENT_ASSEMBLY'    |
+
+   LOOP
+
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected2_ := 'WITH_USAGE_RECORD_ALT_ID'||'USAGE_RECORD_ALT_ID'||chr(31)||'USGREC001'||chr(30);
+      expected3_ := 'MX_UNIQUE_KEY'||chr(31)||'USGREC001'||chr(30)||'WITH_PARENT_ASSEMBLY';
+      
+      IF attr_ LIKE '%WITH_USAGE_RECORD_ID%' THEN
+      ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+   ELSIF attr_ LIKE '%WITH_PARENT_ASSEMBLY%' THEN
+      ASSERT output1_ = expected3_ MESSAGE 'Expected '||expected3_||' but  was '||output1_;
+   END IF;
+END LOOP;
+END UNITTEST;
+
+

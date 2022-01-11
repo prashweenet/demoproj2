@@ -1,0 +1,75 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistUsageData
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  202008  themlk  DISO2020R1-425, Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in
+--  200915  themlk  DISCOP2020R1-123, New, Modify, Get_Objects_By_Keys, Get_Usage_Data_Id
+--  200827  kapalk  Pre Sync Action
+--  200918  waislk  DISO2020R1-297, Added Get methods to fetch data to use in data migration jobs
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PRIVATE METHODS ----------------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   @MockTable av_inventory_tab
+   VALUES
+      | inventory_id |inventory_serial_no_oem|part_no_oem|manufacture_code|barcode|
+      | 1            |'serial001'            |'part001'  |'manufacture001'|'barcode001'|
+   END VALUES;
+
+   @MockTable av_hist_usage_record_tab
+   VALUES
+      | inventory_id | usage_record_id | usage_record_alt_id |
+      | 1            | 1               | 'USGREC1'           |
+   END VALUES;
+
+   @MockTable av_hist_usage_data_tab
+   VALUES
+      | inventory_id | mx_unique_key | usage_record_id | usage_data_id |
+      | 1            | 'MXUSGDATAKEY1'           | 1               | 1             |
+   END VALUES;
+
+IS
+   output1_  VARCHAR2(2000);
+   expected1_   VARCHAR2(2000);
+   expected2_   VARCHAR2(2000);
+   expected3_   VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      |'INVENTORY_SERIAL_NO_OEM'||chr(31)||'serial001'||chr(30)||'PART_NO_OEM'||chr(31)||'part001' ||chr(30)||'MANUFACTURE_CODE'||chr(31)||'manufacture001'||chr(30)||'BARCODE'||chr(31)||'barcode001'||chr(30)||'WITH_INVENTORY_ID'|
+      |'USAGE_RECORD_UNIQUE_ID'||chr(31)||'USGREC1'||chr(30)||'WITH_USAGE_RECORD_ID'|
+      |'USAGE_DATA_ALT_UNIQUE_ID'||chr(31)||'MXUSGDATAKEY1'||chr(30)||'WITH_USAGE_DATA_ALT_ID'|
+   LOOP
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_INVENTORY_ID'||'INVENTORY_ID'||chr(31)||'1'||chr(30);
+      expected2_ := 'WITH_USAGE_RECORD_ID'||''||'USAGE_RECORD_ALT_ID'||chr(31)||'USGREC1'||chr(30);
+      expected3_ := 'USAGE_DATA_ALT_UNIQUE_ID'||chr(31)||'MXUSGDATAKEY1'||chr(30)||'WITH_USAGE_DATA_ALT_ID';
+
+      IF attr_ LIKE '%WITH_INVENTORY_ID%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_USAGE_RECORD_ID%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_USAGE_DATA_ALT_ID%' THEN
+         ASSERT output1_ = expected3_ MESSAGE 'Expected '||expected3_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+

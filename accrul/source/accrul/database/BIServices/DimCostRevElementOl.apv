@@ -1,0 +1,67 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  CostRevElement
+--  Component:  ACCRUL
+--  LU:         DimCostRevElement
+--
+--  File     :  DimCostRevElementOl.api
+--  Purpose  :  Create ON LINE dimension view DIM_COST_REV_ELEMENT_OL
+--  Note     :  NOTE that NULL identity handling is not required for OL views
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_COST_REV_ELEMENT
+DEFINE VIEW       = DIM_COST_REV_ELEMENT_OL
+DEFINE TAB        = PROJECT_COST_ELEMENT
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimCostRevElement
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.company||'^'||a.project_cost_element                                   id,
+      a.company                                                                 company,
+      a.project_cost_element                                                    code,
+      a.project_cost_element                                                    project_cost_element,
+      a.description                                                             element_description,
+      SUBSTR(Fnd_Boolean_API.Decode(NVL(a.default_cost_element,'FALSE')),1,100) default_cost_element,
+      SUBSTR(a.state,1,100)                                                     validity,
+      SUBSTR(Prj_Followup_Element_Type_API.Decode(element_type_db), 1, 100)     element_type,
+      a.element_type_db                                                         element_type_db
+FROM &TAB a
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Cost Revenue Element^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(100)/UPPERCASE^PROMPT=Cost Revenue Element^';
+COMMENT ON COLUMN &VIEW..PROJECT_COST_ELEMENT
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Project Cost Element^';
+COMMENT ON COLUMN &VIEW..ELEMENT_DESCRIPTION
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(200)^PROMPT=Element Description^';
+COMMENT ON COLUMN &VIEW..DEFAULT_COST_ELEMENT
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(5)^PROMPT=Default Element^';
+COMMENT ON COLUMN &VIEW..VALIDITY
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(20)^PROMPT=Validity^';
+COMMENT ON COLUMN &VIEW..ELEMENT_TYPE
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Element Type^';
+COMMENT ON COLUMN &VIEW..ELEMENT_TYPE_DB
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(20)^PROMPT=Element Type^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE TAB
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

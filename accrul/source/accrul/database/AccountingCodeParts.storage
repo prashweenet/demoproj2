@@ -1,0 +1,19 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingCodeParts
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+INDEX accounting_code_part_ix1 IS accounting_code_part_tab (company, code_part_function, code_part);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

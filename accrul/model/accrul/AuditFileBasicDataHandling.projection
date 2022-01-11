@@ -1,0 +1,182 @@
+projection AuditFileBasicDataHandling;
+component ACCRUL;
+layer Core;
+description "Audit File Basic Data Handling";
+category Users;
+include fragment PersonInfoAllSelector;
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+-- gelr:saft_poland, begin
+include fragment TaxCodeRestrictedSelector;
+@DynamicComponentDependency INVOIC
+include fragment InvoiceCustomerTypeGroupSelector;
+@DynamicComponentDependency EREP
+include fragment AuditFileBasicDataPl;
+@DynamicComponentDependency INVOIC
+include fragment InvoiceType3Selector;
+@DynamicComponentDependency EREP
+include fragment JpkInvoiceSeriesLovSelector;
+-- gelr:saft_poland, end
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AuditFormatSet for AuditFormat {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AuditFormat {
+
+   array AuditBasicDataMasterArray(Company, ReportType, Country) to AuditBasicDataMaster(Company, ReportType, Country);
+}
+
+@Override
+entity AuditBasicDataMaster {
+   attribute SoftwareID Text {
+      label = "Software ID";
+      updatable = [false];
+   }
+   attribute IncludeSourceDoc Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute ParallelCurrCode Text {
+      fetch = "Company_Finance_API.Get_Parallel_Acc_Currency(company)";
+      insertable = [false];
+      updatable = [false];
+      editable = [false];
+   }
+   attribute AuditFileCountry Text {
+      updatable = [false];
+   }
+   attribute DefaultCurrencyCode Text {
+      updatable = [false];
+   }
+   reference TaxAccountingBasisRef(Company, TaxAccountingBasis) to TaxAccountingBasisInfo(Company, TaxAccountingBasisId) {
+      label = "Tax Accounting Basis";
+   }
+   reference DefaultCurrencyCodeRef(Company, DefaultCurrencyCode) to CurrencyCode(Company, CurrencyCode) {
+      label = "Default Currency Code";
+   }
+   reference CodePartAttrRef(Company, CodePartAttr) to AccountingAttribute(Company, Attribute) {
+      label = "Code Part Attribute";
+   }
+
+   array AuditContactPersonArray(Company, ReportType, Country) to AuditContactPerson(Company, ReportType, Country);
+   array StandardAuditTaxCodesArray(Company, ReportType, Country) to StandardAuditTaxCodes(Company, ReportType, Country);
+   -- gelr:audit_file_france, begin
+   @DynamicComponentDependency EREP
+   array FecGeneralParameterSet(Company, Country, ReportType) to FecGeneralParameter(Company, Country, ReportType);
+   -- gelr:audit_file_france, end
+   -- gelr:saft_poland, begin
+   @DynamicComponentDependency EREP
+   array JpkGeneralParametersSet(Company, Country, ReportType) to  JpkGeneralParameters(Company, Country, ReportType);
+   -- gelr:saft_poland, end
+}
+
+@Override
+entity AuditContactPerson {
+   crud = Create, Read, Delete;
+
+   reference CountryRef(Country) to IsoCountry(CountryCode) {
+      label = "Country";
+   }
+   reference PersonIdRef(PersonId) to PersonInfoAll(PersonId) {
+      label = "Person ID";
+   }
+}
+
+@Override
+entity StandardAuditTaxCodes {
+   crud = Read, Update;
+   from = "standard_audit_tax_codes2";
+   keys = Company, Country, ReportType, TaxId;
+   use attributes = TaxIdDescription, StandardTaxId, TaxExemptionReasonId;
+
+   attribute Company Text {
+      maxlength = 200;
+   }
+   attribute StandardTaxId Text {
+      maxlength = 2000;
+      editable = [ETag != null];
+      format = uppercase;
+   }
+   attribute TaxExemptionReasonId Text {
+      format = uppercase;
+   }
+
+   reference TaxIdRef(Company, Country, ReportType, TaxId) to StandardAuditTaxCodes(Company, Country, ReportType, TaxId) {
+      label = "Tax Code";
+   }
+   reference StandardTaxIdRef(Company, StandardTaxId) to StandardTaxCode(Company, StandardTaxCode) {
+      label = "Standard Tax Code";
+   }
+   reference TaxExemptionReasonIdRef(Company, TaxExemptionReasonId) to TaxExemptionReasonInfo(Company, TaxExemptionReasonId) {
+      label = "Tax Exemption Reason ID";
+   }
+}
+
+-- gelr:audit_file_france, begin
+@Override
+@DynamicComponentDependency EREP
+entity FecGeneralParameter {
+
+   crud = Create, Read, Delete, Update;
+
+   attribute StatisticalAccount Boolean("TRUE", "FALSE") {
+      required = [true];
+      editable = [true];
+      label = "Include Statistical Accounts";
+
+   }
+
+   reference CodePartRef(Company, AccCodePart) to AccountingCodeParts(Company, CodePart) {
+      label = "Account Code Part";
+   }
+
+   array FecExcludeVoucherTypeArray(Company, Country, ReportType) to FecExcludeVoucherType(Company, Country, ReportType);
+}
+
+
+@Override
+@DynamicComponentDependency EREP
+entity FecExcludeVoucherType {
+   crud = Create, Read, Delete;
+
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+
+   attribute Description Text {
+      fetch = "Voucher_Type_API.Get_Description(company, voucher_type)";
+      insertable = [false];
+      updatable = [false];
+      editable = [false];
+   }
+}
+-- gelr:audit_file_france, end
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetAccCurrencyCode Text {
+   parameter Company Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+
+

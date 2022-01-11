@@ -1,0 +1,63 @@
+fragment AccountingCodepartGSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view accounting_codepart_g";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccountingCodepartGSelector for AccountingCodepartG {
+   orderby = SortValue;
+   static CodeG;
+   static Description;
+}
+
+@Override
+list AccountingCodepartGLovList for AccountingCodepartG {
+   orderby = SortValue;
+}
+
+card AccountingCodepartGCard for AccountingCodepartG {
+   label = "";
+   fieldranking CodeG;
+   field CodeG;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccountingCodepartG {
+   from = "accounting_codepart_g";
+   lu = CodeG;
+   keys = Company, CodeG;
+   ludependencies = CodeG;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CodeG Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [true];
+   }
+   attribute ValidUntil Date {
+      lovcolumn = [true];
+   }
+   attribute BudgetValue Enumeration(BudgetAccountFlag) {
+      label = "Budget/Planning Only";
+      lovcolumn = [true];
+      fetch = "budget_value_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

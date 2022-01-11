@@ -1,0 +1,61 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  AccountingPeriodLov
+--  Component:  ACCRUL
+--  LU:         DimAccountingPeriodLov
+--
+--  File     :  DimAccountingPeriodLovDm.api
+--  Purpose  :  Create DATA MART dimension view DIM_ACCOUNTING_PERIOD_LOV_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+--  Date    Sign   History
+--  ------  ----   ----------------------------------------------------------
+--  150512  HIFELK BOULDER-1574  Reverse Engineering
+--  111219  SJayLK Created 
+----------------------------------------------------------------------------- 
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_ACCOUNTING_PERIOD_LOV
+DEFINE VIEW       = DIM_ACCOUNTING_PERIOD_LOV_DM
+DEFINE MV         = ACCOUNTING_PERIOD_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimAccountingPeriodLov
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.id                          id,
+       a.company                     company,
+       a.accounting_year             accounting_year,
+       a.accounting_period           code
+FROM &MV a
+WHERE   EXISTS
+   (SELECT 1
+   FROM   COMPANY_FINANCE_AUTH_PUB auth1
+   WHERE  auth1.company = a.company)
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Accounting Period LoV for Info Services^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..ACCOUNTING_YEAR
+   IS 'FLAGS=PMI--^DATATYPE=NUMBER/UPPERCASE^PROMPT=Accounting Year^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=NUMBER/UPPERCASE^PROMPT=Accounting Period^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

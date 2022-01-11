@@ -1,0 +1,259 @@
+fragment CompanyTaxControl;
+component ACCRUL;
+layer Core;
+description "This fragment contains client and projection code for Tax Control page of Comapany";
+
+include fragment TaxLiabilityLovSelector;
+include fragment TaxCodeRestrictedSelector;
+@DynamicComponentDependency INVOIC
+include fragment CompanyTaxControlInvoiceInformation;
+@DynamicComponentDependency DISCOM
+include fragment CompanySupplyChainTaxInfoTab;
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+-------------------------------- MAIN PAGES ---------------------------------
+page TaxControl using CompanySet {
+   label = "Tax Control";
+   crudactions {
+      edit {
+         enabled = [false];
+      }
+   }
+   selector CompanySelector;
+   group CompanyGroup;
+
+   tabs {
+      tab {
+         label = "General";
+         singleton TaxControlBasicDataSingleton(TaxControlBasicDataArray) bind CompanySelector;
+
+         arrange {
+            group CustomerTaxCodeValidationGroup bind TaxControlBasicDataSingleton;
+            group SupplierTaxCodeValidationGroup bind TaxControlBasicDataSingleton;
+         }
+         arrange {
+            group MaxOverwritingLevelOnTaxGroup bind TaxControlBasicDataSingleton;
+            group AdditionalParametersGroup bind TaxControlBasicDataSingleton;
+         }
+      }
+      tab {
+         label = "Invoice";
+         @DynamicComponentDependency INVOIC
+         singleton CompanyTaxControlInvoiceSingleton(CompanyTaxControlInvoices) bind CompanySelector;
+         @DynamicComponentDependency INVOIC
+         group CompanyTaxControlInvoiceGroup bind CompanyTaxControlInvoiceSingleton;
+         @DynamicComponentDependency INVOIC
+         list TaxLiabilityCountriesList(TaxLiabilityCountriesArray) bind CompanyTaxControlInvoiceSingleton;
+      }
+      @DynamicComponentDependency DISCOM
+      tab {
+         label = "Supply Chain";
+         singleton CompanySupplyChainTaxInfoSingleton(CompanySupplyChainTaxInfoArray) bind CompanySelector;
+         group SupplyChainCompanyTaxGeneralGroup bind CompanySupplyChainTaxInfoSingleton;
+         group SupplyChainCompanyTaxSalesGroup bind CompanySupplyChainTaxInfoSingleton;
+         group SupplyChainCompanyTaxProcurementGroup bind CompanySupplyChainTaxInfoSingleton;
+      }
+      tab {
+         label = "External Tax System";
+         singleton ExternalTaxControlBasicDataSingleton(TaxControlBasicDataArray)  bind CompanySelector;
+
+         group ExternalTaxCalculationGroup bind ExternalTaxControlBasicDataSingleton;
+         arrange {
+            group GenericTaxCodesGroup bind ExternalTaxControlBasicDataSingleton;
+            group TaxIntegrationGroup bind ExternalTaxControlBasicDataSingleton;
+         }
+      }
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+--------------------------------- COMMANDS ----------------------------------
+
+--------------------------------- SELECTORS ---------------------------------
+singleton TaxControlBasicDataSingleton for CompanyTaxControl {
+   crudactions {
+   }
+}
+
+
+singleton ExternalTaxControlBasicDataSingleton for CompanyTaxControl {
+   crudactions {
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group CustomerTaxCodeValidationGroup for CompanyTaxControl {
+   label = "Customer Tax Code Validation";
+   field ArReqTaxObjectLevel;
+   field ArReqTaxAddrLevel;
+   field ArReqTaxTransLevel;
+}
+
+
+group SupplierTaxCodeValidationGroup for CompanyTaxControl {
+   label = "Supplier Tax Code Validation";
+   field ApReqTaxObjectLevel;
+   field ApReqTaxTransLevel;
+}
+
+
+group AdditionalParametersGroup for CompanyTaxControl {
+   label = "Additional Parameters";
+   lov TaxLiabilityRef with ReferenceTaxLiabilityLovSelector using FetchTaxLiabilityForCountry(CountryCode) {
+      search = TaxLiability, Description;
+      description = TaxLiabilityRef.Description;
+   }
+   field TaxRoundingMethod;
+   field UpdateTaxPercent;
+}
+
+
+group MaxOverwritingLevelOnTaxGroup for CompanyTaxControl {
+   label = "Max Overwriting Level on Tax";
+
+   field LevelInPercent;
+   field LevelInAccCurrency;
+}
+
+
+group ExternalTaxCalculationGroup for CompanyTaxControl {
+   label = "";
+   field ExternalTaxCalMethod {
+      validate command {
+         execute {
+            if [ExternalTaxCalMethod != "AvalaraSalesTax"] {
+               set FetchTaxOnLineEntry = true;
+            }
+         }
+      }
+   }
+}
+
+
+group GenericTaxCodesGroup for CompanyTaxControl {
+   label = "Generic Tax Codes";
+   lov TaxCodeCityRef with ReferenceTaxCodeRestrictedSelector using TaxCodeRestrictedFetchValidTaxCodes(CurrentDate) {
+      size = Small;
+   }
+   lov TaxCodeCountyRef with ReferenceTaxCodeRestrictedSelector using TaxCodeRestrictedFetchValidTaxCodes(CurrentDate) {
+      size = Small;
+   }
+   lov TaxCodeDistrictRef with ReferenceTaxCodeRestrictedSelector using TaxCodeRestrictedFetchValidTaxCodes(CurrentDate) {
+      size = Small;
+   }
+   lov TaxCodeStateRef with ReferenceTaxCodeRestrictedSelector using TaxCodeRestrictedFetchValidTaxCodes(CurrentDate) {
+      size = Small;
+   }
+}
+
+
+group TaxIntegrationGroup for CompanyTaxControl {
+   label = "Tax Integration Parameters";
+   field RefreshTaxOnCoRelease {
+      size = Large;
+   }
+   field FetchTaxOnLineEntry {
+      size = Large;
+      editable = [ExternalTaxCalMethod = "AvalaraSalesTax"];
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+
+----------------------------------- CARDS -----------------------------------
+
+---------------------------------- DIALOGS ----------------------------------
+
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+
+----------------------------------- TREES -----------------------------------
+
+---------------------------------- PLUGINS ----------------------------------
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CompanyTaxControl {
+   crud = Read, Update;
+   supportwarnings = [true];
+
+   attribute ArReqTaxObjectLevel Boolean("TRUE", "FALSE") {
+      label = "Object Level";
+   }
+   attribute ArReqTaxAddrLevel Boolean("TRUE", "FALSE") {
+      label = "Address Level";
+   }
+   attribute ArReqTaxTransLevel Boolean("TRUE", "FALSE") {
+      label = "Transaction Level";
+   }
+   attribute ApReqTaxObjectLevel Boolean("TRUE", "FALSE") {
+      label = "Object Level";
+   }
+   attribute ApReqTaxTransLevel Boolean("TRUE", "FALSE") {
+      label = "Transaction Level";
+   }
+   attribute ExternalTaxCalMethod Enumeration(ExternalTaxCalcMethod) {
+      label = "External Tax Calculation Method";
+   }
+   attribute CurrentDate Date {
+      fetch = "trunc(sysdate)";
+      default = "trunc(sysdate)";
+   }
+
+   reference CompanyFinanceRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference TaxLiabilityRef(TaxLiability) to TaxLiabilityLov(TaxLiability) {
+      label = "Tax Liability";
+   }
+   reference TaxCodeCityRef(Company, TaxCodeCity) to TaxCodeRestricted(Company, FeeCode) {
+      label = "City";
+   }
+   reference TaxCodeCountyRef(Company, TaxCodeCounty) to TaxCodeRestricted(Company, FeeCode) {
+      label = "County";
+   }
+   reference TaxCodeDistrictRef(Company, TaxCodeDistrict) to TaxCodeRestricted(Company, FeeCode) {
+      label = "District";
+   }
+   reference TaxCodeStateRef(Company, TaxCodeState) to TaxCodeRestricted(Company, FeeCode) {
+      label = "State";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+-------------------------------- STRUCTURES ---------------------------------
+
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------

@@ -1,0 +1,69 @@
+--  Date    Sign    History
+--  ------  ------  -----------------------------------------------------
+--  200808  DILDLK  LMM2020R1-516, Modified navigation.
+--  200728  TAJALK  LMM2020R1-542, Created.
+-----------------------------------------------------------------------------
+client MeasurementCategories;
+component ADCOM;
+layer Core;
+projection MeasurementCategoriesHandling;
+description "Measurement Categories List";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TaskMeasurementsNavEntry parent AdcomNavigator.MeasurementBasicData at index 200 {
+      label = "Measurement Categories";
+      page List home AvMeasurementCategory;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AvMeasurementCategorySet {
+   label = "Measurement Categories";
+   list MeasurementCategoryList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list MeasurementCategoryList for AvMeasurementCategory {
+   field MeasurementCategoryCode;
+   field MeasurementCategoryDesc {
+      label = "Measurement Category Description";
+   }
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

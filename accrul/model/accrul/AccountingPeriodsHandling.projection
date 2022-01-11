@@ -1,0 +1,362 @@
+projection AccountingPeriodsHandling;
+component ACCRUL;
+layer Core;
+description "This is used to create Accounting Calender for the company and to view year and period status for each ledger";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountingYearSet for AccountingYear {
+   context Company(Company);
+}
+entityset TransInProgressHeaderVirtualSet for TransactionsInProgressHeaderVirtual;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountingYear {
+   supportwarnings = [true];
+   from = "acc_year";
+   crud = Read, Create, Delete;
+   ludependencies = AccountingYear;
+
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute YearStatusDb Text {
+      fetch = "Acc_Year_Ledger_Info_API.Get_Year_Status_Db(Company, accounting_year, '00')";
+      editable = [false];
+   }
+
+   array AccountingPeriodDetailArray(Company, AccountingYear) to AccountingPeriod(Company, AccountingYear);
+   array AccYearDetailArray(Company, AccountingYear) to AccYearLedgerInfo(Company, AccountingYear);
+}
+
+
+@Override
+entity AccountingPeriod {
+   supportwarnings = [true];
+   validate action DoFinalCheck;
+
+   attribute AccountingPeriod Number {
+      label = "Period";
+      maxlength = 2;
+   }
+   attribute DateFrom Date {
+      label = "Valid From";
+   }
+   attribute DateUntil Date {
+      label = "Valid Until";
+   }
+   attribute YearEndPeriod Enumeration(PeriodType) {
+      label = "Period Type";
+   }
+   attribute Company Text {
+      editable = [false];
+   }
+   attribute AttributeOne Text {
+      label = "Period Grouping Attribute 1";
+   }
+   attribute AttributeTwo Text {
+      label = "Period Grouping Attribute 2";
+   }
+   attribute AttributeThree Text {
+      label = "Period Grouping Attribute 3";
+   }
+   attribute AttributeFour Text {
+      label = "Period Grouping Attribute 4";
+   }
+   attribute AttributeFive Text {
+      label = "Period Grouping Attribute 5";
+   }
+}
+
+
+@Override
+entity AccYearLedgerInfo {
+   from = "acc_year_ledger";
+   crud = Read;
+
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute LedgerType Enumeration(Ledger.GILedger) {
+      fetch = "ledger_type_db";
+   }
+   attribute LedgerDesc Text {
+      label = "Ledger Description";
+   }
+   attribute OpeningBalances Enumeration(AccYearOpBal) {
+      label = "Opening Balance";
+   }
+   attribute ClosingBalances Enumeration(AccYearClBal) {
+      label = "Closing Balance";
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company);
+   reference LedgerIdRef(Company, LedgerId) to AllLedger(Company, LedgerId) {
+      label = "Ledger ID";
+   }
+
+   array AccPerDetailArray(Company, AccountingYear, LedgerId) to AccPeriodLedgerInfo(Company, AccountingYear, LedgerId);
+}
+
+
+@Override
+entity AccPeriodLedgerInfo {
+   from = "acc_period_ledger";
+   crud = Read;
+   keys = Company, AccountingYear, AccountingPeriod, LedgerId;
+   ludependencies = AccountingPeriod;
+   attribute AccountingPeriod Number {
+      label = "Period";
+   }
+   attribute Description Text;
+   attribute YearEndPeriod Enumeration(PeriodType) {
+      label = "Period Type";
+      fetch = "year_end_period_db";
+   }
+   attribute DateFrom Date;
+   attribute DateUntil Date;
+   attribute IlAvailable Text {
+      fetch = "Acc_Period_Ledger_Info_API.All_Il_Period_Status(company, accounting_year, accounting_period)";
+   }
+   attribute Ledger Text {
+      fetch = "Ledger_API.Get_Ledger(ledger_id)";
+      required = [false];
+   }
+   attribute LedgerDescription Text {
+      fetch = "All_Ledger_API.Get_Description(company, ledger_id)";
+      required = [false];
+   }
+   attribute LedgerPeriodStatus Text {
+      fetch = "Acc_Period_Ledger_Info_API.Get_Period_Status(company, accounting_year, accounting_period, ledger_id)";
+      required = [false];
+   }
+
+   action OpenAccountingPeriod Text {
+      ludependencies = AccPeriodLedgerInfo;
+   }
+   action OpenAllIlPeriods Text {
+      ludependencies = AccPeriodLedgerInfo;
+   }
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+--Row level security added to the entity.
+action OpenUpClosed {
+   initialcheck implementation;
+   ludependencies = AccYearLedgerInfo;
+   parameter Company Text;
+   parameter Year Number;
+   parameter LedgerId Text;
+}
+
+--Row level security added to the entity.
+@DynamicComponentDependency GENLED
+action RollbackYearEnd Structure(RollbackVoucherInfoStructure) {
+   initialcheck implementation;
+   ludependencies = AccYearLedgerInfo;
+
+   parameter Company  Text;
+   parameter VouYearOrCl Number;
+   parameter VouPeriodOrCl Number;
+   parameter LedgerId Text;
+   parameter VouYearRollCl  Number;
+   parameter VouYearOrOp Number;
+}
+
+
+action DoFinalCheck {
+   initialcheck none;
+
+   parameter Init Boolean;
+}
+
+--Row level security added to the entity.
+action CreatePeriodsForUserGroups {
+   initialcheck implementation;
+   ludependencies = AccPeriodLedgerInfo;
+
+   parameter Selection  Text;
+   parameter Usergroup Text;
+   parameter CreateAllLedgers Boolean;
+   parameter UserPeriodStatus Enumeration(AccYearPerStatus.OpenCloseSet);
+}
+
+--Row level security added to the entity.
+action ModifyPeriodStatusAll {
+   initialcheck implementation;
+   ludependencies = AccPeriodLedgerInfo;
+
+   parameter Objkey Text;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GlIlLedgerLov List<Entity(AllLedger)> {
+   parameter Company Text;
+   where = "ledger_id != '*'";
+}
+
+
+function PeriodFinallyClosed Boolean {
+   parameter Company Text;
+   parameter Year Number;
+   parameter LedgerId Text;
+}
+
+
+@DynamicComponentDependency GENLED
+function GetInfoYearEndVou Structure(YearEndVoucherInfoStructure) {
+   parameter Company Text;
+   parameter Year Number;
+   parameter LedgerId Text;
+}
+
+function ManualUpdateAction Text {
+
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter AccountingPeriod Number;
+   parameter DateFrom Date;
+   parameter DateUntil Date;
+
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure YearEndVoucherInfoStructure {
+   attribute Company Text;
+   attribute VouYearOrCl Number {
+      label = "Voucher Year";
+      editable = [false];
+   }
+   attribute VouPeriodOrCl Number {
+      label = "Voucher Period";
+      editable = [false];
+   }
+   attribute VouTypeOrCl Text {
+      label = "Voucher Type";
+      editable = [false];
+   }
+   attribute UserGroupOrCl Text {
+      label = "User Group";
+      editable = [false];
+   }
+   attribute VouYearOrOp Number {
+      label = "Voucher Year";
+      editable = [false];
+   }
+   attribute VouPeriodOrOp Number {
+      label = "Voucher Period";
+      editable = [false];
+   }
+   attribute VouTypeOrOp Text {
+      label = "Voucher Type";
+      editable = [false];
+   }
+   attribute UserGroupOrOp Text {
+      label = "User Group";
+      editable = [false];
+   }
+   attribute UserId Text;
+}
+
+
+structure RollbackVoucherInfoStructure {
+   attribute CloseVouNo Number;
+   attribute OpenVouNo Number;
+   attribute YearPeriodCl Text;
+   attribute YearPeriodOp Text;
+}
+
+
+structure RollbackVoucherCreatedStructure {
+   attribute Company Text;
+   attribute AccYearPeriodCl Text {
+      label = "Year-Period";
+      editable = [false];
+   }
+   attribute VoucherTypeCl Text {
+      label = "Voucher Type";
+      editable = [false];
+   }
+   attribute VoucherNoCl Number {
+      label = "Voucher No";
+      editable = [false];
+   }
+   attribute AccYearPeriodOp Text {
+      label = "Year-Period";
+      editable = [false];
+   }
+   attribute VoucherTypeOp Text {
+      label = "Voucher Type";
+      editable = [false];
+   }
+   attribute VoucherNoOp Number {
+      label = "Voucher No";
+      editable = [false];
+   }
+}
+
+
+structure CreatePeriodsForUserGroupsStructure {
+   attribute UserGroup Text {
+      format = uppercase;
+   }
+   attribute Company Text;
+   attribute Status Text;
+   attribute CreateForAllLedgers Boolean("TRUE", "FALSE") {
+      label = "Create for All Ledgers";
+      required = [true];
+   }
+   attribute UserGroupPeriodStatus Enumeration(AccYearPerStatus.OpenCloseSet) {
+      label = "User Group Period Status";
+      required = [true];
+   }
+   reference UserGroupRef(Company, UserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "User Group";
+   }
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+virtual TransactionsInProgressHeaderVirtual {
+   attribute LedgerId Text;
+   attribute Description Text;
+   attribute Selection Text;
+   attribute AllLedger Text;
+   attribute Action Text;
+   attribute TransferError Text;
+   attribute ErrorExist Text;
+   array  TransactionsInProgressArray(Objkey) to TransactionsInProgressVirtual(ParentObjkey);
+}
+
+
+virtual TransactionsInProgressVirtual {
+   crud = Read;
+
+   attribute InfoType Enumeration(InformationType) {
+      label = "Error/Warning";
+   }
+   attribute InfoTypeDb Text {
+      fetch = "info_type";
+   }
+   attribute InformationMessage Text {
+      label = "Transactions in Progress";
+   }
+   attribute TransactionsExist Boolean("TRUE", "FALSE") {
+      label = "Transactions Exist";
+      required = [true];
+   }
+   attribute LedgerId Text {
+      label = "Ledger ID";
+   }
+}
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------
+

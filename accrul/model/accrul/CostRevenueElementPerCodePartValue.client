@@ -1,0 +1,123 @@
+client CostRevenueElementPerCodePartValue;
+component ACCRUL;
+layer Core;
+projection CostRevenueElementPerCodePartValueHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CostElementToAccountNavEntry parent AccrulNavigator.CostRevenueElementSetupMenu at index 200 {
+      label = "Cost/Revenue Element per Code Part Value";
+      page List home CostElementToAccount;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using CostElementToAccountSet {
+   label = "Cost/Revenue Element per Code Part Value";
+   initcontext PageInitContext;
+   list CostElementToAccountList;
+}
+
+initcontext PageInitContext {
+   parameter ColumnTitleVar Text;
+   init command {
+      execute {
+         call SetValue(context.Company) into ColumnTitleVar;
+      }
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command SecondaryCostCommand for CostElementToAccount {
+   label = "Secondary Cost/Revenue Element";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/SecondaryCostRevenueElement/List?$contexts=Company:$[Company]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ReferenceAccountingCodePartValueLovSelector for AccountingCodePartValueLov {
+   static CodePartValue {
+      label = "${CodePartName}";
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list CostElementToAccountList for CostElementToAccount {
+   orderby = Account;
+
+   lov AccountRef with ReferenceAccountingCodePartValueLovSelector {
+      label = "${initcontext.ColumnTitleVar}";
+      search = CodePartValue, Description;
+      searchable = true;
+      size = Large;
+      description = AccountRef.Description;
+   }
+   lov ProjectCostElementRef with ReferenceProjectCostElementLovSelector {
+      search = ProjectCostElement, Description;
+      size = Large;
+      description = ProjectCostElementRef.Description;
+
+      validate command {
+         execute {
+            if[ProjectCostElement != null] {
+               if [ValidFrom = null] {
+                  call GetCurrentDate() into ValidFrom;
+               }
+            }
+            else {
+               set ValidFrom = null;
+            }
+         }
+      }
+   }
+   field ValidFrom {
+      editable = [ProjectCostElement != null and isNew];
+   }
+   field ProjectCostElementRef.ElementType {
+      size = Small;
+   }
+
+   command SecondaryCostCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

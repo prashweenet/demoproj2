@@ -1,0 +1,771 @@
+----------------------------------------------------------------------------
+--
+--  Dimension:  RpdPeriod
+--  Component:  ACCRUL
+--  LU:         DimRpdPeriod
+--
+--  Filename   : MetaData_AccrulBIDimRpdPeriod.ins
+--
+--  Purpose    : Installs Business Intelligence specific Meta Data for dimension
+--               DIM_RPD_PERIOD in component ACCRUL.
+--
+--               The following is installed:
+--               * Dimension (header) data
+--               * Data access type information
+--               * Dimension Item data including add-on item definitions
+--               * Parent data
+--               * LOV information
+--               * Performance indicator information
+--               * Index definitions
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+----------------------------------------------------------------------------- 
+--  Date    Sign   History
+--  ------  ----   ----------------------------------------------------------
+--  111207  SJayLK Created
+----------------------------------------------------------------------------- 
+
+SET SERVEROUTPUT ON
+
+DEFINE DIMENSION      = DIM_RPD_PERIOD
+DEFINE MODULE         = ACCRUL
+DEFINE VIEW_STD_DM    = DIM_RPD_PERIOD_DM
+DEFINE VIEW_STD_OL    = DIM_RPD_PERIOD_OL
+DEFINE DIM_ADD_ON     = ""
+DEFINE LOG_MESSAGE    = "****** &DIMENSION ******"
+DEFINE LOG_SOURCE_ID  = "Dimension &DIMENSION"
+
+PROMPT ================================================================
+PROMPT   Start installing Meta Data for &DIMENSION in component &MODULE
+PROMPT ================================================================
+
+BEGIN
+   Xlr_Import_Log_Util_API.Log_Message_Source(dbms_session.unique_session_id,
+                                              '&LOG_MESSAGE',
+                                              Xlr_Import_Log_Util_API.log_type_start,
+                                              '&LOG_SOURCE_ID');
+END;
+/
+
+
+PROMPT Backup dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Public_Rec;
+BEGIN
+   rec_.Dimension_Id  := '&DIMENSION';
+   XLR_META_UTIL_API.Backup_Dimension(rec_);
+END;
+/
+
+PROMPT Installing master data for dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Public_Rec;
+BEGIN
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Reporting Period';
+   rec_.Installation_Name           := 'Reporting Period';
+   rec_.Key_Column                  := 'ID';
+   rec_.Lov_Distinct_Search         := TRUE;
+   rec_.Lov_Max_Limit               := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Dimension_Type              := Xlr_Meta_Util_API.DIM_STANDARD_TYPE_;
+   XLR_META_UTIL_API.Install_Dimension(rec_);
+END;
+/
+
+PROMPT Installing data access information for dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Source_Public_Rec;
+BEGIN
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Source_Type                 := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Default_Source_Type         := TRUE;
+   rec_.View_Name                   := '&VIEW_STD_OL';
+   XLR_META_UTIL_API.Install_Dimension_Source(rec_);
+
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Source_Type                 := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Default_Source_Type         := FALSE;
+   rec_.View_Name                   := '&VIEW_STD_DM';
+   XLR_META_UTIL_API.Install_Dimension_Source(rec_);
+END;
+/
+
+PROMPT Installing item data for dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Item_Public_Rec;
+BEGIN
+   rec_.Dimension_Item_Id           := '&DIMENSION..ID';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Reporting Period Unique Identity';
+   rec_.Column_Name                 := 'ID';
+   rec_.Installation_Name           := 'Reporting Period Unique Identity';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.DATE_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := FALSE;
+   rec_.Display_Order               := NULL;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..CODE';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Reporting Date';
+   rec_.Column_Name                 := 'CODE';
+   rec_.Installation_Name           := 'Reporting Date';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.DATE_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 11;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := '&DIMENSION';
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := TRUE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..ID_WITH_RPD_ID';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'ID with Reporting Period Defintion ID';
+   rec_.Column_Name                 := 'ID_WITH_RPD_ID';
+   rec_.Installation_Name           := 'ID with Reporting Period Defintion ID';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := FALSE;
+   rec_.Display_Order               := 1;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..RPD_ID';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Reporting Period Defintion ID';
+   rec_.Column_Name                 := 'RPD_ID';
+   rec_.Installation_Name           := 'Reporting Period Defintion ID';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 2;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..RPD_YEAR';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Reporting Year';
+   rec_.Column_Name                 := 'RPD_YEAR';
+   rec_.Installation_Name           := 'Reporting Year';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.NUMBER_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 4;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..RPD_PERIOD';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Rerporting Period';
+   rec_.Column_Name                 := 'RPD_PERIOD';
+   rec_.Installation_Name           := 'Reporting Period';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.NUMBER_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 5;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..REPORTING_DATE';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Reporting Date';
+   rec_.Column_Name                 := 'REPORTING_DATE';
+   rec_.Installation_Name           := 'Reporting Date';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.DATE_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := FALSE;
+   rec_.Display_Order               := 6;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..RPD_ID_DESCRIPTION';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Reporting Period Definition Description';
+   rec_.Column_Name                 := 'RPD_ID_DESCRIPTION';
+   rec_.Installation_Name           := 'Reporting Period Definition Description';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 3;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..YEAR_PERIOD_STR';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Reporting Year Period';
+   rec_.Column_Name                 := 'YEAR_PERIOD_STR';
+   rec_.Installation_Name           := 'Reporting Year Period';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 7;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..FROM_DATE';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Reporting Period From Date';
+   rec_.Column_Name                 := 'FROM_DATE';
+   rec_.Installation_Name           := 'Reporting Period From Date';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.DATE_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 8;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..UNTIL_DATE';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Reporting Period Until Date';
+   rec_.Column_Name                 := 'UNTIL_DATE';
+   rec_.Installation_Name           := 'Reporting Period Until Date';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.DATE_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 9;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..YEAR_PERIOD_NUM';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Reporting Year Period Number';
+   rec_.Column_Name                 := 'YEAR_PERIOD_NUM';
+   rec_.Installation_Name           := 'Reporting Year Period Number Representation';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.NUMBER_DATA_TYPE_;
+   rec_.Nullable                    := FALSE;
+   rec_.Display_In_Client           := FALSE;
+   rec_.Display_Order               := 10;
+   rec_.Display_Folder              := NULL;
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..STRING_ATTRIBUTE1';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'String Attribute 1';
+   rec_.Column_Name                 := 'STRING_ATTRIBUTE1';
+   rec_.Installation_Name           := 'String Attribute 1';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 12;
+   rec_.Display_Folder              := 'String Attributes';
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..STRING_ATTRIBUTE2';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'String Attribute 2';
+   rec_.Column_Name                 := 'STRING_ATTRIBUTE2';
+   rec_.Installation_Name           := 'String Attribute 2';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 13;
+   rec_.Display_Folder              := 'String Attributes';
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..STRING_ATTRIBUTE3';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'String Attribute 3';
+   rec_.Column_Name                 := 'STRING_ATTRIBUTE3';
+   rec_.Installation_Name           := 'String Attribute 3';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 14;
+   rec_.Display_Folder              := 'String Attributes';
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..STRING_ATTRIBUTE4';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'String Attribute 4';
+   rec_.Column_Name                 := 'STRING_ATTRIBUTE4';
+   rec_.Installation_Name           := 'String Attribute 4';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 15;
+   rec_.Display_Folder              := 'String Attributes';
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..STRING_ATTRIBUTE5';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'String Attribute 5';
+   rec_.Column_Name                 := 'STRING_ATTRIBUTE5';
+   rec_.Installation_Name           := 'String Attribute 5';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 16;
+   rec_.Display_Folder              := 'String Attributes';
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..NUMBER_ATTRIBUTE1';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Number Attribute 1';
+   rec_.Column_Name                 := 'NUMBER_ATTRIBUTE1';
+   rec_.Installation_Name           := 'Number Attribute 1';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.NUMBER_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 17;
+   rec_.Display_Folder              := 'Number Attributes';
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..NUMBER_ATTRIBUTE2';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Number Attribute 2';
+   rec_.Column_Name                 := 'NUMBER_ATTRIBUTE2';
+   rec_.Installation_Name           := 'Number Attribute 2';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.NUMBER_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 18;
+   rec_.Display_Folder              := 'Number Attributes';
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..NUMBER_ATTRIBUTE3';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Number Attribute 3';
+   rec_.Column_Name                 := 'NUMBER_ATTRIBUTE3';
+   rec_.Installation_Name           := 'Number Attribute 3';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.NUMBER_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 19;
+   rec_.Display_Folder              := 'Number Attributes';
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..NUMBER_ATTRIBUTE4';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Number Attribute 4';
+   rec_.Column_Name                 := 'NUMBER_ATTRIBUTE4';
+   rec_.Installation_Name           := 'Number Attribute 4';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.NUMBER_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 20;
+   rec_.Display_Folder              := 'Number Attributes';
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+
+   rec_.Dimension_Item_Id           := '&DIMENSION..NUMBER_ATTRIBUTE5';
+   rec_.Dimension_Id                := '&DIMENSION';
+   rec_.Description                 := 'Number Attribute 5';
+   rec_.Column_Name                 := 'NUMBER_ATTRIBUTE5';
+   rec_.Installation_Name           := 'Number Attribute 5';
+   rec_.Data_Type                   := Xlr_Meta_Util_API.NUMBER_DATA_TYPE_;
+   rec_.Nullable                    := TRUE;
+   rec_.Display_In_Client           := TRUE;
+   rec_.Display_Order               := 21;
+   rec_.Display_Folder              := 'Number Attributes';
+   rec_.Add_On_Dimension_Id         := NULL;
+   rec_.Add_On_Def_Owned_By_Id      := NULL;
+   rec_.Module                      := '&MODULE';
+   rec_.Published_Lov_Dimension     := NULL;
+   rec_.Published_Lov_Item_Ref      := NULL;
+   rec_.Code_Key                    := FALSE;
+   rec_.Structure_Item_Type         := NULL;
+   rec_.Connected_Structure_Item_Id := NULL;
+   XLR_META_UTIL_API.Install_Dimension_Item(rec_);
+END;
+/
+
+PROMPT Installing parent item data for dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Parent_Public_Rec;
+BEGIN
+   NULL;
+END;
+/
+
+PROMPT Installing LOV item data for dimension items associated with &DIMENSION
+-- Note that the dimension item itself is not part of the list
+-- Will be added by LOV logic and given the Display_Order=0
+-- Also possible to add LOV info for add on items in this section
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Item_Lov_Public_Rec;
+BEGIN
+   rec_.Dimension_Item_Id     := '&DIMENSION..CODE';
+   rec_.Item_No               := 1;
+   rec_.Lov_Dimension_Item_Id := '&DIMENSION..RPD_YEAR';
+   rec_.Display_Order         := 1;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov(rec_);
+   rec_.Dimension_Item_Id     := '&DIMENSION..CODE';
+   rec_.Item_No               := 2;
+   rec_.Lov_Dimension_Item_Id := '&DIMENSION..RPD_PERIOD';
+   rec_.Display_Order         := 2;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov(rec_);
+   rec_.Dimension_Item_Id     := '&DIMENSION..CODE';
+   rec_.Item_No               := 3;
+   rec_.Lov_Dimension_Item_Id := '&DIMENSION..RPD_ID';
+   rec_.Display_Order         := 3;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov(rec_);
+
+   rec_.Dimension_Item_Id     := '&DIMENSION..RPD_ID';
+   rec_.Item_No               := 1;
+   rec_.Lov_Dimension_Item_Id := '&DIMENSION..RPD_ID_DESCRIPTION';
+   rec_.Display_Order         := 1;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov(rec_);
+
+   rec_.Dimension_Item_Id     := '&DIMENSION..RPD_YEAR';
+   rec_.Item_No               := 1;
+   rec_.Lov_Dimension_Item_Id := '&DIMENSION..RPD_ID';
+   rec_.Display_Order         := 1;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov(rec_);
+
+   rec_.Dimension_Item_Id     := '&DIMENSION..RPD_PERIOD';
+   rec_.Item_No               := 1;
+   rec_.Lov_Dimension_Item_Id := '&DIMENSION..RPD_YEAR';
+   rec_.Display_Order         := 1;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov(rec_);
+   rec_.Dimension_Item_Id     := '&DIMENSION..RPD_PERIOD';
+   rec_.Item_No               := 2;
+   rec_.Lov_Dimension_Item_Id := '&DIMENSION..RPD_ID';
+   rec_.Display_Order         := 2;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov(rec_);
+
+END;
+/
+
+PROMPT Installing LOV sort item data for dimension items associated with &DIMENSION
+-- Also possible to add LOV info for add on items in this section
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Item_Lov_Sort_Public_Rec;
+BEGIN
+   rec_.Dimension_Item_Id      := '&DIMENSION..CODE';
+   rec_.Item_No                := 1;
+   rec_.Sort_Dimension_Item_Id := '&DIMENSION..RPD_ID';
+   rec_.Ascending_Sort         := TRUE;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov_Sort(rec_);
+
+   rec_.Dimension_Item_Id      := '&DIMENSION..CODE';
+   rec_.Item_No                := 2;
+   rec_.Sort_Dimension_Item_Id := '&DIMENSION..CODE';
+   rec_.Ascending_Sort         := TRUE;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov_Sort(rec_);
+
+   rec_.Dimension_Item_Id      := '&DIMENSION..RPD_ID';
+   rec_.Item_No                := 1;
+   rec_.Sort_Dimension_Item_Id := '&DIMENSION..RPD_ID';
+   rec_.Ascending_Sort         := TRUE;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov_Sort(rec_);
+
+   rec_.Dimension_Item_Id      := '&DIMENSION..RPD_YEAR';
+   rec_.Item_No                := 1;
+   rec_.Sort_Dimension_Item_Id := '&DIMENSION..RPD_ID';
+   rec_.Ascending_Sort         := TRUE;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov_Sort(rec_);
+
+   rec_.Dimension_Item_Id      := '&DIMENSION..RPD_YEAR';
+   rec_.Item_No                := 2;
+   rec_.Sort_Dimension_Item_Id := '&DIMENSION..RPD_YEAR';
+   rec_.Ascending_Sort         := TRUE;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov_Sort(rec_);
+
+   rec_.Dimension_Item_Id      := '&DIMENSION..RPD_PERIOD';
+   rec_.Item_No                := 1;
+   rec_.Sort_Dimension_Item_Id := '&DIMENSION..RPD_ID';
+   rec_.Ascending_Sort         := TRUE;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov_Sort(rec_);
+
+   rec_.Dimension_Item_Id      := '&DIMENSION..RPD_PERIOD';
+   rec_.Item_No                := 2;
+   rec_.Sort_Dimension_Item_Id := '&DIMENSION..RPD_YEAR';
+   rec_.Ascending_Sort         := TRUE;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov_Sort(rec_);
+
+   rec_.Dimension_Item_Id      := '&DIMENSION..RPD_PERIOD';
+   rec_.Item_No                := 3;
+   rec_.Sort_Dimension_Item_Id := '&DIMENSION..RPD_PERIOD';
+   rec_.Ascending_Sort         := TRUE;
+   XLR_META_UTIL_API.Install_Dim_Item_Lov_Sort(rec_);
+
+
+END;
+/
+
+PROMPT Installing hint items associated with dimension &DIMENSION
+-- derived columns in the data mart or on line view should be defined
+-- all indexed columns, regardless of order in a concatenated index, should be defined
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Src_Hint_Item_Public_Rec;
+BEGIN
+   -- OnLine
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.DERIVED_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..CODE';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..ID_WITH_RPD_ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.DERIVED_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..RPD_ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..RPD_YEAR';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..RPD_PERIOD';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   -- DataMart
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..CODE';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..ID_WITH_RPD_ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..RPD_ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..RPD_YEAR';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+   rec_.Dimension_Id         := '&DIMENSION';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Dimension_Item_Id    := '&DIMENSION..RPD_PERIOD';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Dim_Src_Hint_Item(rec_);
+END;
+/
+
+PROMPT Installing BA Parameter Functions for dimension items in dimension - &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Item_Functions_Public_Rec;
+BEGIN
+   NULL;
+END;
+/
+
+PROMPT Post validate dimension &DIMENSION
+DECLARE
+   rec_  XLR_META_UTIL_API.Dim_Public_Rec;
+BEGIN
+   rec_.Dimension_Id  := '&DIMENSION';
+   XLR_META_UTIL_API.Post_Validate_Dimension(rec_);
+END;
+/
+
+BEGIN
+   Trace_SYS.Set_Trace_Output(1);
+   Xlr_Import_Log_Util_API.Output_Stats_And_Finish(dbms_session.unique_session_id,
+                                                   '&LOG_MESSAGE',
+                                                   '&LOG_SOURCE_ID');
+   Trace_SYS.Set_Trace_Output(0);
+END;
+/
+
+COMMIT;
+
+
+PROMPT ================================================================
+PROMPT    End installing Meta Data for &DIMENSION in component &MODULE
+PROMPT ================================================================
+
+-----------------------------------------------------------------------
+
+UNDEFINE DIMENSION
+UNDEFINE MODULE
+UNDEFINE VIEW_STD_DM
+UNDEFINE VIEW_STD_OL
+UNDEFINE DIM_ADD_ON
+UNDEFINE LOG_MESSAGE
+UNDEFINE LOG_SOURCE_ID
+
+-----------------------------------------------------------------------

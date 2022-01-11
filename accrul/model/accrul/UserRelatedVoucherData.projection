@@ -1,0 +1,314 @@
+projection UserRelatedVoucherData;
+component ACCRUL;
+layer Core;
+description "User Related Voucher Data";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+entityset VoucherTypeSet for VoucherType {
+   context Company(Company);
+}
+entityset VoucherNoSerialSet for VoucherNoSerial;
+entityset VoucherNoSerialYearSet for VoucherNoSerialYrQuery {
+   context Company(Company);
+}
+entityset VoucherTypeDetailSet for VoucherTypeDetailQuery {
+   context Company(Company);
+}
+entityset FunctionGroupSet for FunctionGroup;
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+@Override
+entity VoucherType {
+   crud = Read;
+
+   reference CompanyFinanceRef(Company) to CompanyFinance(Company);
+
+   array VoucherNoSerialArray(Company, VoucherType) to VoucherNoSerial(Company, VoucherType);
+}
+
+@Override
+entity VoucherNoSerial {
+   attribute Period Number {
+      required = [false];
+   }
+   attribute SerieFrom Number {
+      label = "From Number";
+      editable = [ETag = null];
+      maxlength = 10;
+   }
+   attribute SerieUntil Number {
+      label = "Until Number";
+      maxlength = 10;
+   }
+   attribute CurrentNumber Number {
+      label = "Next Voucher No";
+   }
+
+   reference AccountingYearRef(Company, AccountingYear) to AccountingYear(Company, AccountingYear) {
+      label = "Year";
+   }
+   reference PeriodRef(Company, AccountingYear, Period) to AccountingPeriod(Company, AccountingYear, AccountingPeriod) {
+      label = "Period";
+   }
+}
+
+@Override
+entity VoucherTypeUserGroup {
+   attribute AuthorizeLevel Enumeration(AuthorizeLevel) {
+      label = "Authorization Level";
+   }
+   attribute DefaultTypeDb Boolean("Y", "N") {
+      label = "Default Type";
+      required = [true];
+   }
+   attribute DefaultType Text {
+      fetch = "default_type";
+      required = [false];
+   }
+
+   reference UserGroupRef(Company, UserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "User Group";
+   }
+   reference FunctionGroupRef(Company, VoucherType, FunctionGroup) to VoucherTypeDetailLovQuery(Company, VoucherType, FunctionGroup) {
+      label = "Function Group";
+   }
+
+   action DoSetDefault {
+      ludependencies = VoucherTypeUserGroup;
+   }
+}
+
+@Override
+entity FunctionGroup {
+   crud = Read;
+
+   attribute StoreOriginalMandatoryDb Boolean("TRUE", "FALSE") {
+      label = "Store Original Mandatory";
+   }
+   attribute AutomaticAllotmentReqDb Boolean("TRUE", "FALSE") {
+      label = "Automatic Allotment Required";
+   }
+   attribute SimulationVoucherAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Simulation Voucher Allowed";
+   }
+   attribute SingleFunctionRequiredDb Boolean("TRUE", "FALSE") {
+      label = "Single Function Required";
+   }
+   attribute VouRowGrpValAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Voucher Row Group Validation Allowed";
+   }
+   attribute RefMandatoryAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Reference Mandatory Allowed";
+   }
+   attribute SepUserApprovalAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Separate User Approval Allowed";
+   }
+   attribute InternalLedgerAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Allowed to use in Internal Ledger";
+   }
+   attribute AutomaticVoucherBalanceDb Boolean("TRUE", "FALSE") {
+      label = "Automatic Voucher Balance";
+   }
+   attribute ConnFuncGroupAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Connect Function Group Allowed";
+   }
+   attribute ParAmountBalancedInSrcDb Boolean("TRUE", "FALSE") {
+      label = "Parallel Amount Balanced In Source";
+   }
+   attribute ProjectConnSupportedDb Boolean("TRUE", "FALSE") {
+      label = "Project Connection Supported";
+   }
+   attribute StoreOriginalAllowedDb Boolean("TRUE", "FALSE") {
+      label = "Allow set Store Original";
+   }
+
+   reference FunctionGroupRef(FunctionGroup) to FunctionGroup(FunctionGroup) {
+      label = "Function Group";
+   }
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+enumeration EnumFunctionGroup {
+   value = "Single" {
+      label = "Single Function Group";
+   }
+   value = "All" {
+      label = "All";
+   }
+}
+
+---------------------------------- QUERIES ----------------------------------
+
+query VoucherNoSerialYrQuery {
+   from = "voucher_no_serial_yr";
+   lu = VoucherNoSerial;
+   keys = Company, VoucherType, AccountingYear, Period;
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute AccountingYearUsed Number;
+   attribute Period Number {
+      label = "Period";
+   }
+   attribute SerieFrom Number {
+      label = "From Number";
+   }
+   attribute SerieUntil Number {
+      label = "Until Number";
+   }
+
+   reference CompanyFinanceRef(Company) to CompanyFinance(Company);
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+
+   array VoucherTypeUserGroupArray(Company, VoucherType, AccountingYear) to VoucherTypeUserGroup(Company, VoucherType, AccountingYear);
+}
+
+query VoucherTypeDetailLovQuery {
+   from = "voucher_type_detail_lov";
+   lu = VoucherTypeDetail;
+   keys = Company, VoucherType, FunctionGroup;
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute FunctionGroup Text;
+   attribute Description Text;
+}
+
+query VoucherTypeDetailQuery {
+   from = "voucher_type_detail_query";
+   lu = VoucherTypeDetail;
+   keys = Company, VoucherType, FunctionGroup;
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute FunctionGroup Text;
+   attribute Ledger Text;
+   attribute LedgerId Text {
+      label = "Ledger ID";
+   }
+   attribute Balance Boolean("TRUE", "FALSE") {
+      label = "Balance Mandatory";
+   }
+   attribute UseManual Boolean("TRUE", "FALSE") {
+      label = "Use Manual Internal Methods";
+   }
+   attribute AutomaticAllotDb Boolean("Y", "N") {
+      label = "Automatic Allotment";
+   }
+   attribute VtSingleFunctionGroup Boolean("Y", "N") {
+      label = "Single Function Group";
+   }
+   attribute SimulationVoucher Boolean("TRUE", "FALSE") {
+      label = "Simulation Voucher";
+   }
+   attribute SeparateUserApprovalDb Boolean("TRUE", "FALSE") {
+      label = "Separate User Approval";
+   }
+   attribute UseApprovalWorkflow Boolean("TRUE", "FALSE") {
+      label = "Use Voucher Approval Workflow";
+   }
+   attribute AutomaticVouBalance Boolean("Y", "N") {
+      label = "Optional Auto Balance";
+   }
+   attribute StoreOriginalDb Boolean("Y", "N") {
+      label = "Store Original";
+   }
+   attribute RowGroupValidation Boolean("Y", "N") {
+      label = "Voucher Row Group Validation";
+   }
+   attribute ReferenceMandatory Boolean("Y", "N");
+   attribute JournalID Text {
+      fetch = "Voucher_Util_Pub_API.Get_Acc_Journal(company, voucher_type)";
+      label = "Journal ID";
+      maxlength = 20;
+      format = uppercase;
+   }
+
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+   reference FunctionGroupRef(FunctionGroup) to FunctionGroup(FunctionGroup) {
+      label = "Function Group";
+   }
+}
+
+---------------------------------- ACTIONS ----------------------------------
+
+action DoCreateUserGroupForVoucherType {
+   initialcheck implementation;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter AccountingYears Text;
+   parameter UserGroup Text;
+   parameter AuthorizationLevel Enumeration(AuthorizeLevel);
+   parameter DefaultType Boolean;
+   parameter FunctionGroup Text {
+      required = [false];
+   }
+}
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+function GetKeysFromSelection Structure(VoucherKeysStruct) {
+   parameter Selection Text;
+}
+
+function GetSameUserGroupExists Structure(ResultAllowedYearStruct) {
+   parameter FullSelection Text;
+   parameter UserGroup Text;
+   parameter FunctionGroup Text;
+   parameter SingleFunctionGroup Boolean;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+
+structure VoucherKeysStruct {
+   attribute Company Text;
+   attribute VoucherType Text;
+}
+
+structure UserGroupInfoStruct {
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute Selection Text;
+   attribute AllowedYears Text;
+   attribute UserGroup Text {
+      format = uppercase;
+   }
+   attribute AuthorizationLevel Enumeration(AuthorizeLevel);
+   attribute DefaultType Boolean("Y", "N") {
+      required = [true];
+   }
+   attribute SingleFunctionGroup Boolean("Y", "N") {
+      required = [true];
+      default = "true";
+
+   }
+   attribute FunctionGroup Text;
+
+   reference UserGroupRef(Company, UserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "User Group";
+   }
+   reference FunctionGroupRef(Company, VoucherType, FunctionGroup) to VoucherTypeDetail(Company, VoucherType, FunctionGroup) {
+      label = "Function Group";
+   }
+}
+
+structure ResultAllowedYearStruct {
+   attribute UserGroupExists Text;
+   attribute UserGroupNotExists Text;
+   attribute AllowedYears Text;
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------

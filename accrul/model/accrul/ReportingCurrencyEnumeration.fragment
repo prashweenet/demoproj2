@@ -1,0 +1,33 @@
+fragment ReportingCurrencyEnumeration;
+component ACCRUL;
+layer Core;
+description "Manage reporting currency enumeration values used in Reports";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+------------------------------- ENUMERATIONS --------------------------------
+enumeration ReportingCurrencyEnum {
+   value = "AccountingCurrency" {
+      identifier = "ACCOUNTING_CURRENCY";
+      label = "Accounting Currency";
+   }
+   value = "ParallelCurrency" {
+      identifier = "PARALLEL_CURRENCY";
+      label = "Parallel Currency";
+   }
+}
+
+-- Used in GENLED
+enumeration ReportingCurrEnum {
+   value = "AccountingCurr" {
+      identifier = "ACCOUNTING";
+      label = "Accounting Currency";
+   }
+   value = "ParallelCurr" {
+      identifier = "PARALLEL";
+      label = "Parallel Currency";
+   }
+}

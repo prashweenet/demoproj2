@@ -1,0 +1,165 @@
+---------------------------------------------------------------------------------------
+-- File        : PctrlBasicDataAccrul.ins
+--
+-- Purpose     : Defines basic data for posting control, such as control types,
+--               posting types and allowed combinations, for component
+--               Accrul (Accounting Rules)
+--               The statements are executed both during Fresh install and upgrade.
+--               Descriptions are handled as Module Attribute Translations and are
+--               thus send to Enteprise.
+--               NOTE the following:
+--               * If the key, e.g. posting type 'AP1', does not exist then it
+--                 will be defined in Accounting Rules. The description will be
+--                 defined as translation for this key (=translation attribute)
+--                 for language 'en'.
+--               * If the key, e.g. posting type 'AP1', exists then only the
+--                 installation translation for this key (=translation attribute)
+--                 will be modified for language 'en'
+---
+-- Localization: Not needed
+--
+
+---------------------------------------------------------------------------------------
+-- Posting Types
+---------------------------------------------------------------------------------------
+SET SERVEROUT ON
+
+BEGIN
+   -- Shsalk 02/02/19 Added a call to Set_Cct_Enabled for each posting_type.
+   Posting_Ctrl_API.Insert_Posting_Type('AP1', 'Tax Received, Voucher Entry', 'ACCRUL', 'N', 'Y', sort_order_ => 1 );
+   Posting_Ctrl_API.Set_Cct_Enabled('AP1');
+   Posting_Ctrl_API.Insert_Posting_Type('AP2', 'Tax Disbursed, Voucher Entry', 'ACCRUL', 'N', 'Y', sort_order_ => 2 );
+   Posting_Ctrl_API.Set_Cct_Enabled('AP2');
+   Posting_Ctrl_API.Insert_Posting_Type('AP3', 'Calculated Tax Received, Voucher Entry', 'ACCRUL', 'N', 'Y', sort_order_ => 3 );
+   Posting_Ctrl_API.Set_Cct_Enabled('AP3');
+   Posting_Ctrl_API.Insert_Posting_Type('AP4', 'Calculated Tax Disbursed, Voucher Entry', 'ACCRUL', 'N', 'Y', sort_order_ => 4 );
+   Posting_Ctrl_API.Set_Cct_Enabled('AP4');   
+   Posting_Ctrl_API.Insert_Posting_Type('AP5', 'Payable Investment Tax', 'ACCRUL', 'N', 'Y', sort_order_ => 5 );
+   Posting_Ctrl_API.Set_Cct_Enabled('AP5');
+   Posting_Ctrl_API.Insert_Posting_Type('AP6', 'Base Value for Calculate Investement Tax', 'ACCRUL', 'N', 'N', sort_order_ => 6 );
+   Posting_Ctrl_API.Set_Cct_Enabled('AP6');
+   Posting_Ctrl_API.Insert_Posting_Type('AP7', 'The Counter Post to Base Value for Calculate Investement Tax', 'ACCRUL', 'N', 'N', sort_order_ => 7 );
+   Posting_Ctrl_API.Set_Cct_Enabled('AP7');
+   Posting_Ctrl_API.Insert_Posting_Type('AP8', 'Interim Accounting When Investment Tax Including Inventory', 'ACCRUL', 'N', 'N', sort_order_ => 8 );
+   Posting_Ctrl_API.Set_Cct_Enabled('AP8');
+   -- IID 10001 End
+   Posting_Ctrl_API.Insert_Posting_Type('AP9', 'Difference Account Vouchers', 'ACCRUL', 'N', 'N', sort_order_ => 9 );
+   Posting_Ctrl_API.Insert_Posting_Type('AP10', 'Inter Company due from affiliated company ', 'ACCRUL', 'N', 'N', sort_order_ => 10 );
+   Posting_Ctrl_API.Insert_Posting_Type('AP11', 'Inter Company due to affiliated company ', 'ACCRUL', 'N', 'N', sort_order_ => 11 );
+     
+   --
+   COMMIT;
+END;
+/                               
+
+---------------------------------------------------------------------------------------
+-- Control Types
+---------------------------------------------------------------------------------------
+BEGIN
+   Posting_Ctrl_API.Insert_Control_Type('AC1', 'ACCRUL', 'Fixed value',    'FIXED',       '**NoView**',                            '**NoPkg');
+   Posting_Ctrl_API.Insert_Control_Type('AC2', 'ACCRUL', 'Pre posting',    'PREPOSTING',  '**NoView**',                            '**NoPkg**');
+   Posting_Ctrl_API.Insert_Control_Type('AC3', 'ACCRUL', 'Currency code',  'ORDINARY',    'CURRENCY_CODE(COMPANY)',                'CURRENCY_CODE_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC4', 'ACCRUL', 'Country code',   'ORDINARY',    'ISO_COUNTRY',                           'ISO_COUNTRY_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC5', 'ACCRUL', 'User group',     'ORDINARY',    'USER_GROUP_FINANCE(COMPANY)',           'USER_GROUP_FINANCE_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC6', 'ACCRUL', 'Account group',  'ORDINARY',    'ACCOUNT_GROUP(COMPANY)',                'ACCOUNT_GROUP_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC7', 'ACCRUL', 'Tax code',       'ORDINARY',    'STATUTORY_FEE(COMPANY)',                'STATUTORY_FEE_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC8', 'ACCRUL', 'Company',        'ORDINARY',    'COMPANY_FINANCE',                       'COMPANY_FINANCE_API');
+   -- IID 10997 Start                                                                     
+   Posting_Ctrl_API.Insert_Control_Type('AC9', 'ACCRUL', 'State Code',     'ORDINARY',    'CONCATENATED_STATE_INFO',               'CONCATENATED_STATE_INFO_API');   
+   -- IID 10997 End   
+   -- IID FIPL659 Start 19/10/2006 GaDaLK
+   Posting_Ctrl_API.Insert_Control_Type('AC10','ACCRUL','Copy from Source','PREPOSTING',  '**NoView**',                            '**NoPkg**');
+   Posting_Ctrl_API.Insert_Control_Type('AC11','ACCRUL','Account',         'ORDINARY',    'ACCOUNT(COMPANY)',                      'ACCOUNT_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC12','ACCRUL','Code B',          'ORDINARY',    'CODE_B(COMPANY)',                       'CODE_B_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC13','ACCRUL','Code C',          'ORDINARY',    'CODE_C(COMPANY)',                       'CODE_C_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC14','ACCRUL','Code D',          'ORDINARY',    'CODE_D(COMPANY)',                       'CODE_D_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC15','ACCRUL','Code E',          'ORDINARY',    'CODE_E(COMPANY)',                       'CODE_E_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC16','ACCRUL','Code F',          'ORDINARY',    'CODE_F(COMPANY)',                       'CODE_F_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC17','ACCRUL','Code G',          'ORDINARY',    'CODE_G(COMPANY)',                       'CODE_G_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC18','ACCRUL','Code H',          'ORDINARY',    'CODE_H(COMPANY)',                       'CODE_H_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC19','ACCRUL','Code I',          'ORDINARY',    'CODE_I(COMPANY)',                       'CODE_I_API');
+   Posting_Ctrl_API.Insert_Control_Type('AC20','ACCRUL','Code J',          'ORDINARY',    'CODE_J(COMPANY)',                       'CODE_J_API');
+   -- IID FIPL659 End
+   -- IID 75DEV-Fin12 New Control type for IP1 and IP2 (Bug 68473) Start cldase
+   Posting_Ctrl_API.Insert_Control_Type('AC21','ACCRUL','Voucher type',    'ORDINARY',    'VOUCHER_TYPE_FUNCTION_GROUP(COMPANY)',  'VOUCHER_TYPE_API');
+   -- IID 75DEV-Fin12 End
+   --
+   Posting_Ctrl_API.Insert_Control_Type('AC23','ACCRUL','Tax Account',     'ORDINARY',    'TAX_ACCOUNT(COMPANY)',                  'ACCOUNT_API');
+   COMMIT;
+END;
+/
+
+---------------------------------------------------------------------------------------
+-- Allowed combinations
+---------------------------------------------------------------------------------------
+BEGIN
+   -- Insert allowed combination between control type and posting type
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP1', 'AC1', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP1', 'AC7', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP1', 'AC10','ACCRUL',  'B');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP1', 'AC10','ACCRUL',  'C');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP1', 'AC10','ACCRUL',  'D');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP1', 'AC10','ACCRUL',  'E');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP1', 'AC10','ACCRUL',  'F');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP1', 'AC10','ACCRUL',  'G');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP1', 'AC10','ACCRUL',  'H');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP1', 'AC10','ACCRUL',  'I');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP1', 'AC10','ACCRUL',  'J');
+   
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP2', 'AC1', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP2', 'AC7', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP2', 'AC10','ACCRUL',  'B');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP2', 'AC10','ACCRUL',  'C');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP2', 'AC10','ACCRUL',  'D');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP2', 'AC10','ACCRUL',  'E');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP2', 'AC10','ACCRUL',  'F');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP2', 'AC10','ACCRUL',  'G');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP2', 'AC10','ACCRUL',  'H');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP2', 'AC10','ACCRUL',  'I');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP2', 'AC10','ACCRUL',  'J');
+
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP3', 'AC1', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP3', 'AC7', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP3', 'AC10','ACCRUL',  'B');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP3', 'AC10','ACCRUL',  'C');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP3', 'AC10','ACCRUL',  'D');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP3', 'AC10','ACCRUL',  'E');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP3', 'AC10','ACCRUL',  'F');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP3', 'AC10','ACCRUL',  'G');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP3', 'AC10','ACCRUL',  'H');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP3', 'AC10','ACCRUL',  'I');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP3', 'AC10','ACCRUL',  'J');
+
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP4', 'AC1', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP4', 'AC7', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP4', 'AC10','ACCRUL',  'B');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP4', 'AC10','ACCRUL',  'C');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP4', 'AC10','ACCRUL',  'D');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP4', 'AC10','ACCRUL',  'E');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP4', 'AC10','ACCRUL',  'F');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP4', 'AC10','ACCRUL',  'G');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP4', 'AC10','ACCRUL',  'H');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP4', 'AC10','ACCRUL',  'I');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP4', 'AC10','ACCRUL',  'J');
+
+   -- IID 10001 Start NOTE This is only used by companies in Norway.
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP5', 'AC1', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP5', 'AC7', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP6', 'AC1', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP6', 'AC7', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP7', 'AC1', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP7', 'AC7', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP8', 'AC1', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP8', 'AC7', 'ACCRUL',  '*');
+   -- IID 10001 End
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP9', 'AC1', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP9', 'AC5', 'ACCRUL',  '*');
+   
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP10', 'AC1', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP10', 'AC8', 'ACCRUL',  '*');
+   
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP11', 'AC1', 'ACCRUL',  '*');
+   Posting_Ctrl_API.Insert_Allowed_Comb('AP11', 'AC8', 'ACCRUL',  '*');
+   COMMIT;
+END;
+/

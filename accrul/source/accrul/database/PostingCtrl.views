@@ -1,0 +1,199 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingCtrl
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Component IS
+   Flags      = 'PMI--'
+   Datatype   = 'STRING(6)/UPPERCASE'
+   Prompt     = 'Component';
+
+COLUMN Sort_Order IS
+   Flags      = 'A----'
+   Datatype   = 'NUMBER/UPPERCASE'
+   Prompt     = 'Sort Order';
+
+COLUMN Value IS
+   Flags      = 'K-IUL'
+   Datatype   = 'STRING(20)/UPPERCASE'
+   Prompt     = 'Account'
+   Ref        = 'Account(COMPANY)';
+
+COLUMN Description IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING(200)'
+   Prompt     = 'Description';
+   
+COLUMN Allow_Prepost_Det IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(200)'
+   Enumeration = 'FndBoolean'
+   Prompt     = 'Allow Pre-Posting on Detail level';   
+   
+COLUMN Allow_Prepost_Det_Db IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(20)'
+   Prompt     = 'Allow Pre-Posting on Detail level';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+VIEW Posting_Ctrl_Pub IS
+   Prompt = 'Posting Ctrl'
+   Pc_Valid_From.Flags = 'KMI--'
+   Control_Type.Ref = 'PostingCtrlAllowedComb(POSTING_TYPE,CODE_PART,MODULE)'
+   Override_Db.Datatype = 'STRING(20)'
+   Default_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Default_Value.Ref = 'AccountingCodePartValue(COMPANY,CODE_PART)'
+   Default_Value_No_Ct.Datatype = 'STRING(20)/UPPERCASE'
+   Default_Value_No_Ct.Ref = 'AccountingCodePartValue(COMPANY,CODE_PART)'
+SELECT p.company                                                company,
+       pt.module                                                component,
+       p.code_part                                              code_part,
+       p.posting_type                                           posting_type,
+       p.pc_valid_from                                          pc_valid_from,
+       p.control_type                                           control_type,
+       p.module                                                 module,
+       p.override                                               override_db,
+       p.default_value                                          default_value,
+       p.default_value_no_ct                                    default_value_no_ct,       
+       pt.allow_prepost_det                                     allow_prepost_det_db,
+       pt.rowkey                                               objkey
+FROM   posting_ctrl_tab p, posting_ctrl_posting_type_tab pt
+WHERE  p.posting_type = pt.posting_type;
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@SecurityCheck Company.UserAuthorized(p.company)
+VIEW Posting_Ctrl_Master IS
+   Prompt = 'Posting Ctrl'
+   Pc_Valid_From.Flags = 'KMI--'
+   Override_Db.Datatype = 'STRING(20)'
+   Ctrl_Type_Category.Datatype = 'STRING(50)'
+
+   
+SELECT p.Company                                                                              Company,
+       p.code_part                                                                            code_part,
+       p.posting_type                                                                         posting_type,
+       p.pc_valid_from                                                                        pc_valid_from,
+       to_char(p.pc_valid_from, 'YYYY-MM')                                                    period_char_pc_valid_from,
+       Accounting_Code_Parts_API.Get_Name(p.company, p.code_part)                             code_name,
+       Posting_Ctrl_Posting_Type_API.Get_Description(p.posting_type)                          posting_type_desc,
+       p.control_type                                                                         control_type,
+       decode(p.ctrl_type_category,
+              'COMBINATION', Comb_Control_Type_API.Get_Comb_Control_Type_Desc(p.company,
+                                                                              p.posting_type,
+                                                                              p.control_type),
+              Posting_Ctrl_Control_Type_API.Get_Description(p.control_type,
+                                                            p.module,
+                                                            p.company))                       control_type_desc,
+       p.module                                                                               module,
+       Fin_Allowed_API.Decode(p.override)                                                     override,
+       p.override                                                                             override_db,
+       Posting_Ctrl_Posting_Type_API.Get_Module(p.posting_type)                               post_module,
+       p.default_value                                                                        default_value,
+       p.default_value_no_ct                                                                  default_value_no_ct,
+       ctrl_type_category                                                                     ctrl_type_category_db,
+       Ctrl_Type_Category_API.Decode(ctrl_type_category)                                      ctrl_type_category,
+       pt.sort_order                                                                          sort_order,
+       Fnd_Boolean_API.Decode(pt.allow_prepost_det)                                           allow_prepost_det,
+       pt.allow_prepost_det                                                                   allow_prepost_det_db,       
+       p.rowid                                                                               objid,
+       ltrim(lpad(to_char(p.rowversion,'YYYYMMDDHH24MISS'),2000))                             objversion,
+       p.rowkey                                                                                objkey
+FROM   posting_ctrl_tab p, posting_ctrl_posting_type_tab pt
+WHERE  p.posting_type = pt.posting_type;
+
+--This view is used Aurena
+VIEW Posting_Cntrl_Master_Temp IS
+SELECT DISTINCT  post_module post_module,
+                 company  company
+FROM posting_ctrl_master;
+
+--This view is used Aurena
+VIEW Posting_Type IS
+SELECT DISTINCT posting_type posting_type,
+                posting_type_desc posting_type_desc,
+                post_module post_module,
+                company  company
+FROM posting_ctrl_master;
+
+--This view is used Aurena
+VIEW Posting_Code_Part IS
+SELECT DISTINCT  code_part code_part, 
+                 code_name code_name,
+                 post_module post_module,
+                 posting_type posting_type,
+                 company  company
+FROM posting_ctrl_master
+ORDER BY code_part;
+
+--This view is used Aurena
+VIEW Posting_Pc_Valid_From IS
+SELECT DISTINCT pc_valid_from pc_valid_from,
+                ctrl_type_category_db ctrl_type_category_db, 
+                control_type control_type,
+                post_module post_module,
+                posting_type posting_type,
+                code_part code_part,
+                company  company
+FROM posting_ctrl_master;
+
+
+VIEW Accrued_Cost_Revenue IS
+   Prompt = 'Posting Ctrl'
+   Company.Flags = 'P----'
+   Company.Datatype = 'STRING'
+SELECT a.COMPANY,
+       DEFAULT_VALUE    value,
+       ACCOUNT_API.GET_DESCRIPTION(a.COMPANY,DEFAULT_VALUE)    description
+FROM   posting_ctrl_tab a
+WHERE  EXISTS (SELECT * FROM user_finance_auth_pub c WHERE a.company = c.company)
+AND    posting_type = 'GP2'
+AND    code_part = 'A'
+UNION
+SELECT a.COMPANY,
+       CODE_PART_VALUE     value ,
+       ACCOUNT_API.GET_DESCRIPTION(a.COMPANY,CODE_PART_VALUE)    description
+FROM   posting_ctrl_detail_tab a
+WHERE  EXISTS (SELECT * FROM user_finance_auth_pub c WHERE a.company = c.company)
+AND    posting_type = 'GP2'
+AND    code_part = 'A'
+UNION
+SELECT a.COMPANY           company,
+       CODE_PART_VALUE     value ,
+       ACCOUNT_API.GET_DESCRIPTION(a.COMPANY,CODE_PART_VALUE)    description
+FROM   posting_ctrl_comb_detail_tab a
+WHERE  EXISTS (SELECT * FROM user_finance_auth_pub c WHERE a.company = c.company)
+AND    posting_type = 'GP2'
+AND    code_part = 'A';
+
+VIEW Posting_Ctrl_Av IS
+   Prompt = 'Posting Ctrl Tax Audit'
+   Pc_Valid_From.Flags = 'KMI--'
+   Code_Name.Flags = 'A-I-L'
+   Default_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Default_Value_No_Ct.Datatype = 'STRING(20)/UPPERCASE'
+SELECT company                         company,
+       pc_valid_from                   pc_valid_from,
+       posting_type                    posting_type,
+       posting_type_desc               posting_type_desc,
+       code_part                       code_part,
+       code_name                       code_name,
+       control_type                    control_type,
+       control_type_desc               control_type_desc,
+       override                        override,
+       default_value                   default_value,
+       default_value_no_ct             default_value_no_ct
+FROM   posting_ctrl;
+

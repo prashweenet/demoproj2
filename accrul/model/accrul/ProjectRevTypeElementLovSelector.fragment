@@ -1,0 +1,55 @@
+fragment ProjectRevTypeElementLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view project_rev_type_element_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceProjectRevTypeElementLovSelector for ProjectRevTypeElementLov {
+   static ProjectCostElement;
+   static Description;
+}
+
+card ProjectRevTypeElementLovCard for ProjectRevTypeElementLov {
+   label = "";
+   fieldranking ProjectCostElement;
+   field ProjectCostElement;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query ProjectRevTypeElementLov {
+   from = "project_rev_type_element_lov";
+   keys = Company, ProjectCostElement;
+   ludependencies = ProjectCostElement;
+   lu = ProjectCostElement;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute ProjectCostElement Text {
+      label = "Project Revenue Element";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute ElementType Enumeration(PrjFollowupElementType) {
+      lovcolumn = [true];
+      fetch = "element_type_db";
+   }
+   attribute DefaultCostElement Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Objstate Enumeration(ProjectCostElementState) {
+      label = "Validity";
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

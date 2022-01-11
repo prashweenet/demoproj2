@@ -1,0 +1,107 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtFileType
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN View_Type IS
+   Flags      = 'A-IUL'
+   Datatype   = 'STRING(1)'
+   Prompt     = 'View Type';
+
+COLUMN Name IS
+   Flags      = 'PMI-L'
+   Datatype   = 'STRING(50)'
+   Prompt     = 'Name';
+
+COLUMN Version IS
+   Flags      = 'PMI-L'
+   Datatype   = 'STRING(50)'
+   Prompt     = 'Version';
+
+COLUMN Column_Id IS
+   Flags      = 'KMI-L'
+   Datatype   = 'STRING(30)'
+   Prompt     = 'Column Id';
+
+COLUMN Data_Type IS
+   Flags      = 'PMI-L'
+   Datatype   = 'STRING(10)'
+   Prompt     = 'Data Type';
+
+COLUMN File_Typex IS
+   Flags      = 'KMI-L'
+   Datatype   = 'STRING(30)'
+   Prompt     = 'File Type X';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Ext_File_View_Name IS
+   Prompt = 'Ext File View Name'
+   View_Name.Flags = 'KMI-L'
+SELECT d1.view_name          view_name,
+       d2.module             component,
+       d1.view_type          view_type
+FROM Dictionary_Sys_View_Active d1,
+     Dictionary_Sys_Lu_Active d2
+WHERE d1.lu_name = d2.lu_name;
+
+VIEW Ext_File_Module_Name IS
+   Prompt = 'Ext File Module Name'
+   Component.Flags = 'PMI-L'
+SELECT module        component,
+       name          name,
+       version       version
+FROM   module_tab
+WHERE active = 'TRUE';
+
+VIEW Ext_File_View_Lov IS
+   Prompt = 'Ext File View Lov'
+   View_Name.Flags = 'P-IU-'
+   Description.Flags = 'PMI-L'
+   Description.Datatype = 'STRING(50)'
+SELECT c.table_name  view_name,
+       c.column_name column_id,
+       DECODE(c.data_type,'N','NUMBER','D','DATE','STRING') data_type,
+       NVL(Dictionary_SYS.Comment_Value_('PROMPT',m.comments),INITCAP(c.column_name)) description
+FROM   user_tab_columns c, user_col_comments m
+WHERE  c.column_name NOT IN ('OBJID','OBJVERSION')
+  AND  m.table_name  = c.table_name
+  AND  m.column_name = c.column_name;
+
+VIEW Ext_File_Type_Usable IS
+   Prompt = 'Ext File Type'
+SELECT file_type                      file_type,
+       NVL(RTRIM(RPAD(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileType', file_type ),100)),description)       
+                                      description,              
+       component                      component,        
+       system_defined                 system_defined,   
+       file_type                      file_typex,       
+       rowid                         objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                        objkey
+FROM   Ext_File_Type_Tab     F
+WHERE (f.component IS NULL OR EXISTS (SELECT 1 FROM module_tab WHERE F.component = module AND active = 'TRUE'))
+AND  EXISTS
+   (SELECT 1 
+    FROM   Ext_File_Template_Tab T
+    WHERE  T.file_type         = F.file_type
+    AND    T.valid_definition  = 'TRUE'
+    AND    T.active_definition = 'TRUE'
+    AND EXISTS 
+       (SELECT 1
+        FROM   Ext_File_Template_Dir_Tab D
+        WHERE  D.file_template_id = T.file_template_id));
+

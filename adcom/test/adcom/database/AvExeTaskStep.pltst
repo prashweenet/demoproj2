@@ -1,0 +1,469 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvExeTaskStep
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201201  siselk  AD2020R1-927, Unit test for Get_Awaiting_Insp_Count
+--  201123  majslk  AD2020R1-896, Updated Sync_State_Handle___, Pre_Sync_Action tests
+--  201109  majslk  LMM2020R1-1390, Added a test for Check_Insert__
+--  201008  aruflk  LMM2020R1-509, Added Get_Rejected_Step.
+--  201002  majslk  LMM2020R1-1035, Added Get_Task_Step_Count and modified Get_Task_Step_Ord_Set
+--  200909  siselk  LMM2020R1-946, Change PassInspect to Complete in Sync_State_Handle___
+--  200902  TAJALK  LMM2020R1-1014 - Added tests for Sync_State_Handle___, Post_Sync_Action
+--  200820  sevhlk  LMM2020R1-466, Added a test for Pre_Sync method.
+--  200813  rosdlk  LMM2020R1-140, Added a test for 'Is_Partial_State_Step_Exist' method
+--  200807  siselk  Get_Task_Step_Ord_Set
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Get_Task_Step_Ord_Set should return the concatinated step ord set of the particular task id when task id is given" FOR
+   FUNCTION Get_Task_Step_Ord_Set(
+      task_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_step_tab
+   VALUES
+      | step_ord | task_id | rowstate             |
+      | 1        | 1       | 'Pending'            |
+      | 1        | 2       | 'Pending'            |
+      | 1        | 3       | 'Pending'            |
+      | 1        | 4       | 'Pending'            |
+      | 2        | 1       | 'Closed'             |
+      | 2        | 2       | 'Partial'            |
+      | 3        | 1       | 'AwaitingInspection' |
+
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | task_id_ |
+      | '1, 3'    |  1       |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Task_Step_Ord_Set(task_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Is_Partial_State_Step_Exist should return a true when a partially done task step exists" FOR
+   FUNCTION Is_Partial_State_Step_Exist (
+      task_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_step_tab
+   VALUES
+      | task_id | rowstate    |
+      | 1       | 'Partial'   |
+      | 1       | 'Pending'   |
+      | 1       | 'Completed' |
+      | 2       | 'Partial'   |
+      | 3       | 'Completed' |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | task_id_ |
+      | 'TRUE'    |  1       |
+      | 'TRUE'    |  2       |
+      | 'FALSE'   |  3       |
+   LOOP
+      --Insert your test code here
+      return_ := Is_Partial_State_Step_Exist(task_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_tab
+   VALUES
+      | task_id | mx_unique_key |
+      | 1       | 'UNIQUEKEY1'  |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_  VARCHAR2(2000);
+   expected1_ VARCHAR2(2000);
+   expected2_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'TASK_UNIQUE_KEY'||chr(31)||'UNIQUEKEY1'||chr(30)||'WITH_TASK_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'UNIQUEKEY1'||chr(30)|| 'REASON'||chr(31)||'NOTE1'||chr(30)||'WITH_REASON_KEY'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_TASK_KEY'||'TASK_ID'||chr(31)||'1'|| chr(30) || 'REASON_STATUS'||chr(31)|| '0' ||chr(30);
+      expected2_ := 'REASON'||chr(31)|| 'NOTE1' ||chr(30) || 'WITH_REASON_KEY'||'TASK_ID'||chr(31)||'1'|| chr(30) || 'REASON_STATUS'||chr(31)|| '1' ||chr(30);
+
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_TASK_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_REASON_KEY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Sync_State_Handle___ should correct the incoming state based on the current state" FOR
+   PROCEDURE Sync_State_Handle___(
+      current_rowstate_  IN     VARCHAR2,
+      incoming_rowstate_ IN     VARCHAR2,
+      input_objid_       IN     VARCHAR2,
+      input_objversion_  IN     VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage  Av_Exe_Task_Step_API
+   PROCEDURE Partialy_Complete__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('MXPARTIAL1', 'MXCOMPLETE1')     MESSAGE 'Expected '||'MXPARTIAL1,MXCOMPLETE1'||' but  was '||objid_;
+   END Partialy_Complete__;
+
+   @MockPackage  Av_Exe_Task_Step_API
+   PROCEDURE Set_Not_Applicable__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     =  'MXNA1'     MESSAGE 'Expected '||'MXNA1'||' but  was '||objid_;
+   END Set_Not_Applicable__;
+
+   @MockPackage  Av_Exe_Task_Step_API
+   PROCEDURE Await_Inspect__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('MXCOMPLETE1', 'MXCOMPLETE2')    MESSAGE 'Expected '||'MXCOMPLETE1,MXCOMPLETE2'||' but  was '||objid_;
+   END Await_Inspect__;
+
+   @MockPackage  Av_Exe_Task_Step_API
+   PROCEDURE Complete__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     IN  ('MXCOMPLETE1', 'MXCOMPLETE2')     MESSAGE 'Expected '||'MXCOMPLETE1,MXCOMPLETE2'||' but  was '||objid_;
+   END Complete__;
+
+   @MockPackage  Av_Exe_Task_Step_API
+   PROCEDURE Set_Pending__ (
+      info_          OUT VARCHAR2,
+      objid_      IN     VARCHAR2,
+      objversion_ IN OUT NOCOPY VARCHAR2,
+      attr_       IN OUT NOCOPY VARCHAR2,
+      action_     IN     VARCHAR2 )
+   IS
+   BEGIN
+      ASSERT   objid_     =  'MXPENDING1'     MESSAGE 'Expected '||'MXPENDING1'||' but  was '||objid_;
+   END Set_Pending__;
+IS
+   --Insert your test variables here
+BEGIN
+   FOR
+      | current_rowstate_ | incoming_rowstate_ | input_objid_    | input_objversion_ |
+      | 'Pending'         |  'MXPENDING'       |  'NOTAPP1'      |  'A'              |
+      | 'Partial'         |  'MXPARTIAL'       |  'NOTAPP2'      |  'A'              |
+      | 'Completed'       |  'MXCOMPLETE'      |  'NOTAPP3'      |  'A'              |
+      | 'NotApplicable'   |  'MXNA'            |  'NOTAPP4'      |  'A'              |
+      | 'Pending'         |  'MXPARTIAL'       |  'MXPARTIAL1'   |  'A'              |
+      | 'Pending'         |  'MXNA'            |  'MXNA1'        |  'A'              |
+      | 'Pending'         |  'MXCOMPLETE'      |  'MXCOMPLETE1'  |  'A'              |
+      | 'Partial'         |  'MXCOMPLETE'      |  'MXCOMPLETE2'  |  'A'              |
+      | 'NotApplicable'   |  'MXPENDING'       |  'MXPENDING1'   |  'A'              |
+
+   LOOP
+      --Insert your test code here
+      Sync_State_Handle___(current_rowstate_, incoming_rowstate_, input_objid_, input_objversion_);
+      --Insert your assertions here
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Post_Sync_Action should correct the incoming state based on the current state" FOR
+   PROCEDURE Post_Sync_Action(
+      objid_      IN     VARCHAR2,
+      objversion_ IN     VARCHAR2,
+      attr_       IN     VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage  Av_Exe_Task_Step_API
+   FUNCTION Get_Object_By_Id___ (
+      objid_ IN     VARCHAR2 ) RETURN av_exe_task_step_tab%ROWTYPE
+   IS
+      rec_         av_exe_task_step_tab%ROWTYPE;
+   BEGIN
+      CASE objid_
+      WHEN 'NOTAPP1' THEN
+         rec_.task_step_id := 1;
+         RETURN rec_;
+      WHEN 'NOTAPP2' THEN
+         rec_.task_step_id := 2;
+         RETURN rec_;
+      WHEN 'NOTAPP3' THEN
+         rec_.task_step_id := 3;
+         RETURN rec_;
+      WHEN 'NOTAPP4' THEN
+         rec_.task_step_id := 4;
+         RETURN rec_;
+      WHEN 'MXPARTIAL1' THEN
+         rec_.task_step_id := 5;
+         RETURN rec_;
+      WHEN 'MXNA1' THEN
+         rec_.task_step_id := 6;
+         RETURN rec_;
+      WHEN 'MXCOMPLETE1' THEN
+         rec_.task_step_id := 7;
+         RETURN rec_;
+      WHEN 'MXCOMPLETE2' THEN
+         rec_.task_step_id := 8;
+         RETURN rec_;
+      END CASE ;
+
+      RETURN NULL;
+END Get_Object_By_Id___;
+
+@MockPackage  Av_Exe_Task_Step_API
+FUNCTION Get_Objstate (
+   task_step_id_ IN     NUMBER ) RETURN VARCHAR2
+IS
+BEGIN
+   CASE task_step_id_
+   WHEN 1 THEN
+      RETURN 'Pending';
+   WHEN 2 THEN
+      RETURN 'Partial';
+   WHEN 3 THEN
+      RETURN 'Completed';
+   WHEN 4 THEN
+      RETURN 'NotApplicable';
+   WHEN 5 THEN
+      RETURN 'Pending';
+   WHEN 6 THEN
+      RETURN 'Pending';
+   WHEN 7 THEN
+      RETURN 'Pending';
+   WHEN 8 THEN
+      RETURN 'Partial';
+   END CASE ;
+
+   RETURN NULL;
+END Get_Objstate;
+
+@MockPackage  Av_Exe_Task_Step_API
+PROCEDURE Sync_State_Handle___(
+   current_rowstate_  IN     VARCHAR2,
+   incoming_rowstate_ IN     VARCHAR2,
+   input_objid_       IN     VARCHAR2,
+   input_objversion_  IN     VARCHAR2)
+IS
+BEGIN
+   ASSERT  current_rowstate_ IN  ('Pending', 'Partial', 'Completed', 'NotApplicable')  MESSAGE 'Expected '||'Pending,Partial,Completed,NotApplicable'||' but  was '||current_rowstate_;
+   ASSERT  incoming_rowstate_ IN  ('MXPENDING', 'MXPARTIAL', 'MXCOMPLETE', 'MXNA')     MESSAGE 'Expected '||'MXPENDING,MXPARTIAL,MXCOMPLETE,MXNA'||' but  was '||incoming_rowstate_;
+END Sync_State_Handle___;
+IS
+--Insert your test variables here
+BEGIN
+FOR
+   | objid_        | objversion_ | attr_                                     |
+   | 'NOTAPP1'     |  'A'        | 'ROWSTATE'||chr(31)||'MXPENDING'||chr(30) |
+   | 'NOTAPP2'     |  'A'        | 'ROWSTATE'||chr(31)||'MXPARTIAL'||chr(30) |
+   | 'NOTAPP3'     |  'A'        | 'ROWSTATE'||chr(31)||'MXCOMPLETE'||chr(30)|
+   | 'NOTAPP4'     |  'A'        | 'ROWSTATE'||chr(31)||'MXNA'||chr(30)      |
+   | 'MXPARTIAL1'  |  'A'        | 'ROWSTATE'||chr(31)||'MXPARTIAL'||chr(30) |
+   | 'MXNA1'       |  'A'        | 'ROWSTATE'||chr(31)||'MXNA'||chr(30)      |
+   | 'MXCOMPLETE1' |  'A'        | 'ROWSTATE'||chr(31)||'MXCOMPLETE'||chr(30)|
+   | 'MXCOMPLETE2' |  'A'        | 'ROWSTATE'||chr(31)||'MXCOMPLETE'||chr(30)|
+LOOP
+   --Insert your test code here
+   Post_Sync_Action(objid_, objversion_, attr_);
+   --Insert your assertions here
+END LOOP;
+END UNITTEST;
+
+
+
+UNITTEST "Get_Task_Step_Count should return total step count for a given task id" FOR
+   FUNCTION Get_Task_Step_Count(
+      task_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_step_tab
+   VALUES
+      | task_id |
+      | 1       |
+      | 2       |
+      | 1       |
+      | 2       |
+      | 3       |
+      | 1       |
+      | 2       |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | task_id_ |
+      | 3         |  1       |
+      | 1         |  3       |
+      | 3         |  2       |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Task_Step_Count(task_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Rejected_Step should return concatenated steps where is rejected true when task id is given" FOR
+   FUNCTION Get_Rejected_Step (
+      task_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_step_tab
+   VALUES
+      | step_ord | task_id | is_rejected |
+      | 1        | 1       | 'TRUE'      |
+      | 2        | 1       | 'FALSE'     |
+      | 3        | 1       | 'TRUE'      |
+      | 1        | 2       | 'TRUE'      |
+
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | task_id_ |
+      | '1, 3'    |  1       |
+
+   LOOP
+      --Insert your test code here
+      return_ := Get_Rejected_Step(task_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Check_Insert___ should genarate next sequence value when task_step_id is NULL" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_exe_task_step_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+IS
+   test_rec1_  av_exe_task_step_tab%ROWTYPE;
+   test_rec2_  av_exe_task_step_tab%ROWTYPE;
+   output_  Indicator_Rec;
+BEGIN
+   test_rec1_.task_step_id            := NULL;
+   test_rec1_.task_id                 := 5000;
+   test_rec1_.step_ord                := 1;
+   test_rec1_.step_description        := 'Step1';
+   test_rec1_.applicability_range     := 'ApplicRange1';
+   test_rec1_.primary_competency_id   := 'C001';
+   test_rec1_.secondary_competency_id := 'S001';
+   test_rec1_.reason                  := 'Reason1';
+   test_rec1_.step_note               := 'Note1';
+   test_rec1_.is_rejected             := 'true';
+   test_rec1_.mx_unique_key           := NULL;
+
+   test_rec2_.task_step_id            := 5000;
+
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.task_step_id IS NULL THEN
+         newrec_.task_step_id := av_exe_task_step_seq.NEXTVAL;
+         ASSERT newrec_.task_step_id IS NOT NULL MESSAGE 'Returned '||newrec_.task_step_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Awaiting_Insp_Count should return number of steps in AwaitingInspection when TaskId is given" FOR
+   FUNCTION Get_Awaiting_Insp_Count (
+      task_id_ IN     NUMBER ) RETURN NUMBER;
+USING
+   @MockTable av_exe_task_step_tab
+   VALUES
+      | task_id | rowstate                |
+      | 1       | 'AwaitingInspection'    |
+      | 1       | 'AwaitingInspection'    |
+      | 1       | 'Pending'               |
+      | 2       | 'AwaitingInspection'    |
+      | 2       | 'AwaitingInspection'    |
+      | 2       | 'AwaitingInspection'    |
+      | 2       | 'Completed'             |
+   END VALUES;
+
+IS
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | task_id_ |
+      | 2         |  1       |
+      | 3         |  2       |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Awaiting_Insp_Count(task_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+

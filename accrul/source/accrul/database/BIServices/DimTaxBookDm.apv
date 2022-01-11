@@ -1,0 +1,88 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  TaxBook
+--  Component:  ACCRUL
+--  LU:         DimTaxBook
+--
+--  File     :  DimTaxBookDm.apv
+--  Purpose  :  Create DATA MART dimension view DIM_TAX_BOOK_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   --------------------------------------------
+--  090715  RORALK Created for 75 core version of IFS BA
+--  150507  HIFELK BOULDER-1467 Reverse Engineering
+---------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_TAX_BOOK
+DEFINE VIEW       = DIM_TAX_BOOK_DM
+DEFINE MV         = TAX_BOOK_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimTaxBook
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.id                                                                  id,
+       a.company                                                             company,
+       a.code                                                                code,
+       a.tax_book_id                                                         tax_book_id,
+       SUBSTR(NVL( (SELECT description
+      FROM TAX_BOOK_TRANSLATION_MV b
+      WHERE b.company         = a.company
+      AND   b.translation_key = a.code
+      AND   b.lu              = 'TaxBook'
+      AND   b.language_code   =
+      (SELECT language
+      FROM fnd_session)), a.description),1,100)                              description,
+       a.tax_direction_sp                                                    tax_direction_sp,
+       SUBSTR(Tax_Direction_Sp_API.Decode(a.tax_direction_sp),1,100)         tax_direction_sp_desc,
+       a.tax_book_base                                                       tax_book_base,
+       SUBSTR(Tax_Book_Base_API.Decode(a.tax_book_base),1,100)               tax_book_base_desc,
+       a.tax_book_base_values                                                tax_book_base_values,
+       SUBSTR(Tax_Book_Base_Values_API.Decode(a.tax_book_base_values),1,100) tax_book_base_values_desc,
+       a.tax_series_id                                                       tax_series_id
+FROM &MV a
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Tax Book^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=COMPANY^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(10)/UPPERCASE^PROMPT=Tax Book^';
+COMMENT ON COLUMN &VIEW..TAX_BOOK_ID
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(10)^PROMPT=Tax Book Id^';
+   COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(200)^PROMPT=Description^';
+   COMMENT ON COLUMN &VIEW..TAX_DIRECTION_SP
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Direction^';
+COMMENT ON COLUMN &VIEW..TAX_DIRECTION_SP_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Direction Description^';
+COMMENT ON COLUMN &VIEW..TAX_BOOK_BASE
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Book Base^';
+COMMENT ON COLUMN &VIEW..TAX_BOOK_BASE_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Book Base Description^';
+COMMENT ON COLUMN &VIEW..TAX_BOOK_BASE_VALUES
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Book Base Values^';
+COMMENT ON COLUMN &VIEW..TAX_BOOK_BASE_VALUES_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Book Base Values Description^';
+COMMENT ON COLUMN &VIEW..TAX_SERIES_ID
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(20)^PROMPT=Tax Series ID^';
+   
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

@@ -1,0 +1,88 @@
+-------------------------------------------------------------------------------
+----
+----  Logical unit: AvHistReliabilityNote
+----  Component:    ADCOM
+----
+----  IFS Developer Studio Template Version 3.0
+----
+----  Date    Sign    History
+----  ------  ------  ---------------------------------------------------------
+----  201013  themlk  DISO2020R1-425, Get_Parent_Inv_Id_Frm_Inv should return Parent_Invetory_Id
+----  201007  themlk  DISO2020R1-410, Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in
+-------------------------------------------------------------------------------
+--
+--layer Core;
+--
+--
+---------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+--
+--
+---------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   @MockTable av_inventory_tab
+   VALUES
+      | inventory_id |parent_inventory_id |inventory_serial_no_oem|part_no_oem|manufacture_code|barcode|
+      | 1            | 2                  |'serial001'            |'part001'  |'manufacture001'|'barcode001'|
+
+   END VALUES;
+
+IS
+   output1_  VARCHAR2(2000);
+   expected1_   VARCHAR2(2000);
+
+BEGIN
+   FOR
+      | attr_ |
+      |'INVENTORY_SERIAL_NO_OEM' ||chr(31)||'serial001' ||chr(30)||'PART_NO_OEM'||chr(31)||'part001'||chr(30)||'MANUFACTURE_CODE'||chr(31)||'manufacture001'||chr(30)||'BARCODE'||chr(31)||'barcode001'||chr(30)|| 'PARENT_INVENTORY_SERIAL_NO_OEM'||chr(31)||'SE002'||chr(30)||'PARENT_PART_NO_OEM'||chr(31)||'PN002'||chr(30)||'PARENT_MANUFACTURE_CODE'||chr(31)||'manufacture002'||chr(30)||'PARENT_BARCODE'||chr(31)||'barcode002'||chr(30)||'WITH_PARENT_INVENTORY_ID'|
+   LOOP
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_INVENTORY_ID'||'INVENTORY_ID'||chr(31)||'1'||chr(30)||'PARENT_INVENTORY_ID'||chr(31)||'2'||chr(30);
+
+      IF attr_ LIKE 'WITH_PARENT_INVENTORY_ID' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Parent_Inv_Id_Frm_Inv should return Parent_Invetory_Id" FOR
+   FUNCTION Get_Parent_Inv_Id_Frm_Inv(
+      inventory_unique_key_ IN     VARCHAR2 ) RETURN IFSAPP.av_inventory_tab.parent_inventory_id%TYPE;
+USING
+   @MockTable av_inventory_tab
+   VALUES
+      | parent_inventory_id | inventory_id |
+      | 1                   | 2            |
+      | 2                   | 3            |
+   END VALUES;
+
+   @Mock
+   FUNCTION Get_Inventory_Id_From_Unq_Key(
+      inventory_unique_key_ IN     VARCHAR2 ) RETURN av_inventory_tab.inventory_id%TYPE
+   IS
+   BEGIN
+      CASE inventory_unique_key_
+      WHEN 'MXINV2' THEN
+         RETURN 2;
+      WHEN 'MXINV3' THEN
+         RETURN 3;
+      END CASE;
+END Get_Inventory_Id_From_Unq_Key;
+
+IS
+return_   av_inventory_tab.parent_inventory_id%TYPE;
+expected_ av_inventory_tab.parent_inventory_id%TYPE;
+BEGIN
+FOR
+   | expected_ | inventory_unique_key_ |
+   |  1        |  'MXINV2'             |
+   |  2        |  'MXINV3'             |
+LOOP
+   return_ := Get_Parent_Inv_Id_Frm_Inv(inventory_unique_key_);
+   ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+END LOOP;
+END UNITTEST;

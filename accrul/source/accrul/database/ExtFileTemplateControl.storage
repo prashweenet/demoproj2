@@ -1,0 +1,23 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtFileTemplateControl
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+@Overtake Base
+PRIMARY KEY ext_file_template_control_pk IS ext_file_template_control_tab (
+   file_template_id,
+   file_direction,
+   row_no);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

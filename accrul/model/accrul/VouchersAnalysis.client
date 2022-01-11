@@ -1,0 +1,191 @@
+client VouchersAnalysis;
+component ACCRUL;
+layer Core;
+include fragment FinNotesDialog;
+
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry VoucherAnalysisNavEntry parent AccrulNavigator.VoucherAnalysisMenu at index 1 {
+      label = "Vouchers Analysis";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using VoucherSet {
+   label = "Vouchers Analysis";
+   list VoucherAnalysisList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+--------------------------------- COMMANDS ----------------------------------
+command VoucherRowsCommand for Voucher {
+   label = "Voucher Rows";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/VoucherRowsAnalysis/List?$filter=VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+   }
+}
+
+command VoucherDetailsCommand for Voucher {
+   label = "Voucher Details";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/VoucherDetailsAnalysis/Form?$filter=VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+   }
+}
+
+command ViewMultiCompanyVoucherCommand for Voucher {
+   label = "View Multi Company Voucher";
+
+   enabled = [MultiCompanyVoucher = true and  MultiCompanyId != null and VoucherTypeRef.VoucherType != "R"];
+   variable MultiCompanyInfoStructureVar {
+      type = MultiCompanyInfoStructure;
+   }
+   execute {
+      if [MultiCompanyId != null and VoucherTypeReference != null and MultiCompanyId != Company] {
+         call GetMultiCompanyInfo(Company, AccountingYear, VoucherType, VoucherNo) into MultiCompanyInfoStructureVar;
+         navigate  "page/MultiCompanyVoucherDetailsAnalysis/Form?$filter=Company eq $[MultiCompanyInfoStructureVar.OriginalCompany] and VoucherType eq $[MultiCompanyInfoStructureVar.OriginalVoucherType] and VoucherNo eq $[MultiCompanyInfoStructureVar.OriginalVoucherNo] and AccountingYear eq $[MultiCompanyInfoStructureVar.OriginalAccYear]";
+      }
+      else {
+         navigate  "page/MultiCompanyVoucherDetailsAnalysis/Form?$filter=Company eq Company and VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+      }
+   }
+}
+
+command NotesCommand for Voucher {
+   label = "Notes";
+   enabled = [true];
+   variable NoteIdNum {
+      type = Number;
+   }
+   execute {
+      set PackageNameStr = "VOUCHER_NOTE_API";
+      set CallingProjectionNameStr = "VouchersAnalysis";
+      assistant NotesAssistant(PackageNameStr, CallingProjectionNameStr, keyref, luname, "") into(NoteIdNum) {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+---------------------------------- GROUPS -----------------------------------
+
+----------------------------------- LISTS -----------------------------------
+list VoucherAnalysisList for Voucher {
+   orderby = VoucherType, VoucherNo;
+
+   badge VoucherStatus {
+      style = TextOnly;
+      emphasis Progress11 = [Objstate = "Confirmed"];
+	   emphasis Progress2 = [Objstate = "Waiting"];
+      emphasis StateError = [Objstate = "Error"];
+      emphasis StateCancelled = [Objstate = "Cancelled"];
+      emphasis Progress5 = [Objstate = "AwaitingApproval"];
+      emphasis Progress9 = [Objstate = "PartiallyApproved"];
+   }
+   field VoucherTypeRef {
+      size = Small;
+   }
+   field FunctionGroup {
+      size = Small;
+   }
+   field VoucherNo;
+   field VoucherDate;
+   field AccountingYear {
+      size = Small;
+   }
+   field AccountingPeriod {
+      size = Small;
+   }
+   field DateReg;
+   field EnteredByUserGroupRef;
+   field Userid {
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field ApprovedByUserid {
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field ApprovalDate;
+   field ApprovedByUserGroupRef;
+   field SecondApproverId {
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field SecondApprovalDate;
+   field SecondApproverUserGroup;
+   field VoucherText2 {
+      size = Large;
+   }
+   field UpdateError {
+      size = Large;
+   }
+   field Notes {
+      size = Small;
+   }
+   field InterimVoucher {
+      size = Small;
+   }
+   field MultiCompanyVoucher {
+      size = Small;
+   }
+   field MultiCompanyIdRef;
+   field VoucherTypeReferenceRef {
+      size = Large;
+   }
+   field VoucherNoReference {
+      size = Small;
+   }
+   field AccountingYearReference {
+      size = Small;
+   }
+
+   commandgroup CommandGroup {
+
+      command VoucherRowsCommand;
+      command VoucherDetailsCommand;
+      command ViewMultiCompanyVoucherCommand;
+   }
+
+   commandgroup CommandGroup2 {
+
+      command NotesCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+---------------------------------- DIALOGS ----------------------------------
+
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+
+----------------------------------- TREES -----------------------------------
+
+---------------------------------- PLUGINS ----------------------------------
+
+------------------------------- IMAGE VIEWERS -------------------------------

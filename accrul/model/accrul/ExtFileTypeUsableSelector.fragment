@@ -1,0 +1,50 @@
+fragment ExtFileTypeUsableSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ext_file_type_usable";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceExtFileTypeUsableSelector for ExtFileTypeUsable {
+   static FileType;
+   static FileTypex;
+   static Description;
+}
+
+card ExtFileTypeUsableCard for ExtFileTypeUsable {
+   label = "";
+   fieldranking FileType;
+   field FileType;
+   field FileTypex;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query ExtFileTypeUsable {
+   from = "ext_file_type_usable";
+   lu = ExtFileType;
+   keys = FileType, FileTypex;
+   ludependencies = ExtFileType;
+   attribute FileType Text {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute Component Text {
+      lovcolumn = [true];
+      format = uppercase;
+   }
+   attribute SystemDefined Text {
+      lovcolumn = [true];
+   }
+   attribute FileTypex Text {
+      label = "File Type X";
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

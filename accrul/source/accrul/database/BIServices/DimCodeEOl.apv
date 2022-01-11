@@ -1,0 +1,79 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  CodeE
+--  Component:  ACCRUL
+--  LU:         DimCodeE
+--
+--  File     :  DimCodeEOl.api
+--  Purpose  :  Create ON LINE dimension view DIM_CODE_E_OL
+--  Note     :  NOTE that NULL identity handling is not required for OL views
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   -------------------------------------------------
+--  090715  RORALK Created for 75 core version of IFS BA
+--------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_CODE_E
+DEFINE VIEW       = &DIM._OL
+DEFINE TAB        = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = BIDimCodeE
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.company||'^'||a.code_part_value                           id,
+       a.company                                                   company,
+       a.code_part_value                                           code,
+       SUBSTR(NVL( (SELECT SUBSTR(c.current_translation,1,100)
+      FROM KEY_LU_TRANSLATION_TAB c
+      WHERE c.key_value       = a.company
+      AND   c.attribute_key   = a.code_part_value
+      AND   c.lu              = 'CodeE'
+      AND   c.module          = 'ACCRUL'
+      AND   c.key_name        = 'CompanyKeyLu'
+      AND   c.rowtype         = 'CompanyKeyLuTranslation'
+      AND   c.language_code   =
+      (SELECT language
+      FROM FND_SESSION)), a.description),1,100)                    description,
+       a.valid_from                                                valid_from,
+       a.valid_until                                               valid_until,
+       a.bud_account                                               budget_value,
+       SUBSTR(Budget_Account_Flag_API.Decode(a.bud_account),1,100) budget_value_desc
+FROM &TAB a
+WHERE a.code_part = 'E'
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Code E^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Code E^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Code E Description^';
+   COMMENT ON COLUMN &VIEW..VALID_FROM
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Valid From^';
+COMMENT ON COLUMN &VIEW..VALID_UNTIL
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Valid Until^';
+COMMENT ON COLUMN &VIEW..BUDGET_VALUE
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Budget Value^';
+COMMENT ON COLUMN &VIEW..BUDGET_VALUE_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Budget Value Description^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE TAB
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

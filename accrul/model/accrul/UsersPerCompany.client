@@ -1,0 +1,94 @@
+client UsersPerCompany;
+component ACCRUL;
+layer Core;
+projection UsersPerCompanyHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry UsersPerCompanyNavEntry parent AccrulNavigator.UserRelatedDataMenu at index 100 {
+      label = "Users Per Company";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using CompanyFinanceSet {
+   label = "Users Per Company";
+   selector CompanySelector;
+   list UserFinanceList(UserFinanceArray);
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command SetDefaultCommand for UserFinance {
+   label = "Set Default";
+   mode = SelectedRecords;
+
+   enabled = [DefaultCompany != true];
+   execute {
+      call DoSetDefault();
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector CompanySelector for CompanyFinance {
+   label = "${Company} - ${Description}";
+
+   lov CompanyRef with ReferenceCompanyFinanceSelector;
+   static Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list UserFinanceList for UserFinance {
+
+   lov UseridRef with ReferenceFndUserSelector {
+      search = Identity, Description;
+      description = UseridRef.Description;
+      contactwidget {
+         enabled = [true];
+         source = Person;
+      }
+   }
+
+   field DefaultCompany;
+
+   command SetDefaultCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

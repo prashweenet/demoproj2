@@ -1,0 +1,28 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TransferredVoucherRow
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+
+DECLARE
+   columns_        Database_SYS.ColumnTabType;
+   table_name_     VARCHAR2(30) := 'TRANSFERRED_VOUCHER_ROW_TAB';
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ITEM_ID', 'NUMBER');
+   Database_SYS.Set_Table_Column(columns_, 'REFERENCE_ROW_NO', 'NUMBER');
+   Database_SYS.Alter_Table(table_name_,columns_,TRUE);
+END;

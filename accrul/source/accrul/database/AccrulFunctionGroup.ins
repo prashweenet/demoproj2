@@ -1,0 +1,355 @@
+-----------------------------------------------------------------------------
+--
+--  Filename      : AccrulFunctionGroup.ins
+--
+--  Module        : ACCRUL
+--
+--  Purpose       : Inserting default Function Groups.
+--
+--  Localization  : Not needed. Translation support via Module-translations.
+--
+--  Date    Sign   History
+--  ------  ----   -----------------------------------------------------------
+--  020124  ANDJ   Created.
+--  021017  samblk added new function group TF
+--  021031  GEPELK added new function group H
+--  021101  chajlk Added new function group YE
+--  050324  ovjose Added new function group LI
+--  050422  reanpl FIME232, merged UK changes (added function group AFP)
+--  051122  nijalk Added new function group CSS.
+--  060915  Kagalk FIPL615 - Added new function group CB.
+--  070619  Bmekse Merge of Project Enterprise. Added new function group SCV
+--  090826  Nsillk Bug 84652 Corrected.Added two new function groups TP and TE
+--  100910  JoAnSe Added new function group TI
+---------------------SIZZLER-------------------------------------------------
+--  110804  Ersruk Added function group PC
+---------------------CONVERGE -----------------------------------------------
+--  130201  NaSalk Added function group RT for rental transactions.
+---------------------BREEZE -------------------------------------------------
+--  130717  CPriLK BRZ-3774, Added new function group MPR.
+---------------------STRIKE-------------------------------------------------
+--  160913  ovjose STRFI-3527. Added data to the function groups, instead hard coded in source code.
+--  161012  shdilk STRSA-13718 Modified the description of function group TF.
+--  170120  Maaylk STRFI-4215  (132672) GG-75, Added new function group FSM.
+--  170721  hiralk STRFI-9286, Added new function group TC.
+--  171107  Chwtlk STRFI-10634, Set function group YE as Store Original false.
+-----------------------------------------------------------------------------
+--  200106  thrplk PJXTEND-3081, Added new function group PAT.
+--  200921  tkavlk FISPRING20-6702, Removed Consolidation function Group.
+-----------------------------------------------------------------------------
+
+
+SET SERVEROUT ON
+
+PROMPT Default Function Groups
+DECLARE
+   -- local variables of FndBoolean constants
+   fnd_true_      CONSTANT VARCHAR2(20) := Fnd_Boolean_API.DB_TRUE;
+   fnd_false_     CONSTANT VARCHAR2(20) := Fnd_Boolean_API.DB_FALSE;
+
+   -- Arguments:
+      -- fgroup_:                   The ID of the function group
+      -- descr_:                    The description of the function group
+      -- par_amt_balanced_in_src_:  TRUE defines that the creator of a voucher handles parallel currency amounts (can balance the voucher in parallel currency). When FALSE Accrul will make sure to 
+         -- balance the voucher, this is just a fallback for parts of the system that does not handle parallel currency. It should not be seen as a switch that should be changed by any user.
+         -- Default value is FALSE (this value is not set it is assumed that the process does not handle parallel currency amounts)
+      -- auto_allot_:               TRUE if automatic allotment is required for the function group. Default value is TRUE
+      -- store_original_man_:       TRUE if Store Original is mandatory for the voucher type connected to the function group. Means that the Store Original flag will always be TRUE. Default value is FALSE
+      -- store_original_all_:       TRUE if it should be possible to set Store Original flag to TRUE for a voucher type. Default value is FALSE
+      -- single_func_req_:          TRUE if the function group is required to be a single function. Default value is TRUE
+      -- conn_func_grp_allowed_:    TRUE if it should be allowed to connect function groups together when a voucher type is connected to a Cash Account. Default value is FALSE
+      -- sim_voucher_allowed_:      TRUE if it should be allowed to define simulation voucher for a voucher type connected to the function group. Default value is FALSE
+      -- il_allowed_:               TRUE if voucher type connected to the function group should be allowed to use in Internal Ledger. Default value is FALSE
+      -- aut_vou_balance_:          TRUE if Automatic Voucher Balance should be allowed for the voucher type connected to the function group. Default value is FALSE
+      -- vou_row_grp_allowed_:      TRUE if the Voucher Row Group Valiation should be allowed for the voucher type connected to the function group. Default value is FALSE
+      -- ref_mandatory_allowed_:    TRUE if Reference Mandatory should be allowed for the voucher type connected to the function group. Default value is FALSE
+      -- sep_user_appr_allowed_:    TRUE if separate user approval should be allowed to set on the voucher type connected to the function group. Default value is FALSE
+      -- proj_conn_supp_:           TRUE if the function group support project connections (created when voucher is created). Default value is FALSE
+         -- This attribute shows all function group that support project connection. "proj_conn_supp_vou_row_" defines if the connection is created from VoucherRow entity.
+      -- proj_conn_supp_vou_row_:   TRUE if the function group support project connections AND project connection is created from voucher row entity). Default value is FALSE
+         -- For example function groups F, I and J creates the project conneciton from the source (from Invoice) directlty and must set this to FALSE to not create project connections twice. 
+         -- This parameter cannot be TRUE unless proj_conn_supp_ is TRUE.
+         -- This attribute will be used in a check when voucher row is created. Only function groups with the value TRUE will automatically create project connection when voucher row is created.
+      -- manual_:                   TRUE if the function group is a function group for manual transactions. Default value is FALSE
+   PROCEDURE New_Function_Group___(
+      fgroup_                    IN VARCHAR2,
+      descr_                     IN VARCHAR2,
+      par_amt_balanced_in_src_   IN VARCHAR2,
+      auto_allot_                IN VARCHAR2,
+      store_original_man_        IN VARCHAR2,
+      store_original_all_        IN VARCHAR2,
+      single_func_req_           IN VARCHAR2,
+      conn_func_grp_allowed_     IN VARCHAR2,
+      sim_voucher_allowed_       IN VARCHAR2,
+      il_allowed_                IN VARCHAR2,
+      aut_vou_balance_           IN VARCHAR2,
+      vou_row_grp_allowed_       IN VARCHAR2,
+      ref_mandatory_allowed_     IN VARCHAR2,
+      sep_user_appr_allowed_     IN VARCHAR2,
+      proj_conn_supp_            IN VARCHAR2,
+      proj_conn_vou_row_support_ IN VARCHAR2,
+      manual_                    IN VARCHAR2)
+   IS
+      newrec_ FUNCTION_GROUP_TAB%ROWTYPE;
+   BEGIN
+      newrec_.rowversion := SYSDATE;
+      newrec_.function_group := fgroup_;
+      newrec_.description := descr_;
+
+      newrec_.par_amount_balanced_in_src := NVL(par_amt_balanced_in_src_, fnd_false_);
+      newrec_.automatic_allotment_req := NVL(auto_allot_, fnd_true_);
+      newrec_.store_original_mandatory := NVL(store_original_man_, fnd_false_);                
+      newrec_.store_original_allowed := NVL(store_original_all_, fnd_false_); 
+
+      newrec_.single_function_required := NVL(single_func_req_, fnd_true_);
+      newrec_.conn_func_group_allowed := NVL(conn_func_grp_allowed_, fnd_false_);
+      newrec_.simulation_voucher_allowed := NVL(sim_voucher_allowed_, fnd_false_);
+      newrec_.internal_ledger_allowed := NVL(il_allowed_, fnd_false_);
+
+      newrec_.automatic_voucher_balance := NVL(aut_vou_balance_, fnd_false_);
+      newrec_.vou_row_grp_val_allowed := NVL(vou_row_grp_allowed_, fnd_false_);
+      newrec_.ref_mandatory_allowed := NVL(ref_mandatory_allowed_, fnd_false_);
+      newrec_.sep_user_approval_allowed := NVL(sep_user_appr_allowed_, fnd_false_);
+
+      newrec_.project_conn_supported := NVL(proj_conn_supp_, fnd_false_);
+      newrec_.proj_conn_vou_row_support := NVL(proj_conn_vou_row_support_, fnd_false_);
+
+      newrec_.manual := NVL(manual_, fnd_false_);
+
+      Function_Group_API.Insert_Lu_Data_Rec__(newrec_);
+      COMMIT;
+   END New_Function_Group___;
+BEGIN
+   New_Function_Group___('A',   'Depreciations',
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_, 
+                         fnd_true_,    fnd_false_, NULL,       fnd_true_,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('AFP', 'Application For Payment',           
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   New_Function_Group___('B',   'Payments received',                 
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_false_,   fnd_true_,  NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('CA',  'Multi-company Allocation',          
+                         fnd_false_,   fnd_true_,  fnd_true_,  fnd_true_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('CB',  'Cash Box',                          
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_false_, fnd_false_); 
+   New_Function_Group___('CSS', 'Cost Sold Services',                
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('D',   'Multi Company Voucher',             
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   -- Note for function group D. Parallel amount only fully supported for Invoices. For Manual Entry the user needs to adjust amount (trans/acc) until parallel amount is in balance (since it at least can be adjusted)
+   --                            proj_conn = TRUE (but only when it is not an invoice, check against inv_acc_row_id on voucher row)
+   New_Function_Group___('E',   'Personell Transactions',            
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   New_Function_Group___('F',   'Customer Invoice',                  
+                         fnd_true_,    fnd_false_, fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         fnd_true_,    NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_false_, fnd_false_);
+   New_Function_Group___('FSM',   'Field Service Management',                  
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('G',   'Offset AR/AP',                      
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_false_,   fnd_true_,  NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('H',   'Currency Revaluation',              
+                         fnd_true_,    fnd_true_,  fnd_true_,  fnd_true_,
+                         fnd_true_,    fnd_false_, NULL,       fnd_true_,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('I',   'Supplier invoice, entry',           
+                         fnd_true_,    fnd_false_, fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         fnd_true_,    NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_false_, fnd_false_);
+   New_Function_Group___('J',   'Supp. Inv, fin.post',               
+                         fnd_true_,    fnd_false_, fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         fnd_true_,    NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_false_, fnd_false_);
+   New_Function_Group___('K',   'Corrections',                       
+                         fnd_true_,    fnd_false_, fnd_false_, fnd_true_,
+                         fnd_true_,    fnd_false_, fnd_true_,  fnd_true_,
+                         NULL,         fnd_true_,  fnd_true_,  fnd_true_, 
+                         fnd_true_, fnd_true_, fnd_true_);
+   -- Note for function group K. proj_conn = TRUE (but only when party_type is not CUSTOMER or SUPPLIER)
+   New_Function_Group___('L',   'Stock movements',                   
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   New_Function_Group___('LA',   'Lease Periodical Accounting',
+                         fnd_true_,    fnd_true_,  fnd_true_, fnd_true_, 
+                         fnd_true_,    fnd_false_, NULL,       fnd_true_,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('LI',  'Interim Sales',                     
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('M',   'Manual vouchers',                   
+                         fnd_true_,    fnd_false_, fnd_false_, fnd_true_,
+                         fnd_false_,   fnd_true_,  fnd_true_,  fnd_true_,
+                         fnd_true_,    fnd_true_,  fnd_true_,  fnd_true_, 
+                         fnd_true_, fnd_true_, fnd_true_);
+   New_Function_Group___('MPR', 'Multi-company project reporting',   
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   New_Function_Group___('N',   'Mixed payments',                    
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_false_,   fnd_true_,  NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_false_, fnd_false_);
+   New_Function_Group___('O',   'Shop Order Operations',             
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_, 
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   New_Function_Group___('P',   'Project trans.',                    
+                         fnd_true_,    fnd_true_,  fnd_true_,  fnd_true_,
+                         fnd_true_,    fnd_false_, NULL,       fnd_true_,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('PAT', 'Project Accrual Transactions',                    
+                         fnd_false_, fnd_true_, fnd_true_, fnd_true_,
+                         fnd_true_, fnd_false_, fnd_false_, fnd_false_,
+                         fnd_false_, fnd_false_, fnd_false_, fnd_false_, 
+                         fnd_true_, fnd_false_, fnd_false_);
+   New_Function_Group___('PPC', 'Periodical Project Capitalization', 
+                         fnd_true_,    fnd_true_,  fnd_true_,  fnd_true_,
+                         fnd_true_,    fnd_false_, NULL,       fnd_true_,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('Q',   'Opening balances',                  
+                         fnd_true_,    fnd_false_, fnd_false_, fnd_true_,
+                         fnd_true_,    fnd_false_, fnd_true_,  fnd_true_,
+                         NULL,         fnd_true_,  fnd_true_,  fnd_true_, 
+                         fnd_true_, fnd_true_, fnd_true_);
+   New_Function_Group___('R',   'Interim vouchers',                  
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, fnd_true_,  fnd_true_,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('RT',  'Rental Transactions',               
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('S',   'Employee Payment',                  
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('SCV', 'Sub Contract Valuation',            
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('T',   'Time trans.',                       
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('TC',  'Tax Clearance',
+                         fnd_true_,    fnd_true_,  fnd_true_,  fnd_true_,
+                         fnd_true_,    fnd_false_, fnd_false_, fnd_false_,
+                         fnd_false_,   fnd_false_, fnd_false_, fnd_false_,
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('TE',  'Maintenance Manual Expense',        
+                         fnd_false_,   fnd_false_, fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   New_Function_Group___('TF',  'Tool/ Equipment',              
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   New_Function_Group___('TI',  'Time Reporting Indirect Labor',     
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('TP',  'Maintenance Manual Purchase',       
+                         fnd_false_,   fnd_false_, fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   New_Function_Group___('TR',  'Work Task Reposting Transactions',       
+                         fnd_false_,   fnd_false_, fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   New_Function_Group___('U',   'Payments',                          
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_false_,   fnd_true_,  NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('V',   'Time Transactions Work Order',      
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   New_Function_Group___('W',   'Wage trans.',                       
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+   -- Note for function group W. If polish payroll is used the parallel currency should be handled on that side but if another system is used then FALSE
+   New_Function_Group___('X',   'Period allocation',                 
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       fnd_true_,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('Y',   'Project Work in Progress',          
+                         fnd_false_,   fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('YE',  'Year End Accounting',               
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       fnd_true_,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('Z',   'Periodical Cost Allocation',        
+                         fnd_true_,    fnd_true_,  fnd_true_,  fnd_true_,
+                         fnd_true_,    fnd_false_, NULL,       fnd_true_,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_false_, fnd_false_, fnd_false_);
+   New_Function_Group___('0',   'Purch Non Inventory',               
+                         fnd_true_,    fnd_true_,  fnd_false_, fnd_false_,
+                         fnd_true_,    fnd_false_, NULL,       NULL,
+                         NULL,         NULL,       NULL,       NULL, 
+                         fnd_true_, fnd_true_, fnd_false_);
+END;
+/
+COMMIT;
+

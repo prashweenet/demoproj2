@@ -1,0 +1,2192 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     TaxLinesCommonAssistant
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  180904  MaRalk  FIUXX-7198, Created.
+-----------------------------------------------------------------------------
+layer Core;
+
+@ApproveGlobalVariable
+source_line_objkey_global_  VARCHAR2(50);
+@ApproveGlobalVariable
+tax_item_objkey_global_     VARCHAR2(50);
+@ApproveGlobalVariable
+tax_code_global_            VARCHAR2(20); 
+@ApproveGlobalVariable
+is_transferred_global_      VARCHAR2(5); 
+@ApproveGlobalVariable
+is_modified_global_         VARCHAR2(5); 
+@ApproveGlobalVariable
+is_removed_global_          VARCHAR2(5); 
+
+@Override
+PROCEDURE CRUD_Create___(
+   rec_ IN Source_Line_Virtual_Rec )
+IS 
+   source_line_rec_              Source_Line_Virtual_Rec;
+   field_visibility_rec_         Tax_Handling_Util_API.tax_assis_field_visibility_rec;  
+   label_rec_                    Tax_Handling_Util_API.tax_assistant_label_rec; 
+   source_info_rec_              Tax_Handling_Util_API.source_info_rec;
+   default_info_rec_             Tax_Handling_Util_API.default_info_structure_rec;
+BEGIN      
+   source_line_rec_ := rec_;
+   
+   source_info_rec_ := Source_Info___(rec_.key_ref, rec_.source_objkey, rec_.package_name);
+   default_info_rec_ := Default_Info___(source_info_rec_, rec_.package_name); 
+   
+   source_line_rec_.company := source_info_rec_.company;
+   source_line_rec_.source_ref_type_db := source_info_rec_.source_ref_type_db;
+   source_line_rec_.source_ref1 := source_info_rec_.source_ref1;
+   source_line_rec_.source_ref2 := source_info_rec_.source_ref2;
+   source_line_rec_.source_ref3 := source_info_rec_.source_ref3;
+   source_line_rec_.source_ref4 := source_info_rec_.source_ref4;
+   source_line_rec_.source_ref5 := source_info_rec_.source_ref5;
+   source_line_rec_.source_objversion := source_info_rec_.source_objversion;
+   source_line_rec_.source_objkey := source_info_rec_.source_objkey;
+   source_line_rec_.party_type_db := source_info_rec_.party_type_db;
+   source_line_rec_.identity := source_info_rec_.identity;
+   source_line_rec_.transaction_date := source_info_rec_.transaction_date;
+   source_line_rec_.transaction_currency := source_info_rec_.transaction_currency;
+   source_line_rec_.delivery_address_id := source_info_rec_.delivery_address_id;
+   source_line_rec_.advance_invoice := source_info_rec_.advance_invoice;
+   source_line_rec_.tax_validation_type := source_info_rec_.tax_validation_type;
+   source_line_rec_.taxable := source_info_rec_.taxable;
+   source_line_rec_.liability_type := source_info_rec_.liability_type;
+   source_line_rec_.tax_calc_structure_id := source_info_rec_.tax_calc_structure_id;
+   source_line_rec_.curr_rate := source_info_rec_.curr_rate;
+   source_line_rec_.tax_curr_rate := source_info_rec_.tax_curr_rate;
+   source_line_rec_.parallel_curr_rate := source_info_rec_.parallel_curr_rate;
+   source_line_rec_.div_factor := source_info_rec_.div_factor;
+   source_line_rec_.parallel_div_factor := source_info_rec_.parallel_div_factor;
+   source_line_rec_.gross_curr_amount := source_info_rec_.gross_curr_amount;
+   source_line_rec_.net_curr_amount := source_info_rec_.net_curr_amount;
+   source_line_rec_.tax_curr_amount := source_info_rec_.tax_curr_amount;
+   source_line_rec_.non_ded_tax_curr_amount := source_info_rec_.non_ded_tax_curr_amount;
+   source_line_rec_.total_tax_curr_amount := source_info_rec_.total_tax_curr_amount;
+   source_line_rec_.deductible_factor := default_info_rec_.deductible_factor;
+   source_line_rec_.tax_rounding_method := default_info_rec_.tax_rounding_method;
+   source_line_rec_.currency_rounding := default_info_rec_.currency_rounding;
+            
+   -- Setting field visible flags
+   Tax_Handling_Util_API.Field_Visible_Tax_Line_Assis(field_visibility_rec_,
+                                                      source_line_rec_.package_name,
+                                                      source_line_rec_.tax_calc_structure_id);  
+   
+   source_line_rec_.tax_dom_amount_visible := Get_Boolean___(field_visibility_rec_.tax_dom_amount_visible);
+   source_line_rec_.tax_parallel_amount_visible := Get_Boolean___(field_visibility_rec_.tax_parallel_amount_visible);
+   source_line_rec_.tax_base_curr_amount_visible := Get_Boolean___(field_visibility_rec_.tax_base_curr_amount_visible);
+   source_line_rec_.tax_base_dom_amount_visible := Get_Boolean___(field_visibility_rec_.tax_base_dom_amount_visible);
+   source_line_rec_.tax_base_parallel_amt_visible := Get_Boolean___(field_visibility_rec_.tax_base_parallel_amt_visible);
+   source_line_rec_.non_ded_tax_curr_amt_visible := Get_Boolean___(field_visibility_rec_.non_ded_tax_curr_amt_visible);
+   source_line_rec_.non_ded_tax_dom_amount_visible := Get_Boolean___(field_visibility_rec_.non_ded_tax_dom_amount_visible);
+   source_line_rec_.non_ded_tax_paral_amt_visible := Get_Boolean___(field_visibility_rec_.non_ded_tax_paral_amt_visible);
+   source_line_rec_.total_tax_curr_amount_visible := Get_Boolean___(field_visibility_rec_.total_tax_curr_amount_visible);
+   source_line_rec_.total_tax_dom_amount_visible := Get_Boolean___(field_visibility_rec_.total_tax_dom_amount_visible);
+   source_line_rec_.total_tax_parallel_amt_visible := Get_Boolean___(field_visibility_rec_.total_tax_parallel_amt_visible);
+   source_line_rec_.deductible_percentage_visible := Get_Boolean___(field_visibility_rec_.deductible_percentage_visible);
+   source_line_rec_.transferred_visible := Get_Boolean___(field_visibility_rec_.transferred_visible);
+   source_line_rec_.sum_non_ded_curr_amt_visible := Get_Boolean___(field_visibility_rec_.sum_non_ded_curr_amt_visible);
+   source_line_rec_.sum_tot_tax_curr_amt_visible := Get_Boolean___(field_visibility_rec_.sum_tot_tax_curr_amt_visible);   
+   
+   -- Setting labels for the list and the amounts group
+   Tax_Handling_Util_API.Set_Tax_Line_Assis_Colm_Labels(label_rec_, source_line_rec_.package_name);   
+   
+   source_line_rec_.tax_lines_label := label_rec_.tax_lines_label;
+   
+   source_line_rec_.list_tax_percentage_label := label_rec_.list_tax_percentage_label;          
+   source_line_rec_.list_ded_percentage_label := label_rec_.list_ded_percentage_label;            
+   source_line_rec_.list_tax_amount_label := label_rec_.list_tax_amount_label;                
+   source_line_rec_.list_tax_dom_amount_label := label_rec_.list_tax_dom_amount_label;            
+   source_line_rec_.list_tax_parallel_amt_label := label_rec_.list_tax_parallel_amt_label;        
+   source_line_rec_.list_tax_base_curr_amt_label := label_rec_.list_tax_base_curr_amt_label;         
+   source_line_rec_.list_tax_base_dom_amount_label := label_rec_.list_tax_base_dom_amount_label;      
+   source_line_rec_.list_tax_base_para_amt_label := label_rec_.list_tax_base_para_amt_label;         
+   source_line_rec_.list_non_ded_tax_amt_label := label_rec_.list_non_ded_tax_amt_label;           
+   source_line_rec_.list_non_ded_tax_dom_amt_lbl := label_rec_.list_non_ded_tax_dom_amt_lbl;         
+   source_line_rec_.list_non_ded_tax_para_amt_lbl := label_rec_.list_non_ded_tax_para_amt_lbl;        
+   source_line_rec_.list_total_tax_curr_amt_label := label_rec_.list_total_tax_curr_amt_label;       
+   source_line_rec_.list_total_tax_dom_amt_label := label_rec_.list_total_tax_dom_amt_label;         
+   source_line_rec_.list_total_tax_para_amount_label := label_rec_.list_total_tax_para_amount_label; 
+   
+   source_line_rec_.group_gross_curr_amount_label := label_rec_.group_gross_curr_amount_label;         
+   source_line_rec_.group_net_curr_amount_label := label_rec_.group_net_curr_amount_label;          
+   source_line_rec_.group_vat_curr_amount_label := label_rec_.group_vat_curr_amount_label;          
+   source_line_rec_.group_non_ded_curr_amt_label := label_rec_.group_non_ded_curr_amt_label;        
+   source_line_rec_.group_total_tax_curr_amt_lbl := label_rec_.group_total_tax_curr_amt_lbl;         
+   source_line_rec_.group_cost_curr_amount_label := label_rec_.group_cost_curr_amount_label;  
+
+   Super(source_line_rec_);   
+   Populate_Tax_Lines___(source_line_rec_);
+END CRUD_Create___;
+
+
+@Override
+PROCEDURE CRUD_Create___(
+   rec_ IN Source_Tax_Item_Virtual_Rec )
+IS
+   parent_key_rec_                Source_Line_Virtual_Key;
+   parent_rec_                    Source_Line_Virtual_Rec;      
+   new_source_tax_item_rec_       Source_Tax_Item_Virtual_Rec;
+BEGIN   
+   parent_key_rec_.objkey := rec_.parent_objkey;
+   parent_rec_ := Get_Record___(parent_key_rec_);
+   
+   new_source_tax_item_rec_:= rec_;
+   
+   new_source_tax_item_rec_.transaction_company := Get_Transaction_Company___(parent_rec_);
+   new_source_tax_item_rec_.source_ref_type_db := parent_rec_.source_ref_type_db;
+   new_source_tax_item_rec_.source_ref1 := parent_rec_.source_ref1;
+   new_source_tax_item_rec_.source_ref2 := parent_rec_.source_ref2;
+   new_source_tax_item_rec_.source_ref3 := parent_rec_.source_ref3;
+   new_source_tax_item_rec_.source_ref4 := parent_rec_.source_ref4;
+   new_source_tax_item_rec_.source_ref5 := parent_rec_.source_ref5;
+   IF (new_source_tax_item_rec_.tax_item_id IS NULL) THEN
+      new_source_tax_item_rec_.tax_item_id := Get_Max_Tax_Item_Id___(rec_.parent_objkey) + 1;
+   END IF;                                                                             
+   
+   -- Setting field editable flags in the record  
+   Handle_Field_Editing___ (new_source_tax_item_rec_,
+                            parent_rec_);
+   
+   super(new_source_tax_item_rec_);
+   source_line_objkey_global_ := parent_rec_.objkey; 
+   tax_item_objkey_global_ := new_source_tax_item_rec_.objkey; 
+   tax_code_global_ := new_source_tax_item_rec_.tax_code;   
+   is_modified_global_ := Fnd_Boolean_API.DB_FALSE;
+   is_removed_global_ := Fnd_Boolean_API.DB_FALSE;
+   IF (new_source_tax_item_rec_.transferred) THEN
+      is_transferred_global_ := Fnd_Boolean_API.DB_TRUE;
+   ELSE
+      is_transferred_global_ := Fnd_Boolean_API.DB_FALSE;
+   END IF;
+END CRUD_Create___;
+
+
+@Override
+PROCEDURE CRUD_Update___(
+   old_ IN Source_Tax_Item_Virtual_Rec,
+   new_ IN Source_Tax_Item_Virtual_Rec )
+IS 
+   tax_info_rec_                 Tax_Info_Structure_Rec; 
+   parent_key_rec_               Source_Line_Virtual_Key;
+   parent_rec_                   Source_Line_Virtual_Rec;
+   modify_source_tax_item_rec_   Source_Tax_Item_Virtual_Rec;   
+   tax_base_curr_changed_count_  NUMBER;
+   
+   CURSOR tax_base_amount_changed(parent_objkey_ VARCHAR2) IS
+      SELECT COUNT(*)
+      FROM   ${PROJECTION}_source_tax_item_virtual_vrt   
+      WHERE  parent_objkey = parent_objkey_
+      AND    tax_base_curr_amount_modified IS NOT NULL;
+BEGIN   
+   parent_key_rec_.objkey := new_.parent_objkey;
+   parent_rec_ := Get_Record___(parent_key_rec_); 
+   modify_source_tax_item_rec_ := new_;   
+   IF (old_.tax_code != NVL(new_.tax_code, ' ')) THEN
+      IF (parent_rec_.tax_calc_structure_id IS NOT NULL) THEN        
+         Statutory_Fee_API.Validate_Tax_Code(parent_rec_.company, new_.tax_code, parent_rec_.transaction_date);
+         Tax_Handling_Util_API.Validate_Tax_In_Structure(parent_rec_.company, new_.tax_code, parent_rec_.transaction_date);
+         -- Setting tx_calc_str_id_for_tax_cod_chg(tax calc structure id for tax code change) column in the parent virtual table 
+         -- to the corresponding tax_calc_structure_item_id in the source tax item virtual table where tax code was modified. 
+         OPEN tax_base_amount_changed(parent_rec_.objkey);
+         FETCH tax_base_amount_changed INTO tax_base_curr_changed_count_;
+         CLOSE tax_base_amount_changed;
+      
+      IF (tax_base_curr_changed_count_ > 0) THEN
+            UPDATE ${PROJECTION}_source_line_virtual_vrt
+            SET    tx_calc_str_id_for_tax_cod_chg = new_.tax_calc_structure_item_id
+            WHERE  objkey = new_.parent_objkey; 
+         END IF;
+      END IF;
+   -- Following logic should run only when Tax Amount is changed by the user
+   ELSIF(new_.tax_curr_amount_changed = 'TRUE') THEN 
+      tax_info_rec_ := Calc_For_Tax_Curr_Amt_Valid___(parent_rec_, new_);     
+   ELSIF (new_.non_ded_tax_curr_amt_changed = 'TRUE') THEN  
+      tax_info_rec_ := Calc_For_Non_Ded_Curr_Valid___(parent_rec_, new_);  
+   ELSIF (new_.total_tax_curr_amount_changed = 'TRUE') THEN 
+      tax_info_rec_ := Calc_For_Total_Curr_Valid___(parent_rec_, new_); 
+   ELSIF (new_.tax_base_curr_amount_changed = 'TRUE') THEN 
+      tax_info_rec_ := Calc_For_Tax_Base_Amt_Valid___(parent_rec_, new_); 
+   ELSIF (new_.tax_percentage_changed = 'TRUE') THEN 
+      tax_info_rec_ := Calc_For_Percentage_Valid___(parent_rec_, new_); 
+   END IF; 
+   
+   IF ((new_.tax_curr_amount_changed = 'TRUE') OR (new_.non_ded_tax_curr_amt_changed = 'TRUE') 
+        OR (new_.total_tax_curr_amount_changed = 'TRUE') OR (new_.tax_base_curr_amount_changed = 'TRUE')
+        OR (new_.tax_percentage_changed = 'TRUE')) THEN
+      modify_source_tax_item_rec_.tax_curr_amount := tax_info_rec_.tax_curr_amount;
+      modify_source_tax_item_rec_.tax_dom_amount := tax_info_rec_.tax_dom_amount;
+      modify_source_tax_item_rec_.tax_parallel_amount := tax_info_rec_.tax_parallel_amount;  
+      modify_source_tax_item_rec_.tax_base_curr_amount := tax_info_rec_.tax_base_curr_amount;   
+      modify_source_tax_item_rec_.tax_base_dom_amount := tax_info_rec_.tax_base_dom_amount;       
+      modify_source_tax_item_rec_.tax_base_parallel_amount := tax_info_rec_.tax_base_parallel_amount;  
+      modify_source_tax_item_rec_.non_ded_tax_curr_amount := tax_info_rec_.non_ded_tax_curr_amount;
+      modify_source_tax_item_rec_.non_ded_tax_dom_amount := tax_info_rec_.non_ded_tax_dom_amount;       
+      modify_source_tax_item_rec_.non_ded_tax_parallel_amount := tax_info_rec_.non_ded_tax_parallel_amount;  
+      modify_source_tax_item_rec_.total_tax_curr_amount := tax_info_rec_.total_tax_curr_amount;
+      modify_source_tax_item_rec_.total_tax_dom_amount := tax_info_rec_.total_tax_dom_amount;      
+      modify_source_tax_item_rec_.total_tax_parallel_amount := tax_info_rec_.total_tax_parallel_amount; 
+   END IF; 
+   
+   -- When tax line is structure connected need to identify the records where tax base amount is modified.
+   -- This information is used inside Fetch_Saved_Tax_Codes___ method when recalculating the amounts upon tax code change.
+   IF (parent_rec_.tax_calc_structure_id IS NOT NULL AND new_.tax_base_curr_amount_changed = 'TRUE') THEN
+      modify_source_tax_item_rec_.tax_base_curr_amount_modified := modify_source_tax_item_rec_.tax_base_curr_amount;
+   END IF;
+   -- Setting field editable flags in the record  
+   Handle_Field_Editing___ (modify_source_tax_item_rec_, 
+                            parent_rec_);
+   
+   super(old_, modify_source_tax_item_rec_);
+   source_line_objkey_global_ := parent_rec_.objkey;  
+   tax_item_objkey_global_ := modify_source_tax_item_rec_.objkey;
+   tax_code_global_ := modify_source_tax_item_rec_.tax_code;    
+   is_modified_global_ := Fnd_Boolean_API.DB_TRUE;
+   is_removed_global_ := Fnd_Boolean_API.DB_FALSE;
+   IF (modify_source_tax_item_rec_.transferred) THEN
+      is_transferred_global_ := Fnd_Boolean_API.DB_TRUE;
+   ELSE
+      is_transferred_global_ := Fnd_Boolean_API.DB_FALSE;
+   END IF;
+END CRUD_Update___;
+
+
+@Override
+PROCEDURE CRUD_Delete___(
+   rec_ IN Source_Tax_Item_Virtual_Rec )
+IS 
+   parent_key_rec_      Source_Line_Virtual_Key;
+   parent_rec_          Source_Line_Virtual_Rec; 
+BEGIN   
+   parent_key_rec_.objkey := rec_.parent_objkey;
+   parent_rec_ := Get_Record___(parent_key_rec_); 
+   source_line_objkey_global_ := parent_rec_.objkey;
+   tax_item_objkey_global_ := rec_.objkey;
+   tax_code_global_ := rec_.tax_code;
+   is_modified_global_ := Fnd_Boolean_API.DB_FALSE;
+   is_removed_global_ := Fnd_Boolean_API.DB_TRUE;
+   IF (rec_.transferred) THEN
+      is_transferred_global_ := Fnd_Boolean_API.DB_TRUE;
+   ELSE
+      is_transferred_global_ := Fnd_Boolean_API.DB_FALSE;
+   END IF; 
+   super(rec_); 
+   IF (parent_rec_.calc_base = 'GROSS_BASE') THEN
+      Recalculate_Tax___(parent_rec_);
+   ELSIF(parent_rec_.calc_base = 'NET_BASE') THEN
+      Calculate_Total_Amounts___(parent_rec_);
+   END IF; 
+END CRUD_Delete___;
+
+
+PROCEDURE Additional_Validations___ (
+	init_ IN BOOLEAN)
+IS
+   parent_key_rec_    Source_Line_Virtual_Key;
+   parent_rec_        Source_Line_Virtual_Rec; 
+   tax_item_key_rec_  Source_Tax_Item_Virtual_Key;
+   validate_rec_      Tax_Handling_Util_API.tax_assistant_validation_rec;
+BEGIN 
+   IF (init_) THEN
+      source_line_objkey_global_ := NULL;
+      tax_item_objkey_global_ := NULL;
+      tax_code_global_ := NULL;
+      is_modified_global_ := NULL;
+      is_transferred_global_ := NULL;
+      is_removed_global_ := NULL;
+   ELSE
+      parent_key_rec_.objkey := source_line_objkey_global_;
+      parent_rec_ := Get_Record___(parent_key_rec_);      
+      validate_rec_.tax_validation_type := parent_rec_.tax_validation_type;
+      validate_rec_.tax_lines_count := Get_Tax_Lines_Count___(parent_key_rec_.objkey);
+      validate_rec_.tax_code := tax_code_global_;  
+      IF (is_transferred_global_ = Fnd_Boolean_API.DB_TRUE) THEN
+         validate_rec_.is_transferred := Fnd_Boolean_API.DB_TRUE;
+      END IF;
+      IF (is_modified_global_ = Fnd_Boolean_API.DB_TRUE) THEN
+         validate_rec_.is_modified := Fnd_Boolean_API.DB_TRUE;
+      END IF;     
+      IF (is_removed_global_ = Fnd_Boolean_API.DB_TRUE) THEN
+         validate_rec_.is_removed := Fnd_Boolean_API.DB_TRUE;
+      END IF;
+      Tax_Handling_Util_API.Do_Additional_Validations(parent_rec_.company,
+                                                      parent_rec_.package_name,
+                                                      parent_rec_.source_ref_type_db, 
+                                                      parent_rec_.source_ref1, 
+                                                      parent_rec_.source_ref2, 
+                                                      parent_rec_.source_ref3, 
+                                                      parent_rec_.source_ref4, 
+                                                      parent_rec_.source_ref5,
+                                                      validate_rec_);
+      IF (is_removed_global_ = Fnd_Boolean_API.DB_FALSE) THEN
+         tax_item_key_rec_.objkey := tax_item_objkey_global_;
+         Post_Actions___(tax_item_key_rec_);
+      END IF;                                                
+      
+   END IF; 
+END Additional_Validations___;
+
+
+PROCEDURE Populate_Tax_Lines___ (
+   rec_ IN Source_Line_Virtual_Rec) 
+IS
+   tax_item_summary_rec_  Tax_Items_Summary_Virtual_Rec;       
+BEGIN  
+   -- Inserting data to the source tax item virtual table  
+   -- source_objkey is NULL when the assistant is opend from a page
+   IF (rec_.source_objkey IS NULL) THEN 
+      Create_Tax_Items___(rec_);
+   -- when the assistant is open from another assistant source information could be sent via a message.
+   ELSE  
+      Create_Tax_Items_From_Msg___(rec_, Get_Tax_Message_For_Tax_Line_Assistant___(rec_));
+   END IF;
+   -- Inserting data to the tax items summary virtual table 
+   tax_item_summary_rec_.gross_curr_amount      := rec_.gross_curr_amount;
+   tax_item_summary_rec_.net_curr_amount        := rec_.net_curr_amount;
+   tax_item_summary_rec_.vat_curr_amount        := rec_.tax_curr_amount;
+   tax_item_summary_rec_.non_ded_curr_amount    := rec_.non_ded_tax_curr_amount;
+   tax_item_summary_rec_.total_tax_curr_amount  := rec_.total_tax_curr_amount;                                                          
+   tax_item_summary_rec_.objkey                 := sys_guid();
+   tax_item_summary_rec_.parent_objkey          := rec_.objkey; 
+
+   CRUD_Create___(tax_item_summary_rec_);
+END Populate_Tax_Lines___;
+
+
+FUNCTION Source_Info___(
+   key_ref_                IN VARCHAR2,
+   source_objkey_          IN VARCHAR2,
+   package_name_           IN VARCHAR2)  RETURN Tax_Handling_Util_API.source_info_rec 
+IS
+  source_info_rec_       Tax_Handling_Util_API.source_info_rec;
+  attr_                  VARCHAR2(32000);
+BEGIN      
+   -- create attribute string from keyref
+   attr_ := Source_Info_Attr___(key_ref_);
+   -- Handle when the assistant is opened from another assistant
+   IF (source_objkey_ IS NOT NULL) THEN
+      source_info_rec_ := Get_Tax_Info_For_Tax_Line_Assistant___(attr_, source_objkey_);
+   -- Handle when the assistant is opened from a page
+   ELSE
+      source_info_rec_ := Tax_Handling_Util_API.Fetch_For_Tax_Line_Assistant(package_name_, attr_);
+   END IF;   
+   IF (source_info_rec_.transaction_date IS NULL) THEN 
+      source_info_rec_.transaction_date := sysdate;  
+   END IF;  
+   RETURN source_info_rec_;
+END Source_Info___;
+
+
+-- Source_Info_Attr___
+--   Function that replace the selection separators with Client_SYS separators
+FUNCTION Source_Info_Attr___ (
+   selection_ VARCHAR2 ) RETURN VARCHAR2
+IS
+   attr_        VARCHAR2(32000);
+BEGIN      
+   attr_ := REPLACE(selection_, '=', Client_SYS.field_separator_);
+   attr_ := REPLACE(attr_, Client_SYS.text_separator_, Client_SYS.record_separator_); 
+   RETURN attr_;
+END Source_Info_Attr___; 
+
+
+FUNCTION Default_Info___(
+   source_info_rec_        IN Tax_Handling_Util_API.source_info_rec, 
+   package_name_           IN VARCHAR2) RETURN Tax_Handling_Util_API.default_info_structure_rec
+IS
+   default_info_rec_       Tax_Handling_Util_API.default_info_structure_rec; 
+BEGIN
+   default_info_rec_.deductible_factor := Get_Deductible_Factor___(source_info_rec_.party_type_db, package_name_);  
+   default_info_rec_.tax_rounding_method := Tax_Handling_Util_API.Get_Tax_Rounding_Method_Db(source_info_rec_.company, source_info_rec_.identity, source_info_rec_.party_type_db, source_info_rec_.delivery_address_id);
+   default_info_rec_.currency_rounding := Currency_Code_API.Get_Currency_Rounding(source_info_rec_.company, source_info_rec_.transaction_currency);  
+   RETURN default_info_rec_;
+END Default_Info___;
+
+
+FUNCTION Set_Tax_Code_Lov___( 
+   company_               IN VARCHAR2,   
+   taxable_               IN VARCHAR2,
+   liability_type_        IN VARCHAR2,
+   tax_calc_structure_id_ IN VARCHAR2,
+   party_type_            IN VARCHAR2,
+   transaction_date_      IN DATE,
+   package_name_          IN VARCHAR2,
+   source_ref4_           IN VARCHAR2)  RETURN Objid_Arr
+IS
+   base_collection_ Objid_Arr := Objid_Arr();
+   base_collection_transferred_ Objid_Arr := Objid_Arr();
+   overriden_base_collection_ Tax_Handling_Util_API.Objid_Arr := Tax_Handling_Util_API.Objid_Arr();  
+      
+   CURSOR tax_codes_restricted IS
+      SELECT *
+      FROM tax_code_restricted
+      WHERE company  = company_
+      AND (valid_from <= transaction_date_ AND
+           valid_until >= transaction_date_); 
+           
+   CURSOR tax_code_tax_calc_structure IS
+      SELECT *
+      FROM tax_code_tax_calc_structure
+      WHERE company  = company_
+      AND (valid_from <= transaction_date_ AND
+           valid_until >= transaction_date_); 
+      
+   CURSOR tax_code_exempt_restricted IS
+      SELECT *
+      FROM tax_code_exempt_restricted
+      WHERE company  = company_
+      AND (valid_from <= transaction_date_ AND
+           valid_until >= transaction_date_); 
+      
+   CURSOR tax_code_common IS
+      SELECT *
+      FROM tax_code_common
+      WHERE company  = company_
+      AND (valid_from <= transaction_date_ AND
+           valid_until >= transaction_date_); 
+BEGIN   
+   IF (package_name_ IN ('MIXED_PAYMENT_MAN_POSTING_API')) THEN
+      overriden_base_collection_ := Tax_Handling_Util_API.Set_Tax_Cd_Lov_For_Tax_Ln_Asis(company_ ,   
+                                                                                         taxable_,
+                                                                                         liability_type_,
+                                                                                         tax_calc_structure_id_,
+                                                                                         party_type_,
+                                                                                         transaction_date_,
+                                                                                         package_name_,
+                                                                                         source_ref4_);
+      -- Filling the array of type Objid_Arr with data retrieved from array of type Tax_Handling_Util_API.Objid_Arr.
+      FOR i IN 1 .. overriden_base_collection_.COUNT LOOP         
+         base_collection_transferred_.extend;
+         base_collection_transferred_(base_collection_transferred_.last) := overriden_base_collection_(base_collection_transferred_.last);         
+      END LOOP;  
+      base_collection_ := base_collection_transferred_;      
+   ELSE      
+      IF (((taxable_ = 'TRUE') AND (liability_type_ = 'TAX') AND (tax_calc_structure_id_ IS NULL)) OR 
+         ((taxable_ IS NULL) AND (liability_type_ = 'TAX') AND (tax_calc_structure_id_ IS NULL)) OR
+         ((taxable_ IS NULL) AND (liability_type_ IS NULL) AND (tax_calc_structure_id_ IS NULL) AND (party_type_ != 'SUPPLIER'))) THEN
+         FOR rec_ IN tax_codes_restricted LOOP
+            base_collection_.extend;
+            base_collection_(base_collection_.last) := rec_.objid;
+         END LOOP;
+      ELSIF (((taxable_ = 'TRUE') AND (liability_type_ = 'TAX') AND (tax_calc_structure_id_ IS NOT NULL)) OR
+            ((taxable_ IS NULL) AND (liability_type_ = 'TAX') AND (tax_calc_structure_id_ IS NOT NULL)) OR 
+            ((taxable_ IS NULL) AND (liability_type_ IS NULL) AND (tax_calc_structure_id_ IS NOT NULL))) THEN   
+         FOR rec_ IN tax_code_tax_calc_structure LOOP
+            base_collection_.extend;
+            base_collection_(base_collection_.last) := rec_.objid;
+         END LOOP;
+      ELSIF (((taxable_ IS NOT NULL) AND NOT((taxable_ = 'TRUE') AND (liability_type_ IS NOT NULL) AND (liability_type_ = 'TAX'))) OR
+             ((taxable_ IS NULL) AND (liability_type_ IS NOT NULL) AND (liability_type_ != 'TAX'))) THEN
+         FOR rec_ IN tax_code_exempt_restricted LOOP
+            base_collection_.extend;
+            base_collection_(base_collection_.last) := rec_.objid;
+         END LOOP;
+      ELSIF (((taxable_ IS NULL) AND (liability_type_ IS NULL) AND (tax_calc_structure_id_ IS NULL) AND (party_type_ = 'SUPPLIER'))) THEN 
+         FOR rec_ IN tax_code_common LOOP
+            base_collection_.extend;
+            base_collection_(base_collection_.last) := rec_.objid;
+         END LOOP;   
+      END IF;
+   END IF; 
+   RETURN base_collection_;   
+END Set_Tax_Code_Lov___;
+
+
+-- Get_Only_Use_Tax___
+--  This method loop through the existing tax lines along with
+--  new/edit tax code and return whether specific invoice line
+--  contains only 'Use Tax' tax lines or not.
+FUNCTION Get_Only_Use_Tax___ (
+   parent_rec_           IN Source_Line_Virtual_Rec, 
+   current_tax_type_db_  IN VARCHAR2,
+   recalculate_          IN VARCHAR2,
+   update_rec_objkey_    IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   parent_key_rec_  Source_Line_Virtual_Key;   
+   only_use_tax_    VARCHAR2(5) := Fnd_Boolean_API.DB_TRUE;
+BEGIN
+   parent_key_rec_.objkey := parent_rec_.objkey;   
+      
+   FOR rec_ IN Get_Tax_Items___(parent_key_rec_) LOOP
+      -- Ignoring the record in the virtual table which corresponds to the record going to update 
+      IF (rec_.objkey != NVL(update_rec_objkey_, 0)) THEN
+         IF (rec_.tax_type != Fee_Type_API.DB_USE_TAX) THEN
+            only_use_tax_ := Fnd_Boolean_API.DB_FALSE;
+            EXIT;
+         END IF;
+      END IF;
+   END LOOP;
+   IF (recalculate_ = Fnd_Boolean_API.DB_FALSE) THEN
+      IF ((only_use_tax_ = Fnd_Boolean_API.DB_TRUE) AND (current_tax_type_db_ != Fee_Type_API.DB_USE_TAX)) THEN
+         only_use_tax_ := Fnd_Boolean_API.DB_FALSE;
+      END IF;
+   END IF;
+   RETURN only_use_tax_;
+END Get_Only_Use_Tax___;
+
+   
+FUNCTION Set_Tax_Calc_Base_Info___(
+   parent_rec_                IN Source_Line_Virtual_Rec, 
+   current_tax_percentage_    IN NUMBER,
+   current_tax_type_db_       IN VARCHAR2,    
+   recalculate_               IN VARCHAR2,
+   update_rec_objkey_         IN VARCHAR2) RETURN Tax_Handling_Util_API.tax_calc_base_info_struct_rec
+IS    
+   rec_          Tax_Handling_Util_API.tax_calc_base_info_struct_rec;
+   only_use_tax_ VARCHAR2(5);
+BEGIN
+   rec_.calc_base := parent_rec_.calc_base;
+   IF(parent_rec_.calc_base = 'GROSS_BASE') THEN        
+      rec_.tax_calc_base_percent := Get_Total_Tax_Percentage___(parent_rec_, current_tax_percentage_, current_tax_type_db_, recalculate_, update_rec_objkey_);
+      rec_.tax_calc_base_amount := ((parent_rec_.gross_curr_amount * rec_.tax_calc_base_percent) / (100 + rec_.tax_calc_base_percent));
+      only_use_tax_ := Get_Only_Use_Tax___(parent_rec_, current_tax_type_db_, recalculate_, update_rec_objkey_);
+      IF (only_use_tax_ = Fnd_Boolean_API.DB_TRUE) THEN      
+         rec_.use_tax_calc_base_amount := parent_rec_.gross_curr_amount;
+      ELSE     
+         rec_.use_tax_calc_base_amount := parent_rec_.gross_curr_amount - rec_.tax_calc_base_amount;
+      END IF;        
+   ELSIF(parent_rec_.calc_base = 'NET_BASE') THEN 
+        rec_.tax_calc_base_percent := 100;
+        rec_.tax_calc_base_amount := parent_rec_.net_curr_amount;
+        rec_.use_tax_calc_base_amount := parent_rec_.net_curr_amount;        
+   END IF;  
+   RETURN rec_;  
+END Set_Tax_Calc_Base_Info___;
+
+
+-- Get_Total_Tax_Percentage___
+--  This method loop through the existing tax lines along with
+--  new/edit tax code and return the total of tax percentages.
+FUNCTION Get_Total_Tax_Percentage___(
+   parent_rec_                IN Source_Line_Virtual_Rec,
+   current_tax_percentage_    IN NUMBER,
+   current_tax_type_db_       IN VARCHAR2,
+   recalculate_               IN VARCHAR2,
+   update_rec_objkey_         IN VARCHAR2) RETURN NUMBER
+IS
+   parent_key_rec_       Source_Line_Virtual_Key;   
+   total_tax_percentage_ NUMBER := 0;
+BEGIN
+   parent_key_rec_.objkey := parent_rec_.objkey;   
+   FOR rec_ IN Get_Tax_Items___(parent_key_rec_) LOOP      
+      -- Ignoring the record in the virtual table which corresponds to the record going to update 
+      IF (rec_.objkey != NVL(update_rec_objkey_, 0)) THEN
+         IF (rec_.tax_type = Fee_Type_API.DB_TAX) THEN
+            total_tax_percentage_ := total_tax_percentage_ + rec_.tax_percentage;
+         END IF;
+      END IF;       
+   END LOOP; 
+   IF (recalculate_ = Fnd_Boolean_API.DB_FALSE) THEN      
+      IF (current_tax_type_db_ = Fee_Type_API.DB_TAX) THEN
+         total_tax_percentage_ := total_tax_percentage_ + current_tax_percentage_; 
+      END IF;
+   END IF;
+   RETURN total_tax_percentage_;   
+END Get_Total_Tax_Percentage___;
+
+
+FUNCTION Get_Tax_Lines_Count___ (
+   parent_objkey_   IN VARCHAR2) RETURN NUMBER
+IS  
+   tax_lines_count_ NUMBER;    
+   CURSOR count_tax_items IS
+      SELECT COUNT(*) 
+      FROM ${PROJECTION}_source_tax_item_virtual_vrt  
+      WHERE parent_objkey = parent_objkey_;     
+BEGIN
+   OPEN  count_tax_items;
+   FETCH count_tax_items INTO tax_lines_count_;
+   CLOSE count_tax_items;
+   RETURN tax_lines_count_;
+END Get_Tax_Lines_Count___;  
+
+
+FUNCTION Calculate_Tax_Dom_Amount___(  
+   parent_rec_                IN Source_Line_Virtual_Rec,  
+   current_tax_code_          IN VARCHAR2,
+   current_tax_percentage_    IN NUMBER,
+   total_tax_curr_amount_     IN NUMBER,
+   tax_curr_amount_           IN NUMBER,
+   tax_base_curr_amount_      IN NUMBER,
+   use_specific_rate_         IN VARCHAR2,
+   curr_rate_                 IN NUMBER) RETURN Tax_Handling_Util_API.tax_dom_amount_struct_rec   
+IS
+   dom_amount_rec_       Tax_Handling_Util_API.tax_dom_amount_struct_rec;
+BEGIN  
+   Tax_Handling_Util_API.Calc_Tax_Dom_Amount(dom_amount_rec_.total_tax_dom_amount,
+                                             dom_amount_rec_.tax_dom_amount,
+                                             dom_amount_rec_.non_ded_tax_dom_amount,
+                                             dom_amount_rec_.tax_base_dom_amount,
+                                             dom_amount_rec_.attr,
+                                             parent_rec_.company,
+                                             parent_rec_.transaction_currency,
+                                             use_specific_rate_,
+                                             current_tax_code_,
+                                             total_tax_curr_amount_,
+                                             tax_curr_amount_,
+                                             tax_base_curr_amount_,
+                                             current_tax_percentage_,
+                                             parent_rec_.deductible_factor,
+                                             curr_rate_,
+                                             NVL(parent_rec_.div_factor, 0));   
+   RETURN dom_amount_rec_;
+END Calculate_Tax_Dom_Amount___;
+
+
+FUNCTION Calculate_Tax_Para_Amount___(  
+   parent_rec_               IN Source_Line_Virtual_Rec,
+   total_tax_curr_amount_    IN NUMBER,
+   total_tax_dom_amount_     IN NUMBER,
+   tax_curr_amount_          IN NUMBER,
+   tax_dom_amount_           IN NUMBER,   
+   tax_base_curr_amount_     IN NUMBER,
+   tax_base_dom_amount_      IN NUMBER) RETURN Tax_Handling_Util_API.tax_para_amount_struct_rec  
+IS       
+   para_amount_rec_        Tax_Handling_Util_API.tax_para_amount_struct_rec;    
+   calculate_para_amount_  VARCHAR2(5) := Fnd_Boolean_API.DB_FALSE;
+BEGIN
+   IF ((parent_rec_.source_ref_type_db = Tax_Source_API.DB_INVOICE) OR (parent_rec_.source_ref_type_db = Tax_Source_API.DB_DIRECT_CASH_PAYMENT)) THEN
+      calculate_para_amount_ := Fnd_Boolean_API.DB_TRUE;
+   END IF;   
+   Tax_Handling_Util_API.Calc_Tax_Para_Amount(para_amount_rec_.total_tax_para_amount,
+                                              para_amount_rec_.tax_para_amount,
+                                              para_amount_rec_.non_ded_tax_para_amount,
+                                              para_amount_rec_.tax_base_para_amount,
+                                              para_amount_rec_.attr,
+                                              parent_rec_.company,
+                                              parent_rec_.transaction_currency,
+                                              calculate_para_amount_,
+                                              total_tax_curr_amount_,
+                                              total_tax_dom_amount_,
+                                              tax_curr_amount_,
+                                              tax_dom_amount_,
+                                              tax_base_curr_amount_,
+                                              tax_base_dom_amount_,
+                                              parent_rec_.parallel_curr_rate,
+                                              parent_rec_.parallel_div_factor); 
+   RETURN para_amount_rec_;
+END Calculate_Tax_Para_Amount___;
+
+
+FUNCTION Summary_Gross_Net_Amounts___(
+   calc_base_             IN VARCHAR2,
+   amount_summary_rec_    IN Tax_Handling_Util_API.tax_amount_summary_struct_rec) RETURN Tax_Handling_Util_API.tax_amount_summary_struct_rec
+IS 
+   amount_summary_rec_out_  Tax_Handling_Util_API.tax_amount_summary_struct_rec;    
+BEGIN
+   amount_summary_rec_out_ := amount_summary_rec_;
+   IF(calc_base_ = 'GROSS_BASE') THEN 
+      amount_summary_rec_out_.net_curr_amount := amount_summary_rec_.gross_curr_amount - amount_summary_rec_.total_tax_curr_amount; 
+   ELSIF(calc_base_ = 'NET_BASE') THEN 
+      amount_summary_rec_out_.gross_curr_amount := amount_summary_rec_.net_curr_amount + amount_summary_rec_.total_tax_curr_amount;  
+   END IF;
+   amount_summary_rec_out_.cost_curr_amount := amount_summary_rec_.net_curr_amount + amount_summary_rec_.non_ded_tax_curr_amount;   
+   RETURN amount_summary_rec_out_;
+END Summary_Gross_Net_Amounts___;
+
+
+-- Calc_For_Tax_Curr_Amt_Valid___
+-- Calculate for Tax Curr Amount Validation
+-- This method is used to handle calculations and validations when the Tax Curr Amount is changed. 
+-- Inside the logic two validations; Max Overwriting Level and the same sign is checked.
+-- Also it will update the virtual table for summary values.
+-- The return structure contains the new values for dom and parallel amounts corresponding to the modified line.
+FUNCTION Calc_For_Tax_Curr_Amt_Valid___ (  
+   parent_rec_                      IN Source_Line_Virtual_Rec,
+   line_rec_                        IN Source_Tax_Item_Virtual_Rec) RETURN Tax_Info_Structure_Rec   
+IS
+   parent_key_rec_                Source_Line_Virtual_Key; 
+   summary_tax_curr_amount_       NUMBER := 0;
+   summary_total_tax_curr_amount_ NUMBER := 0;
+   summary_non_ded_tax_curr_amt_  NUMBER := 0;    
+   tax_amount_summary_rec_        Tax_Handling_Util_API.tax_amount_summary_struct_rec; 
+   saved_tax_item_summary_rec_    Get_Tax_Item_Summary_Set___%ROWTYPE;
+   old_tax_item_summary_rec_      Tax_Items_Summary_Virtual_Rec;
+   old_tax_item_summay_objkey_    Tax_Items_Summary_Virtual_Key;
+   modify_tax_item_summary_rec_   Tax_Items_Summary_Virtual_Rec;
+   curr_amount_rec_               Tax_Handling_Util_API.tax_curr_amount_struct_rec;   
+   tax_info_rec_                  Tax_Info_Structure_Rec;
+   dom_amount_rec_                Tax_Handling_Util_API.tax_dom_amount_struct_rec;   
+   para_amount_rec_               Tax_Handling_Util_API.tax_para_amount_struct_rec;
+   curr_rate_rec_                 Tax_Handling_Util_API.currency_rate_struct_rec;
+   orig_tax_curr_amount_          NUMBER;
+BEGIN
+   curr_amount_rec_.tax_curr_amount := Currency_Amount_API.Round_Amount(parent_rec_.tax_rounding_method, line_rec_.tax_curr_amount, parent_rec_.currency_rounding);
+   curr_amount_rec_.total_tax_curr_amount := curr_amount_rec_.tax_curr_amount + line_rec_.non_ded_tax_curr_amount;  
+   curr_amount_rec_.non_ded_tax_curr_amount := line_rec_.non_ded_tax_curr_amount;
+   curr_amount_rec_.tax_base_curr_amount := line_rec_.tax_base_curr_amount;
+   
+   parent_key_rec_.objkey := parent_rec_.objkey;  
+   -- For the calculation consider records in the virtual table except for the newly editted one 
+   FOR tax_item_rec_ IN Get_Tax_Items___(parent_key_rec_) LOOP
+      IF (tax_item_rec_.tax_type = Fee_Type_API.DB_TAX) THEN 
+         IF (tax_item_rec_.objkey != line_rec_.objkey) THEN
+            summary_tax_curr_amount_       := summary_tax_curr_amount_ + tax_item_rec_.tax_curr_amount;
+            summary_total_tax_curr_amount_ := summary_total_tax_curr_amount_ + tax_item_rec_.total_tax_curr_amount;
+            summary_non_ded_tax_curr_amt_  := summary_non_ded_tax_curr_amt_ + tax_item_rec_.non_ded_tax_curr_amount;
+         END IF;
+      END IF;              
+   END LOOP;
+   -- Consider amounts in newly editted record
+   IF (line_rec_.tax_type = Fee_Type_API.DB_TAX) THEN 
+      summary_tax_curr_amount_       := summary_tax_curr_amount_ + curr_amount_rec_.tax_curr_amount;
+      summary_total_tax_curr_amount_ := summary_total_tax_curr_amount_ + (curr_amount_rec_.tax_curr_amount + line_rec_.non_ded_tax_curr_amount);
+      summary_non_ded_tax_curr_amt_  := summary_non_ded_tax_curr_amt_ + line_rec_.non_ded_tax_curr_amount;
+   END IF; 
+   IF(parent_rec_.calc_base = 'GROSS_BASE') THEN
+      tax_amount_summary_rec_.gross_curr_amount := parent_rec_.gross_curr_amount;
+   ELSIF(parent_rec_.calc_base = 'NET_BASE') THEN
+      tax_amount_summary_rec_.net_curr_amount := parent_rec_.net_curr_amount;
+   END IF;   
+   
+   tax_amount_summary_rec_.tax_curr_amount := summary_tax_curr_amount_;   
+   tax_amount_summary_rec_.total_tax_curr_amount := summary_total_tax_curr_amount_;
+   tax_amount_summary_rec_.non_ded_tax_curr_amount := summary_non_ded_tax_curr_amt_;
+   tax_amount_summary_rec_ := Summary_Gross_Net_Amounts___(parent_rec_.calc_base, tax_amount_summary_rec_);
+   
+   orig_tax_curr_amount_ := Check_Max_Overwrite_Level___(parent_rec_,
+                                                         line_rec_,
+                                                         tax_amount_summary_rec_.gross_curr_amount,
+                                                         tax_amount_summary_rec_.net_curr_amount); 
+   
+   IF (((tax_amount_summary_rec_.net_curr_amount > 0) AND (line_rec_.tax_curr_amount < 0 )) OR ((tax_amount_summary_rec_.net_curr_amount < 0) AND (line_rec_.tax_curr_amount > 0 ))) THEN
+      Error_SYS.Record_General(lu_name_, 'TAXAMOUNTSIGN: Net Amount and Tax Amount must have the same sign.');   
+   END IF; 
+   
+   -- Updating summary values
+   OPEN Get_Tax_Item_Summary_Set___(parent_key_rec_);
+   FETCH Get_Tax_Item_Summary_Set___ INTO saved_tax_item_summary_rec_;
+   CLOSE Get_Tax_Item_Summary_Set___;
+   
+   old_tax_item_summay_objkey_.objkey := saved_tax_item_summary_rec_.objkey;
+   old_tax_item_summary_rec_ := Get_Record___(old_tax_item_summay_objkey_); 
+   modify_tax_item_summary_rec_ := old_tax_item_summary_rec_; 
+   
+   modify_tax_item_summary_rec_.net_curr_amount := tax_amount_summary_rec_.net_curr_amount;
+   modify_tax_item_summary_rec_.gross_curr_amount := tax_amount_summary_rec_.gross_curr_amount;
+   modify_tax_item_summary_rec_.vat_curr_amount := tax_amount_summary_rec_.tax_curr_amount;
+   modify_tax_item_summary_rec_.non_ded_curr_amount := tax_amount_summary_rec_.non_ded_tax_curr_amount; 
+   modify_tax_item_summary_rec_.total_tax_curr_amount := tax_amount_summary_rec_.total_tax_curr_amount;   
+    
+   CRUD_Update___(old_tax_item_summary_rec_, modify_tax_item_summary_rec_);   
+   
+   Tax_Handling_Util_API.Get_Use_Specific_Rate(curr_rate_rec_.use_specific_rate,
+                                               curr_rate_rec_.curr_rate, 
+                                               parent_rec_.source_ref_type_db,
+                                               parent_rec_.company,
+                                               parent_rec_.party_type_db,
+                                               parent_rec_.advance_invoice,
+                                               parent_rec_.package_name,
+                                               line_rec_.tax_code,
+                                               parent_rec_.curr_rate,
+                                               parent_rec_.tax_curr_rate); 
+   
+   IF (orig_tax_curr_amount_ != line_rec_.tax_curr_amount ) THEN
+      curr_rate_rec_.use_specific_rate := Fnd_Boolean_API.DB_FALSE;
+   END IF;   
+   
+   dom_amount_rec_ := Calculate_Tax_Dom_Amount___(parent_rec_,                                                                                                    
+                                                  line_rec_.tax_code, 
+                                                  line_rec_.tax_percentage, 
+                                                  curr_amount_rec_.total_tax_curr_amount, 
+                                                  curr_amount_rec_.tax_curr_amount, 
+                                                  curr_amount_rec_.tax_base_curr_amount,
+                                                  curr_rate_rec_.use_specific_rate,
+                                                  curr_rate_rec_.curr_rate); 
+
+   para_amount_rec_ := Calculate_Tax_Para_Amount___(parent_rec_,                                                    
+                                                    curr_amount_rec_.total_tax_curr_amount,
+                                                    dom_amount_rec_.total_tax_dom_amount,                                     
+                                                    curr_amount_rec_.tax_curr_amount,
+                                                    dom_amount_rec_.tax_dom_amount,
+                                                    tax_amount_summary_rec_.net_curr_amount,
+                                                    dom_amount_rec_.tax_base_dom_amount);
+   
+   tax_info_rec_.tax_curr_amount := curr_amount_rec_.tax_curr_amount;
+   tax_info_rec_.tax_dom_amount := dom_amount_rec_.tax_dom_amount;
+   tax_info_rec_.tax_parallel_amount := para_amount_rec_.tax_para_amount;
+   tax_info_rec_.tax_base_curr_amount := curr_amount_rec_.tax_base_curr_amount;
+   tax_info_rec_.tax_base_dom_amount := dom_amount_rec_.tax_base_dom_amount;
+   tax_info_rec_.tax_base_parallel_amount := para_amount_rec_.tax_base_para_amount; 
+   tax_info_rec_.non_ded_tax_curr_amount := curr_amount_rec_.non_ded_tax_curr_amount;
+   tax_info_rec_.non_ded_tax_dom_amount := dom_amount_rec_.non_ded_tax_dom_amount;
+   tax_info_rec_.non_ded_tax_parallel_amount := para_amount_rec_.non_ded_tax_para_amount;
+   tax_info_rec_.total_tax_curr_amount := curr_amount_rec_.total_tax_curr_amount;
+   tax_info_rec_.total_tax_dom_amount := dom_amount_rec_.total_tax_dom_amount;         
+   tax_info_rec_.total_tax_parallel_amount := para_amount_rec_.total_tax_para_amount;
+   
+   RETURN tax_info_rec_;
+   
+END Calc_For_Tax_Curr_Amt_Valid___; 
+
+
+-- Calc_For_Non_Ded_Curr_Valid___
+-- Calculate for Non Deductible Tax Curr Amount Validation
+FUNCTION Calc_For_Non_Ded_Curr_Valid___ ( 
+   parent_rec_                      IN Source_Line_Virtual_Rec,
+   line_rec_                        IN Source_Tax_Item_Virtual_Rec) RETURN Tax_Info_Structure_Rec
+IS
+   curr_amount_rec_               Tax_Handling_Util_API.tax_curr_amount_struct_rec;  
+   tax_info_rec_                  Tax_Info_Structure_Rec;
+   source_tax_item_rec_           Source_Tax_Item_Virtual_Rec;   
+BEGIN
+   source_tax_item_rec_ := line_rec_;
+   curr_amount_rec_.non_ded_tax_curr_amount := Currency_Amount_API.Round_Amount(parent_rec_.tax_rounding_method, line_rec_.non_ded_tax_curr_amount, parent_rec_.currency_rounding);
+   curr_amount_rec_.tax_curr_amount := line_rec_.total_tax_curr_amount - curr_amount_rec_.non_ded_tax_curr_amount;
+   
+   IF (((curr_amount_rec_.tax_curr_amount > 0) AND (curr_amount_rec_.non_ded_tax_curr_amount < 0 )) OR ((curr_amount_rec_.tax_curr_amount < 0) AND (curr_amount_rec_.non_ded_tax_curr_amount > 0))) THEN
+       Error_SYS.Record_General(lu_name_, 'NONDEDTAXAMOUNTSIGN: Tax amount and Non-deductible Tax Amount must have the same sign.');    
+   END IF;   
+   
+   source_tax_item_rec_.tax_curr_amount := curr_amount_rec_.tax_curr_amount;
+   source_tax_item_rec_.non_ded_tax_curr_amount := curr_amount_rec_.non_ded_tax_curr_amount;
+   
+   -- Calling Tax Curr Amount change validation logic
+   tax_info_rec_ := Calc_For_Tax_Curr_Amt_Valid___(parent_rec_, source_tax_item_rec_);
+  
+   RETURN tax_info_rec_;
+    
+END Calc_For_Non_Ded_Curr_Valid___;    
+
+
+-- Calc_For_Total_Curr_Valid___
+-- Calculate for Total Tax Curr Amount Validation
+FUNCTION Calc_For_Total_Curr_Valid___ ( 
+   parent_rec_                      IN Source_Line_Virtual_Rec,
+   line_rec_                        IN Source_Tax_Item_Virtual_Rec) RETURN Tax_Info_Structure_Rec
+IS
+   tax_info_rec_                  Tax_Info_Structure_Rec;
+   curr_amount_rec_               Tax_Handling_Util_API.tax_curr_amount_struct_rec;  
+   source_tax_item_rec_           Source_Tax_Item_Virtual_Rec;   
+BEGIN
+   source_tax_item_rec_ := line_rec_;
+   curr_amount_rec_.total_tax_curr_amount :=  Currency_Amount_API.Round_Amount(parent_rec_.tax_rounding_method, line_rec_.total_tax_curr_amount, parent_rec_.currency_rounding);
+   Tax_Handling_Util_API.Calc_Tax_Curr_Amount(curr_amount_rec_.tax_curr_amount,
+                                              curr_amount_rec_.non_ded_tax_curr_amount,
+                                              parent_rec_.company,
+                                              parent_rec_.transaction_currency,
+                                              line_rec_.tax_code,
+                                              curr_amount_rec_.total_tax_curr_amount);
+   source_tax_item_rec_.tax_curr_amount := curr_amount_rec_.tax_curr_amount;
+   source_tax_item_rec_.non_ded_tax_curr_amount := curr_amount_rec_.non_ded_tax_curr_amount;
+   source_tax_item_rec_.total_tax_curr_amount := curr_amount_rec_.total_tax_curr_amount;
+   
+   -- Calling Tax Curr Amount change validation logic
+   tax_info_rec_ := Calc_For_Tax_Curr_Amt_Valid___(parent_rec_, source_tax_item_rec_);
+   
+   RETURN tax_info_rec_;
+   
+END Calc_For_Total_Curr_Valid___;
+
+
+-- Calc_For_Tax_Base_Amt_Valid___
+-- Calculate for Tax Base Curr Amount Validation
+FUNCTION Calc_For_Tax_Base_Amt_Valid___ ( 
+   parent_rec_           IN Source_Line_Virtual_Rec,
+   line_rec_             IN Source_Tax_Item_Virtual_Rec) RETURN Tax_Info_Structure_Rec   
+IS
+   tax_info_rec_                  Tax_Info_Structure_Rec;  
+   source_tax_item_rec_           Source_Tax_Item_Virtual_Rec; 
+   curr_amount_rec_               Tax_Handling_Util_API.tax_curr_amount_struct_rec; 
+   calc_base_info_rec_            Tax_Handling_Util_API.tax_calc_base_info_struct_rec;
+BEGIN
+   source_tax_item_rec_ := line_rec_;
+   curr_amount_rec_.tax_base_curr_amount := Currency_Amount_API.Round_Amount(parent_rec_.tax_rounding_method, line_rec_.tax_base_curr_amount, parent_rec_.currency_rounding);
+   IF (parent_rec_.tax_calc_structure_id IS NOT NULL) THEN
+      calc_base_info_rec_.tax_calc_base_percent := 100;
+      calc_base_info_rec_.tax_calc_base_amount := curr_amount_rec_.tax_base_curr_amount;
+      calc_base_info_rec_.use_tax_calc_base_amount := curr_amount_rec_.tax_base_curr_amount;      
+      Tax_Handling_Util_API.Calc_Tax_Curr_Amount(curr_amount_rec_.total_tax_curr_amount,
+                                                 curr_amount_rec_.tax_curr_amount,                               
+                                                 curr_amount_rec_.non_ded_tax_curr_amount,
+                                                 curr_amount_rec_.attr,                              
+                                                 parent_rec_.company,
+                                                 parent_rec_.identity,
+                                                 parent_rec_.party_type_db,
+                                                 parent_rec_.transaction_currency,
+                                                 parent_rec_.delivery_address_id,
+                                                 line_rec_.tax_code,
+                                                 line_rec_.tax_type,
+                                                 calc_base_info_rec_.tax_calc_base_amount,
+                                                 calc_base_info_rec_.tax_calc_base_percent,
+                                                 calc_base_info_rec_.use_tax_calc_base_amount,
+                                                 line_rec_.tax_percentage,
+                                                 parent_rec_.deductible_factor);  
+      
+      source_tax_item_rec_.tax_curr_amount := curr_amount_rec_.tax_curr_amount;
+      source_tax_item_rec_.non_ded_tax_curr_amount := curr_amount_rec_.non_ded_tax_curr_amount;
+      source_tax_item_rec_.total_tax_curr_amount := curr_amount_rec_.total_tax_curr_amount;
+      source_tax_item_rec_.tax_base_curr_amount := curr_amount_rec_.tax_base_curr_amount;
+      
+      -- Calling Tax Curr Amount change validation logic
+      tax_info_rec_ := Calc_For_Tax_Curr_Amt_Valid___(parent_rec_, source_tax_item_rec_);  
+   END IF;   
+   RETURN tax_info_rec_;
+END Calc_For_Tax_Base_Amt_Valid___;   
+   
+
+-- Calc_For_Percentage_Valid___
+-- Calculate for Tax Percentage Validation
+-- This method is called only for calc_base NET_BASE lines when tax percentage get modified.
+-- For the GROSS_BASE lines, amounts are updated from Recalculate logic.
+FUNCTION Calc_For_Percentage_Valid___ ( 
+   parent_rec_                      IN Source_Line_Virtual_Rec,
+   line_rec_                        IN Source_Tax_Item_Virtual_Rec) RETURN Tax_Info_Structure_Rec
+IS  
+   calc_base_info_rec_            Tax_Handling_Util_API.tax_calc_base_info_struct_rec;      
+   parent_key_rec_                Source_Line_Virtual_Key;   
+   summary_tax_curr_amount_       NUMBER := 0;
+   summary_total_tax_curr_amount_ NUMBER := 0;
+   summary_non_ded_tax_curr_amt_  NUMBER := 0;    
+   tax_amount_summary_rec_        Tax_Handling_Util_API.tax_amount_summary_struct_rec;    
+   saved_tax_item_summary_rec_    Get_Tax_Item_Summary_Set___%ROWTYPE;   
+   old_tax_item_summary_rec_      Tax_Items_Summary_Virtual_Rec;   
+   old_tax_item_summay_objkey_    Tax_Items_Summary_Virtual_Key;   
+   modify_tax_item_summary_rec_   Tax_Items_Summary_Virtual_Rec;   
+   curr_amount_rec_               Tax_Handling_Util_API.tax_curr_amount_struct_rec;   
+   tax_info_rec_                  Tax_Info_Structure_Rec;   
+   dom_amount_rec_                Tax_Handling_Util_API.tax_dom_amount_struct_rec;    
+   para_amount_rec_               Tax_Handling_Util_API.tax_para_amount_struct_rec;   
+   curr_rate_rec_                 Tax_Handling_Util_API.currency_rate_struct_rec; 
+BEGIN
+   parent_key_rec_.objkey := parent_rec_.objkey;    
+   calc_base_info_rec_ := Set_Tax_Calc_Base_Info___(parent_rec_, 
+                                                    line_rec_.tax_percentage, 
+                                                    line_rec_.tax_type, 
+                                                    Fnd_Boolean_API.DB_FALSE, 
+                                                    line_rec_.objkey);                                                     
+   Tax_Handling_Util_API.Calc_Tax_Curr_Amount(curr_amount_rec_.total_tax_curr_amount,
+                                              curr_amount_rec_.tax_curr_amount,                               
+                                              curr_amount_rec_.non_ded_tax_curr_amount,
+                                              curr_amount_rec_.attr,                              
+                                              parent_rec_.company,
+                                              parent_rec_.identity,
+                                              parent_rec_.party_type_db,
+                                              parent_rec_.transaction_currency,
+                                              parent_rec_.delivery_address_id,
+                                              line_rec_.tax_code,
+                                              line_rec_.tax_type,
+                                              calc_base_info_rec_.tax_calc_base_amount,
+                                              calc_base_info_rec_.tax_calc_base_percent,
+                                              calc_base_info_rec_.use_tax_calc_base_amount,
+                                              line_rec_.tax_percentage,
+                                              parent_rec_.deductible_factor); 
+   curr_amount_rec_.tax_base_curr_amount := line_rec_.tax_base_curr_amount; 
+                                              
+   -- For the calculation consider records in the virtual table except for the newly editted one 
+   FOR tax_item_rec_ IN Get_Tax_Items___(parent_key_rec_) LOOP
+      IF (tax_item_rec_.tax_type = Fee_Type_API.DB_TAX) THEN 
+         IF (tax_item_rec_.objkey != line_rec_.objkey) THEN
+            summary_tax_curr_amount_       := summary_tax_curr_amount_ + tax_item_rec_.tax_curr_amount;
+            summary_total_tax_curr_amount_ := summary_total_tax_curr_amount_ + tax_item_rec_.total_tax_curr_amount;
+            summary_non_ded_tax_curr_amt_  := summary_non_ded_tax_curr_amt_ + tax_item_rec_.non_ded_tax_curr_amount;
+         END IF;
+      END IF;              
+   END LOOP;
+   -- Consider amounts in newly editted record
+   IF (line_rec_.tax_type = Fee_Type_API.DB_TAX) THEN 
+      summary_tax_curr_amount_       := summary_tax_curr_amount_ + curr_amount_rec_.tax_curr_amount;
+      summary_total_tax_curr_amount_ := summary_total_tax_curr_amount_ + (curr_amount_rec_.tax_curr_amount + line_rec_.non_ded_tax_curr_amount);
+      summary_non_ded_tax_curr_amt_  := summary_non_ded_tax_curr_amt_ + line_rec_.non_ded_tax_curr_amount;
+   END IF; 
+   IF(parent_rec_.calc_base = 'GROSS_BASE') THEN
+      tax_amount_summary_rec_.gross_curr_amount := parent_rec_.gross_curr_amount;
+   ELSIF(parent_rec_.calc_base = 'NET_BASE') THEN
+      tax_amount_summary_rec_.net_curr_amount := parent_rec_.net_curr_amount;
+   END IF;   
+   
+   tax_amount_summary_rec_.tax_curr_amount := summary_tax_curr_amount_;   
+   tax_amount_summary_rec_.total_tax_curr_amount := summary_total_tax_curr_amount_;
+   tax_amount_summary_rec_.non_ded_tax_curr_amount := summary_non_ded_tax_curr_amt_;
+   tax_amount_summary_rec_ := Summary_Gross_Net_Amounts___(parent_rec_.calc_base, tax_amount_summary_rec_); 
+   
+   -- Updating summary values
+   OPEN Get_Tax_Item_Summary_Set___(parent_key_rec_);
+   FETCH Get_Tax_Item_Summary_Set___ INTO saved_tax_item_summary_rec_;
+   CLOSE Get_Tax_Item_Summary_Set___;
+   
+   old_tax_item_summay_objkey_.objkey := saved_tax_item_summary_rec_.objkey;
+   old_tax_item_summary_rec_ := Get_Record___(old_tax_item_summay_objkey_); 
+   modify_tax_item_summary_rec_ := old_tax_item_summary_rec_; 
+   
+   modify_tax_item_summary_rec_.net_curr_amount := tax_amount_summary_rec_.net_curr_amount;
+   modify_tax_item_summary_rec_.gross_curr_amount := tax_amount_summary_rec_.gross_curr_amount;
+   modify_tax_item_summary_rec_.vat_curr_amount := tax_amount_summary_rec_.tax_curr_amount;
+   modify_tax_item_summary_rec_.non_ded_curr_amount := tax_amount_summary_rec_.non_ded_tax_curr_amount; 
+   modify_tax_item_summary_rec_.total_tax_curr_amount := tax_amount_summary_rec_.total_tax_curr_amount;   
+    
+   CRUD_Update___(old_tax_item_summary_rec_, modify_tax_item_summary_rec_);   
+   
+   Tax_Handling_Util_API.Get_Use_Specific_Rate(curr_rate_rec_.use_specific_rate,
+                                               curr_rate_rec_.curr_rate, 
+                                               parent_rec_.source_ref_type_db,
+                                               parent_rec_.company,
+                                               parent_rec_.party_type_db,
+                                               parent_rec_.advance_invoice,
+                                               parent_rec_.package_name,
+                                               line_rec_.tax_code,
+                                               parent_rec_.curr_rate,
+                                               parent_rec_.tax_curr_rate);    
+ 
+   dom_amount_rec_ := Calculate_Tax_Dom_Amount___(parent_rec_,                                                                                                    
+                                                  line_rec_.tax_code, 
+                                                  line_rec_.tax_percentage, 
+                                                  curr_amount_rec_.total_tax_curr_amount, 
+                                                  curr_amount_rec_.tax_curr_amount, 
+                                                  curr_amount_rec_.tax_base_curr_amount,
+                                                  curr_rate_rec_.use_specific_rate,
+                                                  curr_rate_rec_.curr_rate); 
+   para_amount_rec_ := Calculate_Tax_Para_Amount___(parent_rec_,                                                    
+                                                    curr_amount_rec_.total_tax_curr_amount,
+                                                    dom_amount_rec_.total_tax_dom_amount,                                     
+                                                    curr_amount_rec_.tax_curr_amount,
+                                                    dom_amount_rec_.tax_dom_amount,
+                                                    tax_amount_summary_rec_.net_curr_amount,
+                                                    dom_amount_rec_.tax_base_dom_amount);
+   tax_info_rec_.tax_curr_amount := curr_amount_rec_.tax_curr_amount;
+   tax_info_rec_.tax_dom_amount := dom_amount_rec_.tax_dom_amount;
+   tax_info_rec_.tax_parallel_amount := para_amount_rec_.tax_para_amount;
+   tax_info_rec_.tax_base_curr_amount := curr_amount_rec_.tax_base_curr_amount;
+   tax_info_rec_.tax_base_dom_amount := dom_amount_rec_.tax_base_dom_amount;
+   tax_info_rec_.tax_base_parallel_amount := para_amount_rec_.tax_base_para_amount; 
+   tax_info_rec_.non_ded_tax_curr_amount := curr_amount_rec_.non_ded_tax_curr_amount;
+   tax_info_rec_.non_ded_tax_dom_amount := dom_amount_rec_.non_ded_tax_dom_amount;
+   tax_info_rec_.non_ded_tax_parallel_amount := para_amount_rec_.non_ded_tax_para_amount;
+   tax_info_rec_.total_tax_curr_amount := curr_amount_rec_.total_tax_curr_amount;
+   tax_info_rec_.total_tax_dom_amount := dom_amount_rec_.total_tax_dom_amount;         
+   tax_info_rec_.total_tax_parallel_amount := para_amount_rec_.total_tax_para_amount;   
+   
+   RETURN tax_info_rec_; 
+   
+END Calc_For_Percentage_Valid___;
+
+
+PROCEDURE Post_Actions___ (
+   key_ IN Source_Tax_Item_Virtual_Key)
+IS    
+  current_tax_item_rec_      Source_Tax_Item_Virtual_Rec;
+  parent_rec_                Source_Line_Virtual_Rec; 
+  parent_key_rec_            Source_Line_Virtual_Key; 
+  objkey_                    VARCHAR2(50);
+BEGIN
+   current_tax_item_rec_ := Get_Record___(key_);
+   objkey_ := key_.objkey;
+   IF (current_tax_item_rec_.tax_curr_amount_changed = 'TRUE') THEN
+      -- When tax curr amount is changed from the assistant only that record is getting modified
+      -- No need to recalculate other lines.
+      -- tax_curr_amount_changed column is set to False after running the calculations related to Tax Amount change.
+     UPDATE ${PROJECTION}_source_tax_item_virtual_vrt
+     SET    tax_curr_amount_changed = 'FALSE'
+     WHERE  objkey = objkey_;  
+   ELSIF (current_tax_item_rec_.non_ded_tax_curr_amt_changed = 'TRUE') THEN
+      -- When non ded tax curr amount is changed from the assistant only that record is getting modified
+      -- No need to recalculate other lines.
+      -- non_ded_tax_curr_amt_changed column is set to False after running the calculations related to Non Ded Tax Amount change.
+     UPDATE ${PROJECTION}_source_tax_item_virtual_vrt
+     SET    non_ded_tax_curr_amt_changed = 'FALSE'
+     WHERE  objkey = objkey_;   
+   ELSIF (current_tax_item_rec_.total_tax_curr_amount_changed = 'TRUE') THEN
+      -- When total tax curr amount is changed from the assistant only that record is getting modified
+      -- No need to recalculate other lines.
+      -- total_tax_curr_amount_changed column is set to False after running the calculations related to Total Tax Curr Amount change.
+     UPDATE ${PROJECTION}_source_tax_item_virtual_vrt
+     SET    total_tax_curr_amount_changed = 'FALSE'
+     WHERE  objkey = objkey_; 
+   ELSIF (current_tax_item_rec_.tax_base_curr_amount_changed = 'TRUE') THEN
+      -- When tax base curr amount is changed from the assistant only that record is getting modified
+      -- No need to recalculate other lines.
+      -- tax_base_curr_amount_changed column is set to False after running the calculations related to Tax Base Curr Amount change.
+     UPDATE ${PROJECTION}_source_tax_item_virtual_vrt
+     SET    tax_base_curr_amount_changed = 'FALSE'
+     WHERE  objkey = objkey_; 
+   ELSIF (current_tax_item_rec_.tax_percentage_changed = 'TRUE') THEN
+      UPDATE ${PROJECTION}_source_tax_item_virtual_vrt
+      SET    tax_percentage_changed = 'FALSE'
+      WHERE  objkey = objkey_;  
+   ELSE   
+      parent_key_rec_.objkey := current_tax_item_rec_.parent_objkey;
+      parent_rec_ := Get_Record___(parent_key_rec_);
+      
+      -- Below code handles two scenarios,
+      -- 1. Calculating the total amounts - Here only the total amounts are calculated.
+      -- 2. Recalculate tax - Here tax amounts are calculated for all the tax lines along with the total amounts calculation. 
+      -- When the calc base is NET_BASE, it is enough to calculate the total amounts only
+      -- as other tax lines are not affected. In the GROSS_CALC scenario and when tax structure is connected  
+      -- Recalculate_Tax___ logic should run.
+      IF (parent_rec_.tax_calc_structure_id IS NULL AND parent_rec_.calc_base = 'NET_BASE') THEN
+         Calculate_Total_Amounts___(parent_rec_);
+      ELSE 
+         Recalculate_Tax___(parent_rec_);
+      END IF; 
+      
+      -- Resetting tax_base_curr_amount_modified, tx_calc_str_id_for_tax_cod_chg values after saving source tax line virtual record.
+      IF (parent_rec_.tax_calc_structure_id IS NOT NULL) THEN 
+         -- Setting tax_base_curr_amount_modified to NULL only for the tax lines
+         -- where structure items are beneath the corresponding updated tax code. 
+         UPDATE ${PROJECTION}_source_tax_item_virtual_vrt
+         SET   tax_base_curr_amount_modified = NULL
+         WHERE parent_objkey = parent_rec_.objkey
+         AND   tax_calc_structure_item_id > parent_rec_.tx_calc_str_id_for_tax_cod_chg; 
+         
+         UPDATE ${PROJECTION}_source_line_virtual_vrt
+         SET    tx_calc_str_id_for_tax_cod_chg = NULL
+         WHERE  objkey = parent_rec_.objkey; 
+      END IF;         
+   END IF;  
+END Post_Actions___;
+
+
+FUNCTION Get_Deductible_Factor___(
+   parent_party_type_db_ IN VARCHAR2,
+   parent_package_name_  IN VARCHAR2 ) RETURN NUMBER
+IS
+   deductible_factor_      NUMBER;
+BEGIN
+   IF ((parent_party_type_db_ = Party_Type_API.DB_CUSTOMER) OR (parent_package_name_ = 'OUTGOING_SUPPLIER_INVOICE_API')) THEN
+      deductible_factor_ := 1;
+   ELSIF (parent_party_type_db_ = Party_Type_API.DB_SUPPLIER) THEN
+      deductible_factor_ := NULL;
+   END IF; 
+   RETURN deductible_factor_;
+END Get_Deductible_Factor___;
+
+
+FUNCTION Save_To_Src_Tax_Item_Table___ (
+   key_ IN Source_Line_Virtual_Key) RETURN Rtn_Info_After_Save_Structure_Rec
+IS
+   parent_rec_       Source_Line_Virtual_Rec;
+   source_key_rec_   Tax_Handling_Util_API.source_key_rec;
+   tax_info_table_   Tax_Handling_Util_API.tax_information_table;
+   return_info_rec_  Rtn_Info_After_Save_Structure_Rec;
+   return_info_rec1_ Tax_Handling_Util_API.rtn_info_save_tax_assist_rec;
+BEGIN
+   parent_rec_ := Get_Record___(key_);
+   source_key_rec_ := Tax_Handling_Util_API.Create_Source_Key_Rec(parent_rec_.source_ref_type_db, 
+                                                                  parent_rec_.source_ref1, 
+                                                                  parent_rec_.source_ref2, 
+                                                                  parent_rec_.source_ref3, 
+                                                                  parent_rec_.source_ref4, 
+                                                                  parent_rec_.source_ref5, 
+                                                                  NULL);
+   tax_info_table_ := Get_Tax_Info_Table___(key_); 
+   -- Handle when the assistant is opened from another assistant
+   IF (parent_rec_.source_objkey IS NOT NULL) THEN
+      Save_Tax_Info_From_Tax_Line_Assistant___(parent_rec_, source_key_rec_, tax_info_table_);
+   -- Handle when the assistant is opened from a page   
+   ELSE
+      Tax_Handling_Util_API.Save_From_Tax_Line_Assistant(return_info_rec1_,
+                                                         parent_rec_.package_name, 
+                                                         parent_rec_.company, 
+                                                         source_key_rec_, 
+                                                         parent_rec_.source_objversion, 
+                                                         tax_info_table_, 
+                                                         parent_rec_.calc_base,
+                                                         parent_rec_.tax_class_id,
+                                                         parent_rec_.transaction_date);
+      return_info_rec_.tax_limit_applied := return_info_rec1_.tax_limit_applied;                                                   
+   END IF;    
+   RETURN return_info_rec_;
+END Save_To_Src_Tax_Item_Table___;
+
+
+
+FUNCTION Get_RowType___(
+   source_ref_type_db_ IN VARCHAR2) RETURN VARCHAR2
+IS
+   rowtype_      source_tax_item_tab.rowtype%TYPE;
+BEGIN
+   IF (source_ref_type_db_ IN (Tax_Source_API.DB_INVOICE, Tax_Source_API.DB_INVOICE_TEMPLATE)) THEN
+      rowtype_ := 'SourceTaxItemInvoic';      
+   ELSIF (source_ref_type_db_ IN (Tax_Source_API.DB_CUSTOMER_ORDER_LINE, Tax_Source_API.DB_CUSTOMER_ORDER_CHARGE, 
+                                  Tax_Source_API.DB_ORDER_QUOTATION_LINE, Tax_Source_API.DB_ORDER_QUOTATION_CHARGE, 
+                                  Tax_Source_API.DB_RETURN_MATERIAL_LINE, Tax_Source_API.DB_RETURN_MATERIAL_CHARGE, 
+                                  Tax_Source_API.DB_SHIPMENT_FREIGHT_CHARGE)) THEN
+      rowtype_ := 'SourceTaxItemOrder';   
+   -- ELSIF Include support for other rowtypes  
+   END IF;  
+   RETURN rowtype_;
+END Get_RowType___;
+
+
+FUNCTION Get_Max_Tax_Item_Id___ (
+   parent_objkey_   IN VARCHAR2) RETURN NUMBER
+IS
+   max_tax_item_id_ NUMBER;   
+   CURSOR max_tax_item_id IS
+      SELECT MAX(tax_item_id)
+      FROM   ${PROJECTION}_source_tax_item_virtual_vrt          
+      WHERE  parent_objkey = parent_objkey_;
+BEGIN
+   OPEN  max_tax_item_id;
+   FETCH max_tax_item_id INTO max_tax_item_id_;
+   CLOSE max_tax_item_id;
+   RETURN NVL(max_tax_item_id_, 0);
+END Get_Max_Tax_Item_Id___;   
+
+
+FUNCTION Get_Tax_Info_Table___(
+   key_ IN Source_Line_Virtual_Key ) RETURN Tax_Handling_Util_API.tax_information_table
+IS
+   parent_rec_      Source_Line_Virtual_Rec;
+   tax_info_table_  Tax_Handling_Util_API.tax_information_table;
+   tax_rec_         Statutory_Fee_API.Public_Rec;
+   i_               NUMBER := 1;  
+   curr_rate_rec_   Tax_Handling_Util_API.currency_rate_struct_rec; 
+BEGIN
+   parent_rec_ := Get_Record___(key_); 
+   FOR rec_ IN Get_Tax_Items___(key_) LOOP     
+      tax_rec_ := Statutory_Fee_API.Fetch_Validate_Tax_Code_Rec(Get_Transaction_Company___(parent_rec_),
+                                                                rec_.tax_code, 
+                                                                sysdate,
+                                                                'FALSE', 
+                                                                'TRUE', 
+                                                                'FETCH_AND_VALIDATE');     
+      tax_info_table_(i_).tax_code := tax_rec_.fee_code;
+      IF (parent_rec_.party_type_db = Party_Type_API.DB_CUSTOMER) THEN
+         tax_info_table_(i_).tax_method_db     := tax_rec_.vat_disbursed;        
+      ELSIF (parent_rec_.party_type_db = Party_Type_API.DB_SUPPLIER) THEN
+         tax_info_table_(i_).tax_method_db     := tax_rec_.vat_received;
+      END IF;      
+      
+      tax_info_table_(i_).tax_type_db   := tax_rec_.fee_type;      
+      tax_info_table_(i_).tax_calc_structure_id := rec_.tax_calc_structure_id;
+      tax_info_table_(i_).tax_calc_structure_item_id := rec_.tax_calc_structure_item_id;
+      tax_info_table_(i_).tax_percentage := rec_.tax_percentage;
+      tax_info_table_(i_).deductible_factor := parent_rec_.deductible_factor; 
+      Tax_Handling_Util_API.Get_Use_Specific_Rate(curr_rate_rec_.use_specific_rate,
+                                                  curr_rate_rec_.curr_rate,
+                                                  parent_rec_.source_ref_type_db,
+                                                  parent_rec_.company,
+                                                  parent_rec_.party_type_db,
+                                                  parent_rec_.advance_invoice,
+                                                  parent_rec_.package_name,
+                                                  tax_info_table_(i_).tax_code,
+                                                  parent_rec_.curr_rate,
+                                                  parent_rec_.tax_curr_rate);  
+      tax_info_table_(i_).use_specific_rate := curr_rate_rec_.use_specific_rate; 
+      tax_info_table_(i_).curr_rate := curr_rate_rec_.curr_rate;
+      tax_info_table_(i_).total_tax_curr_amount := rec_.total_tax_curr_amount;
+      tax_info_table_(i_).total_tax_dom_amount := rec_.total_tax_dom_amount;
+      tax_info_table_(i_).total_tax_para_amount := rec_.total_tax_parallel_amount;
+      tax_info_table_(i_).tax_curr_amount := rec_.tax_curr_amount;
+      tax_info_table_(i_).tax_dom_amount := rec_.tax_dom_amount;     
+      tax_info_table_(i_).tax_para_amount := rec_.tax_parallel_amount;
+      tax_info_table_(i_).non_ded_tax_curr_amount := rec_.non_ded_tax_curr_amount;
+      tax_info_table_(i_).non_ded_tax_dom_amount := rec_.non_ded_tax_dom_amount;
+      tax_info_table_(i_).non_ded_tax_para_amount := rec_.non_ded_tax_parallel_amount; 
+      tax_info_table_(i_).tax_base_curr_amount := rec_.tax_base_curr_amount;
+      tax_info_table_(i_).tax_base_dom_amount := rec_.tax_base_dom_amount;
+      tax_info_table_(i_).tax_base_para_amount := rec_.tax_base_parallel_amount; 
+      i_ := i_ + 1;
+   END LOOP;
+   RETURN tax_info_table_;
+END Get_Tax_Info_Table___; 
+
+
+-- Prep_Valid_Tax_Percentage___
+-- This method calls only when Tax Percentage is changed by the user.(Only allowed from ORDER side functionality)
+-- The column 'tax_percentage_changed' is setting to TRUE and inside Crud_Update,
+-- Calc_For_Percentage_Valid___ method is called accordingly.
+-- Finally the column value set to 'FALSE' inside Post_Actions___.
+PROCEDURE Prep_Valid_Tax_Percentage___(   
+   objkey_ IN VARCHAR2 )  
+IS
+   key_rec_    Source_Tax_Item_Virtual_Key;
+   rec_        Source_Tax_Item_Virtual_Rec;
+BEGIN
+   key_rec_.objkey := objkey_;
+   rec_ := Get_Record___(key_rec_);  
+   User_Finance_API.Exist_Current_User(rec_.company);
+   UPDATE ${PROJECTION}_source_tax_item_virtual_vrt
+   SET    tax_percentage_changed = 'TRUE'
+   WHERE  objkey = objkey_; 
+END Prep_Valid_Tax_Percentage___;
+
+
+-- Prepare_Valid_Tax_Curr_Amt___
+-- This method calls only when Tax Curr Amount is changed by the user. 
+-- The column 'tax_curr_amount_changed' is setting to TRUE and inside Crud_Update,
+-- Calc_For_Tax_Curr_Amt_Valid___ method is called accordingly.
+-- Finally the column value set to 'FALSE' inside Post_Actions___.
+PROCEDURE Prepare_Valid_Tax_Curr_Amt___(   
+   objkey_ IN VARCHAR2 )  
+IS
+   key_rec_    Source_Tax_Item_Virtual_Key;
+   rec_        Source_Tax_Item_Virtual_Rec;
+BEGIN
+   key_rec_.objkey := objkey_;
+   rec_ := Get_Record___(key_rec_);  
+   User_Finance_API.Exist_Current_User(rec_.company);
+   UPDATE ${PROJECTION}_source_tax_item_virtual_vrt
+   SET    tax_curr_amount_changed = 'TRUE'
+   WHERE  objkey = objkey_; 
+END Prepare_Valid_Tax_Curr_Amt___;
+
+
+-- Prep_Valid_Non_Ded_Taxcurr_Amt___
+-- Prepare Validate Non ded Tax Curr Amount
+-- This method calls only when Non Ded Tax Curr Amount is changed by the user. 
+-- The column 'non_ded_tax_curr_amt_changed' is setting to TRUE and inside Crud_Update,
+-- Calc_For_Non_Ded_Curr_Valid___ method is called accordingly.
+-- Finally the column value set to 'FALSE' inside Post_Actions___.
+PROCEDURE Prep_Valid_Non_Ded_Taxcurr_Amt___(    
+   objkey_ IN VARCHAR2 )  
+IS
+   key_rec_    Source_Tax_Item_Virtual_Key;
+   rec_        Source_Tax_Item_Virtual_Rec;
+BEGIN
+   key_rec_.objkey := objkey_;
+   rec_ := Get_Record___(key_rec_);  
+   User_Finance_API.Exist_Current_User(rec_.company);
+   UPDATE ${PROJECTION}_source_tax_item_virtual_vrt
+   SET    non_ded_tax_curr_amt_changed = 'TRUE'
+   WHERE  objkey = objkey_; 
+END Prep_Valid_Non_Ded_Taxcurr_Amt___;
+
+
+-- Prep_Valid_Total_Tax_Curr_Amt___
+-- Prepare Validate Total Tax Curr Amount
+-- This method calls only when Total Tax Amount is changed by the user. 
+-- The column 'total_tax_curr_amount_changed' is setting to TRUE and inside Crud_Update,
+-- Calc_For_Total_Curr_Valid___ method is called accordingly.
+-- Finally the column value set to 'FALSE' inside Post_Actions___.
+PROCEDURE Prep_Valid_Total_Tax_Curr_Amt___(    
+   objkey_ IN VARCHAR2 )  
+IS
+   key_rec_    Source_Tax_Item_Virtual_Key;
+   rec_        Source_Tax_Item_Virtual_Rec;
+BEGIN
+   key_rec_.objkey := objkey_;
+   rec_ := Get_Record___(key_rec_);  
+   User_Finance_API.Exist_Current_User(rec_.company);
+   UPDATE ${PROJECTION}_source_tax_item_virtual_vrt
+   SET    total_tax_curr_amount_changed = 'TRUE'
+   WHERE  objkey = objkey_; 
+END Prep_Valid_Total_Tax_Curr_Amt___;
+
+-- Prep_Valid_Tax_Base_Curr_Amt___
+-- Prepare Validate Tax Base Curr Amount
+-- This method calls only when Tax Base Curr Amount is changed by the user. 
+-- The column 'tax_base_curr_amount_changed' is setting to TRUE and inside Crud_Update,
+-- Calc_For_Tax_Base_Amt_Valid___ method is called accordingly.
+-- Finally the column value set to 'FALSE' inside Post_Actions___.
+PROCEDURE Prep_Valid_Tax_Base_Curr_Amt___ (
+   objkey_ IN VARCHAR2 ) 
+IS   
+   key_rec_    Source_Tax_Item_Virtual_Key;
+   rec_        Source_Tax_Item_Virtual_Rec;
+BEGIN
+   key_rec_.objkey := objkey_;
+   rec_ := Get_Record___(key_rec_);  
+   User_Finance_API.Exist_Current_User(rec_.company);
+   UPDATE ${PROJECTION}_source_tax_item_virtual_vrt
+   SET    tax_base_curr_amount_changed = 'TRUE'
+   WHERE  objkey = objkey_;
+END Prep_Valid_Tax_Base_Curr_Amt___;
+
+
+FUNCTION Check_Max_Overwrite_Level___( 
+   parent_rec_                      IN Source_Line_Virtual_Rec, 
+   line_rec_                        IN Source_Tax_Item_Virtual_Rec,
+   current_sum_gross_curr_amount_   IN NUMBER,
+   current_sum_net_curr_amount_     IN NUMBER) RETURN NUMBER 
+IS
+   calc_base_info_rec_     Tax_Handling_Util_API.tax_calc_base_info_struct_rec;  
+   tax_base_curr_amount_   NUMBER;
+   curr_rate_rec_          Tax_Handling_Util_API.currency_rate_struct_rec;   
+   orig_tax_curr_amount_   NUMBER;
+BEGIN
+   IF (parent_rec_.tax_calc_structure_id IS NOT NULL) THEN
+      calc_base_info_rec_.tax_calc_base_percent := 100;
+      calc_base_info_rec_.tax_calc_base_amount := line_rec_.tax_base_curr_amount;
+      calc_base_info_rec_.use_tax_calc_base_amount := line_rec_.tax_base_curr_amount;
+      tax_base_curr_amount_ := line_rec_.tax_base_curr_amount;
+   ELSE     
+      calc_base_info_rec_ := Set_Tax_Calc_Base_Info___(parent_rec_, 
+                                                       line_rec_.tax_percentage, 
+                                                       line_rec_.tax_type, 
+                                                       Fnd_Boolean_API.DB_FALSE, 
+                                                       line_rec_.objkey);    
+      tax_base_curr_amount_ := NULL;
+   END IF;  
+   Tax_Handling_Util_API.Get_Use_Specific_Rate(curr_rate_rec_.use_specific_rate,
+                                               curr_rate_rec_.curr_rate, 
+                                               parent_rec_.source_ref_type_db,
+                                               parent_rec_.company,
+                                               parent_rec_.party_type_db,
+                                               parent_rec_.advance_invoice,
+                                               parent_rec_.package_name,
+                                               line_rec_.tax_code,
+                                               parent_rec_.curr_rate,
+                                               parent_rec_.tax_curr_rate);
+                                               
+   Tax_Handling_Util_API.Check_Max_Overwrite_Level(orig_tax_curr_amount_, 
+                                                   parent_rec_.company, 
+                                                   parent_rec_.identity, 
+                                                   parent_rec_.party_type_db,  
+                                                   parent_rec_.transaction_currency,
+                                                   parent_rec_.delivery_address_id, 
+                                                   curr_rate_rec_.use_specific_rate, 
+                                                   line_rec_.tax_code, 
+                                                   line_rec_.tax_type, 
+                                                   parent_rec_.calc_base, 
+                                                   calc_base_info_rec_.tax_calc_base_amount, 
+                                                   calc_base_info_rec_.tax_calc_base_percent,
+                                                   calc_base_info_rec_.use_tax_calc_base_amount, 
+                                                   current_sum_gross_curr_amount_,
+                                                   current_sum_net_curr_amount_,
+                                                   tax_base_curr_amount_,
+                                                   line_rec_.tax_percentage, 
+                                                   parent_rec_.deductible_factor,
+                                                   curr_rate_rec_.curr_rate,
+                                                   NVL(parent_rec_.div_factor, 0),
+                                                   line_rec_.tax_curr_amount,
+                                                   0); 
+   RETURN orig_tax_curr_amount_;                                                
+END Check_Max_Overwrite_Level___;
+
+
+-- Handle_Field_Editing___
+-- This method sets editable property for the fields.
+PROCEDURE Handle_Field_Editing___ (  
+   source_tax_item_rec_    IN OUT Source_Tax_Item_Virtual_Rec,
+   parent_rec_             IN Source_Line_Virtual_Rec) 
+IS
+   field_editable_rec_            Tax_Handling_Util_API.tax_assis_field_editable_rec; 
+BEGIN
+   -- Setting field editable flags
+   Tax_Handling_Util_API.Field_Editable_Tax_Line_Assis(field_editable_rec_,
+                                                       parent_rec_.company,
+                                                       parent_rec_.package_name,
+                                                       source_tax_item_rec_.tax_type,
+                                                       parent_rec_.taxable,
+                                                       parent_rec_.liability_type,
+                                                       parent_rec_.tax_calc_structure_id);                                                        
+  
+   source_tax_item_rec_.tax_percentage_editable := Get_Boolean___(field_editable_rec_.tax_percentage_editable);
+   source_tax_item_rec_.tax_curr_amount_editable := Get_Boolean___(field_editable_rec_.tax_curr_amount_editable);
+   source_tax_item_rec_.tax_base_curr_amount_editable := Get_Boolean___(field_editable_rec_.tax_base_curr_amount_editable);
+   source_tax_item_rec_.non_ded_tax_curr_amt_editable := Get_Boolean___(field_editable_rec_.non_ded_tax_curr_amt_editable);
+   source_tax_item_rec_.total_tax_curr_amount_editable := Get_Boolean___(field_editable_rec_.total_tax_curr_amount_editable); 
+END Handle_Field_Editing___;  
+
+   
+FUNCTION Get_Boolean___(
+   boolean_text_ IN VARCHAR2) RETURN BOOLEAN
+IS   
+BEGIN
+   IF (boolean_text_ = Fnd_Boolean_API.DB_TRUE) THEN
+      RETURN true;              
+   ELSE 
+      RETURN false;    
+   END IF; 
+END Get_Boolean___;
+
+
+FUNCTION Calc_For_Tax_Code_Validate___(
+   parent_key_                  IN VARCHAR2,   
+   current_tax_code_            IN VARCHAR2) RETURN Tax_Info_Structure_Rec
+IS 
+   tax_info_rec_      Tax_Info_Structure_Rec; 
+   tax_rec_           Statutory_Fee_API.Public_Rec;
+   parent_key_rec_    Source_Line_Virtual_Key;
+   parent_rec_        Source_Line_Virtual_Rec;
+   line_amount_rec_   Tax_Handling_Util_API.line_amount_rec;  
+   tax_info_table_    Tax_Handling_Util_API.tax_information_table;
+   i_                 NUMBER;
+BEGIN
+   parent_key_rec_.objkey := parent_key_;
+   parent_rec_ := Get_Record___(parent_key_rec_);  
+   tax_rec_ := Statutory_Fee_API.Fetch_Validate_Tax_Code_Rec(Get_Transaction_Company___(parent_rec_), 
+                                                             current_tax_code_, 
+                                                             parent_rec_.transaction_date, 
+                                                             'FALSE', 
+                                                             'TRUE', 
+                                                             'FETCH_AND_VALIDATE');
+   
+   line_amount_rec_ := Tax_Handling_Util_API.Create_Line_Amount_Rec(parent_rec_.gross_curr_amount, 
+                                                                    parent_rec_.net_curr_amount, 
+                                                                    NULL, 
+                                                                    parent_rec_.calc_base, 
+                                                                    Fnd_Boolean_API.DB_FALSE, 
+                                                                    NULL);  
+   Create_Tax_Info_Table___(tax_info_table_,   
+                            line_amount_rec_,                            
+                            parent_rec_,
+                            current_tax_code_);
+   i_ := tax_info_table_.LAST;  
+   tax_info_rec_.tax_percentage := tax_rec_.fee_rate;
+   tax_info_rec_.deductible_percentage := tax_rec_.deductible;
+   tax_info_rec_.tax_type := tax_rec_.fee_type;
+   tax_info_rec_.tax_curr_amount := tax_info_table_(i_).tax_curr_amount;
+   tax_info_rec_.tax_dom_amount := tax_info_table_(i_).tax_dom_amount;
+   tax_info_rec_.tax_parallel_amount := NVL(tax_info_table_(i_).tax_para_amount, 0);
+   tax_info_rec_.tax_base_curr_amount := tax_info_table_(i_).tax_base_curr_amount;
+   tax_info_rec_.tax_base_dom_amount := tax_info_table_(i_).tax_base_dom_amount;
+   tax_info_rec_.tax_base_parallel_amount := NVL(tax_info_table_(i_).tax_base_para_amount, 0);
+   tax_info_rec_.non_ded_tax_curr_amount := tax_info_table_(i_).non_ded_tax_curr_amount;
+   tax_info_rec_.non_ded_tax_dom_amount := tax_info_table_(i_).non_ded_tax_dom_amount;
+   tax_info_rec_.non_ded_tax_parallel_amount := NVL(tax_info_table_(i_).non_ded_tax_para_amount, 0);  
+   tax_info_rec_.total_tax_curr_amount := tax_info_table_(i_).total_tax_curr_amount;
+   tax_info_rec_.total_tax_dom_amount := tax_info_table_(i_).total_tax_dom_amount;
+   tax_info_rec_.total_tax_parallel_amount := NVL(tax_info_table_(i_).total_tax_para_amount, 0);
+   
+   RETURN tax_info_rec_;
+END Calc_For_Tax_Code_Validate___;   
+
+
+PROCEDURE Recalculate_Tax___(
+   parent_rec_       IN Source_Line_Virtual_Rec)
+IS
+   line_amount_rec_                 Tax_Handling_Util_API.line_amount_rec;  
+   tax_info_table_                  Tax_Handling_Util_API.tax_information_table;
+   source_tax_item_rec_             Source_Tax_Item_Virtual_Rec;    
+   parent_key_rec_                  Source_Line_Virtual_Key; 
+   tax_base_curr_strc_item_table_   Tax_Handling_Util_API.tax_base_curr_str_item_table;
+   count_                           NUMBER := 1;
+BEGIN
+   parent_key_rec_.objkey := parent_rec_.objkey;
+   line_amount_rec_ := Tax_Handling_Util_API.Create_Line_Amount_Rec(parent_rec_.gross_curr_amount, 
+                                                                    parent_rec_.net_curr_amount, 
+                                                                    NULL, --parent_rec_.tax_curr_amount
+                                                                    parent_rec_.calc_base, 
+                                                                    Fnd_Boolean_API.DB_FALSE, 
+                                                                    NULL);  
+   Create_Tax_Info_Table___(tax_info_table_,   
+                            line_amount_rec_,                            
+                            parent_rec_,
+                            NULL);
+   
+   -- All the records in the source tax item virtual table is deleted and 
+   -- then insert again based on tax_info_table_ which has been updated with correct amounts.   
+   -- But tax_base_curr_amount_modified values in the virtual table need to keep as it is. 
+   -- therefore taking a copy of the values and then save back to the virtual table.
+   -- this is applicable only when working with tax structures.
+   IF (parent_rec_.tax_calc_structure_id IS NOT NULL) THEN
+      FOR rec_ IN Get_Tax_Items___(parent_key_rec_) LOOP 
+         tax_base_curr_strc_item_table_(count_).tax_calc_structure_item_id := rec_.tax_calc_structure_item_id;
+         tax_base_curr_strc_item_table_(count_).tax_base_curr_amount_modified := rec_.tax_base_curr_amount_modified;
+         count_ := count_ + 1;
+      END LOOP;
+   END IF;
+
+   -- Delete existing records in the virtual table and replace with the values in the tax_info_table_.
+   DELETE 
+   FROM ${PROJECTION}_source_tax_item_virtual_vrt  
+   WHERE parent_objkey = parent_rec_.objkey;                         
+   
+   FOR i IN 1 .. tax_info_table_.COUNT LOOP
+      source_tax_item_rec_.parent_objkey := parent_rec_.objkey; 
+      source_tax_item_rec_.objkey := sys_guid();
+      source_tax_item_rec_.company := parent_rec_.company;
+      source_tax_item_rec_.source_ref_type_db := parent_rec_.source_ref_type_db;
+      source_tax_item_rec_.source_ref1 := parent_rec_.source_ref1;
+      source_tax_item_rec_.source_ref2 := parent_rec_.source_ref2;
+      source_tax_item_rec_.source_ref3 := parent_rec_.source_ref3;
+      source_tax_item_rec_.source_ref4 := parent_rec_.source_ref4;
+      source_tax_item_rec_.source_ref5 := parent_rec_.source_ref5;
+      source_tax_item_rec_.tax_code := tax_info_table_(i).tax_code; 
+      source_tax_item_rec_.tax_type := tax_info_table_(i).tax_type_db;
+      source_tax_item_rec_.tax_percentage := tax_info_table_(i).tax_percentage;
+      source_tax_item_rec_.deductible_percentage := Statutory_Fee_API.Get_Deductible(Get_Transaction_Company___(parent_rec_), tax_info_table_(i).tax_code);
+      source_tax_item_rec_.tax_calc_structure_id := tax_info_table_(i).tax_calc_structure_id;
+      source_tax_item_rec_.tax_calc_structure_item_id := tax_info_table_(i).tax_calc_structure_item_id;
+      source_tax_item_rec_.tax_curr_amount := tax_info_table_(i).tax_curr_amount;     
+      source_tax_item_rec_.tax_dom_amount := tax_info_table_(i).tax_dom_amount;
+      source_tax_item_rec_.tax_parallel_amount := NVL(tax_info_table_(i).tax_para_amount, 0);
+      source_tax_item_rec_.tax_base_curr_amount := tax_info_table_(i).tax_base_curr_amount;     
+      source_tax_item_rec_.tax_base_dom_amount := tax_info_table_(i).tax_base_dom_amount;
+      source_tax_item_rec_.tax_base_parallel_amount := NVL(tax_info_table_(i).tax_base_para_amount, 0);      
+      source_tax_item_rec_.non_ded_tax_curr_amount := tax_info_table_(i).non_ded_tax_curr_amount; 
+      source_tax_item_rec_.non_ded_tax_dom_amount := tax_info_table_(i).non_ded_tax_dom_amount;
+      source_tax_item_rec_.non_ded_tax_parallel_amount := NVL(tax_info_table_(i).non_ded_tax_para_amount, 0);
+      source_tax_item_rec_.total_tax_curr_amount := tax_info_table_(i).total_tax_curr_amount ;
+      source_tax_item_rec_.transferred := false;      
+      
+      -- Setting back the tax_base_curr_amount_modified value after saving the tax code.
+      IF (parent_rec_.tax_calc_structure_id IS NOT NULL) THEN
+         IF (tax_base_curr_strc_item_table_(i).tax_calc_structure_item_id = source_tax_item_rec_.tax_calc_structure_item_id) THEN
+            source_tax_item_rec_.tax_base_curr_amount_modified := tax_base_curr_strc_item_table_(i).tax_base_curr_amount_modified;
+         END IF;   
+      END IF;   
+      
+      CRUD_Create___(source_tax_item_rec_);         
+   END LOOP;   
+   
+   -- Updating summary virtual table
+   Update_Totals___(parent_rec_, line_amount_rec_);  
+   
+END Recalculate_Tax___; 
+
+
+PROCEDURE Create_Tax_Info_Table___(
+    tax_info_table_               OUT Tax_Handling_Util_API.tax_information_table,
+    line_amount_rec_              IN OUT Tax_Handling_Util_API.line_amount_rec,
+    parent_rec_                   IN Source_Line_Virtual_Rec,
+    tax_code_                     IN VARCHAR2)
+IS
+   trans_curr_rec_               Tax_Handling_Util_API.trans_curr_rec; 
+   acc_curr_rec_                 Tax_Handling_Util_API.acc_curr_rec;
+   para_curr_rec_                Tax_Handling_Util_API.para_curr_rec;
+   validation_rec_               Tax_Handling_Util_API.validation_rec;   
+   source_line_tax_code_         VARCHAR2(20);
+   virtual_line_tax_code_        VARCHAR2(20);
+   tax_lines_count_              NUMBER; 
+   dummy_tax_info_table_         Tax_Handling_Util_API.tax_information_table;
+   in_tax_curr_rate_             NUMBER;
+   
+   CURSOR get_tax_code IS
+      SELECT tax_code
+      FROM ${PROJECTION}_source_tax_item_virtual_vrt  
+      WHERE parent_objkey = parent_rec_.objkey; 
+BEGIN
+   trans_curr_rec_  := Tax_Handling_Util_API.Create_Trans_Curr_Rec(parent_rec_.company, 
+                                                                   parent_rec_.identity, 
+                                                                   parent_rec_.party_type_db, 
+                                                                   parent_rec_.transaction_currency, 
+                                                                   parent_rec_.delivery_address_id, 
+                                                                   NULL, 
+                                                                   parent_rec_.tax_rounding_method, 
+                                                                   parent_rec_.currency_rounding); 
+                                                                   
+   acc_curr_rec_  := Tax_Handling_Util_API.Create_Acc_Curr_Rec(parent_rec_.company,
+                                                               NULL,
+                                                               parent_rec_.curr_rate,
+                                                               parent_rec_.div_factor,
+                                                               NULL);                                                               
+                                                               
+   para_curr_rec_ := Tax_Handling_Util_API.Create_Para_Curr_Rec(parent_rec_.company,
+                                                                parent_rec_.transaction_currency,
+                                                                Fnd_Boolean_API.DB_TRUE,
+                                                                NULL,
+                                                                parent_rec_.parallel_curr_rate,
+                                                                parent_rec_.parallel_div_factor,
+                                                                NULL);
+   
+   validation_rec_ := Tax_Handling_Util_API.Create_Validation_Rec(parent_rec_.calc_base, 'FETCH_IF_VALID', NULL, NULL);
+
+   source_line_tax_code_  := Source_Tax_Item_API.Get_Line_Tax_Code(parent_rec_.company, 
+                                                                   parent_rec_.source_ref_type_db, 
+                                                                   parent_rec_.source_ref1, 
+                                                                   parent_rec_.source_ref2, 
+                                                                   parent_rec_.source_ref3,  
+                                                                   parent_rec_.source_ref4, 
+                                                                   parent_rec_.source_ref5);  
+                                                                   
+   tax_lines_count_ := Get_Tax_Lines_Count___(parent_rec_.objkey);
+   -- Setting source_line_tax_code_ to virtual line tax code when having only one record in the virtual table
+   IF (tax_lines_count_ = 1) THEN
+      OPEN get_tax_code;
+      FETCH get_tax_code INTO virtual_line_tax_code_;
+      CLOSE get_tax_code;
+      -- Handles update scenario when having a value to source_line_tax_code_
+      IF (source_line_tax_code_ IS NOT NULL) THEN
+         IF (source_line_tax_code_ != virtual_line_tax_code_) THEN
+            source_line_tax_code_ := virtual_line_tax_code_; 
+         END IF;
+      -- Handles delete scenario when source_line_tax_code_ is NULL.
+      ELSE
+         source_line_tax_code_ := virtual_line_tax_code_;
+      END IF;  
+   -- Setting source_line_tax_code_ to NULL when there are more than one tax line    
+   ELSIF (tax_lines_count_ > 1) THEN   
+      source_line_tax_code_ :=  NULL;
+   -- Handles delete scenario when last tax line is deleted  
+   ELSIF (tax_lines_count_ = 0) THEN  
+      source_line_tax_code_ :=  NULL;
+   END IF;    
+   Fetch_Saved_Tax_Codes___(tax_info_table_,                              
+                            source_line_tax_code_, 
+                            validation_rec_,
+                            parent_rec_,
+                            NULL); 
+   
+   IF (tax_code_ IS NOT NULL) THEN 
+      Tax_Handling_Util_API.Add_Tax_Code_Info(tax_info_table_,
+                                              Get_Transaction_Company___(parent_rec_),
+                                              parent_rec_.party_type_db,
+                                              tax_code_, 
+                                              NULL, -- tax_calc_structure_id_,
+                                              NULL, -- tax_calc_structure_item_id_,
+                                              'FETCH_IF_VALID', -- in_fetch_validate_action_ ,
+                                              NULL, -- in_tax_percentage_
+                                              parent_rec_.transaction_date);
+   END IF;  
+   
+   IF (parent_rec_.package_name IN ('INSTANT_INVOICE_API', 'OUTGOING_SUPPLIER_INVOICE_API', 'MAN_SUPP_INVOICE_API', 'PROJECT_INVOICE_API', 'MAN_CUST_INVOICE_API')) THEN
+      -- Handle when assistant open from a page
+      IF (parent_rec_.source_objkey IS NULL) THEN
+         in_tax_curr_rate_ := NULL;
+      -- Handle when assistant open from another assistant, has consider 'New Manual Supplier Invocie Assistant' and 'New Manual Customer Invoice Assistant'
+      ELSE
+         in_tax_curr_rate_ := parent_rec_.tax_curr_rate;
+      END IF;
+   ELSIF (parent_rec_.package_name = 'MIXED_PAYMENT_MAN_POSTING_API') THEN
+      in_tax_curr_rate_ := parent_rec_.tax_curr_rate;
+   END IF;
+      
+   Tax_Handling_Util_API.Update_Tax_Info_Table(tax_info_table_,
+                                               parent_rec_.company,
+                                               parent_rec_.package_name,
+                                               parent_rec_.advance_invoice,
+                                               NULL,
+                                               parent_rec_.source_ref1,
+                                               parent_rec_.curr_rate,
+                                               in_tax_curr_rate_,
+                                               dummy_tax_info_table_);       
+    
+   Tax_Handling_Util_API.Calc_Line_Total_Amounts(tax_info_table_, 
+                                                 line_amount_rec_, 
+                                                 parent_rec_.company, 
+                                                 trans_curr_rec_, 
+                                                 acc_curr_rec_, 
+                                                 para_curr_rec_); 
+                                                 
+   line_amount_rec_.line_gross_dom_amount := Currency_Amount_API.Calc_Rounded_Acc_Curr_Amount(parent_rec_.transaction_currency, 
+                                                                                              acc_curr_rec_.acc_curr_code, 
+                                                                                              acc_curr_rec_.use_inverted_rate, 
+                                                                                              line_amount_rec_.line_gross_curr_amount, 
+                                                                                              acc_curr_rec_.curr_rate, 
+                                                                                              acc_curr_rec_.conv_factor, 
+                                                                                              acc_curr_rec_.acc_curr_rounding);                                                                                             
+END Create_Tax_Info_Table___;   
+
+                            
+PROCEDURE Fetch_Saved_Tax_Codes___(
+   tax_info_table_            OUT Tax_Handling_Util_API.tax_information_table,   
+   source_line_tax_code_      IN  VARCHAR2,  
+   validation_rec_            IN  Tax_Handling_Util_API.validation_rec,
+   parent_rec_                IN  Source_Line_Virtual_Rec, 
+   add_tax_curr_amount_       IN  VARCHAR2 )
+IS
+   saved_tax_code_msg_           VARCHAR2(32000);
+   saved_tax_code_               VARCHAR2(20);
+   saved_tax_calc_struct_id_     VARCHAR2(20);
+   saved_tax_percentage_         NUMBER;    
+   saved_tax_base_curr_amount_   NUMBER;
+   tax_table_                    Source_Tax_Item_API.source_tax_table; 
+   parent_key_rec_               Source_Line_Virtual_Key;
+   tax_base_curr_changed_count_  NUMBER;
+   count_                        NUMBER := 1;
+   
+   CURSOR tax_base_amount_changed IS
+      SELECT COUNT(*)
+      FROM   ${PROJECTION}_source_tax_item_virtual_vrt   
+      WHERE  parent_objkey = parent_rec_.objkey
+      AND    tax_base_curr_amount_modified IS NOT NULL;
+BEGIN
+   parent_key_rec_.objkey := parent_rec_.objkey;
+   tax_table_ := Get_Tax_Items___(parent_rec_);
+   
+   Source_Tax_Item_API.Get_Tax_Codes(saved_tax_code_msg_, 
+                                     saved_tax_code_, 
+                                     saved_tax_calc_struct_id_, 
+                                     saved_tax_percentage_, 
+                                     saved_tax_base_curr_amount_,
+                                     tax_table_,
+                                     add_tax_curr_amount_); 
+   
+   Tax_Handling_Util_API.Add_Saved_Tax_Code_Info(tax_info_table_, 
+                                                 source_line_tax_code_, 
+                                                 parent_rec_.tax_calc_structure_id, 
+                                                 saved_tax_code_msg_, 
+                                                 saved_tax_code_, 
+                                                 saved_tax_calc_struct_id_, 
+                                                 saved_tax_percentage_, 
+                                                 saved_tax_base_curr_amount_, 
+                                                 Get_Transaction_Company___(parent_rec_), 
+                                                 parent_rec_.party_type_db, 
+                                                 parent_rec_.transaction_date, 
+                                                 validation_rec_);   
+
+   -- Special handling needed when dealing with tax structures in order to have correct amounts for the scenarios where
+   -- tax base amount is modified before the tax code change.
+   -- For such records tax base amount should be remain as it is for the top tax structure items compared to tax structure item id corresponds to tax code change.
+   -- In other words only the structure items beneath the corresponding updated tax code is overridden.
+   -- This information is needed in the TaxHandlingUtil - Set_Tax_Calc_Base_Tax_Str___ logic.
+   IF (parent_rec_.tax_calc_structure_id IS NOT NULL) THEN 
+      OPEN tax_base_amount_changed;
+      FETCH tax_base_amount_changed INTO tax_base_curr_changed_count_;
+      CLOSE tax_base_amount_changed;
+
+      IF (tax_base_curr_changed_count_ > 0) THEN         
+         FOR rec_ IN Get_Tax_Items___(parent_key_rec_) LOOP         
+            IF ((rec_.tax_base_curr_amount_modified IS NOT NULL) AND (rec_.tax_calc_structure_item_id = tax_info_table_(count_).tax_calc_structure_item_id) AND (rec_.tax_calc_structure_item_id <= parent_rec_.tx_calc_str_id_for_tax_cod_chg)) THEN
+               tax_info_table_(count_).tax_base_curr_amount := rec_.tax_base_curr_amount_modified;
+            END IF; 
+            count_ := count_ + 1;
+         END LOOP;  
+      END IF;  
+   END IF;   
+END Fetch_Saved_Tax_Codes___;   
+
+
+FUNCTION Get_Tax_Items___ (
+   parent_rec_          IN Source_Line_Virtual_Rec) RETURN Source_Tax_Item_API.source_tax_table
+IS 
+   temp_          Source_Tax_Item_API.source_tax_table;  
+   CURSOR get_tax_record IS
+      SELECT company,
+             source_ref_type_db source_ref_type,  
+             source_ref1,
+             source_ref2,
+             source_ref3,
+             source_ref4,
+             source_ref5,
+             tax_item_id,
+             ROWID,
+             objmodified rowversion,  
+             objkey rowkey,  
+             NULL object_type,
+             tax_code,
+             tax_percentage,
+             tax_calc_structure_id, 
+             tax_calc_structure_item_id,
+             tax_curr_amount,
+             tax_dom_amount,
+             tax_parallel_amount,
+             tax_base_curr_amount,
+             tax_base_dom_amount,
+             tax_base_parallel_amount,
+             transferred,              
+             non_ded_tax_curr_amount,
+             non_ded_tax_dom_amount,
+             non_ded_tax_parallel_amount,
+             NULL tax_limit_curr_amount             
+      FROM   ${PROJECTION}_source_tax_item_virtual_vrt
+      WHERE  parent_objkey  = parent_rec_.objkey;       
+BEGIN
+   OPEN  get_tax_record;
+   FETCH get_tax_record BULK COLLECT INTO temp_;
+   CLOSE get_tax_record;
+   RETURN temp_;
+END Get_Tax_Items___;
+
+
+
+-- Calculate_Total_Amounts___
+-- This method is called for calculating the total amounts in the net base calculation.
+PROCEDURE Calculate_Total_Amounts___ (  
+   parent_rec_     IN Source_Line_Virtual_Rec) 
+IS
+   line_amount_rec_     Tax_Handling_Util_API.line_amount_rec;
+   tax_info_table_      Tax_Handling_Util_API.tax_information_table;
+   parent_key_rec_      Source_Line_Virtual_Key; 
+BEGIN
+   parent_key_rec_.objkey := parent_rec_.objkey; 
+   
+   line_amount_rec_ := Tax_Handling_Util_API.Create_Line_Amount_Rec(parent_rec_.gross_curr_amount, 
+                                                                    parent_rec_.net_curr_amount, 
+                                                                    NULL, --parent_rec_.tax_curr_amount
+                                                                    parent_rec_.calc_base, 
+                                                                    Fnd_Boolean_API.DB_FALSE, 
+                                                                    NULL); 
+   
+   tax_info_table_ := Get_Tax_Info_Table___(parent_key_rec_);  
+   
+   FOR i IN 1 .. tax_info_table_.COUNT LOOP
+      IF (line_amount_rec_.consider_use_tax = Fnd_Boolean_API.DB_FALSE) THEN
+         IF (tax_info_table_(i).tax_type_db IN (Fee_Type_API.DB_TAX, Fee_Type_API.DB_CALCULATED_TAX)) THEN
+            line_amount_rec_.line_tax_curr_amount         := line_amount_rec_.line_tax_curr_amount + tax_info_table_(i).tax_curr_amount;
+            line_amount_rec_.line_non_ded_tax_curr_amount := line_amount_rec_.line_non_ded_tax_curr_amount + tax_info_table_(i).non_ded_tax_curr_amount;
+         END IF;
+      ELSIF (line_amount_rec_.consider_use_tax = Fnd_Boolean_API.DB_TRUE) THEN
+         IF (tax_info_table_(i).tax_type_db IN (Fee_Type_API.DB_TAX, Fee_Type_API.DB_USE_TAX, Fee_Type_API.DB_CALCULATED_TAX)) THEN
+            line_amount_rec_.line_tax_curr_amount         := line_amount_rec_.line_tax_curr_amount + tax_info_table_(i).tax_curr_amount;
+            line_amount_rec_.line_non_ded_tax_curr_amount := line_amount_rec_.line_non_ded_tax_curr_amount + tax_info_table_(i).non_ded_tax_curr_amount;
+         END IF;
+      END IF;  
+   END LOOP;
+   
+   Tax_Handling_Util_API.Update_Gross_Net_Curr_Amounts(line_amount_rec_);
+   
+   Update_Totals___(parent_rec_, line_amount_rec_);
+END Calculate_Total_Amounts___; 
+
+
+-- Update_Totals___
+-- Updating summary virtual table
+PROCEDURE Update_Totals___(
+   parent_rec_       IN Source_Line_Virtual_Rec,
+   line_amount_rec_  IN Tax_Handling_Util_API.line_amount_rec) 
+IS
+   tax_item_summary_rec_    Tax_Items_Summary_Virtual_Rec;   
+BEGIN
+   -- Delete existing records in the summary virtual table and replace with the values in the line_amount_rec_.
+   DELETE 
+   FROM ${PROJECTION}_tax_items_summary_virtual_vrt
+   WHERE parent_objkey = parent_rec_.objkey;  
+   
+   tax_item_summary_rec_.parent_objkey := parent_rec_.objkey; 
+   tax_item_summary_rec_.objkey := sys_guid();
+   tax_item_summary_rec_.gross_curr_amount := line_amount_rec_.line_gross_curr_amount;
+   tax_item_summary_rec_.net_curr_amount := line_amount_rec_.line_net_curr_amount ;
+   tax_item_summary_rec_.vat_curr_amount := line_amount_rec_.line_tax_curr_amount;
+   tax_item_summary_rec_.non_ded_curr_amount := line_amount_rec_.line_non_ded_tax_curr_amount;
+   tax_item_summary_rec_.total_tax_curr_amount := line_amount_rec_.line_tax_curr_amount + line_amount_rec_.line_non_ded_tax_curr_amount;
+   tax_item_summary_rec_.cost_curr_amount := line_amount_rec_.line_net_curr_amount + line_amount_rec_.line_non_ded_tax_curr_amount;
+   
+   CRUD_Create___(tax_item_summary_rec_);   
+END Update_Totals___;
+
+
+PROCEDURE Create_Tax_Items_From_Msg___ (
+   rec_  IN Source_Line_Virtual_Rec,
+   msg_  IN VARCHAR2 )
+IS
+   source_tax_item_rec_   Source_Tax_Item_Virtual_Rec; 
+   tax_rec_               Source_Tax_Item_API.source_tax_table;
+   index_                 NUMBER := 0;
+BEGIN   
+   IF (Message_SYS.Get_Name(msg_) = 'TAX_INFORMATION') THEN      
+      Source_Tax_Item_API.Assign_Message_To_Pubrec(tax_rec_, index_, msg_);
+      FOR dummy_ IN 1..index_ LOOP
+         source_tax_item_rec_.company                       := rec_.company;
+         source_tax_item_rec_.source_ref_type_db            := rec_.source_ref_type_db;
+         source_tax_item_rec_.source_ref1                   := rec_.source_ref1;
+         source_tax_item_rec_.source_ref2                   := rec_.source_ref2;
+         source_tax_item_rec_.source_ref3                   := rec_.source_ref3;
+         source_tax_item_rec_.source_ref4                   := rec_.source_ref4;
+         source_tax_item_rec_.source_ref5                   := rec_.source_ref5;
+         source_tax_item_rec_.tax_item_id                   := tax_rec_(dummy_).tax_item_id;
+         source_tax_item_rec_.tax_code                      := tax_rec_(dummy_).tax_code;
+         source_tax_item_rec_.tax_percentage                := tax_rec_(dummy_).tax_percentage;
+         source_tax_item_rec_.tax_calc_structure_id         := tax_rec_(dummy_).tax_calc_structure_id;
+         source_tax_item_rec_.tax_calc_structure_item_id    := tax_rec_(dummy_).tax_calc_structure_item_id;
+         source_tax_item_rec_.tax_curr_amount               := tax_rec_(dummy_).tax_curr_amount;
+         source_tax_item_rec_.tax_dom_amount                := tax_rec_(dummy_).tax_dom_amount;
+         source_tax_item_rec_.tax_parallel_amount           := tax_rec_(dummy_).tax_parallel_amount;
+         source_tax_item_rec_.tax_base_curr_amount          := tax_rec_(dummy_).tax_base_curr_amount;
+         source_tax_item_rec_.tax_base_dom_amount           := tax_rec_(dummy_).tax_base_dom_amount;
+         source_tax_item_rec_.tax_base_parallel_amount      := tax_rec_(dummy_).tax_base_parallel_amount;
+         source_tax_item_rec_.non_ded_tax_curr_amount       := tax_rec_(dummy_).non_ded_tax_curr_amount;
+         source_tax_item_rec_.non_ded_tax_dom_amount        := tax_rec_(dummy_).non_ded_tax_dom_amount;
+         source_tax_item_rec_.non_ded_tax_parallel_amount   := tax_rec_(dummy_).non_ded_tax_parallel_amount;
+         source_tax_item_rec_.total_tax_curr_amount         := (tax_rec_(dummy_).tax_curr_amount + tax_rec_(dummy_).non_ded_tax_curr_amount);
+         source_tax_item_rec_.tax_type                      := Statutory_Fee_API.Get_Fee_Type_Db(Get_Transaction_Company___(rec_), tax_rec_(dummy_).tax_code);
+         source_tax_item_rec_.objkey                        := sys_guid();
+         source_tax_item_rec_.parent_objkey                 := rec_.objkey;
+         
+         CRUD_Create___(source_tax_item_rec_);
+      END LOOP;   
+   END IF;
+END Create_Tax_Items_From_Msg___;
+
+
+PROCEDURE Create_Tax_Items___(
+   rec_ IN Source_Line_Virtual_Rec )
+IS
+   source_tax_item_rec_   Source_Tax_Item_Virtual_Rec; 
+   statutory_fee_rec_     Statutory_Fee_API.Public_Rec;
+   CURSOR get_tax_lines IS 
+      SELECT *
+      FROM Source_Tax_Item_Base_Pub 
+      WHERE (company = rec_.company 
+      AND source_ref_type_db = rec_.source_ref_type_db 
+      AND source_ref1 = rec_.source_ref1 
+      AND source_ref2 = rec_.source_ref2 
+      AND source_ref3 = rec_.source_ref3 
+      AND source_ref4 = rec_.source_ref4 
+      AND source_ref5 = rec_.source_ref5);
+BEGIN
+   FOR tax_line_rec_ IN get_tax_lines LOOP    
+      statutory_fee_rec_ := Statutory_Fee_API.Get(Get_Transaction_Company___(rec_), tax_line_rec_.tax_code);
+      source_tax_item_rec_.company := rec_.company;
+      source_tax_item_rec_.source_ref_type_db := rec_.source_ref_type_db;
+      source_tax_item_rec_.source_ref1 := rec_.source_ref1;
+      source_tax_item_rec_.source_ref2 := rec_.source_ref2;
+      source_tax_item_rec_.source_ref3 := rec_.source_ref3;
+      source_tax_item_rec_.source_ref4 := rec_.source_ref4;
+      source_tax_item_rec_.source_ref5 := rec_.source_ref5;
+      source_tax_item_rec_.tax_item_id := tax_line_rec_.tax_item_id;
+      source_tax_item_rec_.tax_code := tax_line_rec_.tax_code;       
+      source_tax_item_rec_.tax_type := statutory_fee_rec_.fee_type; 
+      source_tax_item_rec_.tax_percentage := tax_line_rec_.tax_percentage;
+      source_tax_item_rec_.deductible_percentage := statutory_fee_rec_.deductible;
+      source_tax_item_rec_.tax_calc_structure_id := tax_line_rec_.tax_calc_structure_id;
+      source_tax_item_rec_.tax_calc_structure_item_id := tax_line_rec_.tax_calc_structure_item_id;
+      IF (rec_.package_name = 'OUTGOING_SUPPLIER_INVOICE_API') THEN
+         source_tax_item_rec_.tax_curr_amount := tax_line_rec_.tax_curr_amount * (-1);
+         source_tax_item_rec_.tax_dom_amount := tax_line_rec_.tax_dom_amount * (-1);
+         source_tax_item_rec_.tax_parallel_amount := tax_line_rec_.tax_parallel_amount * (-1);
+         source_tax_item_rec_.tax_base_curr_amount := tax_line_rec_.tax_base_curr_amount * (-1); 
+         source_tax_item_rec_.tax_base_dom_amount := tax_line_rec_.tax_base_dom_amount * (-1); 
+         source_tax_item_rec_.tax_base_parallel_amount := tax_line_rec_.tax_base_parallel_amount * (-1);  
+         source_tax_item_rec_.total_tax_curr_amount := tax_line_rec_.total_tax_curr_amount * (-1);  
+      ELSE
+         source_tax_item_rec_.tax_curr_amount := tax_line_rec_.tax_curr_amount;
+         source_tax_item_rec_.tax_dom_amount := tax_line_rec_.tax_dom_amount;
+         source_tax_item_rec_.tax_parallel_amount := tax_line_rec_.tax_parallel_amount;
+         source_tax_item_rec_.tax_base_curr_amount := tax_line_rec_.tax_base_curr_amount;    
+         source_tax_item_rec_.tax_base_dom_amount := tax_line_rec_.tax_base_dom_amount;
+         source_tax_item_rec_.tax_base_parallel_amount := tax_line_rec_.tax_base_parallel_amount;  
+         source_tax_item_rec_.total_tax_curr_amount := tax_line_rec_.total_tax_curr_amount;
+      END IF;  
+      source_tax_item_rec_.non_ded_tax_curr_amount := tax_line_rec_.non_ded_tax_curr_amount; 
+      source_tax_item_rec_.non_ded_tax_dom_amount := tax_line_rec_.non_ded_tax_dom_amount;
+      source_tax_item_rec_.non_ded_tax_parallel_amount := tax_line_rec_.non_ded_tax_parallel_amount;
+      IF (tax_line_rec_.transferred_db = Fnd_Boolean_API.DB_TRUE) THEN
+         source_tax_item_rec_.transferred := true;
+      ELSE
+         source_tax_item_rec_.transferred := false;
+      END IF;   
+      
+      source_tax_item_rec_.objkey := sys_guid();
+      source_tax_item_rec_.parent_objkey := rec_.objkey;   
+
+      CRUD_Create___(source_tax_item_rec_);          
+END LOOP;  
+END Create_Tax_Items___;
+
+
+FUNCTION Get_Transaction_Company___(
+   parent_rec_       IN Source_Line_Virtual_Rec) RETURN VARCHAR2
+IS   
+BEGIN
+   IF (parent_rec_.source_ref_type_db = Tax_Source_API.DB_DIRECT_CASH_PAYMENT) THEN
+      RETURN NVL(parent_rec_.source_ref4, parent_rec_.company);
+   ELSE 
+      RETURN parent_rec_.company;
+   END IF;    
+END Get_Transaction_Company___;
+
+
+PROCEDURE Set_To_Default___(
+   key_ IN Source_Line_Virtual_Key)
+IS   
+   tax_info_table_            Tax_Handling_Util_API.tax_information_table;
+   line_amount_rec_           Tax_Handling_Util_API.line_amount_rec; 
+   field_visibility_rec_      Tax_Handling_Util_API.tax_assis_field_visibility_rec;
+   tax_calc_structure_id_     VARCHAR2(20);
+   tax_class_id_              VARCHAR2(20);
+   source_tax_item_rec_       Source_Tax_Item_Virtual_Rec;
+   parent_rec_                Source_Line_Virtual_Rec; 
+   source_line_modified_rec_  Source_Line_Virtual_Rec; 
+BEGIN
+   parent_rec_ := Get_Record___(key_);    
+   
+   -- Handle when the assistant is opened from a page 
+   IF (parent_rec_.source_objkey IS NULL) THEN 
+      Tax_Handling_Util_API.Tax_Line_Assis_Set_To_Default(tax_info_table_,
+                                                          line_amount_rec_, 
+                                                          tax_calc_structure_id_,
+                                                          tax_class_id_,
+                                                          parent_rec_.package_name,
+                                                          parent_rec_.company,                                                       
+                                                          parent_rec_.source_ref_type_db,
+                                                          parent_rec_.source_ref1,
+                                                          parent_rec_.source_ref2,
+                                                          parent_rec_.source_ref3,
+                                                          parent_rec_.source_ref4,
+                                                          parent_rec_.source_ref5,
+                                                          parent_rec_.calc_base);
+   -- Handle when the assistant is opened from another assistant
+   ELSE  
+      Set_Def_From_Tax_Line_Assis___(tax_info_table_,
+                                     line_amount_rec_, 
+                                     tax_calc_structure_id_,
+                                     parent_rec_);
+   END IF;       
+	
+   -- Delete existing records in the virtual table and replace with the values in the tax_info_table_.
+   DELETE 
+   FROM ${PROJECTION}_source_tax_item_virtual_vrt  
+   WHERE parent_objkey = parent_rec_.objkey;                         
+   
+   FOR i IN 1 .. tax_info_table_.COUNT LOOP
+      source_tax_item_rec_.parent_objkey := parent_rec_.objkey; 
+      source_tax_item_rec_.objkey := sys_guid();
+      source_tax_item_rec_.company := parent_rec_.company;
+      source_tax_item_rec_.source_ref_type_db := parent_rec_.source_ref_type_db;
+      source_tax_item_rec_.source_ref1 := parent_rec_.source_ref1;
+      source_tax_item_rec_.source_ref2 := parent_rec_.source_ref2;
+      source_tax_item_rec_.source_ref3 := parent_rec_.source_ref3;
+      source_tax_item_rec_.source_ref4 := parent_rec_.source_ref4;
+      source_tax_item_rec_.source_ref5 := parent_rec_.source_ref5;
+      source_tax_item_rec_.tax_code := tax_info_table_(i).tax_code; 
+      source_tax_item_rec_.tax_type := tax_info_table_(i).tax_type_db;
+      source_tax_item_rec_.tax_percentage := tax_info_table_(i).tax_percentage;
+      source_tax_item_rec_.deductible_percentage := Statutory_Fee_API.Get_Deductible(Get_Transaction_Company___(parent_rec_), tax_info_table_(i).tax_code);
+      source_tax_item_rec_.tax_calc_structure_id := tax_info_table_(i).tax_calc_structure_id;
+      source_tax_item_rec_.tax_calc_structure_item_id := tax_info_table_(i).tax_calc_structure_item_id;
+      source_tax_item_rec_.tax_curr_amount := tax_info_table_(i).tax_curr_amount;     
+      source_tax_item_rec_.tax_dom_amount := tax_info_table_(i).tax_dom_amount;
+      source_tax_item_rec_.tax_parallel_amount := NVL(tax_info_table_(i).tax_para_amount, 0);
+      source_tax_item_rec_.tax_base_curr_amount := tax_info_table_(i).tax_base_curr_amount;     
+      source_tax_item_rec_.tax_base_dom_amount := tax_info_table_(i).tax_base_dom_amount;
+      source_tax_item_rec_.tax_base_parallel_amount := NVL(tax_info_table_(i).tax_base_para_amount, 0);      
+      source_tax_item_rec_.non_ded_tax_curr_amount := tax_info_table_(i).non_ded_tax_curr_amount; 
+      source_tax_item_rec_.non_ded_tax_dom_amount := tax_info_table_(i).non_ded_tax_dom_amount;
+      source_tax_item_rec_.non_ded_tax_parallel_amount := NVL(tax_info_table_(i).non_ded_tax_para_amount, 0);
+      source_tax_item_rec_.total_tax_curr_amount := tax_info_table_(i).total_tax_curr_amount ;
+      source_tax_item_rec_.transferred := false; 
+      
+      CRUD_Create___(source_tax_item_rec_);         
+   END LOOP;   
+   
+   -- Updating summary virtual table
+   Update_Totals___(parent_rec_, line_amount_rec_); 
+   
+   -- When tax structure id is setting or clearing upon setting to defaults tax_base_curr_amount_visible and tax_calc_structure_id
+   -- must be updated in the SourceLineVirtual table.
+   source_line_modified_rec_ := parent_rec_;
+   -- Setting visibility flag for the tax_base_curr_amount column depending on the tax calculation structure   
+   Tax_Handling_Util_API.Field_Visible_Tax_Line_Assis(field_visibility_rec_,
+                                                      parent_rec_.package_name,
+                                                      tax_calc_structure_id_);
+   source_line_modified_rec_.tax_base_curr_amount_visible := Get_Boolean___(field_visibility_rec_.tax_base_curr_amount_visible);   
+   source_line_modified_rec_.tax_calc_structure_id := tax_calc_structure_id_;
+   source_line_modified_rec_.tax_class_id := tax_class_id_;
+   source_line_modified_rec_.set_default_executed := true;
+   CRUD_Update___(parent_rec_, source_line_modified_rec_);
+END Set_To_Default___;
+
+
+-- Below method has overridden in relevant projection plsvc files when it is required.
+FUNCTION Get_Tax_Info_For_Tax_Line_Assistant___ (
+   attr_    IN VARCHAR2,
+   objkey_  IN VARCHAR2) RETURN Tax_Handling_Util_API.source_info_rec
+IS   
+   source_info_rec_  Tax_Handling_Util_API.source_info_rec;
+BEGIN
+   RETURN source_info_rec_;
+END Get_Tax_Info_For_Tax_Line_Assistant___;
+
+
+-- Below method has overridden in relevant projection plsvc files when it is required.
+FUNCTION Get_Tax_Message_For_Tax_Line_Assistant___(
+   rec_ IN Source_Line_Virtual_Rec) RETURN VARCHAR2
+IS
+BEGIN
+   RETURN NULL;
+END Get_Tax_Message_For_Tax_Line_Assistant___;
+
+
+-- Below method has overridden in relevant projection plsvc files when it is required.
+PROCEDURE Save_Tax_Info_From_Tax_Line_Assistant___(
+   parent_rec_      IN  Source_Line_Virtual_Rec,
+   source_key_rec_  IN  Tax_Handling_Util_API.source_key_rec,
+   tax_info_table_  IN  Tax_Handling_Util_API.tax_information_table)
+IS   
+BEGIN
+   NULL;
+END Save_Tax_Info_From_Tax_Line_Assistant___;
+
+
+-- Below method has overridden in relevant projection plsvc files when it is required.
+PROCEDURE Set_Def_From_Tax_Line_Assis___(
+   tax_info_table_         OUT Tax_Handling_Util_API.tax_information_table,
+   line_amount_rec_        OUT Tax_Handling_Util_API.line_amount_rec, 
+   tax_calc_structure_id_  OUT VARCHAR2,
+   parent_rec_             IN  Source_Line_Virtual_Rec)
+IS   
+BEGIN
+   NULL;      
+END Set_Def_From_Tax_Line_Assis___;
+
+

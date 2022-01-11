@@ -1,0 +1,71 @@
+projection ExternalFileLoadIdsHandling;
+component ACCRUL;
+layer Core;
+description "External File Load IDs";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtFileLoadSet for ExtFileLoad {
+   defaultwhere = "Load_Date >= SYSDATE -(365*2)";
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileLoad {
+   crud = Read, Delete;
+
+   attribute FileTemplateId Text {
+      label = "File Template";
+   }
+   attribute FileName Text;
+   attribute SetId Text {
+      label = "Parameter Set ID";
+   }
+   attribute State Enumeration(ExtFileState) {
+      label = "Status";
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference FileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+   reference FileTemplateIdRef(FileTemplateId) to ExtFileTemplate(FileTemplateId) {
+      label = "File Template";
+   }
+}
+
+@Override
+entity ExtFileTemplate {
+   -- Note: Where clause was added to support solution sets. Inactive component data should not be shown.
+   where = "exists (select 1
+                    from ext_file_type
+                    where ext_file_type.file_type = ext_file_template.file_type)";
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

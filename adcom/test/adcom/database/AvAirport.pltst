@@ -1,0 +1,96 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvAirport
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201106  lahnlk   Added Unit test to Check_Insert___ method.
+--  200907  sevhlk   Added Unit test to Prepare_Insert___ method.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+UNITTEST "Prepare_Insert___ should add the rlevent attributes to attribute string" FOR
+   PROCEDURE Prepare_Insert___ (
+      attr_ IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+IS
+   --Insert your test variables here
+   output1_       VARCHAR2(2000);
+   expected1_     VARCHAR2(2000);
+   expected2_     VARCHAR2(2000);
+   expected_     VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      |'With_Aircraft_Id '||'Airport_Id'||chr(31)||'1'||chr(30)|
+      |'With_Two_Attributes'||'Airport_Id'||chr(31)||'1'||chr(30)||'IATA_CODE'||chr(31)||'IATACODE1'||chr(30)|
+      |''     |
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Prepare_Insert___(output1_);
+
+      expected1_ := 'With_Aircraft_Id '||'Airport_Id'||chr(31)||'1'||chr(30)||'ARRIVAL_OFFSET'||chr(31)||'3'||chr(30)||'DEPARTURE_OFFSET'||chr(31)||'3'||chr(30)||'FAULTS_OFFSET'||chr(31)||'3'||chr(30);
+      expected2_ := 'With_Two_Attributes'||'Airport_Id'||chr(31)||'1'||chr(30)||'IATA_CODE'||chr(31)||'IATACODE1'||chr(30)||'ARRIVAL_OFFSET'||chr(31)||'3'||chr(30)||'DEPARTURE_OFFSET'||chr(31)||'3'||chr(30)||'FAULTS_OFFSET'||chr(31)||'3'||chr(30);
+      expected_ := 'ARRIVAL_OFFSET'||chr(31)||'3'||chr(30)||'DEPARTURE_OFFSET'||chr(31)||'3'||chr(30)||'FAULTS_OFFSET'||chr(31)||'3'||chr(30);
+      --Insert your assertions here
+
+      IF attr_ LIKE '%With_Aircraft_Id%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%With_Two_Attributes%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = expected_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+
+END UNITTEST;
+
+
+UNITTEST "Check_Insert___ should assign sequence value for airport_id when inserting new record" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_airport_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      |dummy |
+      |1     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_  av_airport_tab%ROWTYPE;
+   output4_  av_airport_tab%ROWTYPE;
+   output2_  Indicator_Rec;
+   --output3_  VARCHAR2(2000);
+BEGIN
+   output1_.Airport_Id:= NULL;
+   output4_.Airport_Id :=1243;
+   FOR
+      | newrec_ | indrec_ | attr_ |
+      | output1_| output2_| 'A'   |
+      | output4_| output2_| 'A'   |
+   LOOP
+      IF newrec_.Airport_Id IS NULL THEN
+         newrec_.Airport_Id := AIRPORT_ID_SEQ.nextval;
+         ASSERT newrec_.Airport_Id IS NOT NULL MESSAGE 'Returned '||newrec_.Airport_Id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+
+

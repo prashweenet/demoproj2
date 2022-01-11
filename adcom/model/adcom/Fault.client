@@ -1,0 +1,208 @@
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210329  majslk  AD-1079, Added logbook reference field.
+--  210112  LAHNLK  LMM2020R1-1481, Added ReferenceAvAircraftSubSystemNewSelector..
+--  201013  majslk  LMM2020R1-1285, Improvements in Fault page
+--  200808  DILDLK  LMM2020R1-516, Modified navigation.
+--  200715  SatGlk  LMM2020R1-300, Added Fault Action and Fault Deadline Lists
+--  200702  TAJALK  LMM2020R1-270, Bug fixes
+--  200701  SatGlk  LMM2020R1-187, Corrected AircraftRef with AircraftLov
+--  200630  SatGlk  LMM2020R1-187, UI Improvements done
+--  200625  KAWJLK  LMM2020R1-186, Arranging the order of attributes
+--  200623  dildlk  LMM2020R1-80, UI Changes.
+--  200617  LAHNLK  LMM2020R1-74: created.
+-----------------------------------------------------------------------------
+
+client Fault;
+component ADCOM;
+layer Core;
+projection FaultHandling;
+include fragment AircraftLovSelector;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+entry FaultsNavEntry parent AdcomNavigator.AviationMaintenance at index 600 {
+   label = "Faults";
+   page Faults home AvFault;
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Faults using AvFaultSet {
+   list AvFaultList;
+   tabs {
+      tab {
+         label = "Fault Actions";
+         list AvFaultActionList(FaultActionArray)bind AvFaultList;
+      }
+      tab {
+         label = "Fault Deadlines";
+         list AvFaultDeadlineList(FaultDeadlineArray)bind AvFaultList;
+      }
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector ReferenceAvAircraftSubSystemNewSelector for AvAircraftSubSystem {
+   label = "";
+   static SubSystemCode;
+   static SubSystemName;
+}
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AvFaultList for AvFault {
+   field Barcode;
+   lov AircraftRef with ReferenceAircraftLovSelector {
+      label = "Aircraft";
+      description = AircraftRef.Aircraft;
+      hidekey = [true];
+   }
+   lov AircraftSubSystemRef with ReferenceAvAircraftSubSystemNewSelector {
+      label = "Failed System";
+      description = AircraftSubSystemRef.SubSystemCode;
+      hidekey = [true];
+   }
+   field LogbookReference {
+      label = "Logbook Reference";
+   }
+   field Description {
+      label = "Fault Description";
+   }
+   badge Objstate {
+      label = "Fault Status ";
+      style = TextOnly;
+      emphasis Alert = [Objstate = "Open"];
+      emphasis Info = [Objstate = "Deferred"];
+      emphasis Ok = [Objstate = "Closed"];
+   }
+   field AvFaultDeferralRef.FaultSeverityCd {
+      label = "Fault Severity";
+   }
+   field Priority {
+      label = "Fault Priority";
+   }
+   field FoundOnType;
+   field FoundOnId {
+      label = "Found On ID";
+   }
+   field FoundOnDesc {
+      label = "Found On Description";
+   }
+   field FoundOnDate;
+   field FoundByUserRef.Description {
+      label = "Found By";
+   }
+   field PhaseOfFlightCodeRef {
+      label = "Phase of Flight";
+   }
+   field LogbookTypeCodeRef {
+      label = "Logbook Type";
+   }
+   field FaultSourceCodeRef {
+      label = "Fault Source";
+   }
+   field FailureTypeCodeRef {
+      label = "Failure Type";
+   }
+   field FaultCode;
+   field ClosedDate;
+   commandgroup PartDetailStates {
+      command Complete;
+      command Defer;
+   }
+}
+list AvFaultActionList for AvFaultAction {
+   crudactions {
+
+      edit {
+
+         enabled = [parent.Objstate != "Closed"];
+
+      }
+      new {
+         enabled = [parent.Objstate != "Closed"];
+      }
+
+   }
+   field ActionUser {
+      label = "Performed by User";
+   }
+   field ActionDesc {
+      label = "Description";
+   }
+   field ActionDate {
+      label = "Date";
+   }
+   field IsCorrective {
+      label = "Corrective Action";
+      required = [true];
+   }
+}
+list AvFaultDeadlineList for AvFaultDeadline {
+   crudactions {
+
+      edit {
+
+         enabled = [parent.Objstate != "Closed"];
+
+      }
+      new {
+         enabled = [parent.Objstate != "Closed"];
+      }
+
+   }
+   field FaultDeadlineId {
+      label = "Deadline ID";
+   }
+   field DeadlineParameterCode {
+      label = "Deadline Parameter Code";
+   }
+   field DeadlineUsage {
+      label = "Usage";
+   }
+   field DeadlineDate;
+   field UsageRemaining;
+   field DeadlineDriver {
+      label = "Driving Deadline";
+   }
+   field DeadlineExtension {
+      label = "Extension";
+   }
+   field DeadlineInterval {
+      label = "Interval";
+   }
+}
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

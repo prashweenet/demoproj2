@@ -1,0 +1,147 @@
+client CreateAccountingPeriods;
+component ACCRUL;
+layer Core;
+projection CreateAccountingPeriodsHandling;
+
+include fragment SourceAccountingYearLovSelector;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CreateAccountingPeriodsNavEntry parent AccrulNavigator.UserRelatedDataMenu at index 1000 {
+      label = "New Accounting Periods";
+      assistant Assistant;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+assistant Assistant using CreateAccPeriodHeadVirtualSet {
+   label = "New Accounting Periods";
+   savemode = OnFinish;
+
+   steps {
+      step {
+         group AccountingPeriodDummyGroup;
+         list CreateAccountingPeriodVirtualList(AccountingPeriodsArray);
+      }
+      final step {
+
+      }
+      cancelled step {
+      }
+   }
+   finish command {
+      variable ExeStatus;
+
+      execute {
+         call CreateAccountingPeriods(Objkey) into ExeStatus;
+         if [ExeStatus = "SUCCESS"] {
+            success("The accounting period(s) is successfully created");
+         }
+         if[ExeStatus = "ERROR"] {
+            error("Errors occurred while creating Accounting Calender ");
+         }
+         if[ExeStatus = "PARTIAL"] {
+            info("Accounting Calender is created with errors");
+         }
+      }
+   }
+   cancel command {
+      execute {
+         navigate back;
+      }
+   }
+   restart command {
+      visible = [true];
+   }
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+group AccountingPeriodDummyGroup for CreateAccPeriodHeadVirtual {
+   label = "";
+   visible = [false];
+
+   field Company {
+      visible = [false];
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list CreateAccountingPeriodVirtualList for CreateAccountingPeriodVirtual {
+   label = "";
+   multiselect = [false];
+
+   field Selected {
+      size = Small;
+   }
+   lov  CompanyRef with ReferenceCompanyFinanceSelector {
+      search = Company, Description;
+      description = CompanyRef.Description;
+      editable = [false];
+   }
+   lov SourceYearRef with ReferenceSourceAccountingYearLovSelector {
+      size = Small;
+   }
+   field FromAccountingYear {
+      size = Small;
+   }
+   field ToAccountingYear {
+      editable = [VouNumCreateMethodDb != "Exclude"];
+      size = Small;
+   }
+   field VouNumCreateMethod {
+      validate command {
+         execute {
+            if [VouNumCreateMethod = "Exclude"] {
+               set ExclUserGroupPerVouSeries = true;
+            }
+         }
+      }
+   }
+   field ExclUserGroupPerVouSeries;
+   field ExcludeUserGroupPerPeriod;
+   field AccPeriodCreateMethod {
+      size = Small;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

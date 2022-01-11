@@ -1,0 +1,30 @@
+-----------------------------------------------------------------------------
+--
+--  Filename      : AccrulAppsrvDefinitions.ins
+--
+--  Module        : ACCRUL
+--
+--  Purpose       : Define basic data
+--
+--  Localization  : No localization needed, and no translation support.
+--                  
+--  Date    Sign   History
+--  ------  ----   -----------------------------------------------------------
+--  030917  CHPRLK Created by moving statements from InvoiceAppsrvDeifinitions.ins
+--  071214  SHSALK Bug # 69372 Corrected.
+-----------------------------------------------------------------------------
+SET SERVEROUT ON
+
+PROMPT Setting up Attribute limitations of PAY_TERM_ID in PaymentTerm
+
+BEGIN
+   Attribute_definition_API.Set_Length ('PaymentTerm','PAY_TERM_ID','*','20');
+   Attribute_definition_API.Set_Max_Length ('PaymentTerm','PAY_TERM_ID','*',20);
+END;
+/
+
+COMMIT;
+
+-----------------------------------------------------------------------------
+-- END OF FILE
+-----------------------------------------------------------------------------

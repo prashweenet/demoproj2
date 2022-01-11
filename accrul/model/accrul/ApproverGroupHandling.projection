@@ -1,0 +1,58 @@
+projection ApproverGroupHandling;
+component ACCRUL;
+layer Core;
+description "Approver Group";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ApproverGroupSet for ApproverGroup {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ApproverGroup {
+   attribute ApproverGroupId Text {
+      label = "Approver Group ID";
+   }
+   attribute Description Text {
+      label = "Approver Group Description";
+   }
+
+   array ApproverGroupDetailArray(Company, ApproverGroupId) to ApproverGroupDetail(Company, ApproverGroupId);
+}
+
+@Override
+entity ApproverGroupDetail {
+   crud = Create, Read, Delete;
+   reference UserIdRef(Company, UserId) to UserFinance(Company, Userid) {
+      label = "User";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

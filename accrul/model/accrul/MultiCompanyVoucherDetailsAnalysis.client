@@ -1,0 +1,217 @@
+client MultiCompanyVoucherDetailsAnalysis;
+component ACCRUL;
+layer Core;
+
+include fragment FinNotesDialog;
+include fragment CodeStringAllBasic;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry MCQueryVoucherDetailNavEntry parent AccrulNavigator.VoucherAnalysisMenu at index 400 {
+      label = "Multi-Company Voucher Details Analysis";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using MultiCompanyVoucher1QuerySet {
+   label = "Multi-Company Voucher Details Analysis";
+   selector MultiCompanyVoucher1QueryDetailSelector;
+
+   group MCQueryVoucherDetailGroup;
+   group EntryDetailsGroup;
+   list MultiCompanyVoucherRow1QueryList(VoucherRowArray);
+   command NotesCommand;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command NotesCommand for MultiCompanyVoucher1Query {
+   label = "Notes";
+   enabled = [Company != null and VoucherNo > 1];
+   variable NoteIdNum {
+      type = Number;
+   }
+   execute {
+      set PackageNameStr = "VOUCHER_NOTE_API";
+      set CallingProjectionNameStr = "MultiCompanyVoucherDetailsAnalysis";
+      assistant NotesAssistant(PackageNameStr, CallingProjectionNameStr, keyref, luname, "") into(NoteIdNum) {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+selector MultiCompanyVoucher1QueryDetailSelector for MultiCompanyVoucher1Query {
+   label = "${VoucherType} - ${VoucherNo}";
+
+   static VoucherType;
+   static VoucherNo;
+   static AccountingYear;
+
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group MCQueryVoucherDetailGroup for MultiCompanyVoucher1Query {
+   label = "";
+
+   field VoucherTypeRef {
+      size = Small;
+   }
+   field VoucherNo;
+   field FunctionGroup {
+      size = Small;
+      searchable = false;
+   }
+   field VoucherDate {
+      size = Small;
+   }
+   field AccountingYear {
+      size = Small;
+   }
+   field AccountingPeriod {
+      size = Small;
+   }
+   field Notes {
+      size = Small;
+   }
+   field UpdateError {
+      size = Large;
+   }
+}
+
+group EntryDetailsGroup for MultiCompanyVoucher1Query {
+   label = "Entry Information";
+
+   field DateReg;
+   field Userid {
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+
+   field UserGroup;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list MultiCompanyVoucherRow1QueryList for MultiCompanyVoucherRow1Query {
+   label = "Voucher Rows";
+   field RowNo {
+      size = Small;
+   }
+   lov CompanyFinanceRef with CompanyFinanceSelector {
+      search = Company, Description;
+      size = Large;
+      description = CompanyFinanceRef.Description;
+   }
+   field VoucherUpdated {
+      size = Small;
+   }
+   fieldset CodeStringAllBasicLovFieldSet;
+   field CurrencyCode {
+      size = Small;
+   }
+   field CurrencyRate {
+      size = Small;
+   }
+   field ConversionFactor {
+      size = Small;
+   }
+   field DebitAmount;
+   field CreditAmount;
+   field Amount;
+   field AccCurrency {
+      size = Small;
+   }
+   field CurrencyDebitAmount;
+   field CurrencyCreditAmount;
+   field CurrencyAmount;
+   field ParallelCurrencyRate {
+      size = Small;
+   }
+   field ParallelConversionFactor {
+      size = Small;
+   }
+   field ParallelAccCurrency {
+      size = Small;
+   }
+   field ThirdCurrencyDebitAmount;
+   field ThirdCurrencyCreditAmount;
+   field ThirdCurrencyAmount;
+   field Quantity;
+   field PeriodAllocation {
+      size = Small;
+   }
+   field Text;
+
+   @DynamicComponentDependency INVOIC
+   lov DelivTypeIdRef with DeliveryTypeSelector {
+      search = DelivTypeId, Description;
+      description = DelivTypeIdRef.Description;
+   }
+   field OptionalCode {
+      size = Small;
+   }
+   field ProjectActivityId;
+   field UpdateError {
+      size = Small;
+      multiline = true;
+   }
+   field TransCode {
+      size = Small;
+   }
+   field ReferenceSerie {
+      size = Small;
+   }
+   field ReferenceNumber {
+      size = Small;
+   }
+   field VoucherTypeRef {
+      size = Small;
+   }
+   field VoucherNoRef;
+   field AccountingYearRef;
+   field RowGroupId;
+
+   fieldranking AccCurrency, Amount;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

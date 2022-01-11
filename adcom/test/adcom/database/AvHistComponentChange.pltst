@@ -1,0 +1,163 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistComponentChange
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  202013  themlk  DISO2020R1-425, Get_Event_Type should return event type
+--  202007  themlk  DISO2020R1-410, Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PRIVATE METHODS ----------------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should_find_the_correct_IFS_lu_key_when_MX_UNIQUE_KEY_is_passed_in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Event_Type_API
+   FUNCTION Encode (
+      client_value_ IN     VARCHAR2 )  RETURN  VARCHAR2
+   IS
+   BEGIN
+      CASE client_value_
+      WHEN 'Installation' THEN
+         RETURN 'INST';
+      WHEN 'Removal' THEN
+         RETURN 'RMVL';
+      END CASE;
+END Encode;
+
+@MockPackage Event_Type_API
+FUNCTION Get_Client_Value (
+   index_ IN     NUMBER )  RETURN  VARCHAR2
+IS
+BEGIN
+   CASE index_
+   WHEN 0 THEN
+      RETURN 'Installation';
+   WHEN 1 THEN
+      RETURN 'Removal';
+   END CASE;
+   END Get_Client_Value;
+
+@MockPackage Event_Type_API
+FUNCTION Decode (
+   db_value_ IN     VARCHAR2 )  RETURN  VARCHAR2
+IS
+BEGIN
+   CASE db_value_
+   WHEN 'INST' THEN
+      RETURN 'Installation';
+   WHEN 'RMVL' THEN
+      RETURN 'Removal';
+   END CASE;
+   END Decode;
+
+@MockTable av_inventory_tab
+VALUES
+   | inventory_id |inventory_serial_no_oem|part_no_oem|manufacture_code|barcode|
+   | 1            |'SE001'                |'PN001'    |'manufacture001'|'barcode001'|
+   END VALUES;
+
+   @MockTable av_hist_execution_task
+   VALUES
+      | inventory_id  | task_name | et_barcode |
+      | 1             | 'TASK1'   | 'TB01'     |
+   END VALUES;
+
+IS
+   output1_  VARCHAR2(2000);
+   expected1_   VARCHAR2(2000);
+   expected2_   VARCHAR2(2000);
+   expected3_   VARCHAR2(2000);
+
+   BEGIN
+      FOR
+         | attr_ |
+         | 'INVENTORY_ID'||chr(31)||'1'||chr(30)||'WITH_INVENTORY_ID'|
+         | 'ET_BARCODE'||chr(31)||'TB01'||chr(30)||'WITH_TASK_NAME'                                      |
+      LOOP
+
+         output1_ := attr_;
+         Pre_Sync_Action(output1_);
+
+         expected1_ := 'INVENTORY_ID'||chr(31)||'1'||chr(30)||'WITH_INVENTORY_ID';
+         expected2_ := 'ET_BARCODE'||chr(31)||'TB01'||chr(30)||'WITH_TASK_NAME';
+         expected3_ := 'USAGE_REC_UNIQUE_ID'||chr(31)||'MXSNAPSHOTKEY1'||chr(30)||'USAGE_SNAPSHOT_RECORD_ID'||'USAGE_SNAPSHOT_RECORD_ID'||chr(31)||'1'||chr(30);
+
+         IF attr_ LIKE '%WITH_INVENTORY_ID%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_TASK_NAME%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Event_Type should_return_event_type" FOR
+   FUNCTION Get_Event_Type(
+      event_status_code_ IN     VARCHAR2) RETURN VARCHAR2;
+USING
+   @MockPackage Event_Type_API
+   FUNCTION Decode (
+      db_value_ IN     VARCHAR2 )  RETURN  VARCHAR2
+   IS
+   BEGIN
+      CASE db_value_
+      WHEN 'INST' THEN
+         RETURN 'Installation';
+      WHEN 'RMVL' THEN
+         RETURN 'Removal';
+      END CASE;
+END Decode;
+
+@MockPackage Event_Type_API
+FUNCTION Encode (
+   client_value_ IN     VARCHAR2 )  RETURN  VARCHAR2
+IS
+BEGIN
+   CASE client_value_
+   WHEN 'Installation' THEN
+      RETURN 'INST';
+   WHEN 'Removal' THEN
+      RETURN 'RMVL';
+   END CASE;
+END Encode;
+
+@MockPackage Event_Type_API
+FUNCTION Get_Client_Value (
+   index_ IN     NUMBER )  RETURN  VARCHAR2
+IS
+BEGIN
+   CASE index_
+   WHEN 0 THEN
+      RETURN 'Installation';
+   WHEN 1 THEN
+      RETURN 'Removal';
+   END CASE;
+END Get_Client_Value;
+
+IS
+return_   VARCHAR2(2000);
+expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | event_status_code_ |
+      | 'INST'    |  'FGINST'          |
+      | 'RMVL'    |  'FGRMVL'          |
+   LOOP
+
+      return_ := Get_Event_Type(event_status_code_);
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;

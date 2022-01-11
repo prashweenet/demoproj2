@@ -1,0 +1,72 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalFileTypeHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200922  CKumlk   FISPRING20-6568, Added a warning in Create_Details_From_View_Def___ when there are differences between view and the base view.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Is_View_Available___ (
+   view_name_ IN VARCHAR2 ) RETURN BOOLEAN
+IS
+BEGIN
+   Finance_Lib_API.Is_View_Available(view_name_);
+   RETURN TRUE;
+END Is_View_Available___;
+
+FUNCTION Is_Package_Available___ (
+   package_name_ IN VARCHAR2 ) RETURN BOOLEAN
+IS
+BEGIN
+   Finance_Lib_API.Is_Package_Available(package_name_);
+   RETURN TRUE;
+END Is_Package_Available___;
+
+FUNCTION Get_Input_Package___(
+   view_name_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   input_package_       VARCHAR2(200);
+BEGIN
+   IF (Dictionary_SYS.View_Is_Active(view_name_)) THEN
+      input_package_ :=  External_File_Utility_API.Get_Input_Package(view_name_);
+      IF (Dictionary_SYS.Package_Is_Active(input_package_)) THEN
+         RETURN input_package_;
+      END IF;
+   END IF;
+   RETURN NULL;
+END Get_Input_Package___;
+
+PROCEDURE Create_Details_From_View_Def___ (
+   file_type_      IN VARCHAR2,
+   view_name_      IN VARCHAR2,
+   input_package_  IN VARCHAR2,
+   record_type_id_ IN VARCHAR2,
+   component_      IN VARCHAR2,
+   info$_          OUT VARCHAR2)
+IS
+   base_view_        VARCHAR2(30);
+   view_diff_exist_  VARCHAR2(5):= 'FALSE';
+BEGIN
+   IF (view_name_ IS NOT NULL) THEN
+      External_File_Utility_API.Check_View_Col_Diff(view_diff_exist_, base_view_, view_name_);
+      IF (view_diff_exist_ = 'TRUE') THEN
+         Client_SYS.Add_Warning(lu_name_, 'WARNVIEWDIFF: The view :P1 does not match with the base view of entity :P2. It could lead to errors when loading external files.', view_name_, base_view_);
+      END IF;
+   END IF;
+   
+   IF (file_type_ IS NOT NULL AND view_name_ IS NOT NULL AND record_type_id_ IS NOT NULL) THEN
+      
+      External_File_Utility_API.Create_Rec_Det_From_View(file_type_,
+                                                         view_name_,
+                                                         input_package_,
+                                                         record_type_id_,
+                                                         component_);
+   END IF; 
+   info$_ :=  Client_SYS.Get_All_Info();
+END Create_Details_From_View_Def___;

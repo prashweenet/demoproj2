@@ -1,0 +1,32 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccrulUtility
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+VIEW Accrul_Session_Pid IS
+   Prompt = 'Accrul Session Pid'
+   Session_Id.Flags = 'A-IU-'
+   Session_Id.Datatype = 'NUMBER(10)'
+   Session_Id.Prompt = 'Session Id'
+   Posting_Combination_Id.Flags = 'A-IU-'
+   Posting_Combination_Id.Datatype = 'NUMBER'
+   Posting_Combination_Id.Prompt = 'Posting combination id'
+SELECT p.session_id                       session_id,
+       p.posting_combination_id           posting_combination_id 
+FROM   accrul_session_pid_tmp p;
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

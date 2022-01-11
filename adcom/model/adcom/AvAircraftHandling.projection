@@ -1,0 +1,59 @@
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200702  TAJALK  LMM2020R1-270, Bug fixes
+--  200626  SatGlk  LMM2020R1-187, Added DummyAircraft to concat AircraftDesc and RegCode.
+--  200622  dildlk  LMM2020R1-71, Created.
+-----------------------------------------------------------------------------
+
+projection AvAircraftHandling;
+component ADCOM;
+layer Core;
+description "This API shows all the information related to Aircraft";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AircraftSet for Aircraft;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity Aircraft {
+   crud = Create, Read, Update, Delete;
+   attribute AircraftId Number {
+      required = [false];
+   }
+   attribute DummyAircraft Text {
+      fetch = "CONCAT(CONCAT(Av_Aircraft_Type_API.Get_Aircraft_Type_Name(aircraft_type_code), ' - '), TO_CHAR(reg_code))";
+      editable = [false];
+   }
+   attribute AircraftTypeCode Text {
+      required = [true];
+   }
+
+   reference CountryCodeRef(CountryCode) to IsoCountry(CountryCode);
+   reference RegulatoryBodyRef(RegulatoryBodyCode) to AvRegulatoryBody(RegulatoryBodyCode);
+   reference AircraftTypeRef(AircraftTypeCode) to AvAircraftType(AircraftTypeCode);
+}
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

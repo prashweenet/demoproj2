@@ -1,0 +1,45 @@
+fragment CurrencyType1Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view currency_type1";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCurrencyType1Selector for CurrencyType1 {
+   static CurrencyType;
+   static Description;
+}
+
+card CurrencyType1Card for CurrencyType1 {
+   label = "";
+   fieldranking CurrencyType;
+   field CurrencyType;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CurrencyType1 {
+   from = "currency_type1";
+   lu = CurrencyType;
+   keys = Company, CurrencyType;
+   ludependencies = CurrencyType;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CurrencyType Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute RefCurrencyCode Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

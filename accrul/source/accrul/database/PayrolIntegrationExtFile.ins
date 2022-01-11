@@ -1,0 +1,172 @@
+-----------------------------------------------------------------------------
+--
+--  Filename      : PayrolIntegrationExtFile.ins
+--
+--  Module        : ACCRUL
+--
+--  Purpose       : Define basic data for File Type and / or File Template 
+--
+-----------------------------------------------------------------------------------------------------------------------
+--  Date    Sign    History
+--  ----    ----    ----------------------------------------------------------------------------------------------------
+--  150622  ALAIN  File created.
+--------------------------------------------------------------------------------------------------------------------------------------
+--
+--------------------------------------------------------------------------------------------------------------------------------------
+PROMPT Insert Instructions for file type
+ 
+DECLARE 
+   row_no_                NUMBER;
+BEGIN 
+ 
+   DELETE FROM Ext_File_Type_Tab WHERE  file_type = 'ExtPayrolInt';
+   External_File_Utility_API.File_Type_Row('ExtPayrolInt', 'Payrol Integration', 'ACCRUL', 'TRUE', 'FALSE', '', 'tbwExtParameters', 'Ext_Parameters_API.Create_Parameter_Msg', 'Ext_Load_API.Start_Ext_Vouchers', '', 'LoadPayroll', 'NULL');
+ 
+   DELETE FROM Ext_File_Type_Rec_Tab WHERE  file_type = 'ExtPayrolInt';
+   External_File_Utility_API.File_Type_Rec_Row('ExtPayrolInt', '1', 'Voucher Line', '1', 'TRUE', 'TRUE', 'FALSE', '', '', '' );
+ 
+   DELETE FROM Ext_File_Type_Rec_Column_Tab WHERE  file_type = 'ExtPayrolInt';
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'ACCOUNT', 'Account', '1', 'TRUE', 'C1' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'ACCOUNTING_YEAR', 'Accounting Year', '2', 'FALSE', 'N2' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'AMOUNT', 'Amount', '2', 'FALSE', 'N8' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CODE_B', 'Code B', '1', 'FALSE', 'C2' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CODE_C', 'Code C', '1', 'FALSE', 'C3' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CODE_D', 'Code D', '1', 'FALSE', 'C4' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CODE_E', 'Code E', '1', 'FALSE', 'C5' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CODE_F', 'Code F', '1', 'FALSE', 'C6' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CODE_G', 'Code G', '1', 'FALSE', 'C7' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CODE_H', 'Code H', '1', 'FALSE', 'C8' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CODE_I', 'Code I', '1', 'FALSE', 'C9' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CODE_J', 'Code J', '1', 'FALSE', 'C10' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'COMPANY', 'Company', '1', 'FALSE', 'C70' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CREDIT_AMOUNT', 'Credit Amount', '2', 'FALSE', 'N7' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CURRENCY_AMOUNT', 'Currency Amount', '2', 'FALSE', 'N5' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CURRENCY_CODE', 'Currency Code', '1', 'FALSE', 'C11' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CURRENCY_CREDIT_AMOUNT', 'Currency Credit Amount', '2', 'FALSE', 'N4' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CURRENCY_DEBIT_AMOUNT', 'Currency Debit Amount', '2', 'FALSE', 'N3' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CURRENCY_RATE_TYPE', 'Currency Rate Type', '1', 'FALSE', 'C72' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'CURRENCY_TAX_AMOUNT', 'Currency Tax Amount', '2', 'FALSE', 'N13' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'DEBIT_AMOUNT', 'Debit Amount', '2', 'FALSE', 'N6' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'DELIVERY_TYPE_ID', 'Delivery Type Id', '1', 'FALSE', 'C71' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'EVENT_DATE', 'Event Date', '3', 'FALSE', 'D2' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'LOAD_GROUP_ITEM', 'Load Group Item', '1', 'FALSE', 'C19' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'PARALLEL_CURR_RATE_TYPE', 'Parallel Currency Rate Type', '1', 'FALSE', 'C73' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'PARTY_TYPE_ID', 'Party Type Id', '1', 'FALSE', 'C15' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'PROCESS_CODE', 'Process Code', '1', 'FALSE', 'C12' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'PROJECT_ACTIVITY_SEQ_NO', 'Project Activity Seq No', '2', 'FALSE', 'N14' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'QUANTITY', 'Quantity', '2', 'FALSE', 'N9' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'REFERENCE_NUMBER', 'Reference Number', '1', 'FALSE', 'C16' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'REFERENCE_SERIE', 'Reference Serie', '1', 'FALSE', 'C17' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'RETROACTIVE_DATE', 'Retoractive Date', '3', 'FALSE', 'D3' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'SIGN_AMOUNT', 'Sign Amount', '1', 'FALSE', 'C22' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'SIGN_QUANTITY', 'Sign Quantity', '1', 'FALSE', 'C23' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'TAX_AMOUNT', 'Tax Amount', '2', 'FALSE', 'N12' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'TAX_CODE', 'Tax Code', '1', 'FALSE', 'C13' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'TAX_DIRECTION', 'Tax Direction', '1', 'FALSE', 'C21' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'TEXT', 'Text', '1', 'FALSE', 'C14' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'THIRD_CURRENCY_AMOUNT', 'Third Currency Amount', '2', 'FALSE', 'N15' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'THIRD_CURRENCY_CREDIT_AMOUNT', 'Third Currency Credit Amount', '2', 'FALSE', 'N11' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'THIRD_CURRENCY_DEBIT_AMOUNT', 'Third Currency Debit Amount', '2', 'FALSE', 'N10' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'THIRD_CURRENCY_TAX_AMOUNT', 'Third Currency Tax Amount', '2', 'FALSE', 'N16' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'TRANSACTION_DATE', 'Transaction Date', '3', 'FALSE', 'D1' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'TRANSACTION_REASON', 'Transaction Reason', '1', 'FALSE', 'C24' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'TRANS_CODE', 'Trans Code', '1', 'FALSE', 'C18' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'VOUCHER_NO', 'Voucher No', '2', 'FALSE', 'N1' );
+   External_File_Utility_API.File_Type_Rec_Column_Row('ExtPayrolInt', '1', 'VOUCHER_TYPE', 'Voucher Type', '1', 'FALSE', 'C20' );
+ 
+   DELETE FROM Ext_File_Type_Param_Tab WHERE  file_type = 'ExtPayrolInt';
+   External_File_Utility_API.File_Type_Param_Row('ExtPayrolInt', '1', 'COMPANY', 'Company', 'COMPANY_FINANCE', '', 'Company_Finance_API.Exist(COMPANY)', 'FALSE', '', '1' );
+   External_File_Utility_API.File_Type_Param_Row('ExtPayrolInt', '2', 'USER_ID', 'User Id', 'USER_FINANCE(COMPANY)', '', 'User_Finance_API.Exist(COMPANY,USERID)', 'FALSE', '', '1' );
+   External_File_Utility_API.File_Type_Param_Row('ExtPayrolInt', '3', 'LOAD_TYPE', 'Load_Type', 'EXT_PARAMETERS(COMPANY)', '', 'Ext_Parameters_API.Exist(COMPANY,LOAD_TYPE)', 'FALSE', '', '1' );
+   External_File_Utility_API.File_Type_Param_Row('ExtPayrolInt', '4', 'LOAD_DATE', 'Load Date', '', '', 'Ext_File_Message_API.Is_Date_Format_Ok(LOAD_DATE)', 'FALSE', '', '3' );
+   External_File_Utility_API.File_Type_Param_Row('ExtPayrolInt', '5', 'USER_GROUP', 'User Group', 'USER_GROUP_MEMBER_FINANCE2(COMPANY,USER_ID)', '', 'User_Group_Member_Finance_API.Exist(COMPANY,USER_GROUP,USER_ID)', 'FALSE', '', '1' );
+   External_File_Utility_API.File_Type_Param_Row('ExtPayrolInt', '6', 'CHECK_WHEN_LOADED', 'Check When Loaded', '', 'Fnd_Boolean_API.Enumerate', '', 'FALSE', 'TRUE/FALSE', '1' );
+   External_File_Utility_API.File_Type_Param_Row('ExtPayrolInt', '7', 'CREATE_WHEN_CHECKED', 'Create When Checked', '', 'Fnd_Boolean_API.Enumerate', '', 'FALSE', 'TRUE/FALSE', '1' );
+ 
+   DELETE FROM Ext_Type_Param_Set_Tab WHERE  file_type = 'ExtPayrolInt';
+   External_File_Utility_API.File_Type_Param_Set_Row('ExtPayrolInt', '1', 'External Voucher Default Set', 'TRUE' );
+ 
+   DELETE FROM Ext_Type_Param_Per_Set_Tab WHERE  file_type = 'ExtPayrolInt';
+   External_File_Utility_API.File_Type_Param_Per_Set_Row('ExtPayrolInt', '1', '1', '<COMPANY>', 'TRUE', 'TRUE', 'TRUE' );
+   External_File_Utility_API.File_Type_Param_Per_Set_Row('ExtPayrolInt', '1', '2', '<USER_ID>', 'TRUE', 'TRUE', 'TRUE' );
+   External_File_Utility_API.File_Type_Param_Per_Set_Row('ExtPayrolInt', '1', '3', '<LOAD_TYPE>', 'TRUE', 'TRUE', 'TRUE' );
+   External_File_Utility_API.File_Type_Param_Per_Set_Row('ExtPayrolInt', '1', '4', '<SYSDATE>', 'TRUE', 'TRUE', 'TRUE' );
+   External_File_Utility_API.File_Type_Param_Per_Set_Row('ExtPayrolInt', '1', '5', '<USER_GROUP>', 'FALSE', 'TRUE', 'TRUE' );
+   External_File_Utility_API.File_Type_Param_Per_Set_Row('ExtPayrolInt', '1', '6', 'FALSE', 'FALSE', 'TRUE', 'TRUE' );
+   External_File_Utility_API.File_Type_Param_Per_Set_Row('ExtPayrolInt', '1', '7', 'FALSE', 'FALSE', 'TRUE', 'TRUE' );
+ 
+ 
+END;
+/
+COMMIT;
+--------------------------------------------------------------------------------------------------------------------------------------
+ 
+--------------------------------------------------------------------------------------------------------------------------------------
+PROMPT Insert Instructions for file template
+ 
+DECLARE 
+   row_no_                NUMBER;
+BEGIN 
+ 
+   DELETE FROM Ext_File_Template_Tab WHERE  file_template_id = 'STDPAYROLINT';
+   External_File_Utility_API.File_Template_Row('ExtPayrolInt', 'STDPAYROLINT', 'Standard Payrol Integration', 'TRUE', 'SEP', '1', '.', '', 'YYYY-MM-DD', 'TRUE', 'TRUE', 'TRUE', '', '' );
+ 
+   DELETE FROM Ext_File_Template_Dir_Tab WHERE  file_template_id = 'STDPAYROLINT';
+   External_File_Utility_API.File_Template_Dir_Row('STDPAYROLINT', '1', 'TRUE', 'TRUE', 'TRUE', 'FALSE', 'TRUE', 'FALSE', 'FALSE', '*^*', 'InExtFileTemplateDir', 'Ext_Load_API.Start_Ext_Vouchers', '30', 'FALSE', '', '', '', '', '', '', '', '', '', '' );
+ 
+   DELETE FROM Ext_File_Template_Detail_Tab WHERE  file_template_id = 'STDPAYROLINT';
+   DELETE FROM Ext_File_Templ_Det_Func_Tab WHERE  file_template_id = 'STDPAYROLINT';
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'ACCOUNT', '3', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CODE_J', '12', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CURRENCY_CODE', '13', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'PROCESS_CODE', '21', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'TAX_CODE', '23', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'TEXT', '25', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'PARTY_TYPE_ID', '26', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'REFERENCE_NUMBER', '27', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'REFERENCE_SERIE', '28', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'TRANS_CODE', '29', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'LOAD_GROUP_ITEM', '33', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CODE_B', '4', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'VOUCHER_TYPE', '37', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'TAX_DIRECTION', '34', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'SIGN_AMOUNT', '15', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'SIGN_QUANTITY', '16', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'TRANSACTION_REASON', '40', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CODE_C', '5', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CODE_D', '6', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CODE_E', '7', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CODE_F', '8', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CODE_G', '9', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'COMPANY', '23', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'DELIVERY_TYPE_ID', '22', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CURRENCY_RATE_TYPE', '43', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'PARALLEL_CURR_RATE_TYPE', '44', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CODE_H', '10', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CODE_I', '11', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'TRANSACTION_DATE', '32', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'EVENT_DATE', '38', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'RETROACTIVE_DATE', '39', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'VOUCHER_NO', '1', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'THIRD_CURRENCY_DEBIT_AMOUNT', '30', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'THIRD_CURRENCY_CREDIT_AMOUNT', '31', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'TAX_AMOUNT', '35', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CURRENCY_TAX_AMOUNT', '36', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'PROJECT_ACTIVITY_SEQ_NO', '24', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'THIRD_CURRENCY_AMOUNT', '41', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'THIRD_CURRENCY_TAX_AMOUNT', '42', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'ACCOUNTING_YEAR', '2', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CURRENCY_DEBIT_AMOUNT', '14', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CURRENCY_CREDIT_AMOUNT', '15', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CURRENCY_AMOUNT', '16', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'DEBIT_AMOUNT', '17', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'CREDIT_AMOUNT', '18', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'AMOUNT', '19', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+   External_File_Utility_API.File_Template_Det_Row(row_no_, 'STDPAYROLINT', 'ExtPayrolInt', '1', 'QUANTITY', '20', '', '', '', '', 'FALSE', 'FALSE', '', '' );
+ 
+   DELETE FROM Ext_File_Template_Control_Tab WHERE  file_template_id = 'STDPAYROLINT';
+ 
+END;
+/
+COMMIT;
+--------------------------------------------------------------------------------------------------------------------------------------

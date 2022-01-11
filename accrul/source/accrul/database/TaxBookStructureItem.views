@@ -1,0 +1,91 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TaxBookStructureItem
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Tax_Book_Structure_Item2 IS
+   Prompt = 'Tax Book Structure Node'
+   Company.Datatype = 'STRING(20)'
+   Structure_Id.Datatype = 'STRING(10)/UPPERCASE'
+   Structure_Id.Ref = 'TaxBookStructure(company)/NOCHECK'
+   Name_Value.Prompt = 'Node Name'
+   Description.Datatype = 'STRING(35)'
+   Structure_Item_Type.Prompt = 'Structure item type'
+SELECT company                        company,
+       structure_id                   structure_id,
+       name_value                     name_value,
+       description                    description,
+       level_id                       level_id,
+       item_above                     item_above,
+       Tax_Book_Struc_Item_Type_API.Decode(structure_item_type)
+                                      structure_item_type,
+       structure_item_type            structure_item_type_db,
+       rowid                          objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                        objkey
+FROM   tax_book_structure_item_tab
+WHERE  structure_item_type = 'NODE';
+
+VIEW Tax_Book_Structure_Item3 IS
+   Prompt = 'Tax Book Structure Code Part Value'
+   Company.Datatype = 'STRING(20)'
+   Structure_Id.Datatype = 'STRING(10)/UPPERCASE'
+   Structure_Id.Ref = 'TaxBookStructure(company)/NOCHECK'
+   Name_Value.Prompt = 'Code Part Value'
+   Structure_Item_Type.Prompt = 'Structure item type'
+SELECT company                        company,
+       structure_id                   structure_id,
+       name_value                     name_value,
+       level_id                       level_id,
+       item_above                     item_above,
+       Tax_Book_Struc_Item_Type_API.Decode(structure_item_type)
+                                      structure_item_type,
+       rowid                         objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                        objkey
+FROM   tax_book_structure_item_tab
+WHERE  structure_item_type = 'TAXBOOK';
+
+-- This view is to be used by Aurena
+VIEW Tax_Book_Struct_Item_Disp IS
+   Prompt = 'Tax Book Structure Item'
+   Structure_Id.Ref = 'TaxBookStructure(company)'
+   Name_Value.Flags = 'KMI-L'
+   Name_Value.Datatype = 'STRING(10)/UPPERCASE'
+   Level_Id.Datatype = 'STRING(10)/UPPERCASE'
+   Item_Above.Datatype = 'STRING(10)/UPPERCASE'
+   Structure_Item_Type.Flags = 'AMI--'
+SELECT t.company                        company,
+       t.structure_id                   structure_id,
+       t.name_value                     name_value,      
+       t.description                    description,
+       t.level_id                       level_id,
+       t.item_above                     item_above,
+       Tax_Book_Struc_Item_Type_API.Decode(t.structure_item_type)
+                                        structure_item_type,
+       t.structure_item_type            structure_item_type_db,
+       l.levl                           struct_level,
+       t.ROWID                          objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))    objversion,
+       t.rowkey                          objkey,
+       l.description                     level_description
+FROM   tax_book_structure_item_tab t,
+       tax_book_struc_level_hierarchy l
+WHERE  t.company       = l.company 
+  AND  t.structure_id  = l.structure_id 
+  AND  t.level_id      = l.level_id;

@@ -1,0 +1,142 @@
+--------------------------------------------------------------------------------------
+-- Date     Sign   History
+-- -------  ------   -----------------------------------------------------------------
+-- 200602   SACNLK   GESPRING20-4612, Added accounting_xml_data functionality.
+-- 200623   SACNLK   GESPRING20-4642, Added SatLevel and SatAccountGroup to accounting_xml_data functionality.
+-- 201112   SACNLK   GESPRING20-5995, Added SatParentAccount for accounting_xml_data functionality.
+--------------------------------------------------------------------------------------
+
+projection PseudoCodesHandling;
+component ACCRUL;
+layer Core;
+description "Handle Pseudo Codes";
+category Users;
+
+@DynamicComponentDependency PROJ
+include fragment ProjectActivityPostableSelector;
+include fragment CodeStringAccountExtended;
+include fragment CodeStringExtended;
+--gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+--gelr:localization_control_center, end
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PseudoCodesSet for PseudoCodes {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity PseudoCodes {
+   attribute Description Text {
+      label = "Pseudo Code Description";
+   }
+   attribute Account Text {
+      required = [true];
+   }
+   attribute ProcessCode Text {
+      format = uppercase;
+   }
+   attribute PseudoCodeOwnership Enumeration(FinOwnership) {
+      label = "Ownership";
+   }
+   attribute UserName Text {
+      label = "User ID";
+      editable = [false];
+   }
+   attribute ProjectActivityId Number {
+      label = "Proj Activity Seq No";
+   }
+   attribute AttributeKey Text {
+      fetch = "pseudo_code||'^'||user_name";
+   }
+   attribute RequiredString Text {
+      fetch = "Account_API.Get_Required_Code_Part_List(company, account)";
+      editable = [true];
+   }
+   attribute ProjectId Text {
+      fetch = "Pseudo_Codes_API.Get_Project_Id(company, pseudo_code, user_name)";
+   }
+   attribute ActivityIdEnabled Boolean("TRUE", "FALSE") {
+      fetch = "Pseudo_Codes_API.Is_Proj_Activity_Id_Enable(company, pseudo_code, user_name)";
+   }
+   -- gelr:accounting_xml_data, begin
+   reference SatAccountGroupRef(Company, SatAccountGroup) to SatAccountGroup(Company, SatAccountGroup) {
+      label = "SAT Account Group";
+   }
+   reference SatParentAccountRef(Company, SatParentAccount) to Account(Company, Account) {
+      label = "SAT Parent Account";
+   }
+   -- gelr:accounting_xml_data, end
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference AccountRef(Company, Account) to Account(Company, Account);
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+   reference ProcessCodeRef(Company, ProcessCode) to AccountProcessCode(Company, ProcessCode) {
+      label = "Process Code";
+   }
+   reference UserNameRef(UserName) to FndUser(Identity) {
+      label = "User ID";
+   }
+   @DynamicComponentDependency PROJ
+   reference ProjectActivityIdRef(ProjectId, ProjectActivityId) to ProjectActivityPostable(ProjectId, ActivitySeq) {
+      label = "Project Activity Sequence Number";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function ValidateProjectOrigin Structure(ProjectOriginStructure) {
+   parameter Company Text;
+   parameter ProjectId Text;
+}
+
+-- gelr:accounting_xml_data, begin
+function ValidateAccount Structure(SatValues) {
+   parameter Company Text;
+   parameter Account Text;
+}
+-- gelr:accounting_xml_data, end
+-------------------------------- STRUCTURES ---------------------------------
+structure ProjectOriginStructure {
+   attribute ValidOrigin Text;
+   attribute ActivityId  Number;
+}
+
+-- gelr:accounting_xml_data, begin
+structure SatValues {
+   attribute SatAccountGroup Text;
+   attribute SatLevel Enumeration(SatLevel);
+   attribute SatAccountType Enumeration(SatAccountType);
+   attribute SatParentAccount Text;
+}
+-- gelr:accounting_xml_data, end
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

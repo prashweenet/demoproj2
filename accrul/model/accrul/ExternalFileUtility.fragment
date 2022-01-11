@@ -1,0 +1,966 @@
+fragment ExternalFileUtility;
+component ACCRUL;
+layer Core;
+description "Entity model to support send Tax Information";
+
+//Replacement of TaxBizAPI Services in Taxled
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileTransHead using ExtFileTrans {
+   from = "EXT_FILE_TRANS_HEAD";
+   exec = "EXT_FILE_TRANS_API";
+
+   keys = LoadFileId, RowNo;
+   use attributes = FileLine,
+   C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19,
+   C20, C21, C22, C23, C24, C25, C26, C27, C28, C29, C30, C31, C32, C33, C34, C35, C36, C37, C38, C39,
+   C40, C41, C42, C43, C44, C45, C46, C47, C48, C49, C50, C51, C52, C53, C54, C55, C56, C57, C58, C59,
+   C60, C61, C62, C63, C64, C65, C66, C67, C68, C69, C70, C71, C72, C73, C74, C75, C76, C77, C78, C79,
+   C80, C81, C82, C83, C84, C85, C86, C87, C88, C89, C90, C91, C92, C93, C94, C95, C96, C97, C98, C99,
+   N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11, N12, N13, N14, N15, N16, N17, N18, N19,
+   N20, N21, N22, N23, N24, N25, N26, N27, N28, N29, N30, N31, N32, N33, N34, N35, N36, N37, N38, N39,
+   N40, N41, N42, N43, N44, N45, N46, N47, N48, N49, N50, N51, N52, N53, N54, N55, N56, N57, N58, N59,
+   N60, N61, N62, N63, N64, N65, N66, N67, N68, N69, N70, N71, N72, N73, N74, N75, N76, N77, N78, N79,
+   N80, N81, N82, N83, N84, N85, N86, N87, N88, N89, N90, N91, N92, N93, N94, N95, N96, N97, N98, N99,
+   D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, D16, D17, D18, D19, D20,
+   ParentRowNo, RecordTypeId, RecordTypeOut, UseLine, AttrString, RowState, ErrorText, RecordSetNo, ControlId;
+
+   attribute LoadFileId Number;
+   attribute RowNo Number;
+   attribute RecordTypeOut Text {
+      maxlength = 4000;
+   }
+   attribute RowState      Text {
+      maxlength = 10;
+      fetch = "row_state_db";
+   }
+// !TODO: Temporary correction, will be removed after DXDEV-672 is corrected, begin
+   attribute C0 Text;
+   attribute C1 Text;
+   attribute C2 Text;
+   attribute C3 Text;
+   attribute C4 Text;
+   attribute C5 Text;
+   attribute C6 Text;
+   attribute C7 Text;
+   attribute C8 Text;
+   attribute C9 Text;
+   attribute C10 Text;
+   attribute C11 Text;
+   attribute C12 Text;
+   attribute C13 Text;
+   attribute C14 Text;
+   attribute C15 Text;
+   attribute C16 Text;
+   attribute C17 Text;
+   attribute C18 Text;
+   attribute C19 Text;
+   attribute C20 Text;
+   attribute C21 Text;
+   attribute C22 Text;
+   attribute C23 Text;
+   attribute C24 Text;
+   attribute C25 Text;
+   attribute C26 Text;
+   attribute C27 Text;
+   attribute C28 Text;
+   attribute C29 Text;
+   attribute C30 Text;
+   attribute C31 Text;
+   attribute C32 Text;
+   attribute C33 Text;
+   attribute C34 Text;
+   attribute C35 Text;
+   attribute C36 Text;
+   attribute C37 Text;
+   attribute C38 Text;
+   attribute C39 Text;
+   attribute C40 Text;
+   attribute C41 Text;
+   attribute C42 Text;
+   attribute C43 Text;
+   attribute C44 Text;
+   attribute C45 Text;
+   attribute C46 Text;
+   attribute C47 Text;
+   attribute C48 Text;
+   attribute C49 Text;
+   attribute C50 Text;
+   attribute C51 Text;
+   attribute C52 Text;
+   attribute C53 Text;
+   attribute C54 Text;
+   attribute C55 Text;
+   attribute C56 Text;
+   attribute C57 Text;
+   attribute C58 Text;
+   attribute C59 Text;
+   attribute C60 Text;
+   attribute C61 Text;
+   attribute C62 Text;
+   attribute C63 Text;
+   attribute C64 Text;
+   attribute C65 Text;
+   attribute C66 Text;
+   attribute C67 Text;
+   attribute C68 Text;
+   attribute C69 Text;
+   attribute C70 Text;
+   attribute C71 Text;
+   attribute C72 Text;
+   attribute C73 Text;
+   attribute C74 Text;
+   attribute C75 Text;
+   attribute C76 Text;
+   attribute C77 Text;
+   attribute C78 Text;
+   attribute C79 Text;
+   attribute C80 Text;
+   attribute C81 Text;
+   attribute C82 Text;
+   attribute C83 Text;
+   attribute C84 Text;
+   attribute C85 Text;
+   attribute C86 Text;
+   attribute C87 Text;
+   attribute C88 Text;
+   attribute C89 Text;
+   attribute C90 Text;
+   attribute C91 Text;
+   attribute C92 Text;
+   attribute C93 Text;
+   attribute C94 Text;
+   attribute C95 Text;
+   attribute C96 Text;
+   attribute C97 Text;
+   attribute C98 Text;
+   attribute C99 Text;
+   attribute N0 Number;
+   attribute N1 Number;
+   attribute N2 Number;
+   attribute N3 Number;
+   attribute N4 Number;
+   attribute N5 Number;
+   attribute N6 Number;
+   attribute N7 Number;
+   attribute N8 Number;
+   attribute N9 Number;
+   attribute N10 Number;
+   attribute N11 Number;
+   attribute N12 Number;
+   attribute N13 Number;
+   attribute N14 Number;
+   attribute N15 Number;
+   attribute N16 Number;
+   attribute N17 Number;
+   attribute N18 Number;
+   attribute N19 Number;
+   attribute N20 Number;
+   attribute N21 Number;
+   attribute N22 Number;
+   attribute N23 Number;
+   attribute N24 Number;
+   attribute N25 Number;
+   attribute N26 Number;
+   attribute N27 Number;
+   attribute N28 Number;
+   attribute N29 Number;
+   attribute N30 Number;
+   attribute N31 Number;
+   attribute N32 Number;
+   attribute N33 Number;
+   attribute N34 Number;
+   attribute N35 Number;
+   attribute N36 Number;
+   attribute N37 Number;
+   attribute N38 Number;
+   attribute N39 Number;
+   attribute N40 Number;
+   attribute N41 Number;
+   attribute N42 Number;
+   attribute N43 Number;
+   attribute N44 Number;
+   attribute N45 Number;
+   attribute N46 Number;
+   attribute N47 Number;
+   attribute N48 Number;
+   attribute N49 Number;
+   attribute N50 Number;
+   attribute N51 Number;
+   attribute N52 Number;
+   attribute N53 Number;
+   attribute N54 Number;
+   attribute N55 Number;
+   attribute N56 Number;
+   attribute N57 Number;
+   attribute N58 Number;
+   attribute N59 Number;
+   attribute N60 Number;
+   attribute N61 Number;
+   attribute N62 Number;
+   attribute N63 Number;
+   attribute N64 Number;
+   attribute N65 Number;
+   attribute N66 Number;
+   attribute N67 Number;
+   attribute N68 Number;
+   attribute N69 Number;
+   attribute N70 Number;
+   attribute N71 Number;
+   attribute N72 Number;
+   attribute N73 Number;
+   attribute N74 Number;
+   attribute N75 Number;
+   attribute N76 Number;
+   attribute N77 Number;
+   attribute N78 Number;
+   attribute N79 Number;
+   attribute N80 Number;
+   attribute N81 Number;
+   attribute N82 Number;
+   attribute N83 Number;
+   attribute N84 Number;
+   attribute N85 Number;
+   attribute N86 Number;
+   attribute N87 Number;
+   attribute N88 Number;
+   attribute N89 Number;
+   attribute N90 Number;
+   attribute N91 Number;
+   attribute N92 Number;
+   attribute N93 Number;
+   attribute N94 Number;
+   attribute N95 Number;
+   attribute N96 Number;
+   attribute N97 Number;
+   attribute N98 Number;
+   attribute N99 Number;
+// !TODO: Temporary correction, will be removed after DXDEV-672 is corrected, end
+   attribute D1 Timestamp;
+   attribute D2 Timestamp;
+   attribute D3 Timestamp;
+   attribute D4 Timestamp;
+   attribute D5 Timestamp;
+   attribute D6 Timestamp;
+   attribute D7 Timestamp;
+   attribute D8 Timestamp;
+   attribute D9 Timestamp;
+   attribute D10 Timestamp;
+   attribute D11 Timestamp;
+   attribute D12 Timestamp;
+   attribute D13 Timestamp;
+   attribute D14 Timestamp;
+   attribute D15 Timestamp;
+   attribute D16 Timestamp;
+   attribute D17 Timestamp;
+   attribute D18 Timestamp;
+   attribute D19 Timestamp;
+   attribute D20 Timestamp;
+
+   array Details(LoadFileId, RowNo) to ExtFileTransDetail(LoadFileId, RowNo);
+   array Ends(LoadFileId, RowNo) to ExtFileTransEnd(LoadFileId, RowNo);
+   array Taxnos(LoadFileId, RowNo) to ExtFileTransTaxno(LoadFileId, RowNo);
+
+}
+
+@Override
+entity ExtFileTransDetail using ExtFileTrans {
+   from = "EXT_FILE_TRANS_DETAIL";
+   exec = "EXT_FILE_TRANS_API";
+
+   keys = LoadFileId, RowNo, DetailRowNo;
+   use attributes = FileLine,
+   C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19,
+   C20, C21, C22, C23, C24, C25, C26, C27, C28, C29, C30, C31, C32, C33, C34, C35, C36, C37, C38, C39,
+   C40, C41, C42, C43, C44, C45, C46, C47, C48, C49, C50, C51, C52, C53, C54, C55, C56, C57, C58, C59,
+   C60, C61, C62, C63, C64, C65, C66, C67, C68, C69, C70, C71, C72, C73, C74, C75, C76, C77, C78, C79,
+   C80, C81, C82, C83, C84, C85, C86, C87, C88, C89, C90, C91, C92, C93, C94, C95, C96, C97, C98, C99,
+   C100, C101, C102, C103, C104, C105, C106, C107, C108, C109, C110, C111, C112, C113, C114, C115, C116, C117, C118, C119,
+   C120, C121, C122, C123, C124, C125, C126, C127, C128, C129, C130, C131, C132, C133, C134, C135, C136, C137, C138, C139,
+   C140, C141, C142, C143, C144, C145, C146, C147, C148, C149, C150, C151, C152, C153, C154, C155, C156, C157, C158, C159,
+   C160, C161, C162, C163, C164, C165, C166, C167, C168, C169, C170, C171, C172, C173, C174, C175, C176, C177, C178, C179,
+   C180, C181, C182, C183, C184, C185, C186, C187, C188, C189, C190, C191, C192, C193, C194, C195, C196, C197, C198, C199,
+   N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11, N12, N13, N14, N15, N16, N17, N18, N19,
+   N20, N21, N22, N23, N24, N25, N26, N27, N28, N29, N30, N31, N32, N33, N34, N35, N36, N37, N38, N39,
+   N40, N41, N42, N43, N44, N45, N46, N47, N48, N49, N50, N51, N52, N53, N54, N55, N56, N57, N58, N59,
+   N60, N61, N62, N63, N64, N65, N66, N67, N68, N69, N70, N71, N72, N73, N74, N75, N76, N77, N78, N79,
+   N80, N81, N82, N83, N84, N85, N86, N87, N88, N89, N90, N91, N92, N93, N94, N95, N96, N97, N98, N99,
+   D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, D16, D17, D18, D19, D20,
+   RecordTypeId, RecordTypeOut, UseLine, AttrString, RowState, ErrorText, RecordSetNo, ControlId;
+
+   attribute LoadFileId Number;
+   attribute RowNo Number;
+   attribute DetailRowNo Number {
+      fetch = "detail_row_no";
+   }
+   attribute RecordTypeOut Text {
+      maxlength = 4000;
+   }
+   attribute RowState      Text {
+      maxlength = 10;
+      fetch = "row_state_db";
+   }
+   // !TODO: Temporary correction, will be removed after DXDEV-672 is corrected, begin
+   attribute C0 Text;
+   attribute C1 Text;
+   attribute C2 Text;
+   attribute C3 Text;
+   attribute C4 Text;
+   attribute C5 Text;
+   attribute C6 Text;
+   attribute C7 Text;
+   attribute C8 Text;
+   attribute C9 Text;
+   attribute C10 Text;
+   attribute C11 Text;
+   attribute C12 Text;
+   attribute C13 Text;
+   attribute C14 Text;
+   attribute C15 Text;
+   attribute C16 Text;
+   attribute C17 Text;
+   attribute C18 Text;
+   attribute C19 Text;
+   attribute C20 Text;
+   attribute C21 Text;
+   attribute C22 Text;
+   attribute C23 Text;
+   attribute C24 Text;
+   attribute C25 Text;
+   attribute C26 Text;
+   attribute C27 Text;
+   attribute C28 Text;
+   attribute C29 Text;
+   attribute C30 Text;
+   attribute C31 Text;
+   attribute C32 Text;
+   attribute C33 Text;
+   attribute C34 Text;
+   attribute C35 Text;
+   attribute C36 Text;
+   attribute C37 Text;
+   attribute C38 Text;
+   attribute C39 Text;
+   attribute C40 Text;
+   attribute C41 Text;
+   attribute C42 Text;
+   attribute C43 Text;
+   attribute C44 Text;
+   attribute C45 Text;
+   attribute C46 Text;
+   attribute C47 Text;
+   attribute C48 Text;
+   attribute C49 Text;
+   attribute C50 Text;
+   attribute C51 Text;
+   attribute C52 Text;
+   attribute C53 Text;
+   attribute C54 Text;
+   attribute C55 Text;
+   attribute C56 Text;
+   attribute C57 Text;
+   attribute C58 Text;
+   attribute C59 Text;
+   attribute C60 Text;
+   attribute C61 Text;
+   attribute C62 Text;
+   attribute C63 Text;
+   attribute C64 Text;
+   attribute C65 Text;
+   attribute C66 Text;
+   attribute C67 Text;
+   attribute C68 Text;
+   attribute C69 Text;
+   attribute C70 Text;
+   attribute C71 Text;
+   attribute C72 Text;
+   attribute C73 Text;
+   attribute C74 Text;
+   attribute C75 Text;
+   attribute C76 Text;
+   attribute C77 Text;
+   attribute C78 Text;
+   attribute C79 Text;
+   attribute C80 Text;
+   attribute C81 Text;
+   attribute C82 Text;
+   attribute C83 Text;
+   attribute C84 Text;
+   attribute C85 Text;
+   attribute C86 Text;
+   attribute C87 Text;
+   attribute C88 Text;
+   attribute C89 Text;
+   attribute C90 Text;
+   attribute C91 Text;
+   attribute C92 Text;
+   attribute C93 Text;
+   attribute C94 Text;
+   attribute C95 Text;
+   attribute C96 Text;
+   attribute C97 Text;
+   attribute C98 Text;
+   attribute C99 Text;
+   attribute C100 Text;
+   attribute C101 Text;
+   attribute C102 Text;
+   attribute C103 Text;
+   attribute C104 Text;
+   attribute C105 Text;
+   attribute C106 Text;
+   attribute C107 Text;
+   attribute C108 Text;
+   attribute C109 Text;
+   attribute C110 Text;
+   attribute C111 Text;
+   attribute C112 Text;
+   attribute C113 Text;
+   attribute C114 Text;
+   attribute C115 Text;
+   attribute C116 Text;
+   attribute C117 Text;
+   attribute C118 Text;
+   attribute C119 Text;
+   attribute C120 Text;
+   attribute C121 Text;
+   attribute C122 Text;
+   attribute C123 Text;
+   attribute C124 Text;
+   attribute C125 Text;
+   attribute C126 Text;
+   attribute C127 Text;
+   attribute C128 Text;
+   attribute C129 Text;
+   attribute C130 Text;
+   attribute C131 Text;
+   attribute C132 Text;
+   attribute C133 Text;
+   attribute C134 Text;
+   attribute C135 Text;
+   attribute C136 Text;
+   attribute C137 Text;
+   attribute C138 Text;
+   attribute C139 Text;
+   attribute C140 Text;
+   attribute C141 Text;
+   attribute C142 Text;
+   attribute C143 Text;
+   attribute C144 Text;
+   attribute C145 Text;
+   attribute C146 Text;
+   attribute C147 Text;
+   attribute C148 Text;
+   attribute C149 Text;
+   attribute C150 Text;
+   attribute C151 Text;
+   attribute C152 Text;
+   attribute C153 Text;
+   attribute C154 Text;
+   attribute C155 Text;
+   attribute C156 Text;
+   attribute C157 Text;
+   attribute C158 Text;
+   attribute C159 Text;
+   attribute C160 Text;
+   attribute C161 Text;
+   attribute C162 Text;
+   attribute C163 Text;
+   attribute C164 Text;
+   attribute C165 Text;
+   attribute C166 Text;
+   attribute C167 Text;
+   attribute C168 Text;
+   attribute C169 Text;
+   attribute C170 Text;
+   attribute C171 Text;
+   attribute C172 Text;
+   attribute C173 Text;
+   attribute C174 Text;
+   attribute C175 Text;
+   attribute C176 Text;
+   attribute C177 Text;
+   attribute C178 Text;
+   attribute C179 Text;
+   attribute C180 Text;
+   attribute C181 Text;
+   attribute C182 Text;
+   attribute C183 Text;
+   attribute C184 Text;
+   attribute C185 Text;
+   attribute C186 Text;
+   attribute C187 Text;
+   attribute C188 Text;
+   attribute C189 Text;
+   attribute C190 Text;
+   attribute C191 Text;
+   attribute C192 Text;
+   attribute C193 Text;
+   attribute C194 Text;
+   attribute C195 Text;
+   attribute C196 Text;
+   attribute C197 Text;
+   attribute C198 Text;
+   attribute C199 Text;
+   attribute N0 Number;
+   attribute N1 Number;
+   attribute N2 Number;
+   attribute N3 Number;
+   attribute N4 Number;
+   attribute N5 Number;
+   attribute N6 Number;
+   attribute N7 Number;
+   attribute N8 Number;
+   attribute N9 Number;
+   attribute N10 Number;
+   attribute N11 Number;
+   attribute N12 Number;
+   attribute N13 Number;
+   attribute N14 Number;
+   attribute N15 Number;
+   attribute N16 Number;
+   attribute N17 Number;
+   attribute N18 Number;
+   attribute N19 Number;
+   attribute N20 Number;
+   attribute N21 Number;
+   attribute N22 Number;
+   attribute N23 Number;
+   attribute N24 Number;
+   attribute N25 Number;
+   attribute N26 Number;
+   attribute N27 Number;
+   attribute N28 Number;
+   attribute N29 Number;
+   attribute N30 Number;
+   attribute N31 Number;
+   attribute N32 Number;
+   attribute N33 Number;
+   attribute N34 Number;
+   attribute N35 Number;
+   attribute N36 Number;
+   attribute N37 Number;
+   attribute N38 Number;
+   attribute N39 Number;
+   attribute N40 Number;
+   attribute N41 Number;
+   attribute N42 Number;
+   attribute N43 Number;
+   attribute N44 Number;
+   attribute N45 Number;
+   attribute N46 Number;
+   attribute N47 Number;
+   attribute N48 Number;
+   attribute N49 Number;
+   attribute N50 Number;
+   attribute N51 Number;
+   attribute N52 Number;
+   attribute N53 Number;
+   attribute N54 Number;
+   attribute N55 Number;
+   attribute N56 Number;
+   attribute N57 Number;
+   attribute N58 Number;
+   attribute N59 Number;
+   attribute N60 Number;
+   attribute N61 Number;
+   attribute N62 Number;
+   attribute N63 Number;
+   attribute N64 Number;
+   attribute N65 Number;
+   attribute N66 Number;
+   attribute N67 Number;
+   attribute N68 Number;
+   attribute N69 Number;
+   attribute N70 Number;
+   attribute N71 Number;
+   attribute N72 Number;
+   attribute N73 Number;
+   attribute N74 Number;
+   attribute N75 Number;
+   attribute N76 Number;
+   attribute N77 Number;
+   attribute N78 Number;
+   attribute N79 Number;
+   attribute N80 Number;
+   attribute N81 Number;
+   attribute N82 Number;
+   attribute N83 Number;
+   attribute N84 Number;
+   attribute N85 Number;
+   attribute N86 Number;
+   attribute N87 Number;
+   attribute N88 Number;
+   attribute N89 Number;
+   attribute N90 Number;
+   attribute N91 Number;
+   attribute N92 Number;
+   attribute N93 Number;
+   attribute N94 Number;
+   attribute N95 Number;
+   attribute N96 Number;
+   attribute N97 Number;
+   attribute N98 Number;
+   attribute N99 Number;
+// !TODO: Temporary correction, will be removed after DXDEV-672 is corrected, end
+   attribute D1 Timestamp;
+   attribute D2 Timestamp;
+   attribute D3 Timestamp;
+   attribute D4 Timestamp;
+   attribute D5 Timestamp;
+   attribute D6 Timestamp;
+   attribute D7 Timestamp;
+   attribute D8 Timestamp;
+   attribute D9 Timestamp;
+   attribute D10 Timestamp;
+   attribute D11 Timestamp;
+   attribute D12 Timestamp;
+   attribute D13 Timestamp;
+   attribute D14 Timestamp;
+   attribute D15 Timestamp;
+   attribute D16 Timestamp;
+   attribute D17 Timestamp;
+   attribute D18 Timestamp;
+   attribute D19 Timestamp;
+   attribute D20 Timestamp;
+}
+
+@Override
+entity ExtFileTransEnd using ExtFileTrans {
+   from = "EXT_FILE_TRANS_END";
+   exec = "EXT_FILE_TRANS_API";
+   keys = LoadFileId, RowNo, DetailRowNo;
+   use attributes = FileLine,
+   C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19,
+   C20, C21, C22, C23, C24, C25, C26, C27, C28, C29, C30, C31, C32, C33, C34, C35, C36, C37, C38, C39,
+   C40, C41, C42, C43, C44, C45, C46, C47, C48, C49, C50, C51, C52, C53, C54, C55, C56, C57, C58, C59,
+   C60, C61, C62, C63, C64, C65, C66, C67, C68, C69, C70, C71, C72, C73, C74, C75, C76, C77, C78, C79,
+   C80, C81, C82, C83, C84, C85, C86, C87, C88, C89, C90, C91, C92, C93, C94, C95, C96, C97, C98, C99,
+   N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11, N12, N13, N14, N15, N16, N17, N18, N19,
+   N20, N21, N22, N23, N24, N25, N26, N27, N28, N29, N30, N31, N32, N33, N34, N35, N36, N37, N38, N39,
+   N40, N41, N42, N43, N44, N45, N46, N47, N48, N49, N50, N51, N52, N53, N54, N55, N56, N57, N58, N59,
+   N60, N61, N62, N63, N64, N65, N66, N67, N68, N69, N70, N71, N72, N73, N74, N75, N76, N77, N78, N79,
+   N80, N81, N82, N83, N84, N85, N86, N87, N88, N89, N90, N91, N92, N93, N94, N95, N96, N97, N98, N99,
+   D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, D16, D17, D18, D19, D20,
+   RecordTypeId, RecordTypeOut, UseLine, AttrString, RowState, ErrorText, RecordSetNo, ControlId;
+
+   attribute LoadFileId Number;
+   attribute RowNo Number;
+   attribute DetailRowNo Number {
+      fetch = "detail_row_no";
+   }
+   attribute RecordTypeOut Text {
+      maxlength = 4000;
+   }
+   attribute RowState      Text {
+      maxlength = 10;
+      fetch = "row_state_db";
+   }
+// !TODO: Temporary correction, will be removed after DXDEV-672 is corrected, begin
+   attribute C0 Text;
+   attribute C1 Text;
+   attribute C2 Text;
+   attribute C3 Text;
+   attribute C4 Text;
+   attribute C5 Text;
+   attribute C6 Text;
+   attribute C7 Text;
+   attribute C8 Text;
+   attribute C9 Text;
+   attribute C10 Text;
+   attribute C11 Text;
+   attribute C12 Text;
+   attribute C13 Text;
+   attribute C14 Text;
+   attribute C15 Text;
+   attribute C16 Text;
+   attribute C17 Text;
+   attribute C18 Text;
+   attribute C19 Text;
+   attribute C20 Text;
+   attribute C21 Text;
+   attribute C22 Text;
+   attribute C23 Text;
+   attribute C24 Text;
+   attribute C25 Text;
+   attribute C26 Text;
+   attribute C27 Text;
+   attribute C28 Text;
+   attribute C29 Text;
+   attribute C30 Text;
+   attribute C31 Text;
+   attribute C32 Text;
+   attribute C33 Text;
+   attribute C34 Text;
+   attribute C35 Text;
+   attribute C36 Text;
+   attribute C37 Text;
+   attribute C38 Text;
+   attribute C39 Text;
+   attribute C40 Text;
+   attribute C41 Text;
+   attribute C42 Text;
+   attribute C43 Text;
+   attribute C44 Text;
+   attribute C45 Text;
+   attribute C46 Text;
+   attribute C47 Text;
+   attribute C48 Text;
+   attribute C49 Text;
+   attribute C50 Text;
+   attribute C51 Text;
+   attribute C52 Text;
+   attribute C53 Text;
+   attribute C54 Text;
+   attribute C55 Text;
+   attribute C56 Text;
+   attribute C57 Text;
+   attribute C58 Text;
+   attribute C59 Text;
+   attribute C60 Text;
+   attribute C61 Text;
+   attribute C62 Text;
+   attribute C63 Text;
+   attribute C64 Text;
+   attribute C65 Text;
+   attribute C66 Text;
+   attribute C67 Text;
+   attribute C68 Text;
+   attribute C69 Text;
+   attribute C70 Text;
+   attribute C71 Text;
+   attribute C72 Text;
+   attribute C73 Text;
+   attribute C74 Text;
+   attribute C75 Text;
+   attribute C76 Text;
+   attribute C77 Text;
+   attribute C78 Text;
+   attribute C79 Text;
+   attribute C80 Text;
+   attribute C81 Text;
+   attribute C82 Text;
+   attribute C83 Text;
+   attribute C84 Text;
+   attribute C85 Text;
+   attribute C86 Text;
+   attribute C87 Text;
+   attribute C88 Text;
+   attribute C89 Text;
+   attribute C90 Text;
+   attribute C91 Text;
+   attribute C92 Text;
+   attribute C93 Text;
+   attribute C94 Text;
+   attribute C95 Text;
+   attribute C96 Text;
+   attribute C97 Text;
+   attribute C98 Text;
+   attribute C99 Text;
+   attribute N0 Number;
+   attribute N1 Number;
+   attribute N2 Number;
+   attribute N3 Number;
+   attribute N4 Number;
+   attribute N5 Number;
+   attribute N6 Number;
+   attribute N7 Number;
+   attribute N8 Number;
+   attribute N9 Number;
+   attribute N10 Number;
+   attribute N11 Number;
+   attribute N12 Number;
+   attribute N13 Number;
+   attribute N14 Number;
+   attribute N15 Number;
+   attribute N16 Number;
+   attribute N17 Number;
+   attribute N18 Number;
+   attribute N19 Number;
+   attribute N20 Number;
+   attribute N21 Number;
+   attribute N22 Number;
+   attribute N23 Number;
+   attribute N24 Number;
+   attribute N25 Number;
+   attribute N26 Number;
+   attribute N27 Number;
+   attribute N28 Number;
+   attribute N29 Number;
+   attribute N30 Number;
+   attribute N31 Number;
+   attribute N32 Number;
+   attribute N33 Number;
+   attribute N34 Number;
+   attribute N35 Number;
+   attribute N36 Number;
+   attribute N37 Number;
+   attribute N38 Number;
+   attribute N39 Number;
+   attribute N40 Number;
+   attribute N41 Number;
+   attribute N42 Number;
+   attribute N43 Number;
+   attribute N44 Number;
+   attribute N45 Number;
+   attribute N46 Number;
+   attribute N47 Number;
+   attribute N48 Number;
+   attribute N49 Number;
+   attribute N50 Number;
+   attribute N51 Number;
+   attribute N52 Number;
+   attribute N53 Number;
+   attribute N54 Number;
+   attribute N55 Number;
+   attribute N56 Number;
+   attribute N57 Number;
+   attribute N58 Number;
+   attribute N59 Number;
+   attribute N60 Number;
+   attribute N61 Number;
+   attribute N62 Number;
+   attribute N63 Number;
+   attribute N64 Number;
+   attribute N65 Number;
+   attribute N66 Number;
+   attribute N67 Number;
+   attribute N68 Number;
+   attribute N69 Number;
+   attribute N70 Number;
+   attribute N71 Number;
+   attribute N72 Number;
+   attribute N73 Number;
+   attribute N74 Number;
+   attribute N75 Number;
+   attribute N76 Number;
+   attribute N77 Number;
+   attribute N78 Number;
+   attribute N79 Number;
+   attribute N80 Number;
+   attribute N81 Number;
+   attribute N82 Number;
+   attribute N83 Number;
+   attribute N84 Number;
+   attribute N85 Number;
+   attribute N86 Number;
+   attribute N87 Number;
+   attribute N88 Number;
+   attribute N89 Number;
+   attribute N90 Number;
+
+   attribute N91 Number;
+   attribute N92 Number;
+   attribute N93 Number;
+   attribute N94 Number;
+   attribute N95 Number;
+   attribute N96 Number;
+   attribute N97 Number;
+   attribute N98 Number;
+   attribute N99 Number;
+   // !TODO: Temporary correction, will be removed after DXDEV-672 is corrected, end
+   attribute D1 Timestamp;
+   attribute D2 Timestamp;
+   attribute D3 Timestamp;
+   attribute D4 Timestamp;
+   attribute D5 Timestamp;
+   attribute D6 Timestamp;
+   attribute D7 Timestamp;
+   attribute D8 Timestamp;
+   attribute D9 Timestamp;
+   attribute D10 Timestamp;
+   attribute D11 Timestamp;
+   attribute D12 Timestamp;
+   attribute D13 Timestamp;
+   attribute D14 Timestamp;
+   attribute D15 Timestamp;
+   attribute D16 Timestamp;
+   attribute D17 Timestamp;
+   attribute D18 Timestamp;
+   attribute D19 Timestamp;
+   attribute D20 Timestamp;
+}
+
+@Override
+entity ExtFileTransTaxno using ExtFileTrans {
+   from = "EXT_FILE_TRANS_TAXNO";
+   exec = "EXT_FILE_TRANS_API";
+
+   keys = LoadFileId, RowNo, DetailRowNo;
+   use attributes = FileLine, C0, C1, C2, C3, C4, C5, C6, C7, C8, C9,
+   N0, N1, N2, N3, N4, N5, N6, N7, N8, N9,
+   RecordTypeId, UseLine, AttrString, RecordTypeOut, RowState, ErrorText, RecordSetNo, ControlId;
+
+   attribute LoadFileId Number;
+   attribute RowNo Number;
+   attribute DetailRowNo Number {
+      fetch = "detail_row_no";
+   }
+
+   attribute RecordTypeOut Text {
+      maxlength = 4000;
+   }
+   attribute RowState      Text {
+      maxlength = 10;
+      fetch = "row_state_db";
+   }
+   // !TODO: Temporary correction, will be removed after DXDEV-672 is corrected, begin
+   attribute C0 Text;
+   attribute C1 Text;
+   attribute C2 Text;
+   attribute C3 Text;
+   attribute C4 Text;
+   attribute C5 Text;
+   attribute C6 Text;
+   attribute C7 Text;
+   attribute C8 Text;
+   attribute C9 Text;
+   attribute N0 Number;
+   attribute N1 Number;
+   attribute N2 Number;
+   attribute N3 Number;
+   attribute N4 Number;
+   attribute N5 Number;
+   attribute N6 Number;
+   attribute N7 Number;
+   attribute N8 Number;
+   attribute N9 Number;
+   // !TODO: Temporary correction, will be removed after DXDEV-672 is corrected, end
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure ExtFileTransHeadStructure using ExtFileTransHead {
+   nestedwithcrud {
+      crud = Read;
+      xmlnumberformat = "fm9999999999999999999999999999990.0999999999999999999999999999999";
+   }
+   implementation = "Utility";
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+
+-------------------------------- SINGLETONS ---------------------------------

@@ -1,0 +1,686 @@
+fragment Voucher;
+component ACCRUL;
+layer Core;
+description "This is used for common features for voucher posting and its related functionalities
+mainly used for manual vouchers. Voucher Posting, Summary Group";
+
+include fragment VoucherAmountHandling;
+-- include fragment VoucherTaxAmountHandlng;
+include fragment CodeStringExtended;
+include fragment CodeStringAccountLovExtended;
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+group VoucherPostingSummaryGroup for VoucherEntry {
+   label = "Voucher Summary";
+   computedfield CurrencyBalance {
+      label = "Currency Balance ";
+      value = "#{VoucherPostingArray.sum(((IsStatAccount == 'TRUE' ? 0 : CurrencyDebetAmount)- (IsStatAccount == 'TRUE' ? 0 : CurrencyCreditAmount)+(IsStatAccount == 'TRUE' ? 0 : (parent.AmountMethod == 'NetAmountEntry' ? CurrencyTaxAmount: 0))))}";
+      type = Number;
+      format = ifscurrency;
+   }
+
+   computedfield BalanceInAccountingCurrency {
+      label = "Balance in Accounting Currency";
+      value = "#{VoucherPostingArray.sum(((IsStatAccount == 'TRUE' ? 0 : DebetAmount)- (IsStatAccount == 'TRUE' ? 0 : CreditAmount)+(IsStatAccount == 'TRUE' ? 0 : (parent.AmountMethod == 'NetAmountEntry' ? TaxAmount : 0))))}";
+      type = Number;
+      format = ifscurrency;
+   }
+
+   computedfield BalanceInParallelCurrency {
+      label = "Balance in Parallel Currency";
+      value = "#{ VoucherPostingArray.sum(((IsStatAccount == 'TRUE' ? 0 : ThirdCurrencyDebitAmount)- (IsStatAccount == 'TRUE' ? 0 : ThirdCurrencyCreditAmount)+(IsStatAccount == 'TRUE' ? 0 : (parent.AmountMethod == 'NetAmountEntry' ? ParallelCurrTaxAmount : 0))))}";
+      type = Number;
+      format = ifscurrency;
+   }
+
+
+
+
+   computedfield RowGroupIdValue {
+      label = "Next Row Group ID";
+      --value = "#{((VoucherPostingArray.count(RowGroupId) == 0 ? 1 :(computed.BalanceInParallelCurrency+computed.BalanceInAccountingCurrency) ==0 ? VoucherPostingArray.max(RowGroupId)+1: VoucherPostingArray.max(RowGroupId))}";
+    --  value = "#{((VoucherPostingArray.count(RowGroupId) == 0 ? 1 ))}";
+      value = "#{((VoucherPostingArray.count(RowGroupId) == 0 ? 1 :(computed.BalanceInParallelCurrency+computed.BalanceInAccountingCurrency) ==0 ? VoucherPostingArray.max(RowGroupId)+1: VoucherPostingArray.max(RowGroupId) ))}";
+      visible = [RowGroupValidation = "Y"];
+
+      type = Number;
+   --   format = decimal;
+      size = Small;
+   }
+
+}
+
+
+list VoucherPostingList for VoucherPosting {
+   label = "Voucher Postings";
+   savemode = Buffer;
+   orderby = RowNo;
+
+   crudactions {
+      before command BeforeVoucherRowCommand;
+      new {
+         enabled = [not(parent.IsDirty = true)];
+      }
+      delete {
+         enabled = [not(parent.IsDirty = true)];
+      }
+      edit {
+         enabled = [not(parent.IsDirty = true)];
+      }
+   }
+
+   lov CompanyFinanceRef with ReferenceCompanyFinanceSelector {
+      label = "Company";
+      search = Company, Description;
+      columnexclude = [not(parent.MultiCompanyMode)];
+      columnvisible = [parent.MultiCompanyMode];
+      required = [parent.MultiCompanyMode];
+      editable = [parent.MultiCompanyMode];
+
+      description = CompanyFinanceRef.Description;
+      validate command ValidateCompany;
+
+   }
+
+
+   field RowGroupId {
+      columnexclude = [not((parent.MultiCompanyMode and not(parent.ManualBalanceDb)) or parent.RowGroupValidation = "Y")];
+      columnexclude = [not((parent.MultiCompanyMode and not(parent.ManualBalanceDb)) or parent.RowGroupValidation = "Y")];
+      editable = [(parent.MultiCompanyMode and not(parent.ManualBalanceDb)) or parent.RowGroupValidation = "Y"];
+      required = [(parent.MultiCompanyMode and not(parent.ManualBalanceDb)) or parent.RowGroupValidation = "Y"];
+      type = Number;
+   }
+
+   field InternalSeqNumber {
+
+      columnexclude = [true];
+   }
+
+   field RequiredString {
+      columnexclude = [true];
+   }
+
+   fieldset CodeStringAccountLovExtendedLovFieldSet;
+   fieldset CodeStringExtendedLovFieldSet;
+-- THPELK : For performance Testing
+//   field Account {
+//      validate command {
+//         execute {
+//
+//            set CodeB = "100";
+//
+//
+//         }
+//      }
+//
+//   }
+
+//
+//   field CodeB;
+//   field CodeC;
+//   field CodeD;
+//   field CodeE;
+//   field CodeF;
+//   field CodeG;
+//   field CodeH;
+//   field CodeI;
+//   field CodeJ;
+
+
+   lov ProcessCodeRef with ReferenceAccountProcessCodeSelector using ProcessCodeLov(parent.VoucherDate) {
+      search = ProcessCode, Description;
+      description = ProcessCodeRef.Description;
+   }
+
+   @DynamicComponentDependency INVOIC
+   lov DelivTypeIdRef with ReferenceDeliveryTypeSelector {
+      search = DelivTypeId, Description;
+      description = DelivTypeIdRef.Description;
+   }
+
+   fieldset VoucherRowTaxCodes;
+
+
+   fieldset VoucherRowAmountsFieldSet;
+
+  -- fieldset VoucherRowAmountsDummy;
+
+   field Quantity;
+   field PeriodAllocation {
+      size = Small;
+   }
+   field Text {
+      size = Small;
+   }
+   @DynamicComponentDependency PROJ
+   lov ProjectActivityIdRef with ReferenceProjectActivityPostableSelector {
+      editable = [parent.FunctionGroup != "Z" and substring(RequiredString, 24, 1) = "Y"];
+   }
+
+
+   field UpdateError {
+      size = Small;
+      editable = [false];
+      columnexclude = [parent.PageType != "VOUCHERPAGE"];
+   }
+   field TransCode {
+      size = Small;
+      editable = [false];
+     -- visible = [parent.PageType = "VOUCHERPAGE"];
+     -- columnvisible = [parent.PageType = "VOUCHERPAGE"];
+      columnexclude = [parent.PageType != "VOUCHERPAGE"];
+   }
+   field AddInternal {
+      size = Small;
+   }
+   field ReferenceSerie {
+      size = Small;
+   }
+   field ReferenceNumber;
+   field IsStatAccount {
+      columnexclude = [true];
+   }
+
+   fieldranking OptionalCodeRef, CurrencyCodeRef, CurrencyAmount, Amount;
+
+   @DynamicComponentDependency INTLED
+   commandgroup CommandGroupCmdGroup {
+      label = "Internal Manual Posting";
+      command InternalManualPostingsCommand;
+   }
+}
+
+
+@Override
+command ValidateCodeStringAccountLovExtendedAccountRef {
+   variable TaxValues {
+      type = Structure(TaxValuesStructure);
+   }
+   variable IntManualInfo {
+      type = Structure(IntManualStructure);
+   }
+   variable PrevOptionalCode {
+      type = Text;
+   }
+   variable VouType {
+      type = Text;
+   }
+
+   execute {
+      super;
+
+      set IsCredit = false;
+      if [not(CurrencyCreditAmount = null)] {
+         set IsCredit = true;
+      }
+      call GetTaxHandlingValue(Company, Account, parent.VoucherDate, OptionalCode, TaxDirection, TaxPercentage) into TaxValues;
+      set  PrevOptionalCode = OptionalCode;
+      if [TaxValues.TaxCode != null and TaxValues.TaxDirection != null] {
+
+         set  OptionalCode = TaxValues.TaxCode;
+         set  TaxDirection = TaxValues.TaxDirection;
+         set  TaxPercentage = TaxValues.TaxPercentage;
+        -- copy TaxValues into this;
+      }
+
+      if[PrevOptionalCode != OptionalCode and not(TaxAmount = null)] {
+         call ResetTaxAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+         CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+         CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrencyTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection, parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+         set Amount = CurrencyAmountStruct.Amount;
+         set DebetAmount = CurrencyAmountStruct.DebitAmount;
+         set CreditAmount = CurrencyAmountStruct.CreditAmount;
+         set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+         set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+         set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+         set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+         set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+         set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+         set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+         set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+         set ParallelCurrencyTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+         set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+         set TaxAmount = CurrencyAmountStruct.TaxAmount;
+         set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+         set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+         set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+
+      }
+      if [parent.Company = Company] {
+         set VouType = parent.VoucherType;
+      }
+      else {
+         call GetDVoucherType(Company, parent.UserGroup, parent.AccountingYear) into VouType;
+         set VoucherType = VouType;
+      }
+//      Internal manual Posting details are fetching when account validating
+      call GetIntManInfo(Company, Account, parent.VoucherDate, VouType) into IntManualInfo;
+      if [IntManualInfo.LedgerIds != null and IntManualInfo.IntManualSequence != null] {
+         set AddInternal = true;
+         set LedgerIds = IntManualInfo.LedgerIds;
+         set InternalSeqNumber = IntManualInfo.IntManualSequence;
+      }
+      else {
+         set AddInternal = false;
+         set LedgerIds = null;
+         set InternalSeqNumber = null;
+      }
+      set IntManualAdded = false;
+   }
+}
+
+group VoucherEntryGroup for VoucherEntry {
+   label = "";
+   field MultiCompanyMode {
+      visible = [false];
+      columnexclude = [true];
+      searchable = false;
+   }
+
+   field VoucherDate {
+      size = Small;
+      editable = [AuthorizeLevel != "ApproveOnly"];
+      validate command ValidateVoucherDate;
+
+   }
+   lov UserGroupRef with ReferenceUserGroupMemberFinance4Selector {
+      size = Small;
+      editable = [AuthorizeLevel != "ApproveOnly"];
+      validate command ValidateUserGroup;
+   }
+   lov VoucherTypeRef with ReferenceVoucherTypeUserGroup3Selector {
+      search = VoucherType, VoucherTypeDesc;
+      description = VoucherTypeRef.VoucherTypeDesc;
+      size = Small;
+      validate command ValidateVoucherType;
+   }
+   field VoucherNo {
+      size = Small;
+      editable = [Automatic != "Y" and VoucherType != null and PageType != "VOUCHERPAGE"];
+   }
+   field VoucherStatus {
+      label = "Voucher Status";
+      size = Medium;
+      visible = [PageType != "VOUCHERPAGE"];
+      columnexclude = [PageType = "VOUCHERPAGE"];
+   }
+   field AccountingYear {
+      size = Small;
+   }
+   field AccountingPeriod {
+      size = Small;
+   }
+   field AccountingPeriodDescription {
+      searchable = false;
+   }
+   field AmountMethod {
+      size = Medium;
+      editable = [FunctionGroup in("K", "M", "Q") and PageType != "VOUCHERPAGE" and component.VoucherPostingList.RowCount <= 0];
+   }
+   field RowGroupValidation {
+      visible = [false];
+      columnexclude = [true];
+      searchable = false;
+   }
+
+   field UseCorrectionRows {
+      size = Small;
+      editable = [(PageType = "VOUCHERPAGE" and(FunctionGroup in("M", "K", "Q", "Z") and VoucherStatus = "NotApproved") or(FunctionGroup in("M", "K", "Q") and VoucherStatus in("AwaitingApproval", "Approved"))) or PageType = null];
+   }
+   field TextIdRef {
+      size = Small;
+      searchable = false;
+   }
+   field VoucherText2 {
+      size = Medium;
+   }
+   field Notes {
+      size = Small;
+      visible = [PageType = "VOUCHERPAGE"];
+   }
+
+
+}
+
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ValidateCompany for VoucherPosting {
+   execute {
+   }
+}
+
+command ValidateVoucherDateEntry for VoucherEntry {
+   variable AccountingYearPeriodVar {
+      type = Structure(AccountingYearPeriodInfoStruct);
+   }
+   execute {
+      call AccYearPeriodInfo(Company, VoucherDate, UserGroup) into AccountingYearPeriodVar;
+      set AccountingYear = AccountingYearPeriodVar.AccountingYear;
+      set AccountingPeriod = AccountingYearPeriodVar.AccountingPeriod;
+      set AccountingPeriodDescription = AccountingYearPeriodVar.AccPeriodDescription;
+
+      call VoucherHeaderInfo(Company, AccountingYear, UserGroup, VoucherType) into VoucherHeaderInfoVar;
+      set Automatic = VoucherHeaderInfoVar.Automatic;
+      set FunctionGroup = VoucherHeaderInfoVar.FunctionGroup;
+      set SimulationVoucher = VoucherHeaderInfoVar.SimulationVoucher;
+      set UseApporvalWorkflow = VoucherHeaderInfoVar.UseApporvalWorkflow;
+      set SeparateUserApproval = VoucherHeaderInfoVar.SeparateUserApproval;
+      if [UseApporvalWorkflow = "TRUE" or SeparateUserApproval = "TRUE"] {
+         set VoucherStatus = "AwaitingApproval";
+      }
+      else {
+         if [VoucherHeaderInfoVar.AuthorizeLevel = "Approved"] {
+            set VoucherStatus = "Approved";
+         }
+         else {
+            if [VoucherHeaderInfoVar.AuthorizeLevel = "Not Approved"] {
+               set VoucherStatus = "AwaitingApproval";
+            }
+         }
+      }
+   }
+}
+command ValidateVoucherDate for VoucherEntry {
+   variable AccountingYearPeriodVar {
+      type = Structure(AccountingYearPeriodInfoStruct);
+   }
+   execute {
+      call AccYearPeriodInfo(Company, VoucherDate, UserGroup) into AccountingYearPeriodVar;
+      if [AccountingYear = AccountingYearPeriodVar.AccountingYear] {
+         set AccountingPeriod = AccountingYearPeriodVar.AccountingPeriod;
+         set AccountingPeriodDescription = AccountingYearPeriodVar.AccPeriodDescription;
+      }
+   }
+}
+
+command ValidateUserGroup for VoucherEntry {
+   variable AccountingYearPeriodVar {
+      type = Structure(AccountingYearPeriodInfoStruct);
+   }
+   variable VoucherHeaderInfoVar {
+      type = Structure(VoucherHeaderInfoStructure);
+   }
+   variable VouTypeInfoVar {
+      type = Structure(VoucherTypeStructure);
+   }
+   execute {
+      call VoucherHeaderInfo(Company, AccountingYear, UserGroup, VoucherType) into VoucherHeaderInfoVar;
+      set Automatic = VoucherHeaderInfoVar.Automatic;
+      set FunctionGroup = VoucherHeaderInfoVar.FunctionGroup;
+      set SimulationVoucher = VoucherHeaderInfoVar.SimulationVoucher;
+      set UseApporvalWorkflow = VoucherHeaderInfoVar.UseApporvalWorkflow;
+      set SeparateUserApproval = VoucherHeaderInfoVar.SeparateUserApproval;
+      if [UseApporvalWorkflow = "TRUE" or SeparateUserApproval = "TRUE"] {
+         set VoucherStatus = "AwaitingApproval";
+      }
+      else {
+         if [VoucherHeaderInfoVar.AuthorizeLevel = "Approved"] {
+            set VoucherStatus = "Approved";
+         }
+         else {
+            if [VoucherHeaderInfoVar.AuthorizeLevel = "Not Approved"] {
+               set VoucherStatus = "AwaitingApproval";
+            }
+         }
+      }
+      if [VoucherHeaderInfoVar.AuthorizeLevel = "ApproveOnly"] {
+         set VoucherType = null;
+         error("Users included in a user group with Approve Only authorization level are not allowed to enter or modify vouchers.");
+      }
+
+      call AccYearPeriodInfo(Company, VoucherDate, UserGroup) into AccountingYearPeriodVar;
+      set AccountingYear = AccountingYearPeriodVar.AccountingYear;
+      set AccountingPeriod = AccountingYearPeriodVar.AccountingPeriod;
+      set AccountingPeriodDescription = AccountingYearPeriodVar.AccPeriodDescription;
+
+      call GetVoucherTypeInfo(Company, UserGroup, AccountingYear, VoucherNumber, FunctionGroup, VoucherType) into VouTypeInfoVar;
+      set VoucherType = VouTypeInfoVar.VoucherType;
+      set FunctionGroup = VouTypeInfoVar.FunctionGroup;
+   }
+}
+
+
+command ValidateVoucherType for VoucherEntry {
+
+
+   variable VoucherHeaderInfoVar {
+      type = Structure(VoucherHeaderInfoStructure);
+   }
+   execute {
+      call VoucherHeaderInfo(Company, AccountingYear, UserGroup, VoucherType) into VoucherHeaderInfoVar;
+      set Automatic = VoucherHeaderInfoVar.Automatic;
+      set FunctionGroup = VoucherHeaderInfoVar.FunctionGroup;
+      set SimulationVoucher = VoucherHeaderInfoVar.SimulationVoucher;
+      set UseApporvalWorkflow = VoucherHeaderInfoVar.UseApporvalWorkflow;
+      set SeparateUserApproval = VoucherHeaderInfoVar.SeparateUserApproval;
+      set VoucherNo = 0;
+      if [UseApporvalWorkflow = "TRUE" or SeparateUserApproval = "TRUE"] {
+         set VoucherStatus = "AwaitingApproval";
+      }
+      else {
+         if [VoucherHeaderInfoVar.AuthorizeLevel = "Approved"] {
+            set VoucherStatus = "Approved";
+         }
+         else {
+            if [VoucherHeaderInfoVar.AuthorizeLevel = "Not Approved"] {
+               set VoucherStatus = "AwaitingApproval";
+            }
+         }
+      }
+   }
+
+}
+
+@DynamicComponentDependency INTLED
+command InternalManualPostingsCommand for VoucherRow {
+   label = "Internal Manual Postings";
+   enabled = [AddInternal = true];
+   variable DialogTitle Text;
+
+   execute {
+
+      if [parent.MultiCompanyMode] {
+         set DialogTitle = " - ${Company}";
+
+      }
+      else {
+         set DialogTitle = null;
+      }
+      if[(parent.FunctionGroup = "M" or parent.FunctionGroup = "Q" or parent.FunctionGroup = "K") and AutoTaxVouEntry = false] {
+         if[parent.AuthorizeLevel != "ApproveOnly"] {
+            set Editable = "Y";
+         }
+         else {
+            set Editable = "N";
+         }
+      }
+      else {
+         set Editable = "N";
+      }
+
+      assistant ManualIntPostingAssistant(Company, InternalSeqNumber, Account, RowNo, VoucherType, parent.VoucherDate, parent.VoucherNo, CurrencyAmount, Amount, CurrencyRate, CurrencyCode, ConversionFactor, AccountingYear, Correction, Editable, DialogTitle) {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+@DynamicComponentDependency INTLED
+command InternalManualPostingsCommand for VoucherPosting {
+   label = "Internal Manual Postings";
+   enabled = [AddInternal = true];
+   variable EditableVar Text;
+
+   variable DialogTitle Text;
+
+   execute {
+      if [parent.MultiCompanyMode] {
+         set DialogTitle = " ${Company} - ";
+
+      }
+      else {
+         set DialogTitle = null;
+      }
+      if[(parent.FunctionGroup = "M" or parent.FunctionGroup = "Q" or parent.FunctionGroup = "K") and AutoTaxVouEntry = false] {
+         if[parent.AuthorizeLevel != "ApproveOnly"] {
+            set Editable = "Y";
+         }
+         else {
+            set Editable = "N";
+         }
+      }
+      else {
+         set Editable = "N";
+      }
+
+      assistant ManualIntPostingAssistant(Company, InternalSeqNumber, Account, RowNo, VoucherType, parent.VoucherDate, parent.VoucherNo, CurrencyAmount, Amount, CurrencyRate, CurrencyCode, ConversionFactor, AccountingYear, Correction, Editable, DialogTitle) {
+         when OK {
+            set IntManualAdded = true;
+            exit;
+         }
+      }
+   }
+}
+
+command BeforeVoucherRowCommand for VoucherPosting {
+   variable DialogTitle Text;
+   execute {
+      if [parent.MultiCompanyMode] {
+         set DialogTitle = "${Company} - ";
+
+
+      }
+      else {
+         set DialogTitle = null;
+      }
+      if [(CrudOperation = "create" or CrudOperation = "update") and(AddInternal = true and IntManualAdded = false)] {
+         if[(parent.FunctionGroup = "M" or parent.FunctionGroup = "Q" or parent.FunctionGroup = "K") and AutoTaxVouEntry = false] {
+            if[parent.AuthorizeLevel != "ApproveOnly"] {
+               set Editable = "Y";
+            }
+            else {
+               set Editable = "N";
+            }
+         }
+         else {
+            set Editable = "N";
+         }
+         @DynamicComponentDependency INTLED
+         assistant ManualIntPostingAssistant(Company, InternalSeqNumber, Account, RowNo, VoucherType, parent.VoucherDate, parent.VoucherNo, CurrencyAmount, Amount, CurrencyRate, CurrencyCode, ConversionFactor, AccountingYear, Correction, Editable, DialogTitle) {
+            when OK {
+               set IntManualAdded = true;
+               exit;
+            }
+         }
+      }
+   }
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+function AutomaticVoucherBalance Text {
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter FunctionGroup Text;
+}
+
+function ProcessCodeLov List < Entity(AccountProcessCode) > {
+   parameter VoucherDate Date;
+   where = "VALID_FROM <= :VoucherDate AND VALID_UNTIL >= :VoucherDate";
+}
+
+function GetTaxHandlingValue Structure(TaxValuesStructure) {
+   parameter Company Text;
+   parameter Account Text;
+   parameter VoucherDate Date;
+   parameter TaxCode Text;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter TaxPercentage Number;
+
+}
+
+//returning ledger ids and NEXT internal seq number to a structure
+function GetIntManInfo Structure(IntManualStructure) {
+   parameter Company Text;
+   parameter Account Text;
+   parameter VoucherDate Date;
+   parameter VoucherType Text;
+
+}
+
+function GetDVoucherType Text {
+   parameter Company Text;
+   parameter UserGroup Text;
+   parameter AccYear Number;
+}
+
+function AccYearPeriodInfo Structure(AccountingYearPeriodInfoStruct) {
+   parameter Company Text;
+   parameter VoucherDate Date;
+   parameter UserGroup Text;
+}
+
+function GetVoucherTypeInfo Structure(VoucherTypeStructure) {
+   parameter Company Text;
+   parameter UserGroup Text;
+   parameter AccountingYear Number;
+   parameter VoucherNumber Number;
+   parameter FunctionGroup Text;
+   parameter VoucherType Text;
+}
+function VoucherHeaderInfo Structure(VoucherHeaderInfoStructure) {
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter UserGroup Text;
+   parameter VoucherType Text;
+}
+-------------------------------- STRUCTURES ---------------------------------
+
+
+
+structure IntManualStructure {
+   attribute LedgerIds Text;
+   attribute IntManualSequence Number;
+}
+
+structure AccountingYearPeriodInfoStruct {
+   attribute AccountingYear Number;
+   attribute AccountingPeriod Number;
+   attribute AccPeriodDescription Text;
+}
+
+structure VoucherHeaderInfoStructure {
+   attribute AuthorizeLevel Text;
+   attribute Automatic Text;
+   attribute FunctionGroup Text;
+   attribute SimulationVoucher Text;
+   attribute UseApporvalWorkflow Text;
+   attribute SeparateUserApproval Text;
+  -- attribute RowGroupValidation Boolean;
+}
+
+structure VoucherTypeStructure {
+   attribute VoucherType Text;
+   attribute FunctionGroup Text;
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+

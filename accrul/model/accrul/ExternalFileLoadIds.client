@@ -1,0 +1,135 @@
+client ExternalFileLoadIds;
+component ACCRUL;
+layer Core;
+projection ExternalFileLoadIdsHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ExternalFileLoadIdsNavEntry parent AccrulNavigator.MonitorExternalFilesMenu at index 100 {
+      label = "External File Load IDs";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using ExtFileLoadSet {
+   label = "External File Load IDs";
+   currentdatafilter {
+      description = "Files loaded during last 2 years";
+   }
+   list ExtFileLoadList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command DetailsCommand for ExtFileLoad {
+   label = "Details";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/ExternalFileTransactions/Form?$filter=LoadFileId eq $[LoadFileId]";
+   }
+}
+
+command ExternalFileLogCommand for ExtFileLoad {
+   label = "External File Log";
+   mode = SelectedRecords;
+   enabled = [LoadFileId != null];
+   bulkexecute {
+      bulknavigate "page/ExternalFileLog/Form?$filter=LoadFileId eq $[LoadFileId]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileLoadList for ExtFileLoad {
+   orderby = LoadFileId desc;
+
+   field LoadFileId;
+   field LoadDate;
+   field UserId {
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   lov FileTypeRef with ReferenceExtFileTypeSelector {
+      size = Small;
+   }
+   lov FileTemplateIdRef with ReferenceExtFileTemplateSelector {
+      search = FileTemplateId, Description;
+      size = Large;
+      description = FileTemplateIdRef.Description;
+   }
+   field FileDirection {
+      size = Small;
+   }
+   field SetId {
+      size = Small;
+   }
+   lov CompanyRef with ReferenceCompanyFinanceSelector {
+      search = Company, Description;
+      size = Large;
+      description = CompanyRef.Description;
+   }
+   field FileName {
+      size = Large;
+   }
+   badge State {
+      size = Small;
+      style = TextOnly;
+      emphasis Progress2 = [State = "Empty"];
+      emphasis Progress3 = [State = "Loaded"];
+      emphasis Progress6 = [State = "Unpacked"];
+      emphasis Progress11 = [State = "Transferred"];
+      emphasis StateError = [State = "Aborted"];
+      emphasis Progress6 = [State = "Packed"];
+      emphasis Progress11 = [State = "FileCreated"];
+      emphasis Progress11 = [State = "Removed"];
+      emphasis StateError = [State = "TransferError"];
+      emphasis Progress9 = [State = "PartlyTransferred"];
+   }
+
+   command DetailsCommand;
+   command ExternalFileLogCommand;
+
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

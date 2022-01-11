@@ -1,0 +1,242 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvExeTaskLabour
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-- 210312   siydlk  LMM2020R1-1588, Added unit test for Get_Converted_Time Function.
+-- 210111   majslk  LMM2020R1-1478, Updated check_insert__ pltst.
+-- 201203   madglk  LMM2020R1-1454,Unit test for Get_Next_Seq
+-- 201106   lahnlk  LMM2020R1-1392, Added tests for check_insert__ method
+-- 200825   sevhlk  LMM2020R1-836, Added tests for pre_sync_action method
+-- 200803   rosdlk  LMM2020R1-415, Added a test method to test 'GetTaskLabourId' method.
+-- 200726   kawjlk  LMM2020R1-353, Created.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+
+UNITTEST "Get_Skills_Count should return skills count when task id is given" FOR
+   FUNCTION Get_Skills_Count(
+      task_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_labour_tab
+   VALUES
+      | task_id |
+      | 1       |
+      | 1       |
+      | 2       |
+      | 2       |
+      | 2       |
+      | 4       |
+      | 6       |
+      | 8       |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | task_id_ |
+      | 0         |  0       |
+      | 2         |  1       |
+      | 3         |  2       |
+      | 1         |  4       |
+      | 1         |  6       |
+      | 1         |  8       |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Skills_Count(task_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_tab
+   VALUES
+      | task_id | mx_unique_key |
+      | 1       | 'UNIQUEKEY1'  |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_  VARCHAR2(2000);
+   expected1_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'TASK_UNIQUE_KEY'||chr(31)||'UNIQUEKEY1'||chr(30)||'WITH_TASK_KEY'|
+      | 'ROWSTATE'||chr(31)||'MXPENDING'||chr(30)|
+   LOOP
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_TASK_KEY'||'TASK_ID'||chr(31)||'1'||chr(30);
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_TASK_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Check_Insert___ should assign generated sequence value for Task labour id when inserting new record" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_exe_task_labour_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Exe_Task_Labour_API
+   FUNCTION Get_Next_Seq  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN TASK_LABOUR_ID_SEQ.NEXTVAL;
+   END Get_Next_Seq;
+
+   @MockPackage Av_Fault_Labour_API
+   FUNCTION Get_Fault_Labour(mx_unique_key_ IN     VARCHAR2) RETURN VARCHAR2
+   IS
+   BEGIN
+      RETURN CASE mx_unique_key_
+      WHEN '1456:16203' THEN 1
+      WHEN NULL         THEN NULL
+      WHEN '1456:16207' THEN 2
+   END;
+END Get_Fault_Labour;
+
+@MockTable av_fault_labour_tab
+VALUES
+   | mx_unique_key | fault_labour_id |
+   | '1456:16204'  | 1               |
+   | '1456:16203'  | 1               |
+   | NULL          | 2               |
+   | NULL          | 3               |
+END VALUES;
+
+IS
+--Insert your test variables here
+output1_         av_exe_task_labour_tab%ROWTYPE;
+output4_         av_exe_task_labour_tab%ROWTYPE;
+output3_         av_exe_task_labour_tab%ROWTYPE;
+output2_         Indicator_Rec;
+fault_labour_id_ NUMBER;
+
+BEGIN
+output1_.Task_Labour_Id :=NULL;
+output1_.Mx_Unique_Key  := '1456:16203';
+
+output4_.Task_Labour_Id := 4456;
+output4_.Mx_Unique_Key  := '1456:16209';
+
+output3_.Task_Labour_Id := NULL;
+output3_.Mx_Unique_Key  := NULL;
+
+FOR
+   | newrec_ | indrec_ | attr_ |
+   | output1_| output2_| 'A'   |
+   | output4_| output2_| 'A'   |
+   | output3_| output2_| 'A'   |
+LOOP
+   IF newrec_.Task_Labour_Id IS NULL THEN
+      fault_labour_id_:= Get_Fault_Labour(newrec_.Mx_Unique_Key);
+      IF fault_labour_id_ IS NULL THEN
+         newrec_.Task_Labour_Id := Get_Next_Seq();
+      ELSE
+         newrec_.Task_Labour_Id := fault_labour_id_;
+      END IF;
+      ASSERT newrec_.Task_Labour_Id IS NOT NULL MESSAGE 'Returned '||newrec_.Task_Labour_Id;
+   END IF;
+END LOOP;
+END UNITTEST;
+
+
+
+UNITTEST "Get_Next_Seq should return next value of the sequence" FOR
+   FUNCTION Get_Next_Seq RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   return1_   NUMBER;
+   return2_   NUMBER;
+   output_    NUMBER;
+   expected_  NUMBER;
+BEGIN
+   FOR
+      | expected_ |
+      | 1         |
+   LOOP
+      --Insert your test code here
+      return1_ := Get_Next_Seq;
+      return2_ := Get_Next_Seq;
+      output_  := return2_ - return1_;
+      --Insert your assertions here
+      ASSERT output_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||output_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Converted_Time should return converted time" FOR
+   FUNCTION Get_Converted_Time (
+      task_labour_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_labour_tab
+   VALUES
+      | hours_per_person | task_labour_id |
+      | 1.50             | 1              |
+      | 0.50             | 2              |
+      | 150.0            | 3              |
+      | 150.500          | 4              |
+      |  NULL            | 5              |
+      |  1               | 6              |
+
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | task_labour_id_ |
+      | ' 01:30'  |  1              |
+      | ' 00:30'  |  2              |
+      | '150:00'  |  3              |
+      | '150:30'  |  4              |
+      |  NULL     |  5              |
+      | ' 01:00'  |  6              |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Converted_Time(task_labour_id_);
+      --Insert your assertions here
+      ASSERT (expected_ IS NULL AND return_ IS NULL) OR return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+
+
+

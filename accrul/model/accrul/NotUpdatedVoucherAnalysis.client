@@ -1,0 +1,149 @@
+client NotUpdatedVoucherAnalysis;
+component ACCRUL;
+layer Core;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AccPeriodCloseUtilSet {
+   label = "Voucher Analysis";
+   list AccPeriodCloseUtilList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command VoucherRowsCommand for AccPeriodCloseUtil {
+   label = "Voucher Rows";
+   mode = SelectedRecords;
+   bulkexecute {
+      ifall [LedgerId != "00"] {
+         bulknavigate "page/ILHoldVoucherRowsAnalysis/List?contexts=Company:$[Company]&$filter=VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+      }
+      else {
+         bulknavigate "page/VoucherRowsAnalysis/List?contexts=Company:$[Company]&$filter=VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+      }
+   }
+}
+
+command VoucherDetailsCommand for AccPeriodCloseUtil {
+   label = "Voucher Details";
+   mode = SelectedRecords;
+   bulkexecute {
+      ifall [LedgerId != "00"] {
+         bulknavigate "page/IlHoldVoucherDetailsAnalysis/Form?contexts=Company:$[Company]&$filter=VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+      }
+      else {
+         bulknavigate "page/VoucherDetailsAnalysis/Form?contexts=Company:$[Company]&$filter=VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+      }
+
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AccPeriodCloseUtilList for AccPeriodCloseUtil {
+   field VoucherStatus {
+      size = Small;
+   }
+   field LedgerId {
+      size = Small;
+   }
+   field VoucherType {
+      size = Small;
+   }
+   field FunctionGroup {
+      size = Small;
+   }
+   field VoucherNo;
+   field VoucherDate;
+   field AccountingYear;
+   field AccountingPeriod;
+   field DateReg;
+   field EnteredByUserGroup {
+      size = Small;
+   }
+   field Userid {
+      size = Small;
+   }
+   field ApprovedByUserid {
+      size = Small;
+   }
+   field ApprovalDate;
+   field ApprovedByUserGroup {
+      size = Small;
+   }
+   field SecondApproverId {
+      size = Small;
+   }
+   field SecondApprovalDate;
+   field SecondApproverUserGroup {
+      size = Small;
+   }
+   field VoucherText2 {
+      size = Small;
+   }
+   field UpdateError {
+      size = Small;
+   }
+   field NoteExist {
+      size = Small;
+   }
+   field InterimVoucher {
+      size = Small;
+   }
+   field IsMultiCompanyVoucher {
+      size = Small;
+   }
+   field MultiCompanyId {
+      size = Small;
+   }
+   field VoucherTypeReference {
+      size = Small;
+   }
+   field VoucherNoReference;
+   field AccountingYearReference;
+
+   commandgroup CmdGroup {
+      command VoucherRowsCommand;
+      command VoucherDetailsCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

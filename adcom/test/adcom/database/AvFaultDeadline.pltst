@@ -1,0 +1,126 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvFaultDeadline
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201106  majslk  LMM2020R1-1386 - Added test for Check_Insert__
+--  200916  Tajalk  LMM2020R1-736 - Added tests for sync logic
+--  200619  KAWJLK  LMM2020R1-299, Created Unit testing for Get_Act_Deadline_Date
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+
+
+UNITTEST "Get_Act_Deadline_Date should return currently active date related to fault" FOR
+   FUNCTION Get_Act_Deadline_Date(
+      fault_id_ IN     IFSAPP.Av_Fault_Deferral_Tab.fault_id%TYPE)RETURN DATE;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_deadline_tab
+   VALUES
+      | deadline_date | fault_id | deadline_driver |
+      | sysdate       | 1        | 1               |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   DATE;
+   expected_ DATE;
+BEGIN
+   FOR
+      | expected_ | fault_id_ |
+      | sysdate   |  1        |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Act_Deadline_Date(fault_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_fault_tab
+   VALUES
+      | fault_id | mx_unique_key |
+      | 1        | 'FAULT1'      |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_  VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'FAULT_UNIQUE_KEY'||chr(31)||'FAULT1'||chr(30)||'WITH_FAULT_KEY'|
+      | 'DEADLINE_EXTENSION'||chr(31)||'EXT 1'||chr(30)||'WITH_NO_KEY'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_FAULT_KEY'||'FAULT_ID'||chr(31)||'1'||chr(30);
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_FAULT_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Check_Insert___ should genarate next sequence value when fault_deadline_id is NULL" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_fault_deadline_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   test_rec1_  av_fault_deadline_tab%ROWTYPE;
+   test_rec2_  av_fault_deadline_tab%ROWTYPE;
+   output_  Indicator_Rec;
+
+BEGIN
+   test_rec1_.fault_deadline_id := NULL;
+   test_rec1_.fault_id := 3001;
+   test_rec1_.deadline_parameter_code := 'Param1';
+   test_rec1_.deadline_usage := 2;
+   test_rec1_.deadline_date := TO_DATE('2020-11-06 11:21:00', 'yyyy-mm-dd HH:MI:SS');
+   test_rec1_.usage_remaining := 1;
+   test_rec1_.deadline_extension := 'Ext4';
+   test_rec1_.deadline_interval := 'Interval1';
+   test_rec1_.mx_unique_key := NULL;
+
+   test_rec2_.fault_deadline_id := 5000;
+
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.fault_deadline_id IS NULL THEN
+         newrec_.fault_deadline_id := av_fault_deadline_seq.NEXTVAL;
+         ASSERT newrec_.fault_deadline_id IS NOT NULL MESSAGE 'Returned '||newrec_.fault_deadline_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+

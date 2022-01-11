@@ -1,0 +1,65 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountGroupsHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+PROCEDURE Do_Update_Accounts_With_Default_Group_Account___ (
+   full_selection_                      IN VARCHAR2,
+   update_accounts_type_selection_ IN VARCHAR2 ) 
+IS
+   selection_                 VARCHAR2(4000) := CONCAT(full_selection_, ';');
+   current_selection_         VARCHAR2(200);
+   company_                   account_group_tab.company%TYPE;
+   account_group_             account_group_tab.accnt_group%TYPE;
+   def_master_company_accnt_  account_group_tab.def_master_company_accnt%TYPE;
+   group_account_list_        VARCHAR2(4000) := NULL;
+   accounts_type_selection_   NUMBER;
+BEGIN
+   IF (update_accounts_type_selection_ = 'AllAccounts') THEN
+      accounts_type_selection_ := 2;
+   ELSIF (update_accounts_type_selection_ = 'AccountsWithoutDefaultGroupAccount') THEN
+      accounts_type_selection_ := 1;
+   ELSE
+      RETURN;
+   END IF;
+   
+   WHILE (INSTR(selection_, ';') > 0) LOOP
+      current_selection_  := substr(selection_, 0, INSTR(selection_, ';'));
+      company_            := Client_SYS.Get_Key_Reference_Value(current_selection_, 'COMPANY');
+      account_group_      := Client_SYS.Get_Key_Reference_Value(current_selection_, 'ACCNT_GROUP');
+      def_master_company_accnt_ := Account_Group_API.Get_Def_Master_Company_Accnt(company_, account_group_);
+      group_account_list_ := group_account_list_|| account_group_ ||'^'|| def_master_company_accnt_ ||';';
+      selection_ := substr(selection_, INSTR(selection_, ';')+1);      
+   END LOOP;
+   Account_Group_API.Update_Master_Com_Code_Part(company_,'A',group_account_list_,accounts_type_selection_);
+END Do_Update_Accounts_With_Default_Group_Account___;
+
+FUNCTION Get_Selected_Company___ (
+   full_selection_                      IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   selection_                 VARCHAR2(4000) := CONCAT(full_selection_, ';');
+   current_selection_         VARCHAR2(200);
+   company_                   account_group_tab.company%TYPE;
+   current_company_           account_group_tab.company%TYPE;
+BEGIN
+   WHILE (INSTR(selection_, ';') > 0) LOOP
+      current_selection_  := substr(selection_, 0, INSTR(selection_, ';'));
+      current_company_            := Client_SYS.Get_Key_Reference_Value(current_selection_, 'COMPANY');
+      IF (company_ IS NULL) THEN
+         company_ := current_company_;
+      ELSIF (company_ != current_company_) THEN
+         RETURN NULL;
+      END IF;   
+      selection_ := substr(selection_, INSTR(selection_, ';')+1);      
+   END LOOP;
+   RETURN company_;
+END Get_Selected_Company___;
+

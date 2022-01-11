@@ -1,0 +1,134 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     PrePostingAssistant
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override
+PROCEDURE CRUD_Create___(
+   rec_ IN Pre_Postings_Virtual_Rec )
+IS
+   new_rec_    Pre_Postings_Virtual_Rec := rec_;
+BEGIN
+   Get_Pre_Posting_Default_Values___(new_rec_);
+   super(new_rec_);
+END CRUD_Create___;
+
+
+PROCEDURE Get_Pre_Posting_Default_Values___(
+   new_rec_ IN OUT Pre_Postings_Virtual_Rec )
+IS
+   account_  Accounting_Code_Part_Value_TAB.code_part_value%TYPE;
+BEGIN
+   IF (new_rec_.package_name = 'FA_OBJECT_TRANSFER_API') THEN      
+      new_rec_.fa_code_part := Accounting_Code_Parts_API.Get_Codepart_Function(new_rec_.company, 'PRACC');      
+   END IF;
+   Accounting_Codestr_API.Validate_Project_Code_Part(new_rec_.project_code_part,
+                                                     new_rec_.project_activity_enable,
+                                                     new_rec_.project_code_part_value,
+                                                     new_rec_.project_externally_created,
+                                                     new_rec_.project_id,
+                                                     new_rec_.proj_activity_seq_no,
+                                                     new_rec_.company,
+                                                     new_rec_.code_b,
+                                                     new_rec_.code_c,
+                                                     new_rec_.code_d,
+                                                     new_rec_.code_e,
+                                                     new_rec_.code_f,
+                                                     new_rec_.code_g,
+                                                     new_rec_.code_h,
+                                                     new_rec_.code_i,
+                                                     new_rec_.code_j);
+                                                     
+   Accounting_Code_Parts_API.Get_All_Code_Part_Names( account_,
+                                                      new_rec_.code_b_desc,
+                                                      new_rec_.code_c_desc,
+                                                      new_rec_.code_d_desc,
+                                                      new_rec_.code_e_desc,
+                                                      new_rec_.code_f_desc,
+                                                      new_rec_.code_g_desc,
+                                                      new_rec_.code_h_desc,
+                                                      new_rec_.code_i_desc,
+                                                      new_rec_.code_j_desc,                                                      
+                                                      new_rec_.company);
+                                                      
+                                                      
+   new_rec_.code_part_used := Accounting_Code_Parts_API.Get_Blocked_Code_Parts(new_rec_.company);
+                                                     
+END Get_Pre_Posting_Default_Values___;
+
+
+FUNCTION Code_Part_Changed___(
+   company_                 IN VARCHAR2,
+   code_part_               IN VARCHAR2,
+   code_part_value_         IN VARCHAR2,
+   is_code_part_changed_    IN BOOLEAN,
+   project_activity_enable_ IN BOOLEAN,
+   project_id_              IN VARCHAR2,
+   proj_activity_seq_no_    IN NUMBER) RETURN Preposting_Structure_Rec
+IS
+   new_rec_                            Preposting_Structure_Rec;
+   code_part_description_              VARCHAR2(2000);
+   temp_project_externally_created_    VARCHAR2(10);
+   temp_project_id_                    VARCHAR2(20);
+   temp_proj_activity_seq_no_          NUMBER;
+BEGIN
+   --Added tab out validation
+   code_part_description_ := Text_Field_Translation_API.Get_Text(company_,'CODE'||code_part_, code_part_value_);
+   IF (code_part_description_ IS NULL AND code_part_value_ IS NOT NULL) THEN
+      Error_Sys.Record_General('INVALIDCODEPART: Specified Code Part :P1 does not exist', code_part_value_);
+   END IF;
+   temp_project_id_              := project_id_;
+   temp_proj_activity_seq_no_    := proj_activity_seq_no_;
+   Accounting_Codestr_API.Code_Part_Changed(temp_project_externally_created_, temp_project_id_, temp_proj_activity_seq_no_, company_, code_part_, code_part_value_, is_code_part_changed_, project_activity_enable_);
+   new_rec_.project_externally_created := temp_project_externally_created_;
+   new_rec_.project_id                 := temp_project_id_;
+   new_rec_.proj_activity_seq_no       := temp_proj_activity_seq_no_;
+   RETURN new_rec_;
+END Code_Part_Changed___;
+
+
+FUNCTION Prepare_Preposting_Info___(
+   company_          IN VARCHAR2,
+   package_name_     IN VARCHAR2,
+   is_editable_      IN BOOLEAN,
+   account_string_   IN VARCHAR2 ) RETURN Preposting_Structure_Rec
+IS
+    new_rec_                     Preposting_Structure_Rec;
+    code_part_rec_               Preposting_Structure_Rec;
+    codestr_rec_                 Accounting_Codestr_API.CodestrRec;
+    project_code_part_           VARCHAR2(1000);
+    project_code_part_value_     VARCHAR2(1000);
+BEGIN
+   new_rec_.is_editable          := is_editable_;
+   new_rec_.package_name         := package_name_;
+   $IF Component_Invoic_SYS.INSTALLED $THEN
+      codestr_rec_                  := Invoice_Code_String_API.Decode_Account_String(account_string_);
+   $ELSE
+      NULL;
+   $END 
+   new_rec_.account              := codestr_rec_.code_a;
+   new_rec_.code_b               := codestr_rec_.code_b;
+   new_rec_.code_c               := codestr_rec_.code_c;
+   new_rec_.code_d               := codestr_rec_.code_d;
+   new_rec_.code_e               := codestr_rec_.code_e;
+   new_rec_.code_f               := codestr_rec_.code_f;
+   new_rec_.code_g               := codestr_rec_.code_g;
+   new_rec_.code_h               := codestr_rec_.code_h;
+   new_rec_.code_i               := codestr_rec_.code_i;
+   new_rec_.code_j               := codestr_rec_.code_j;
+   new_rec_.proj_activity_seq_no := codestr_rec_.project_activity_id;
+   
+   code_part_rec_                := Code_Part_Changed___(company_, project_code_part_, project_code_part_value_, FALSE, new_rec_.project_activity_enable, new_rec_.project_id, new_rec_.proj_activity_seq_no);
+   new_rec_.proj_activity_seq_no := code_part_rec_.proj_activity_seq_no;
+   new_rec_.project_id           := code_part_rec_.project_id;
+   
+   RETURN new_rec_;
+END Prepare_Preposting_Info___;

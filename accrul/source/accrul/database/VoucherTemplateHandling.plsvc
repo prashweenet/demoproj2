@@ -1,0 +1,198 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherTemplateHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override
+PROCEDURE CRUD_Default___ (
+   key_  IN     Voucher_Template_Row_Key,
+   attr_ IN OUT VARCHAR2,
+   info_    OUT VARCHAR2 )
+ IS
+   correction_  VARCHAR2(1);
+   rec_         Voucher_Template_Row_Rec;
+BEGIN
+   Add_To_Rec_From_Attr___(attr_, rec_);
+   super(key_,attr_,info_);
+   rec_.voucher_company        := rec_.company;
+   rec_.currency_code          := Company_Finance_API.Get_Currency_Code(rec_.company );
+   rec_.currency_type          := Currency_Type_API.Get_Default_Type(rec_.company);
+   rec_.currency_rate          := Currency_Rate_API.Get_Currency_Rate(rec_.company, rec_.currency_code, rec_.currency_type, sysdate);
+   rec_.conv_factor            := NVL(Currency_Code_API.Get_Conversion_Factor(rec_.company, rec_.currency_code), 0);
+   rec_.row_no                 := Voucher_Template_Row_API.Get_Max_Row_No(rec_.company, rec_.template) + 1;
+   rec_.acc_decimals_in_amount := NVL( Currency_Code_API.Get_Currency_Rounding(rec_.company, rec_.currency_code),0);
+   rec_.accounting_currency    := rec_.currency_code;
+   
+   correction_ := Voucher_Template_API.Get_Correction(rec_.company, rec_.template);
+   IF (correction_ = 'Y') THEN
+      rec_.correction_curr    := TRUE;
+   ELSIF (correction_ = 'N') THEN
+      rec_.correction_curr    := FALSE;
+   END IF;
+   Add_To_Attr_From_Rec___(rec_,attr_);
+   
+END CRUD_Default___;
+
+FUNCTION Validate_Tax_Code_On_Acc___(
+   company_       IN VARCHAR2,
+   optional_code_ IN VARCHAR2,
+   account_       IN VARCHAR2 )  RETURN VARCHAR2
+IS   
+BEGIN
+   Tax_Handling_Util_API.Validate_Tax_Code_On_Acc(company_, optional_code_, account_);
+   RETURN 'TRUE';
+END Validate_Tax_Code_On_Acc___;
+
+
+FUNCTION Calculate_Currency_Amount_Fields___(
+   company_          IN VARCHAR2,
+   currency_code_    IN VARCHAR2,
+   correction_       IN BOOLEAN,
+   field_name_       IN VARCHAR2,
+   value_            IN NUMBER) RETURN Accounting_Currency_Amounts_Structure_Rec
+IS
+   ret_val_rec_      Accounting_Currency_Amounts_Structure_Rec;
+   rounding_         NUMBER:= Currency_Code_API.Get_Currency_Rounding(company_,currency_code_);
+   correction_par_   BOOLEAN := NVL(correction_, false);
+BEGIN
+   IF (field_name_ = 'CURRENCY_DEBIT_AMOUNT') THEN
+      ret_val_rec_.currency_debit_amount  := ROUND(value_,rounding_) ;      
+      ret_val_rec_.currency_credit_amount := NULL;
+      IF (value_ < 0) THEN
+         ret_val_rec_.currency_debit_amount := -ret_val_rec_.currency_debit_amount;
+      END IF;
+      IF (correction_par_) THEN
+         ret_val_rec_.currency_debit_amount := -ret_val_rec_.currency_debit_amount;
+      END IF;
+      ret_val_rec_.currency_amount := ret_val_rec_.currency_debit_amount;
+   END IF;
+   
+   IF (field_name_ = 'CURRENCY_CREDIT_AMOUNT') THEN
+      ret_val_rec_.currency_credit_amount := ROUND(value_,rounding_);      
+      ret_val_rec_.currency_debit_amount  := NULL;
+      IF (value_ < 0) THEN
+         ret_val_rec_.currency_credit_amount := -ret_val_rec_.currency_credit_amount;
+      END IF;
+      IF (correction_par_) THEN
+         ret_val_rec_.currency_credit_amount := -ret_val_rec_.currency_credit_amount;
+      END IF;
+      ret_val_rec_.currency_amount := -ret_val_rec_.currency_credit_amount;
+   END IF;
+   
+   IF (field_name_ = 'CURRENCY_AMOUNT') THEN
+      ret_val_rec_.currency_amount        := ROUND(value_,rounding_); 
+      ret_val_rec_.currency_credit_amount := NULL;      
+      ret_val_rec_.currency_debit_amount  := NULL;
+      
+      IF NOT correction_par_ THEN
+         IF (value_ < 0) THEN
+            ret_val_rec_.currency_credit_amount := -ret_val_rec_.currency_amount;
+         ELSE
+            ret_val_rec_.currency_debit_amount := ret_val_rec_.currency_amount;
+         END IF;
+      ELSE
+         IF (value_ < 0) THEN
+            ret_val_rec_.currency_debit_amount := ret_val_rec_.currency_amount;
+         ELSE
+            ret_val_rec_.currency_credit_amount := -ret_val_rec_.currency_amount;
+         END IF;
+      END IF;         
+   END IF;
+   RETURN ret_val_rec_;
+END Calculate_Currency_Amount_Fields___;
+
+FUNCTION Get_Currency_Rounding___(
+   company_       IN VARCHAR2,
+   currency_code_ IN VARCHAR2)  RETURN NUMBER
+IS   
+BEGIN
+   RETURN Currency_Code_API.Get_Currency_Rounding(company_, currency_code_);
+END Get_Currency_Rounding___;
+
+
+FUNCTION Get_Default_Tax_Code___(
+   company_ IN VARCHAR2,
+   account_ IN VARCHAR2)  RETURN VARCHAR2
+IS
+   tax_handling_     accounting_code_part_value_tab.tax_handling_value%TYPE;
+   sdummy_           VARCHAR2(100);
+   ndummy_           NUMBER;
+   tax_code_         statutory_fee_tab.fee_code%TYPE;
+BEGIN
+   tax_handling_ := Account_API.Get_Tax_Handling_Value_Db(company_, account_);
+   Tax_Handling_Util_API.Fetch_Default_Tax_Code_On_Acc(tax_code_, 
+                                                       sdummy_,
+                                                       sdummy_,
+                                                       ndummy_ ,
+                                                       company_, 
+                                                       account_,
+                                                       SYSDATE);
+   RETURN  tax_code_;                                                   
+END Get_Default_Tax_Code___;
+
+@Override
+PROCEDURE CRUD_Update___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Voucher_Template_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+   multi_company_ VARCHAR2(5);
+BEGIN
+   multi_company_ := Client_SYS.Get_Item_Value('MULTI_COMPANY', attr_);
+   IF multi_company_ = 'FALSE' THEN
+      Check_Multi_Company_Rows_Exist___(key_.company, key_.template);
+   END IF;
+   super(etag_, key_, attr_, info_, action_);
+END CRUD_Update___;
+
+
+PROCEDURE Check_Multi_Company_Rows_Exist___(
+   company_    IN VARCHAR2,
+   template_   IN VARCHAR2)
+IS
+   row_exists_ NUMBER;
+   CURSOR row_exist IS
+      SELECT 1
+      FROM   voucher_template_row_tab
+      WHERE  company         = company_
+      AND    template        = template_
+      AND    voucher_company != company;   
+BEGIN
+   OPEN row_exist;
+   FETCH row_exist INTO row_exists_;
+   IF row_exist%FOUND THEN
+      CLOSE row_exist;
+      Error_SYS.Record_General(lu_name_, 'MULTICOMVOUTEMUPDATE: You cannot change the type of the template from multi company to single company as the template includes multi company voucher lines.');
+   END IF;
+   CLOSE row_exist;   
+END Check_Multi_Company_Rows_Exist___;
+
+
+FUNCTION Get_Accounting_Currency___(
+   company_ IN VARCHAR2) RETURN VARCHAR2
+IS   
+BEGIN
+   RETURN Company_Finance_API.Get_Currency_Code(company_);
+END Get_Accounting_Currency___;
+
+
+FUNCTION Do_Round___(
+   value_     IN NUMBER,
+   no_of_dec_ IN NUMBER)  RETURN NUMBER
+IS   
+BEGIN
+   IF (value_ IS NULL) THEN
+      RETURN NULL;
+   END IF;
+   RETURN ROUND(value_, NVL(no_of_dec_,0));
+END Do_Round___;

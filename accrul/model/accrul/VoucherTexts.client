@@ -1,0 +1,80 @@
+client VoucherTexts;
+component ACCRUL;
+layer Core;
+projection VoucherTextsHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry VoucherTextNavEntry parent AccrulNavigator.ManualVoucherMenu at index 500 {
+      label = "Voucher Texts";
+      page List home VoucherText;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using VoucherTextSet {
+   label = "Voucher Texts";
+   list VoucherTextList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'VoucherText' and AttributeKey eq $[TextId]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list VoucherTextList for VoucherText {
+   field TextId {
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+
+   command TranslationCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

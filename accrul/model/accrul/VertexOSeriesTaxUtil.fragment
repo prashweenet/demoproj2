@@ -1,0 +1,384 @@
+fragment VertexOSeriesTaxUtil;
+component ACCRUL;
+layer Core;
+description "Structure and Entities with relations (schema) for Vertex O-series integration messages";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+structure JurisdictionCodeRequest {
+   implementation = "Utility";
+
+   attribute TaxAreaRequestList List < Structure(TaxAreaRequest) > ;
+   attribute LoginInfo Structure(Login);
+   attribute VersionInfo Structure(Version);
+}
+
+structure InvoiceTaxInfoRequest {
+   implementation = "Utility";
+
+   attribute InvoiceRequests List < Structure(InvoiceRequest) > ;
+   attribute LoginInfo Structure(Login);
+   attribute VersionInfo Structure(Version);
+}
+
+structure OrderTaxInfoRequest {
+   implementation = "Utility";
+
+   attribute LoginInfo Structure(Login);
+   attribute OrderRequests Structure(OrderRequest);
+   attribute VersionInfo Structure(Version);
+}
+
+structure Version {
+   implementation = "Utility";
+
+   attribute VersionId Text {
+      maxlength = 100;
+   }
+}
+
+structure Login {
+   implementation = "Utility";
+
+   attribute UserName Text {
+      maxlength = 100;
+   }
+   attribute Password Text {
+      maxlength = 100;
+   }
+   attribute TrustedId Text {
+      maxlength = 100;
+   }
+}
+
+structure TaxAreaRequest {
+   implementation = "Utility";
+
+   attribute LookupDate Text {
+      maxlength = 10;
+   }
+   attribute AddressInfo Structure(PostalAddress);
+}
+
+
+structure InvoiceRequest {
+   implementation = "Utility";
+
+   attribute TransactionType Text {
+      maxlength = 50;
+   }
+   attribute RetAssistParamsInd Text {
+      maxlength = 50;
+   }
+   attribute DocumentDate Text {
+      maxlength = 10;
+   }
+   attribute SitusOverride Text {
+      maxlength = 100;
+   }
+   attribute TaxingLocation Text {
+      maxlength = 100;
+   }
+   attribute TaxOverride Text {
+      maxlength = 100;
+   }
+   attribute OverrideType Text {
+      maxlength = 100;
+   }
+   attribute DocumentNumber Text {
+      maxlength = 100;
+   }
+   attribute LineItems List < Structure(LineItem) > ;
+   attribute Customers List < Structure(Customer) > ;
+   attribute Sellers List < Structure(Seller) > ;
+}
+
+
+structure OrderRequest {
+   implementation = "Utility";
+
+   attribute DocumentDate Text {
+      maxlength = 10;
+   }
+   attribute TransactionType Text {
+      maxlength = 50;
+   }
+   attribute Currency Text {
+      maxlength = 20;
+   }
+   attribute SitusOverride Text {
+      maxlength = 100;
+   }
+   attribute TaxingLocation Text {
+      maxlength = 100;
+   }
+   attribute TaxOverride Text {
+      maxlength = 100;
+   }
+   attribute OverrideType Text {
+      maxlength = 100;
+   }
+   attribute DocumentNumber Text {
+      maxlength = 100;
+   }
+   attribute Sellers List < Structure(Seller) > ;
+   attribute Customers List < Structure(Customer) > ;
+   attribute LineItems List < Structure(LineItem) > ;
+}
+
+
+structure PostalAddress {
+   implementation = "Utility";
+
+   attribute StreetAddress1 Text {
+      maxlength = 50;
+      // XmlElementName "STREET_ADDRESS_1";
+   }
+   attribute StreetAddress2 Text {
+      maxlength = 50;
+      // XmlElementName "STREET_ADDRESS_2";
+   }
+   attribute City Text {
+      maxlength = 35;
+   }
+   attribute State Text {
+      maxlength = 35;
+   }
+   attribute County Text {
+      maxlength = 35;
+   }
+   attribute ZipCode Text {
+      maxlength = 35;
+   }
+   attribute Country Text {
+      maxlength = 35;
+   }
+}
+
+structure LineItem {
+   implementation = "Utility";
+
+   attribute LineItemNumber Text {
+      maxlength = 50;
+   }
+   attribute LineItemId Text {
+      maxlength = 50;
+   }
+   attribute IsMultiomponent Text {
+      maxlength = 50;
+   }
+   attribute Product Text {
+      maxlength = 50;
+   }
+   attribute ProductClass Text {
+      maxlength = 50;
+   }
+   attribute ExtendedPrice Text {
+      maxlength = 50;
+   }
+   attribute Quantity Text {
+      maxlength = 50;
+   }
+   attribute TaxOverride Text {
+      maxlength = 100;
+   }
+   attribute OverrideType Text {
+      maxlength = 100;
+   }
+   attribute TaxDate Text {
+      maxlength = 10;
+   }
+
+   attribute Taxeses List < Structure(Taxes) >;
+}
+
+
+structure Customer {
+   implementation = "Utility";
+
+   attribute CustomerCode Text {
+      maxlength = 50;
+   }
+   attribute ClassCode Text {
+      maxlength = 50;
+   }
+   attribute Destination Text {
+      maxlength = 50;
+   }
+   attribute DesTaxAreaId Text {
+      maxlength = 50;
+   }
+   attribute IsTaxExempt  Text {
+      maxlength = 50;
+   }
+
+   attribute DestinationAddr Structure(PostalAddress);
+}
+
+structure Seller {
+   implementation = "Utility";
+
+   attribute Company Text {
+      maxlength = 50;
+   }
+   attribute PhyOriTaxAreaId Text {
+      maxlength = 50;
+   }
+   attribute AdmOriTaxAreaId Text {
+      maxlength = 50;
+   }
+   attribute Division Text {
+      maxlength = 50;
+   }
+   attribute Department  Text {
+      maxlength = 50;
+   }
+
+   attribute PhysicalOrigin Structure(PostalAddress);
+   attribute AdministrativeOrigin Structure(PostalAddress);
+}
+
+
+structure Taxes {
+   implementation = "Utility";
+
+   attribute Jurisdiction Text {
+      maxlength = 50;
+   }
+   attribute JurisdictionId Text {
+      maxlength = 50;
+   }
+   attribute JurisdictionLevel Text {
+      maxlength = 50;
+   }
+   attribute CalculatedTax Text {
+      maxlength = 50;
+   }
+   attribute EffectiveRate Text {
+      maxlength = 50;
+   }
+   attribute Taxable Text {
+      maxlength = 50;
+   }
+   attribute Imposition Text {
+      maxlength = 100;
+   }
+   attribute ImpositionType Text {
+      maxlength = 100;
+   }
+   attribute TaxRuleId Text {
+      maxlength = 50;
+   }
+   attribute TaxResult Text {
+      maxlength = 50;
+   }
+   attribute TaxType Text {
+      maxlength = 50;
+   }
+   attribute Situs Text {
+      maxlength = 50;
+   }
+}
+
+
+structure TaxAreaResponse {
+   implementation = "Utility";
+
+   attribute TaxAreaResultList List < Structure(TaxAreaResult) >;
+}
+
+structure TaxInvoiceResponse {
+   implementation = "Utility";
+
+   attribute InvoiceResponses List < Structure(InvoiceResponse) >;
+}
+
+structure TaxOrderResponse {
+   implementation = "Utility";
+
+   attribute OrderResponses List < Structure(OrderResponse) >;
+}
+
+structure TaxAreaResult {
+   implementation = "Utility";
+
+   attribute TaxAreaId Text {
+      maxlength = 20;
+   }
+   attribute TaxAddrPos Number;
+   attribute AsOfDate Text {
+      maxlength = 10;
+   }
+   attribute ConfidenceIndicator Text {
+      maxlength = 10;
+   }
+   attribute Country Text {
+      maxlength = 50;
+   }
+   attribute State Text {
+      maxlength = 50;
+   }
+   attribute County Text {
+      maxlength = 50;
+   }
+   attribute City Text {
+      maxlength = 50;
+   }
+}
+
+structure InvoiceResponse {
+   implementation = "Utility";
+
+   attribute InvoiceResponse Text {
+      maxlength = 50;
+   }
+   attribute RetAssistParamsInd Text {
+      maxlength = 50;
+   }
+   attribute DocumentDate Text {
+      maxlength = 10;
+   }
+   attribute SubTotal Text {
+      maxlength = 50;
+   }
+   attribute Total Text {
+      maxlength = 50;
+   }
+   attribute TotalTax Text {
+      maxlength = 50;
+   }
+
+   attribute LineItems List < Structure(LineItem) > ;
+   attribute Customers List < Structure(Customer) > ;
+   attribute Sellers List < Structure(Seller) > ;
+}
+
+
+structure OrderResponse {
+   implementation = "Utility";
+
+   attribute TransactionType Text {
+      maxlength = 50;
+   }
+   attribute DocumentDate Text {
+      maxlength = 50;
+   }
+   attribute SubTotal Text {
+      maxlength = 50;
+   }
+   attribute Total Text {
+      maxlength = 50;
+   }
+   attribute TotalTax Text {
+      maxlength = 50;
+   }
+
+   attribute LineItems List < Structure(LineItem) > ;
+   attribute Customers List < Structure(Customer) > ;
+}

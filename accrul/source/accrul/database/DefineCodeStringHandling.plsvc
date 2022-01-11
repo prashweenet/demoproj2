@@ -1,0 +1,60 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: DefineCodeStringHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+FUNCTION Get_Base_Code_Part___(
+   company_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   base_code_part_ VARCHAR2(1);
+BEGIN
+   base_code_part_ := Accounting_Code_Parts_API.Get_Base_For_Followup_Element(company_);
+   Accounting_Code_Parts_API.Check_Transactions_Exist__( company_, base_code_part_);
+   RETURN base_code_part_;
+END Get_Base_Code_Part___;
+
+
+@Override
+PROCEDURE CRUD_Update___ (
+   etag_ IN OUT VARCHAR2,
+   key_  IN OUT Accounting_Code_Parts_Key,
+   attr_ IN OUT VARCHAR2,
+   info_ OUT VARCHAR2,
+   action_ IN VARCHAR2 )
+IS
+   max_number_of_char_ NUMBER;
+BEGIN
+   max_number_of_char_ := Client_SYS.Get_Item_Value('MAX_NUMBER_OF_CHAR',attr_);
+   IF (max_number_of_char_ < 1 OR max_number_of_char_ > 10) THEN
+      Error_SYS.Appl_General(lu_name_, 'MAXNUMCHARBETWEEN010: Max number of characters must be between 1 and 10.');
+   END IF;
+   super(etag_, key_, attr_, info_, action_);
+END CRUD_Update___;
+
+
+PROCEDURE Do_Set_Base_For_Cost_Revenue_Element___ (
+   key_ IN Accounting_Code_Parts_Key ) 
+IS
+   etag_        VARCHAR2(2000);
+   objid_       VARCHAR2(2000);
+   objversion_  VARCHAR2(2000);
+   attr_        VARCHAR2(2000);
+   info_        VARCHAR2(2000);
+   this_key_    Accounting_Code_Parts_Key;
+BEGIN
+   Get_Objid_Objversion___(objid_,objversion_,key_);
+   etag_ := Get_Etag___(objid_, objversion_);
+   Client_SYS.Add_To_Attr('FROM_CLIENT', 'TRUE', attr_);
+   Client_SYS.Add_To_Attr('BASE_FOR_PFE', 'TRUE', attr_);
+   this_key_ := key_;
+   CRUD_Update___(etag_, this_key_, attr_, info_, 'DO');
+END Do_Set_Base_For_Cost_Revenue_Element___;

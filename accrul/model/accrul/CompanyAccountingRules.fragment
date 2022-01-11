@@ -1,0 +1,347 @@
+fragment CompanyAccountingRules;
+component ACCRUL;
+layer Core;
+description "This fragment contains client and projection code for Accounting Rules page of Comapany";
+
+include fragment CurrencyType3Selector;
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+-------------------------------- MAIN PAGES ---------------------------------
+page AccountingRules using CompanySet {
+   label = "Accounting Rules";
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+   selector CompanySelector;
+   group CompanyGroup;
+
+   tabs {
+      tab {
+
+         label = "General Data";
+         singleton AccountingRulesBasicDataSingleton(AccountingRulesBasicDataArray) bind CompanySelector;
+
+         group GeneralDataGroup bind AccountingRulesBasicDataSingleton;
+         group MasterCompanyConnectionGroup bind AccountingRulesBasicDataSingleton;
+      }
+      tab {
+         label = "Currency Rate Type Information";
+         singleton CurrencyTypeBasicDataSingleton(CurrencyTypeBasicDataArray) bind CompanySelector;
+
+         group DefaultCurrencyRateTypeGroup bind CurrencyTypeBasicDataSingleton;
+         group AllowTaxCurrencyRateTypeGroup bind CurrencyTypeBasicDataSingleton;
+         group DefaultTaxCurrencyRateTypeGroup bind CurrencyTypeBasicDataSingleton;
+      }
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+singleton AccountingRulesBasicDataSingleton for CompanyFinance {
+   crudactions {
+   }
+}
+
+
+singleton CurrencyTypeBasicDataSingleton for CurrencyTypeBasicData {
+   crudactions {
+
+   }
+}
+
+
+@Override
+selector ReferenceCurrencyTypeSelector for CurrencyType {
+   label = "";
+   static RefCurrencyCode {
+      visible = [false];
+   }
+   static RateTypeCategory {
+      visible = [false];
+   }
+}
+
+---------------------------------- GROUPS -----------------------------------
+group GeneralDataGroup for CompanyFinance {
+   label = "";
+   field CurrencyCode {
+      size = Small;
+   }
+   field ValidFrom {
+      size = Small;
+   }
+   field ParallelAccCurrency {
+      size = Small;
+   }
+   field TimeStamp {
+      size = Small;
+   }
+   field ParallelBase {
+      size = Small;
+   }
+   field ParallelRateType {
+      label = "Parallel Currency Rate Type";
+      editable = [ParallelBase != null];
+      size = Small;
+      lovswitch {
+         when [ParallelBase = "TransactionCurrency"] {
+            lov ParallelRateTypeRef with ReferenceCurrencyType3CustomSelector using TransCurrencyParallelRateTypes {
+               search = CurrencyType, Description;
+               description = ParallelRateTypeRef.Description;
+            }
+         }
+         when [ParallelBase = "AccountingCurrency"] {
+            lov ParallelRateTypeRef with ReferenceCurrencyType3CustomSelector using AccCurrencyParallelRateTypes(CurrencyCode) {
+               search = CurrencyType, Description;
+               description = ParallelRateTypeRef.Description;
+            }
+         }
+      }
+   }
+   field CorrectionType;
+   field ReverseVouCorrType;
+   field PeriodClosingMethod;
+   field DefAmountMethod;
+   field UseVouNoPeriod;
+
+}
+group MasterCompanyConnectionGroup for CompanyFinance {
+   label = "Master Company Connection";
+   lov MasterCompanyRef with ReferenceCompanySelector using MasterCompanies {
+      search = Company, Name;
+      description = MasterCompanyRef.Name;
+   }
+}
+
+
+group DefaultCurrencyRateTypeGroup for CurrencyTypeBasicData {
+   label = "";
+
+   lov BuyRef with ReferenceCurrencyTypeSelector using RetrieveCurrencyRate(Company) {
+      search = CurrencyType, Description;
+      size = Large;
+      description = BuyRef.Description;
+   }
+   lov SellRef with ReferenceCurrencyTypeSelector using RetrieveCurrencyRate(Company) {
+      search = CurrencyType, Description;
+      size = Large;
+      description = SellRef.Description;
+   }
+}
+
+
+group AllowTaxCurrencyRateTypeGroup for CurrencyTypeBasicData {
+   label = "Default Currency Rate Types for TAX";
+
+   field UseTaxRates {
+      size = Large;
+      validate command {
+         execute {
+            if [not UseTaxRates] {
+               set TaxBuy = null;
+               set TaxSell = null;
+            }
+         }
+      }
+   }
+}
+
+
+group DefaultTaxCurrencyRateTypeGroup for CurrencyTypeBasicData {
+   label = "";
+
+   lov TaxBuyRef with ReferenceCurrencyTypeSelector using RetrieveCurrencyRate(Company) {
+      search = CurrencyType, Description;
+      size = Large;
+      editable = [UseTaxRates];
+      description = TaxBuyRef.Description;
+   }
+   lov TaxSellRef with ReferenceCurrencyTypeSelector using RetrieveCurrencyRate(Company) {
+      search = CurrencyType, Description;
+      size = Large;
+      editable = [UseTaxRates];
+      description = TaxSellRef.Description;
+   }
+}
+
+----------------------------------- LISTS -----------------------------------
+
+----------------------------------- CARDS -----------------------------------
+
+---------------------------------- DIALOGS ----------------------------------
+
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+
+----------------------------------- TREES -----------------------------------
+
+---------------------------------- PLUGINS ----------------------------------
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CompanyFinance {
+   crud = Read, Update;
+   use attributes = Description, CurrencyCode, ValidFrom, ParallelAccCurrency, TimeStamp, CorrectionType, ReverseVouCorrType, PeriodClosingMethod, DefAmountMethod, UseVouNoPeriod, CreationFinished, ParallelBase, ParallelRateType, MasterCompany;
+   supportwarnings = [true];
+   ludependencies = CompanyFinance;
+
+   attribute CurrencyCode Text {
+      editable = [false];
+      insertable = [false];
+   }
+   attribute ValidFrom Date {
+      editable = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   attribute ParallelAccCurrency Text {
+      label = "Parallel Currency";
+      insertable = [false];
+      editable = [false];
+      format = uppercase;
+   }
+   attribute TimeStamp Date {
+      label = "Valid From";
+      insertable = [false];
+      editable = [false];
+   }
+   attribute CorrectionType Enumeration(CorrectionType) {
+      label = "Cancel/Rollback Posting Method";
+   }
+   attribute ReverseVouCorrType Enumeration(CorrectionType) {
+      label = "Reversal Voucher Posting Method";
+   }
+   attribute UseVouNoPeriod Boolean("TRUE", "FALSE") {
+      label = "Use Voucher Number Series per Period";
+      editable = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   attribute ParallelBase Enumeration(ParallelBase) {
+      label = "Parallel Currency Base";
+      insertable = [false];
+      updatable = [false];
+      editable = [false];
+   }
+   attribute MasterCompany Text {
+      editable = [true];
+   }
+
+
+   reference MasterCompanyRef(MasterCompany) to Company(Company) {
+      label = "Master Company";
+   }
+   reference ParallelRateTypeRef(Company, ParallelRateType) to CurrencyType3(Company, CurrencyType) {
+      label = "Parallel Currency Rate Type";
+
+   }
+}
+
+
+@Override
+entity CurrencyTypeBasicData {
+   crud = Create, Read, Update;
+   use attributes = Buy, Sell, TaxBuy, TaxSell, UseTaxRates;
+   supportwarnings = [true];
+   ludependencies = CompanyFinance, CurrencyTypeBasicData;
+
+   attribute Buy Text {
+      label = "Default Buy Currency Rate Type";
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute Sell Text {
+      label = "Default Sell Currency Rate Type";
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute TaxBuy Text {
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute TaxSell Text {
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute UseTaxRates Boolean("TRUE", "FALSE") {
+      label = "Allow Specific Currency Rates for Tax Transactions";
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference BuyRef(Company, Buy) to CurrencyType(Company, CurrencyType) {
+      label = "Default Buy Currency Rate Type";
+   }
+   reference SellRef(Company, Sell) to CurrencyType(Company, CurrencyType) {
+      label = "Default Sell Currency Rate Type";
+   }
+   reference TaxBuyRef(Company, TaxBuy) to CurrencyType(Company, CurrencyType) {
+      label = "Buying Currency Rate for Tax";
+   }
+   reference TaxSellRef(Company, TaxSell) to CurrencyType(Company, CurrencyType) {
+      label = "Selling Currency Rate for Tax";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function MasterCompanies List < Entity(Company) > {
+   where = "master_company_db = 'TRUE'";
+}
+
+
+function TransCurrencyParallelRateTypes List < Entity(CurrencyType3) > {
+   where = "(rate_type_category_db = 'PARALLEL_CURRENCY')";
+}
+
+
+function AccCurrencyParallelRateTypes List < Entity(CurrencyType3) > {
+   parameter CurrencyCode Text;
+   where = "(ref_currency_code = :CurrencyCode AND rate_type_category_db != 'PROJECT')";
+}
+
+
+function RetrieveCurrencyRate List < Entity(CurrencyType) > {
+   parameter Company Text;
+
+   where = "(ref_currency_code = Company_Finance_API.Get_Currency_Code(:Company))
+   OR (Currency_Code_API.Get_Emu(:Company, Company_Finance_API.Get_Currency_Code(:Company)) = 'TRUE' AND ref_currency_code = 'EUR')";
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------

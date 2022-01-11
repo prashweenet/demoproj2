@@ -1,0 +1,95 @@
+-----------------------------------------------------------------------------
+--
+--  Filename      : AccrulCurrencyData.ins
+--
+--  Module        : ACCRUL
+--
+--  Purpose       : Inserting default Currency data.
+--
+--  Localization  : Not needed. Translation support via Module-translations.
+--
+--  Date    Sign        History
+--  ------  ----        -----------------------------------------------------------
+--  020124  ANDJ        Created.
+--  030822  Thsrlk      Removed Obsolete currencies. 
+--  100623  Janslk      Changed creation of default currency types by including 
+--                      new coulmn rate_type_category. 
+--  121123  Janblk      DANU-122, Parallel currency implementation   
+-------------------------------------------------------------------------------
+SET SERVEROUT ON
+                                                                                     
+PROMPT Default currency types
+DECLARE
+   m_ CONSTANT VARCHAR2(10) := 'ACCRUL';
+   l_ CONSTANT VARCHAR2(20) := 'CurrencyType';
+   PROCEDURE New_Currency_Type___(
+      currtype_     IN VARCHAR2,
+      descrtype_    IN VARCHAR2,
+      deftype_      IN VARCHAR2,
+      refcurr_      IN VARCHAR2, 
+      typecategory_ IN VARCHAR2 )
+   IS
+   BEGIN
+      INSERT INTO currency_type_def_tab(
+         currency_type,
+         description,
+         type_default,
+         ref_currency_code,
+         rate_type_category )
+      VALUES(
+         currtype_,
+         descrtype_,
+         deftype_,
+         refcurr_,
+         typecategory_ );
+      COMMIT;
+   EXCEPTION
+      WHEN dup_val_on_index THEN
+         NULL;
+   END New_Currency_Type___;
+BEGIN
+   Basic_Data_Translation_API.Insert_Prog_Translation(m_,l_,'1','Normal');
+   Basic_Data_Translation_API.Insert_Prog_Translation(m_,l_,'2','EMU currencies');
+   COMMIT;
+   New_Currency_Type___('1', 'Normal', 'Y', '', 'NORMAL');
+   New_Currency_Type___('2', 'EMU currencies', 'Y', 'EUR', 'NORMAL');
+   New_Currency_Type___('3', 'Parallel Currency', 'N', '', 'PARALLEL_CURRENCY');
+END;
+/
+
+PROMPT Default currency rates.
+DECLARE
+   PROCEDURE New_Currency_Rate___(
+      currtype_ IN VARCHAR2,
+      refcurrcode_ IN VARCHAR2,
+      currcode_ IN VARCHAR2,
+      currate_  IN NUMBER,
+      convfactor_ IN NUMBER )
+   IS
+   BEGIN
+      INSERT INTO currency_rate_def_tab(
+         currency_type,
+         ref_currency_code,
+         currency_code,
+         currency_rate,
+         conv_factor )
+      VALUES (
+         currtype_,
+         refcurrcode_,
+         currcode_,
+         currate_,
+         convfactor_ ); 
+      COMMIT;
+   EXCEPTION
+      WHEN dup_val_on_index THEN
+         NULL;
+   END New_Currency_Rate___;
+BEGIN
+   -- The base currency. Rate 1:1.
+   New_Currency_Rate___( '1', 'XXX', 'XXX', 1, 1 );
+   -- The Euro currency Rate 1:1
+   New_Currency_Rate___( '2', 'EUR', 'EUR', 1, 1 );
+   --parallel currency
+   New_Currency_Rate___( '3', 'YYY', 'YYY', 1, 1 );
+END;
+/

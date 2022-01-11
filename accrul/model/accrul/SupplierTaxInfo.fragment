@@ -1,0 +1,181 @@
+fragment SupplierTaxInfo;
+component ACCRUL;
+layer Core;
+description "Supplier Address Delivery Tax Information";
+
+include fragment TaxCalcStructureActiveSelector;
+include fragment TaxCodeCommonSelector;
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+--------------------------------- COMMANDS ----------------------------------
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector SupplierTaxInfoSelector for SupplierTaxInfo {
+   label = "Company: ${Company} - ${CompanyName}";
+   crudactions {
+   }
+   static Company;
+   static CompanyName;
+   static SupplierId {
+      visible = [false];
+   }
+   static AddressId {
+      visible = [false];
+   }
+   static UseSuppAddressForTax {
+      columnexclude = [true];
+      visible = [false];
+   }
+   static TaxCalcStructureId {
+      columnexclude = [true];
+      visible = [false];
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group SupplierTaxInfoGroup for SupplierTaxInfo {
+   label = "";
+
+   lov CompanyRef with ReferenceCompanyFinanceSelector {
+      visible = [isNew];
+   }
+   lov TaxCalcStructureIdRef with ReferenceTaxCalcStructureActiveSelector {
+      search = TaxCalcStructureId, Description;
+      size = Small;
+      description = TaxCalcStructureIdRef.Description;
+   }
+
+   field UseSuppAddressForTax;
+
+}
+
+----------------------------------- LISTS -----------------------------------
+list SupplierDeliveryTaxCodeList for SupplierDeliveryTaxCode {
+   label = "";
+
+   //! UPDATE: <UXX jadulk Same field is used without filtering using the ValidationDate for the search>
+   lov TaxCodeRef with ReferenceTaxCodeCommonSelector {
+      searchable = true;
+      columnexclude = [true];
+   }
+   lov TaxCodeRef with ReferenceTaxCodeCommonSelector using TaxCodeCommonFetchValidTaxCodes(ValidationDate) {
+      search = FeeCode, Description;
+      searchable = false;
+      description = TaxCodeRef.Description;
+   }
+   field TaxCodeRef.FeeRate {
+      label = "Tax (%)";
+   }
+   daterangefield {
+      startdate TaxCodeRef.ValidFrom;
+      enddate TaxCodeRef.ValidUntil;
+      label = "Validity Period";
+      searchable = true;
+   }
+}
+
+----------------------------------- CARDS -----------------------------------
+
+---------------------------------- DIALOGS ----------------------------------
+
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+
+----------------------------------- TREES -----------------------------------
+
+---------------------------------- PLUGINS ----------------------------------
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity SupplierTaxInfo {
+   supportwarnings = [true];
+   ludependencies = SupplierTaxInfo;
+
+   attribute UseSuppAddressForTax Boolean("TRUE", "FALSE") {
+      label = "Use Supplier Address for Tax";
+      editable = [true];
+   }
+   attribute CompanyName Text {
+      fetch = "Company_API.Get_Name(company)";
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference AddressIdRef(SupplierId, AddressId) to SupplierInfoAddress(SupplierId, AddressId);
+   reference TaxCalcStructureIdRef(Company, TaxCalcStructureId) to TaxCalcStructureActive(Company, TaxCalcStructureId) {
+      label = "Tax Calculation Structure";
+   }
+
+   array SupplierDeliveryTaxCodeArray(SupplierId, AddressId, Company) to SupplierDeliveryTaxCode(SupplierId, AddressId, Company);
+}
+
+
+@Override
+entity SupplierDeliveryTaxCode {
+   ludependencies = SupplierTaxInfo;
+   crud = Create, Read, Delete;
+
+   attribute SupplierId Text {
+      label = "Supplier";
+   }
+   attribute Description Text {
+      fetch = "Statutory_Fee_API.Get_Description(company,tax_code)";
+      label = "Description";
+      maxlength = 2000;
+      editable = [false];
+   }
+   attribute ValidationDate Date {
+      default = "trunc(sysdate)";
+      fetch = "trunc(sysdate)";
+   }
+
+   reference CompanyRef(Company, AddressId, SupplierId) to SupplierTaxInfo(Company, AddressId, SupplierId) {
+      label = "Company";
+   }
+   reference TaxCodeRef(Company, TaxCode) to TaxCodeCommon(Company, FeeCode) {
+      label = "Tax Code";
+   }
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+-------------------------------- STRUCTURES ---------------------------------
+
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------
+

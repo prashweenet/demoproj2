@@ -1,0 +1,69 @@
+fragment AccountsConsolidationSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view accounts_consolidation";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccountsConsolidationSelector for AccountsConsolidation {
+   orderby = SortValue;
+   static Account;
+   static Description;
+}
+
+@Override
+list AccountsConsolidationLovList for AccountsConsolidation {
+   orderby = SortValue;
+}
+
+card AccountsConsolidationCard for AccountsConsolidation {
+   label = "";
+   fieldranking Account;
+   field Account;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccountsConsolidation {
+   from = "accounts_consolidation";
+   lu = Account;
+   keys = Company, Account;
+   ludependencies = Account;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Account Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute AccntType Text {
+      lovcolumn = [true];
+   }
+   attribute LogicalAccountType Enumeration(AccountTypeValue) {
+      lovcolumn = [false];
+      fetch = "logical_account_type_db";
+   }
+   attribute AccntGroup Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [true];
+   }
+   attribute ValidUntil Date {
+      lovcolumn = [true];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

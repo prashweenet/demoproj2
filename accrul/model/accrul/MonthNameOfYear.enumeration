@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>MonthNameOfYear</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <NAME>January</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>February</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>March</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>April</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>May</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>June</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>July</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>August</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>September</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>October</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>November</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>December</NAME>
+      </VALUE>
+   </VALUES>
+</ENUMERATION>

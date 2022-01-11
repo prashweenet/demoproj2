@@ -1,0 +1,42 @@
+fragment ExtFileTemplRecTypeSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ext_file_templ_rec_type";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceExtFileTemplRecTypeSelector for ExtFileTemplRecType {
+   static RecordTypeId;
+   static Description;
+}
+
+card ExtFileTemplRecTypeCard for ExtFileTemplRecType {
+   label = "";
+   fieldranking RecordTypeId;
+   field RecordTypeId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query ExtFileTemplRecType {
+   from = "ext_file_templ_rec_type";
+   lu = ExtFileTemplateDetail;
+   keys = FileTemplateId, RecordTypeId;
+   ludependencies = ExtFileTemplateDetail;
+   attribute FileTemplateId Text {
+      label = "File Template ID";
+      lovcolumn = [false];
+   }
+   attribute RecordTypeId Text {
+      label = "Record Type ID";
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

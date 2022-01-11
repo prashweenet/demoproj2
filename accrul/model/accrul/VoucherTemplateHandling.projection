@@ -1,0 +1,206 @@
+projection VoucherTemplateHandling;
+component ACCRUL;
+layer Core;
+description " Voucher Template";
+category Users;
+
+include fragment CodeStringExtended;
+include fragment CodeStringPsCodeAccountExtended;
+include fragment TaxCodeRestrictedSelector;
+include fragment PsCodeAccountSelector;
+@DynamicComponentDependency PROJ
+include fragment ProjectActivityPostableSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherTemplateSet for VoucherTemplate {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity VoucherTemplate {
+   attribute Correction Boolean("Y", "N") {
+      label = "Use Correction Rows";
+      required = [true];
+   }
+   attribute MultiCompany Boolean("TRUE", "FALSE") {
+      label = "Multi-Company";
+      required = [true];
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "";
+   }
+
+   array VouTemplateRowArray(Company, Template) to VoucherTemplateRow(Company, Template);
+}
+
+@Override
+entity VoucherTemplateRow {
+   attribute RowNo Number {
+      editable = [false];
+   }
+   attribute VoucherCompany Text {
+      label = "Company";
+   }
+   attribute ProcessCode Text {
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute DelivTypeId Text {
+      label = "Delivery Type";
+      format = uppercase;
+   }
+   attribute DeliveryTypeDesc Text {
+      label = "Delivery Type Description";
+   }
+   attribute OptionalCode Text {
+      format = uppercase;
+   }
+   attribute CurrencyCode Text {
+      format = uppercase;
+   }
+   attribute CorrectionCurr Boolean("Y", "N") {
+      required = [true];
+      insertable = [true];
+      updatable = [false];
+   }
+   attribute DebitCurrencyAmount Number {
+      label = "Currency Debit Amount";
+      format = ifscurrency;
+   }
+   attribute CreditCurrencyAmount Number {
+      label = "Currency Credit Amount";
+      format = ifscurrency;
+   }
+   attribute CurrencyAmount Number {
+      format = ifscurrency;
+   }
+   attribute TransCode Text {
+      editable = [false];
+      default = "'MANUAL'";
+   }
+   attribute ProjectActivityId Number {
+      label = "Proj Activity Seq No";
+   }
+   @DynamicComponentDependency PROJ
+   attribute ProjectId Text {
+      fetch = "Accounting_Codestr_API.Get_Value_For_Code_Part_Func(COMPANY, ACCOUNT, CODE_B, CODE_C, CODE_D, CODE_E, CODE_F, CODE_G, CODE_H, CODE_I, CODE_J, 'PRACC')";
+      maxlength = 100;
+      editable = [false];
+      updatable = [false];
+      insertable = [false];
+   }
+   attribute ProjectActivityIdEnabled Text {
+      fetch = "NULL";
+   }
+   attribute CurrentDate Date {
+      fetch = "trunc(sysdate)";
+      default = "trunc(sysdate)";
+   }
+   attribute RequiredString Text {
+      fetch = "Accounting_Codestr_API.Get_Required_Code_Part_List(Company, Account, Accounting_Codestr_API.Get_Value_For_Code_Part_Func(COMPANY, ACCOUNT, CODE_B, CODE_C, CODE_D, CODE_E, CODE_F, CODE_G, CODE_H, CODE_I, CODE_J, 'PRACC'))";
+      editable = [true];
+   }
+   attribute Account Text {
+      required = [true];
+   }
+
+   reference CompanyFinanceRef(VoucherCompany) to CompanyFinance(Company);
+   reference TemplateRef(Company, Template) to VoucherTemplate(Company, Template) {
+      label = "Template";
+   }
+   reference VoucherCompanyRef(VoucherCompany) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference AccountRef(VoucherCompany, Account) to PsCodeAccount(Company, Value);
+   reference CodeBRef(VoucherCompany, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(VoucherCompany, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(VoucherCompany, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(VoucherCompany, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(VoucherCompany, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(VoucherCompany, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(VoucherCompany, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(VoucherCompany, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(VoucherCompany, CodeJ) to CodeJ(Company, CodeJ);
+   reference ProcessCodeRef(VoucherCompany, ProcessCode) to AccountProcessCode(Company, ProcessCode) {
+      label = "Process Code";
+   }
+   @DynamicComponentDependency INVOIC
+   reference DelivTypeIdRef(VoucherCompany, DelivTypeId) to DeliveryType(Company, DelivTypeId) {
+      label = "Delivery Type";
+   }
+   reference FeeCodeRef(VoucherCompany, OptionalCode) to TaxCodeRestricted(Company, FeeCode) {
+      label = "Tax Code";
+   }
+   reference CurrencyCodeRef(VoucherCompany, CurrencyCode) to CurrencyCode(Company, CurrencyCode) {
+      label = "Currency Code";
+   }
+   @DynamicComponentDependency PROJ
+   reference ProjectActivityIdRef(ProjectId, ProjectActivityId) to ProjectActivityPostable(ProjectId, ActivitySeq) {
+      label = "Proj Activity Seq No";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function CalculateCurrencyAmountFields Structure(AccountingCurrencyAmountsStructure) {
+   parameter Company Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter FieldName Text;
+   parameter Value Number;
+}
+
+function GetCurrencyRounding Number {
+   parameter Company Text;
+   parameter CurrencyCode Text;
+}
+
+function GetDefaultTaxCode Text {
+   parameter Company Text;
+   parameter Account Text;
+}
+
+function GetAccountingCurrency Text {
+   parameter Company Text;
+}
+
+function DoRound Number {
+   parameter Value Number;
+   parameter NoOfDec Number;
+}
+
+function ValidateTaxCodeOnAcc Text {
+   parameter Company Text;
+   parameter OptionalCode Text;
+   parameter Account Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure AccountingCurrencyAmountsStructure {
+   attribute CurrencyDebitAmount Number;
+   attribute CurrencyCreditAmount Number;
+   attribute CurrencyAmount Number;
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

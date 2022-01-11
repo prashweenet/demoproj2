@@ -1,0 +1,59 @@
+fragment StructureRevTypeLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view structure_rev_type_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceStructureRevTypeLovSelector for StructureRevTypeLov {
+   static Company;
+   static CostStructureId;
+   static NameValue;
+   static ItemDescription;
+}
+
+card StructureRevTypeLovCard for StructureRevTypeLov {
+   label = "";
+   fieldranking Company;
+   field Company;
+   field CostStructureId;
+   field NameValue;
+   field ItemDescription;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query StructureRevTypeLov {
+   from = "structure_rev_type_lov";
+   lu = CostStructureItem;
+   keys = Company, CostStructureId, NameValue;
+   ludependencies = CostStructureItem;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute CostStructureId Text {
+      label = "Cost Structure ID";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute NameValue Text {
+      lovcolumn = [true];
+      format = uppercase;
+   }
+   attribute CostStructItemType Enumeration(CostStructItemType) {
+      lovcolumn = [true];
+      fetch = "cost_struct_item_type_db";
+   }
+   attribute ItemDescription Text {
+      lovcolumn = [true];
+   }
+   attribute ElementType Enumeration(PrjFollowupElementType) {
+      lovcolumn = [true];
+      fetch = "element_type_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

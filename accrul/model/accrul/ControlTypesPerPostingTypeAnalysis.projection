@@ -1,0 +1,76 @@
+projection ControlTypesPerPostingTypeAnalysis;
+component ACCRUL;
+layer Core;
+description "Control Types Per Posting Type Analysis";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+entityset PostingCtrlAllowedCombSet for PostingCtrlAllowedComb {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity PostingCtrlAllowedComb {
+   crud = Read;
+   from = "posting_ctrl_alwd_combination";
+
+   attribute PostModule Text {
+      label = "Posting Type Module";
+   }
+   attribute LedgFlag Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute Module Text;
+   reference PostingTypeRef(PostingType) to PostingCtrlPostingType(PostingType) {
+      label = "Posting Type";
+   }
+   reference ControlTypeRef(ControlType) to PostingCtrlControlType(ControlType) {
+      label = "Control Type";
+   }
+   reference ModuleRef(Module) to PostingCtrlControlType(Module) {
+      label = "Control Type Module";
+   }
+}
+
+@Override
+entity PostingCtrlPostingType {
+   attribute LedgFlag Text {
+      label = "Ledger Account";
+   }
+   attribute TaxFlag Text {
+      label = "Tax Account";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetPostingCtrlAllowedComb List<Entity(PostingCtrlAllowedComb)> {
+   parameter Company Text;
+   where = "company IS NULL OR company = :Company";
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

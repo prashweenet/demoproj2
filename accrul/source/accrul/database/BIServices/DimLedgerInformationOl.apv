@@ -1,0 +1,83 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  LedgerInformation
+--  Component:  ACCRUL
+--  LU:         DimLedgerInformation
+--
+--  File     :  DimLedgerInformationOl.apv
+--  Purpose  :  Create ON LINE dimension view DIM_LEDGER_INFORMATION_OL
+--  Note     :  NOTE that NULL identity handling is not required for OL views
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_LEDGER_INFORMATION
+DEFINE VIEW       = DIM_LEDGER_INFORMATION_OL
+DEFINE TAB        = LEDGER_INFORMATION_TAB
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimLedgerInformation
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT TO_CHAR(b.company ||'^'|| TO_CHAR(b.accounting_year) ||'^'|| TO_CHAR(b.accounting_period)||'^'|| TO_CHAR(b.ledger_id)) id,
+      a.company                                                                                                               company,
+      TO_CHAR(b.accounting_year)|| TO_CHAR(b.accounting_period,'FM00')||TO_CHAR(b.ledger_id)                                  code,
+      a.accounting_year                                                                                                       accounting_year,
+      b.accounting_period                                                                                                     accounting_period,
+      b.ledger_id                                                                                                             ledger_id,
+       a.year_status                                                                                                          year_status,
+       SUBSTR(Acc_Year_Per_Status_API.Decode(a.year_status),1,100)                                                            year_status_desc,
+       b.period_status                                                                                                        period_status,
+       SUBSTR(Acc_Year_Per_Status_API.Decode(b.period_status),1,100)                                                          period_status_desc,
+       a.opening_balances                                                                                                     opening_balances,
+       SUBSTR(Acc_Year_Op_Bal_API.Decode(a.opening_balances),1,100)                                                           opening_balances_desc,
+       a.closing_balances                                                                                                     closing_balances,
+       SUBSTR(Acc_Year_Cl_Bal_API.Decode(a.closing_balances),1,100)                                                           closing_balances_desc
+FROM ACC_YEAR_LEDGER_INFO_TAB a,ACC_PERIOD_LEDGER_INFO_TAB b
+WHERE b.accounting_year = a.accounting_year AND b.company = a.company AND b.ledger_id = a.ledger_id
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=IL Period Status^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(53)/UPPERCASE^PROMPT=Year Period^';
+COMMENT ON COLUMN &VIEW..ACCOUNTING_YEAR
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=Year^';
+COMMENT ON COLUMN &VIEW..ACCOUNTING_PERIOD
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=Period^';
+COMMENT ON COLUMN &VIEW..LEDGER_ID
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(10)^PROMPT=Ledger ID^';
+COMMENT ON COLUMN &VIEW..YEAR_STATUS
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=IL Year Status^';
+COMMENT ON COLUMN &VIEW..YEAR_STATUS_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=IL Year Status Description^';
+COMMENT ON COLUMN &VIEW..PERIOD_STATUS
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=IL Period Status^';
+COMMENT ON COLUMN &VIEW..PERIOD_STATUS_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=IL Period Status Description^';
+COMMENT ON COLUMN &VIEW..OPENING_BALANCES
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=IL Opening Balance^';
+COMMENT ON COLUMN &VIEW..OPENING_BALANCES_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=IL Opening Balance Description^';
+COMMENT ON COLUMN &VIEW..CLOSING_BALANCES
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=IL Closing Balance^';
+COMMENT ON COLUMN &VIEW..CLOSING_BALANCES_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=IL Closing Balance Description^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE TAB
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

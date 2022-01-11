@@ -1,0 +1,330 @@
+client UserGroupPerPeriod;
+component ACCRUL;
+layer Core;
+projection UserGroupPerPeriodHandling;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry UserGroupsPerPeriodNavEntry parent AccrulNavigator.UserRelatedDataMenu at index 1000 {
+      label = "User Groups per Period";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AccountingPeriodSet {
+   label = "User Groups per Period";
+   searchcontext PageSearchContext {
+      defaults = GetPageSearchContextDefaults(context.Company, AccountingYear, AccountingPeriod);
+   }
+   selector AccountingYearPeriodSelector;
+
+   group UserGroupPerPeriodGroup bind AccountingYearPeriodSelector;
+   list UserGroupsList(DetailUserGroups) bind AccountingYearPeriodSelector {
+      filter = [LedgerId = searchcontext.PageSearchContext.LedgerId];
+      copyoncruddefault(searchcontext.PageSearchContext.Company, searchcontext.PageSearchContext.LedgerId, searchcontext.PageSearchContext.Ledger, searchcontext.PageSearchContext.LedgerDescription, searchcontext.PageSearchContext.PeriodStatus)to(Company, LedgerId, Ledger, LedgerDescription, LedgerInfoPeriodStatus);
+   }
+
+   command MultiCompanyCommand;
+}
+
+
+searchcontext PageSearchContext for PageSearchContextStructure {
+   label = "";
+   field Company {
+      visible = [false];
+   }
+   field LedgerId {
+      visible = [false];
+   }
+   field Ledger {
+      visible = [false];
+   }
+   field LedgerDescription {
+      visible = [false];
+   }
+   field PeriodStatus {
+      visible = [false];
+   }
+}
+
+page MultiCompanyForm using AccountingPeriodMultiCompanieSet {
+   label = "User Groups per Period";
+   selector MultiCompanyAccountingPeriodSelector;
+   group MultiCompanyUserGroupPerPeriodGroup bind MultiCompanyAccountingPeriodSelector;
+   list MultiCompanyUserGroupsList(MultiCompanyDetailUserGroups)bind MultiCompanyAccountingPeriodSelector;
+
+   command SingleCompanyCommand {
+      icon = "check";
+      emphasis Info = [true];
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command OpenGLPeriodCommand for UserGroupPeriod {
+   label = "Open Period";
+   mode = SelectedRecords;
+   enabled = [PeriodStatus = "Closed"];
+   bulkexecute {
+      bulkcall ChangePeriod(PeriodStatus);
+   }
+}
+
+command CloseGLPeriodCommand for UserGroupPeriod {
+   label = "Close Period";
+   mode = SelectedRecords;
+   enabled = [PeriodStatus = "Open"];
+   bulkexecute {
+      bulkcall ChangePeriod(PeriodStatus);
+   }
+}
+
+command MultiCompanyCommand for AccountingPeriod {
+   mode = Global;
+   label = "Multi Company";
+   execute {
+      navigate MultiCompanyForm;
+   }
+}
+
+command SingleCompanyCommand for MultiCompanyAccountingPeriod {
+   mode = Global;
+   label = "Multi Company";
+   execute {
+      navigate Form;
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AccountingYearPeriodSelector for AccountingPeriod {
+   label = "${AccountingYear} - ${AccountingPeriod}";
+   static AccountingYear;
+   static AccountingPeriod;
+}
+
+@Override
+selector MultiCompanyAccountingPeriodSelector for MultiCompanyAccountingPeriod {
+   label = "${AccountingYear} - ${AccountingPeriod}";
+}
+
+@DynamicComponentDependency INTLED
+selector LedgerIdRefSelector for InternalLedgerCurrent {
+   static Company {
+      visible = [false];
+   }
+   static LedgerId;
+   static Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group UserGroupPerPeriodGroup for AccountingPeriod {
+   label = "";
+   field AccountingYear;
+   field AccountingPeriod;
+   field Description;
+}
+
+group MultiCompanyUserGroupPerPeriodGroup for MultiCompanyAccountingPeriod {
+   label = "";
+   field AccountingYear;
+   field AccountingPeriod;
+   field Description;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+@Override
+@DynamicComponentDependency INTLED
+list InternalLedgerCurrentLovList for InternalLedgerCurrent {
+   label = "";
+   static Company {
+      columnexclude = [true];
+   }
+}
+
+list UserGroupsList for UserGroupPeriod {
+   label = "User Group Details";
+
+   lov UserGroupRef with ReferenceUserGroupFinanceSelector {
+      search = UserGroup, Description;
+      size = Large;
+      description = UserGroupRef.Description;
+   }
+   field Ledger {
+      size = Medium;
+      validate command {
+         variable LedgerInfoStructure {
+            type = Structure(LedgerDataStructure);
+         }
+         execute {
+
+            if[Ledger = "GeneralLedger"] {
+               set LedgerId = "00";
+               call RetrieveLedgerData(Company, AccountingYear, AccountingPeriod, LedgerId) into LedgerInfoStructure;
+               set LedgerDescription = LedgerInfoStructure.LedgerDescription;
+               set LedgerInfoPeriodStatus = LedgerInfoStructure.LedgerInfoPeriodStatus;
+            }
+            else {
+               set LedgerId = "";
+               set LedgerDescription = "";
+               set LedgerInfoPeriodStatus = "";
+            }
+         }
+      }
+   }
+   @DynamicComponentDependency INTLED
+   lov LedgerIdRef with LedgerIdRefSelector {
+      size = Small;
+      editable = [Ledger != "GeneralLedger"];
+      validate command {
+         variable IlExistBool {
+            type = Boolean;
+         }
+         variable LedgerInfoStructure {
+            type = Structure(LedgerDataStructure);
+         }
+         execute {
+            call IsIlExist(Company, LedgerId) into IlExistBool;
+
+            if[IlExistBool] {
+               call RetrieveLedgerData(Company, AccountingYear, AccountingPeriod, LedgerId) into LedgerInfoStructure;
+               set LedgerDescription = LedgerInfoStructure.LedgerDescription;
+               set LedgerInfoPeriodStatus = LedgerInfoStructure.LedgerInfoPeriodStatus;
+            }
+            else {
+               error("The Internal Ledger ${LedgerId} does not exist.");
+            }
+         }
+      }
+   }
+   field LedgerDescription {
+      size = Medium;
+   }
+   field LedgerInfoPeriodStatus {
+      size = Small;
+      editable = [false];
+   }
+   field PeriodStatus {
+      editable = [false];
+   }
+
+   commandgroup PeriodChangeActionCmdGroup {
+      command OpenGLPeriodCommand;
+      command CloseGLPeriodCommand;
+   }
+
+}
+
+list MultiCompanyUserGroupsList for UserGroupPeriod {
+   label = "";
+   orderby = Company;
+
+   lov CompanyRef with ReferenceCompanyFinanceSelector {
+      search = Company, Description;
+      size = Large;
+      description = CompanyRef.Description;
+   }
+   lov UserGroupRef with ReferenceUserGroupFinanceSelector {
+      search = UserGroup, Description;
+      size = Large;
+      description = UserGroupRef.Description;
+   }
+   field Ledger {
+      size = Medium;
+      validate command {
+         variable LedgerInfoStructure {
+            type = Structure(LedgerDataStructure);
+         }
+         execute {
+
+            if[Ledger = "GeneralLedger"] {
+               set LedgerId = "00";
+               call RetrieveLedgerData(Company, AccountingYear, AccountingPeriod, LedgerId) into LedgerInfoStructure;
+               set LedgerDescription = LedgerInfoStructure.LedgerDescription;
+               set LedgerInfoPeriodStatus = LedgerInfoStructure.LedgerInfoPeriodStatus;
+            }
+            else {
+               set LedgerId = "";
+               set LedgerDescription = "";
+               set LedgerInfoPeriodStatus = "";
+            }
+         }
+      }
+   }
+   @DynamicComponentDependency INTLED
+   lov LedgerIdRef with LedgerIdRefSelector {
+      size = Small;
+      editable = [Ledger != "GeneralLedger"];
+      validate command {
+         variable IlExistBool {
+            type = Boolean;
+         }
+         variable LedgerInfoStructure {
+            type = Structure(LedgerDataStructure);
+         }
+         execute {
+            call IsIlExist(Company, LedgerId) into IlExistBool;
+
+            if[IlExistBool] {
+               call RetrieveLedgerData(Company, AccountingYear, AccountingPeriod, LedgerId) into LedgerInfoStructure;
+               set LedgerDescription = LedgerInfoStructure.LedgerDescription;
+               set LedgerInfoPeriodStatus = LedgerInfoStructure.LedgerInfoPeriodStatus;
+            }
+            else {
+               error("The Internal Ledger ${LedgerId} does not exist.");
+            }
+         }
+      }
+   }
+   field LedgerDescription {
+      size = Medium;
+   }
+   field LedgerInfoPeriodStatus {
+      size = Small;
+      editable = [false];
+   }
+   field PeriodStatus;
+
+   commandgroup PeriodChangeActionCmdGroup {
+      command OpenGLPeriodCommand;
+      command CloseGLPeriodCommand;
+   }
+
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

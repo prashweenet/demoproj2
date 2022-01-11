@@ -1,0 +1,16 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 201210_ADCOM_LMM2020R1-1466.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  201210   supklk  LMM2020R1-1466, Changed SubSystemCode length to 50 in AV_DEFERRAL_REFERENCE_TAB and AV_FAULT_TAB
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+SET SERVEROUTPUT OFF

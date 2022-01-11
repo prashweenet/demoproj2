@@ -1,0 +1,7 @@
+projection ExternalFileAssistantHandling;
+component ACCRUL;
+layer Core;
+description "External File Assistant";
+category Users;
+
+include fragment ExtFileAssistant;

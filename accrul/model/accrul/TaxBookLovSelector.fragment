@@ -1,0 +1,65 @@
+fragment TaxBookLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view tax_book_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceTaxBookLovSelector for TaxBookLov {
+   static TaxBookId;
+   static Description;
+   static TaxStructId;
+}
+
+card TaxBookLovCard for TaxBookLov {
+   label = "";
+   fieldranking TaxBookId;
+   field TaxBookId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query TaxBookLov {
+   from = "tax_book_lov";
+   lu = TaxBook;
+   keys = Objid;
+   ludependencies = TaxBook;
+   attribute Objid  Text;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute TaxBookId Text {
+      label = "Tax Book Reference";
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute NodeId Text {
+      lovcolumn = [true];
+   }
+   attribute NodeDescription Text {
+      lovcolumn = [true];
+   }
+   attribute TaxStructId Text {
+      label = "Structure ID";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute StructDescr Text {
+      label = "Structure Description";
+      lovcolumn = [true];
+   }
+   -- gelr:tax_book_and_numbering, begin
+   attribute TaxSeriesId Text {
+      label = "Tax Series ID";
+      lovcolumn = [true];
+   }
+   -- gelr:tax_book_and_numbering, end
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

@@ -1,0 +1,62 @@
+projection AuditSourceColumnHandling;
+component ACCRUL;
+layer Core;
+description "Audit Source Column";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AuditSourceSet for AuditSource;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AuditSource {
+   crud = Read;
+
+   attribute InternalLedgerDb Boolean("TRUE", "FALSE") {
+      label = "Internal Ledger";
+   }
+   attribute SystemDefinedDb Boolean("TRUE", "FALSE") {
+      label = "System Defined";
+   }
+
+   array AuditSourceColumnsArray(AuditSource) to AuditSourceColumn(AuditSource);
+}
+
+@Override
+entity AuditSourceColumn {
+   crud = Read;
+
+   attribute SelectionDateDb Boolean("TRUE", "FALSE") {
+      label = "Selection Date";
+   }
+   attribute Datatype Enumeration(ExtyDataType) {
+      label = "Data Type";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

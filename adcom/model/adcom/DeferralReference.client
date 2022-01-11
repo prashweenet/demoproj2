@@ -1,0 +1,167 @@
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210112  LAHNLK  LMM2020R1-1481, Added AircraftSubSystemNewSelector..
+--  200820  SWiclk  LMM2020R1-870, Replaced AircraftTypeId by AircraftTypeCode due to key change.
+--  200702  DILDLK  LMM2020R1-260, Modified navigation.
+--  200625  LAHNLK  LMM2020R1-74: created.
+--  200701  MADGLK  LMM2020R1-182:added conflicting and associated deferral references
+-----------------------------------------------------------------------------
+client DeferralReference;
+component ADCOM;
+layer Core;
+projection DeferralReferenceHandling;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+entry DeferralReferencesNavEntry parent AdcomNavigator.FaultDeferralBasicData  at index 100 {
+   label = "Deferral References";
+   page List home AvDeferralReference;
+}
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AvDeferralReferenceSet {
+   label = "Deferral References";
+   list AvDeferralReferenceList {
+      label = "Deferral References";
+   }
+   tabs {
+      tab {
+         label = "Conflicting Deferral References";
+
+         list DeferralReferenceConflictList(DeferralReferenceConflictArray)bind AvDeferralReferenceList;
+
+      }
+      tab {
+         label = "Associated Deferral References";
+         list DeferralReferenceAssociateList(DeferralReferenceAssociateArray)bind AvDeferralReferenceList;
+      }
+
+   }
+
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AircraftSubSystemNewSelector for AvAircraftSubSystem {
+   label = "${SubSystemCode} - ${SubSystemName}";
+   static SubSystemCode;
+   static SubSystemName;
+
+}
+selector AircraftTypeNewSelector for AvAircraftType {
+   label = "${AircraftTypeCode} - ${AircraftTypeName}";
+   static AircraftTypeCode;
+   static AircraftTypeName;
+}
+selector DeferralRefStatusNewSelector for AvDeferralRefStatus {
+   label = "${DeferralRefStatusCode} - ${DeferralRefStatusDesc}";
+   static DeferralRefStatusCode;
+   static DeferralRefStatusDesc;
+}
+selector FaultSeverityNewSelector for AvFaultSeverity {
+   label = "${FaultSeverityCode} - ${FaultSeverityDesc}";
+   static FaultSeverityCode;
+   static FaultSeverityDesc;
+}
+selector DeferralClassNewSelector for AvDeferralClass {
+   label = "${DeferralClassCode}- ${DeferralClassDesc}";
+   static DeferralClassCode;
+   static DeferralClassDesc;
+}
+selector DeferralReferenceSelector for AvDeferralReference {
+   label = "${DeferralReference}";
+   field DeferralReferenceName;
+}
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AvDeferralReferenceList for AvDeferralReference {
+   label = "Deferral References";
+   field DeferralReferenceName {
+      label = "Deferral Reference";
+   }
+   field DeferralRefDescription {
+      label = "Description";
+   }
+   lov AircraftTypeRef with AircraftTypeNewSelector {
+      label = "Aircraft Type";
+      description = AircraftTypeRef.AircraftTypeName;
+   }
+   lov AircraftSubSystemRef with AircraftSubSystemNewSelector {
+      label = "Aircraft Sub System";
+      description = AircraftSubSystemRef.SubSystemName;
+   }
+   field InstSystemsQt {
+      label = "Number Installed";
+   }
+   field OpSystemsQt {
+      label = "Required for Dispatch";
+   }
+   lov DeferralRefStatusRef with DeferralRefStatusNewSelector {
+      label = "Status";
+      description = DeferralRefStatusRef.DeferralRefStatusDesc;
+   }
+   field IsMocApprovalRequired {
+      label = "Requires MOC Authorization";
+
+   }
+   lov AvFaultSeverityRef with FaultSeverityNewSelector {
+      label = "Severity";
+      description = AvFaultSeverityRef.FaultSeverityDesc;
+   }
+   lov AvDeferralClassRef with DeferralClassNewSelector {
+      label = "Class";
+      description = AvDeferralClassRef.DeferralClassDesc;
+   }
+   field ApplicabilityRange;
+   field OperationalRestrictions;
+   field MaintenanceActions;
+   field PerformancePenalties;
+}
+
+list DeferralReferenceConflictList for AvConflictingDefRef {
+   label = "Conflicting Deferral References";
+   lov AvDeferralReferenceRef2 with DeferralReferenceSelector using DeferralReferenceLovFunction(DeferralRefId) {
+      label = " Conflicting Deferral Reference";
+      description = AvDeferralReferenceRef2.DeferralReferenceName;
+   }
+
+}
+
+list DeferralReferenceAssociateList for AvAssociatedDefRef {
+   label = "Associated Deferral References";
+   lov AvDeferralReferenceRef2 with DeferralReferenceSelector using DeferralReferenceLovFunction(DeferralRefId) {
+      label = " Associated Deferral Reference";
+      description = AvDeferralReferenceRef2.DeferralReferenceName;
+   }
+
+}
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

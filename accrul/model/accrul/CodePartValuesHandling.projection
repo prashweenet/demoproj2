@@ -1,0 +1,64 @@
+projection CodePartValuesHandling;
+component ACCRUL;
+layer Core;
+description "Code Part Values Handling";
+category Users;
+
+include fragment CodeB;
+include fragment CodeC;
+include fragment CodeD;
+include fragment CodeE;
+include fragment CodeF;
+include fragment CodeG;
+include fragment CodeH;
+include fragment CodeI;
+include fragment CodeJ;
+include fragment CopyToCompaniesAssistant;
+include fragment AccountingCodePartValueLovSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CompanyFinanceSet for CompanyFinance {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CompanyFinance {
+   reference AccountingCodePartBRef(Company) to AccountingCodeParts(Company) {
+      where = ":child.CodePart = 'B'";
+   }
+   reference AccountingCodePartCRef(Company) to AccountingCodeParts(Company) {
+      where = ":child.CodePart = 'C'";
+   }
+   reference AccountingCodePartDRef(Company) to AccountingCodeParts(Company) {
+      where = ":child.CodePart = 'D'";
+   }
+   reference AccountingCodePartERef(Company) to AccountingCodeParts(Company) {
+      where = ":child.CodePart = 'E'";
+   }
+   reference AccountingCodePartFRef(Company) to AccountingCodeParts(Company) {
+      where = ":child.CodePart = 'F'";
+   }
+   reference AccountingCodePartGRef(Company) to AccountingCodeParts(Company) {
+      where = ":child.CodePart = 'G'";
+   }
+   reference AccountingCodePartHRef(Company) to AccountingCodeParts(Company) {
+      where = ":child.CodePart = 'H'";
+   }
+   reference AccountingCodePartIRef(Company) to AccountingCodeParts(Company) {
+      where = ":child.CodePart = 'I'";
+   }
+   reference AccountingCodePartJRef(Company) to AccountingCodeParts(Company) {
+      where = ":child.CodePart = 'J'";
+   }
+
+   array CodeBArray(Company) to CodeB(Company);
+   array CodeCArray(Company) to CodeC(Company);
+   array CodeDArray(Company) to CodeD(Company);
+   array CodeEArray(Company) to CodeE(Company);
+   array CodeFArray(Company) to CodeF(Company);
+   array CodeGArray(Company) to CodeG(Company);
+   array CodeHArray(Company) to CodeH(Company);
+   array CodeIArray(Company) to CodeI(Company);
+   array CodeJArray(Company) to CodeJ(Company);
+}

@@ -1,0 +1,119 @@
+client CodePartValues;
+component ACCRUL;
+layer Core;
+projection CodePartValuesHandling;
+
+include fragment CodeB;
+include fragment CodeC;
+include fragment CodeD;
+include fragment CodeE;
+include fragment CodeF;
+include fragment CodeG;
+include fragment CodeH;
+include fragment CodeI;
+include fragment CodeJ;
+include fragment CopyToCompaniesAssistant;
+include fragment AccountingCodePartValueLovSelector;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CodePartValuesNavEntry parent AccrulNavigator.CodeStringMenu at index 600 {
+      label = "Code Part Values";
+      page Form;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using CompanyFinanceSet {
+   label = "Code Part Values";
+   singleton CompanyFinanceSingleton;
+
+   tabs {
+      tab {
+         visible = [context.Company.CodeBUsed = "Y"];
+         label = "${context.Company.CodeBName}";
+         list CodeBList(CodeBArray);
+      }
+      tab {
+         visible = [context.Company.CodeCUsed = "Y"];
+         label = "${context.Company.CodeCName}";
+         list CodeCList(CodeCArray);
+      }
+      tab {
+         visible = [context.Company.CodeDUsed = "Y"];
+         label = "${context.Company.CodeDName}";
+         list CodeDList(CodeDArray);
+      }
+      tab {
+         visible = [context.Company.CodeEUsed = "Y"];
+         label = "${context.Company.CodeEName}";
+         list CodeEList(CodeEArray);
+      }
+      tab {
+         visible = [context.Company.CodeFUsed = "Y"];
+         label = "${context.Company.CodeFName}";
+         list CodeFList(CodeFArray);
+      }
+      tab {
+         visible = [context.Company.CodeGUsed = "Y"];
+         label = "${context.Company.CodeGName}";
+         list CodeGList(CodeGArray);
+      }
+      tab {
+         visible = [context.Company.CodeHUsed = "Y"];
+         label = "${context.Company.CodeHName}";
+         list CodeHList(CodeHArray);
+      }
+      tab {
+         visible = [context.Company.CodeIUsed = "Y"];
+         label = "${context.Company.CodeIName}";
+         list CodeIList(CodeIArray);
+      }
+      tab {
+         visible = [context.Company.CodeJUsed = "Y"];
+         label = "${context.Company.CodeJName}";
+         list CodeJList(CodeJArray);
+      }
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+--------------------------------- SELECTORS ---------------------------------
+singleton CompanyFinanceSingleton for CompanyFinance;
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

@@ -1,0 +1,21 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistComponentChange
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+INDEX av_hist_comp_chg_ix1 IS av_hist_component_change_tab (inventory_id);
+-------------------- OTHER DEFINITIONS --------------------------------------
+
+SEQUENCE av_hist_comp_chg_seq IS MAXVALUE 999999999999999 INCREMENT BY 1 START WITH 1 NOCACHE;
+
+-------------------- OTHER DEFINITIONS --------------------------------------

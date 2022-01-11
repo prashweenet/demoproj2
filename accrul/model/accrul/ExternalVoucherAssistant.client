@@ -1,0 +1,145 @@
+client ExternalVoucherAssistant;
+component ACCRUL;
+layer Core;
+projection ExternalVoucherAssistantHandling;
+
+include fragment ExtFileAssistant;
+warningsenabled = ExtFileLoad;
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+navigator {
+   entry ExtVoucherAssistantNav parent AccrulNavigator.ExternalVoucherMenu at index 100 {
+      label = "External Voucher Assistant";
+      assistant Assistant;
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+assistant Assistant using TaskVirtualSet {
+   label = "External Voucher Assistant";
+   savemode = OnLostFocus;
+   setup ExtVoucherAssistantSetup {
+      variable FileTypeStr Text;
+      variable SetIdStr Text;
+      variable FileTemplateStr Text;
+      variable FileDirectionStr Text;
+      variable FileDirectionDbStr Text;
+
+      execute {
+         set FileType = FileTypeStr;
+         set SetId = SetIdStr;
+         set FileTemplate = FileTemplateStr;
+         set FileDirection = FileDirectionStr;
+         set FileDirectionDb = FileDirectionDbStr;
+      }
+   }
+   init command {
+      variable Company Text;
+      execute {
+         set FileType = "ExtVoucher";
+         set FileTypeParam = "ExtVoucher";
+         set Company = "${context.Company}";
+         call GetDefaultFileTypeInfo(Company, FileType, ProcessOptions) into DefaultInfo;
+         set Company = DefaultInfo.Company;
+         set SetId = DefaultInfo.SetId;
+         set FileTemplate = DefaultInfo.FileTemplate;
+         set ParamString = DefaultInfo.ParamString;
+         set FileDirection = DefaultInfo.FileDirection;
+         set FileDirectionDb = DefaultInfo.FileDirectionDb;
+         set FileName = DefaultInfo.FileName;
+      }
+   }
+   steps {
+      step {
+         label = "Set External File Type";
+         group ProcessOptionsGroup;
+         group FileOptionsGroup;
+         fileselector {
+            enabled = [FileDirectionDb = "1" and ProcessOptions = "Online"];
+            multifile = [false];
+            onfileselect {
+               execute {
+                  set FileName = component.UploadQueue.FileList;
+                  call ChangeParamValues("FILE_NAME", FileName, ParamString) into ParamString;
+               }
+            }
+            label = "Add File";
+         }
+         next command {
+            enabled = [(FileDirectionDb = "1" and ProcessOptions = "Online" and not component.UploadQueue.IsEmpty)
+            or(FileDirectionDb = "1" and ProcessOptions = "Batch")];
+            execute {
+               call CreateFileTypeParamVal();
+            }
+         }
+      }
+      step {
+         label = "Set Parameter Values";
+         group FileTypeInfoGroup;
+         list ExtFileTypeParamList(FileTypeParamArr);
+         next command {
+            enabled = [ProcessOptions = "Batch"];
+         }
+      }
+      step {
+         label = "Schedule";
+         group SchedulingParametersGroup;
+         group SchedulingStartAndStopDateGroup;
+      }
+      step {
+         label = "Schedule Options";
+         group ScheduledTasksAssistantAdvOpGroup;
+         group ScheduledTasksAssistantStreamsGroup;
+      }
+      final step {
+         markdowntext {
+            text = "${ReturnInfo}";
+         }
+         command NavigateToExtVouLoadInfo {
+            label = "External Voucher Load Information";
+            execute {
+               navigate "page/ExternalVoucherLoadInformation/List?$filter=LoadFileId eq ${LoadFileId}";
+            }
+         }
+         command NavigateToScheduledTask {
+            visible = [ProcessOptions = "Batch"];
+         }
+      }
+   }
+   finish command {
+      variable ImportFileInfoVar Structure(ImportFileInfo);
+      enabled = [((component.Assistant.ActiveStep = 2 and ProcessOptions = "Online")
+      or((component.Assistant.ActiveStep = 3)or(component.Assistant.ActiveStep = 4) and ProcessOptions = "Batch"))
+      and((FileDirectionDb = "1" and ProcessOptions = "Online" and not component.UploadQueue.IsEmpty)
+      or(FileDirectionDb = "1" and ProcessOptions = "Batch"))];
+      execute {
+         if [ProcessOptions = "Online"] {
+            upload "TaskVirtualSet(Objkey=$[Objkey])/FileData";
+            call ImportFile() into ImportFileInfoVar;
+            set LoadFileId = ImportFileInfoVar.LoadFileId;
+            set ReturnInfo = ImportFileInfoVar.Info;
+            call GetFileLoadStateDb(LoadFileId) into LoadStateDb;
+         }
+         else {
+            call ScheduleTask() into ScheduledTask;
+            set ScheduleId = ScheduledTask.ScheduleId;
+            set ReturnInfo = "Task '${ScheduleName}', assigned with the Id '${ScheduleId}', was successfully scheduled to start ${ScheduledTask.ScheduledDate} at ${ScheduledTask.ScheduledTime}.";
+         }
+      }
+   }
+   cancel command {
+      execute {
+         navigate back;
+      }
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+command NavigateToExtVouLoadInfo for TaskVirtual {
+   label = "External Voucher Load Information";
+}
+
+---------------------------------- GROUPS -----------------------------------

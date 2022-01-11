@@ -1,0 +1,45 @@
+fragment AccountingYearEndPeriodSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view accounting_year_end_period";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccountingYearEndPeriodSelector for AccountingYearEndPeriod {
+   static AccountingYear;
+   static AccountingPeriod;
+}
+
+card AccountingYearEndPeriodCard for AccountingYearEndPeriod {
+   label = "";
+   fieldranking AccountingYear;
+   field AccountingYear;
+   field AccountingPeriod;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccountingYearEndPeriod {
+   from = "accounting_year_end_period";
+   lu = AccPeriodLedgerInfo;
+   keys = Company, AccountingYear;
+   ludependencies = AccPeriodLedgerInfo;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute AccountingYear Number {
+      lovcolumn = [true];
+   }
+   attribute AccountingPeriod Number {
+      lovcolumn = [true];
+   }
+   attribute LedgerId Text {
+      label = "Ledger ID";
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

@@ -1,0 +1,37 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalVoucherBasicDataHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+PROCEDURE Do_Set_Default___ (
+   key_          IN Ext_Parameters_Key)   
+IS
+   info_       VARCHAR2(50); 
+   attr_       VARCHAR2(50);
+   objid_      VARCHAR2(2000);
+   objversion_ VARCHAR2(2000);
+BEGIN   
+   Get_Objid_Objversion___(objid_, objversion_, key_);    
+   Client_SYS.Add_To_Attr('DEF_TYPE', 'TRUE', attr_);
+   Ext_Parameters_API.Modify__(info_, objid_, objversion_, attr_, 'DO'); 
+END Do_Set_Default___;
+
+@Override
+PROCEDURE CRUD_Default___ (
+   key_  IN  Ext_Parameters_Key,
+   attr_ IN OUT VARCHAR2,
+   info_ OUT VARCHAR2 )
+IS
+BEGIN      
+   super(key_, attr_, info_);
+   --//! TODO:UXX Shdilk 171113 Can remove the setting value as false if we can get company value to prepare_insert or crud_default. Then can call Check_Default__ to fetch the correct value
+   Client_SYS.Set_Item_Value('DEF_TYPE', 'FALSE', attr_);
+END CRUD_Default___;

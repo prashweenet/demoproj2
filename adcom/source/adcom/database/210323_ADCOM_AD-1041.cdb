@@ -1,0 +1,29 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210323_ADCOM_AD-1041.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210323   supklk  Added AL_ID column to AV_FAULT_PART_REQUEST_TAB
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_FAULT_PART_REQUEST_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+    IF NOT(Database_SYS.Column_Exist(table_name_, 'ALT_ID')) THEN
+      column_ := Database_SYS.Set_Column_Values('ALT_ID', 'VARCHAR2(50)', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'A', column_ , TRUE );
+   END IF;
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+SET SERVEROUTPUT OFF

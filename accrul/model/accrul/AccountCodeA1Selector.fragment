@@ -1,0 +1,62 @@
+fragment AccountCodeA1Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view account_code_a1";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccountCodeA1Selector for AccountCodeA1 {
+   orderby = SortValue;
+   static Account;
+   static Description;
+}
+
+@Override
+list AccountCodeA1LovList for AccountCodeA1 {
+   orderby = SortValue;
+}
+
+card AccountCodeA1Card for AccountCodeA1 {
+   label = "";
+   fieldranking Account;
+   field Account;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccountCodeA1 {
+   from = "account_code_a1";
+   lu = Account;
+   keys = Company, Account;
+   ludependencies = Account;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Account Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute LogicalAccountType Enumeration(AccountTypeValue) {
+      lovcolumn = [true];
+      fetch = "logical_account_type_db";
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [false];
+   }
+   attribute ValidUntil Date {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

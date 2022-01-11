@@ -1,0 +1,51 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: SecondaryCostRevenueElementHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  072318  jadulk  Added function, Get_Current_Date___
+--  072618  jadulk  Added procedure, Copy_Elements_To_Sec_Map___
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Get_Element_Type_Client___ (
+  company_ IN VARCHAR2, 
+  project_cost_element_ IN VARCHAR2) RETURN VARCHAR2
+IS
+BEGIN
+   RETURN Project_Cost_Element_API.Get_Element_Type_Client(company_, project_cost_element_);
+END Get_Element_Type_Client___;
+
+
+FUNCTION Get_Current_Date___ RETURN DATE
+IS
+   today_ DATE;
+BEGIN
+   SELECT sysdate 
+   INTO   today_
+   FROM   dual;
+   
+   RETURN today_;
+END Get_Current_Date___;
+
+
+PROCEDURE Copy_Elements_To_Sec_Map___ (
+   company_ IN VARCHAR2 )
+IS
+BEGIN
+   Cost_Ele_To_Accnt_Secmap_API.Copy_Elements_To_Sec_Map__(company_);
+END Copy_Elements_To_Sec_Map___;  
+
+
+FUNCTION Get_Base_For_Followup_Element___(
+   company_    IN VARCHAR2)RETURN VARCHAR2
+IS
+BEGIN
+   RETURN Accounting_Code_Parts_API.Get_Base_For_Followup_Element(company_);
+END Get_Base_For_Followup_Element___;  
+   

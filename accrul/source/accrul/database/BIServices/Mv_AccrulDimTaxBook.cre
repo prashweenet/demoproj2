@@ -1,0 +1,114 @@
+----------------------------------------------------------------------------
+--
+--  Dimension:  TaxBook
+--  Component:  ACCRUL
+--  LU:         DimTaxBook
+--
+--  File        : MVAccrul_DimTaxBook.cre
+--  Purpose     : Create Materialized views, constraints and indexes for ACCRUL BRA Services
+--  Localization: No translation needed.
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+
+
+-- ***** &MV - Start *****
+
+DEFINE MV         = TAX_BOOK_MV
+DEFINE TAB1       = TAX_BOOK_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT company||''^''||tax_book_id id,
+              company                     company,
+              tax_book_id                 code,
+              tax_book_id                 tax_book_id,
+              ''Null''                    description,
+              tax_direction_sp            tax_direction_sp,
+              tax_book_base               tax_book_base,
+              tax_book_base_values        tax_book_base_values,
+              tax_series_id               tax_series_id
+       FROM   &TAB1 
+       UNION ALL
+       SELECT company||''^''||''#''       id,
+              company                     company,
+              NULL                        code,
+              NULL                        tax_book_id,
+              NULL                        description,
+              NULL                        tax_direction_sp,
+              NULL                        tax_book_base,
+              NULL                        tax_book_base_values,
+              NULL                        tax_series_id
+       FROM   &TAB2
+       UNION ALL
+       SELECT ''#''||''^''||''#''         id,
+              NULL                        company,
+              NULL                        code,
+              NULL                        tax_book_id,
+              NULL                        description,
+              NULL                        tax_direction_sp,
+              NULL                        tax_book_base,
+              NULL                        tax_book_base_values,
+              NULL                        tax_series_id
+       FROM BI_DUAL_TAB
+    ';
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/
+
+UNDEFINE MV
+UNDEFINE TAB1
+UNDEFINE TAB2
+-- ***** &MV - End *****
+------------------------------------------------------------------

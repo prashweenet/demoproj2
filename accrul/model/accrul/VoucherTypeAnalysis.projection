@@ -1,0 +1,95 @@
+projection VoucherTypeAnalysis;
+component ACCRUL;
+layer Core;
+description "Voucher Type Analysis";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherTypeDetailQuerys for VoucherTypeDetailQuery {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query VoucherTypeDetailQuery {
+   from = "voucher_type_detail_query";
+   lu = VoucherTypeDetail;
+   keys = Company, VoucherType, FunctionGroup;
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute FunctionGroup Text;
+   attribute Ledger Text;
+   attribute LedgerId Text {
+      label = "Ledger ID";
+   }
+   attribute Balance Boolean("TRUE", "FALSE") {
+      label = "Balance Mandatory";
+   }
+   attribute UseManual Boolean("TRUE", "FALSE") {
+      label = "Use Manual Internal Methods";
+   }
+   attribute AutomaticAllotDb Boolean("Y", "N") {
+      label = "Automatic Allotment";
+   }
+   attribute VtSingleFunctionGroup Boolean("Y", "N") {
+      label = "Single Function Group";
+   }
+   attribute SimulationVoucher Boolean("TRUE", "FALSE") {
+      label = "Simulation Voucher";
+   }
+   attribute SeparateUserApprovalDb Boolean("TRUE", "FALSE") {
+      label = "Separate User Approval";
+   }
+   attribute UseApprovalWorkflow Boolean("TRUE", "FALSE") {
+      label = "Use Voucher Approval Workflow";
+   }
+   attribute AutomaticVouBalance Boolean("Y", "N") {
+      label = "Optional Auto Balance";
+   }
+   attribute StoreOriginalDb Boolean("Y", "N") {
+      label = "Store Original";
+   }
+   attribute RowGroupValidation Boolean("Y", "N") {
+      label = "Voucher Row Group Validation";
+   }
+   attribute ReferenceMandatory Boolean("Y", "N");
+   attribute JournalID Text {
+      fetch = "Voucher_Util_Pub_API.Get_Acc_Journal(company, voucher_type)";
+      label = "Journal ID";
+      maxlength = 20;
+      format = uppercase;
+   }
+
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+   reference FunctionGroupRef(FunctionGroup) to FunctionGroup(FunctionGroup) {
+      label = "Function Group";
+   }
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

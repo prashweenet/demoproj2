@@ -1,0 +1,23 @@
+fragment AccLibCurrencyAmount;
+component ACCRUL;
+layer Core;
+description "Fragment to support Currency Amount functions, such as roundings, calculations and currency conversions";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+// function to round an amount to the number of decimals of the accounting currency of the company
+function RoundAccCurrencyAmount Number {
+   parameter Company Text;
+   parameter Amount Number;
+}
+
+// function to round an amount to the number of decimals for the given currency code in the company
+function RoundCurrencyAmount Number {
+   parameter Company Text;
+   parameter CurrencyCode Text;
+   parameter Amount Number;
+}
+

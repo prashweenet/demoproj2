@@ -1,0 +1,162 @@
+projection PostingControlNavigatorHandling;
+component ACCRUL;
+layer Core;
+description "This is used both for querying for posting control details, as well as for adding or modifying information...";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PostingCtrlMasterQuerySet for PostingCtrlMasterQuery {
+   context Company(Company);
+}
+
+entityset PostingCtrlSet for PostingCtrl {
+   context Company(Company);
+}
+
+entityset PostingCtrlDetailSet for PostingCtrlDetail {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity PostingCtrl {
+   from = "posting_ctrl_master";
+
+   attribute PcValidFrom Date {
+      editable = [ETag = null];
+   }
+   attribute PcValidFromDate Text {
+      fetch = "to_char(pc_valid_from,'fmMM/DDfm/YYYY')";
+   }
+   attribute SortOrder Number {
+      editable = [false];
+   }
+}
+
+@Override
+entity PostingCtrlDetail {
+   attribute PcValidFromDate Text {
+      fetch = "to_char(pc_valid_from,'fmMM/DDfm/YYYY')";
+   }
+   attribute ControlTypeValueDesc Text {
+      fetch = "Posting_Ctrl_Control_Type_API.Get_Control_Type_Value_Desc(company, control_type, control_type_value, module)";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query PostingCtrlMasterQuery {
+   from = "posting_cntrl_master_temp";
+   lu = PostingCtrl;
+   keys = Company, PostModule;
+
+   attribute Company Text;
+   attribute PostModule Text;
+
+   array PostingTypeArray(Company, PostModule) to PostingTypeQuery(Company, PostModule);
+}
+
+query PostingTypeQuery {
+   from = "posting_type";
+   lu = PostingCtrl;
+   keys = Company, PostModule, PostingType;
+
+   attribute Company Text;
+   attribute PostModule Text;
+   attribute PostingType Text;
+   attribute PostingTypeDesc Text;
+
+   array PostingCodePartArray(Company, PostModule, PostingType) to PostingCodePartQuery(Company, PostModule, PostingType);
+
+}
+
+query PostingCodePartQuery {
+   from = "posting_code_part";
+   lu = PostingCtrl;
+   keys = Company, PostModule, PostingType, CodePart;
+
+   attribute Company Text;
+   attribute PostModule Text;
+   attribute PostingType Text;
+   attribute CodePart Text;
+   attribute CodeName Text;
+
+
+   array PostingPcValidFromArray(Company, PostModule, PostingType, CodePart) to PostingPcValidFromQuery(Company, PostModule, PostingType, CodePart);
+}
+
+query PostingPcValidFromQuery {
+   from = "posting_pc_valid_from";
+   lu = PostingCtrl;
+   keys = Company, PostModule, PostingType, CodePart, PcValidFrom;
+
+   attribute Company Text;
+   attribute PostModule Text;
+   attribute PostingType Text;
+   attribute CodePart Text;
+   attribute PcValidFrom Date;
+   attribute PcValidFromDate Text {
+      fetch = "to_char(pc_valid_from,'fmMM/DDfm/YYYY')";
+   }
+   attribute ControlType Text;
+   attribute CtrlTypeCategoryDb Text;
+
+   array PostingCntrlTypeValueArray(Company, PostingType, CodePart, PcValidFrom) to PostingCntrlTypeValueQuery(Company, PostingType, CodePart, PcValidFrom);
+}
+
+query PostingCntrlTypeValueQuery {
+   from = "temp_posting_cntrl_type_value";
+   lu = PostingCtrlDetail;
+   keys = Company, PostingType, CodePart, PcValidFrom, ControlTypeValue;
+
+   attribute Company Text;
+   attribute PostingType Text;
+   attribute CodePart Text;
+   attribute ControlTypeValue Text;
+   attribute ControlTypeValueDesc Text;
+   attribute PcValidFrom Date;
+   attribute SpecCtrlTypeCategoryDb Text;
+
+   array PostingValidFromArray(Company, PostingType, CodePart, PcValidFrom, ControlTypeValue) to PostingValidFromQuery(Company, PostingType, CodePart, PcValidFrom, ControlTypeValue);
+}
+
+query PostingValidFromQuery {
+   from = "temp_posting_valid_from";
+   lu = PostingCtrlDetail;
+   keys = Company, PostingType, CodePart, PcValidFrom, ControlTypeValue, ValidFrom;
+
+   attribute Company Text;
+   attribute PostingType Text;
+   attribute CodePart Text;
+   attribute ControlType Text;
+   attribute ControlTypeValue Text;
+   attribute PcValidFrom Date;
+   attribute PcValidFromDate Text {
+      fetch = "to_char(pc_valid_from,'fmMM/DDfm/YYYY')";
+   }
+   attribute ValidFrom Date;
+   attribute SpecCtrlTypeCategoryDb Text;
+}
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

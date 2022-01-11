@@ -1,0 +1,24 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PaymentVacationDaysHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+@Override
+PROCEDURE CRUD_Default___ (
+   rec_ IN OUT Payment_Vacation_Period_Rec )
+IS
+BEGIN
+   super(rec_);
+   rec_.invoic_active := Dictionary_SYS.Component_Is_Active_Num('INVOIC');
+END CRUD_Default___;
+
+

@@ -1,0 +1,52 @@
+fragment AccountingCodePartA1Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view accounting_code_part_a1";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccountingCodePartA1Selector for AccountingCodePartA1 {
+   orderby = SortValue;
+   static CodePartValue;
+   static Description;
+}
+
+@Override
+list AccountingCodePartA1LovList for AccountingCodePartA1 {
+   orderby = SortValue;
+}
+
+card AccountingCodePartA1Card for AccountingCodePartA1 {
+   label = "";
+   fieldranking CodePartValue;
+   field CodePartValue;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccountingCodePartA1 {
+   from = "accounting_code_part_a1";
+   lu = AccountingCodePartValue;
+   keys = Company, CodePartValue;
+   ludependencies = AccountingCodePartA;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CodePartValue Text {
+      label = "Account";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute SortValue Text {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

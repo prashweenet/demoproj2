@@ -1,0 +1,73 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingCtrlCombDetSpecHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+FUNCTION Get_Control_Type_Description___(
+   company_             IN VARCHAR2,
+   control_type_        IN VARCHAR2,
+   control_type_value_  IN VARCHAR2,
+   module_              IN VARCHAR2,
+   valid_from_          IN DATE ) RETURN VARCHAR2
+IS
+BEGIN   
+  RETURN Posting_Ctrl_Control_Type_API.Get_Control_Type_Value_Desc(company_,control_type_,control_type_value_,module_,valid_from_);
+END Get_Control_Type_Description___;
+
+
+PROCEDURE Get_CtrlType1ValueRef_Info_(
+   attr_ IN OUT VARCHAR2)
+IS
+   CURSOR get_control_type1_value_views IS
+       SELECT control_type, replace(CASE WHEN instr(view_name,'TO_CHAR(PC_VALID_FROM, ''YYYY-MM'')')>0 THEN replace(view_name,'TO_CHAR(PC_VALID_FROM, ''YYYY-MM'')','PERIOD_CHAR_PC_VALID_FROM')
+                              ELSE view_name END , ' ')   view_name                               
+       FROM   posting_ctrl_control_type_tab
+       WHERE view_name != '**NoView**';
+BEGIN
+   FOR rec_ IN get_control_type1_value_views LOOP
+      Client_SYS.Add_To_Attr(rec_.control_type, rec_.view_name, attr_);
+   END LOOP;
+END Get_CtrlType1ValueRef_Info_;
+
+PROCEDURE Get_CtrlType2ValueRef_Info_(
+   attr_ IN OUT VARCHAR2)
+IS
+   CURSOR get_control_type2_value_views IS
+      SELECT control_type, replace(CASE WHEN instr(view_name,'TO_CHAR(PC_VALID_FROM, ''YYYY-MM'')')>0 THEN replace(view_name,'TO_CHAR(PC_VALID_FROM, ''YYYY-MM'')','PERIOD_CHAR_PC_VALID_FROM')
+                             ELSE view_name END , ' ')   view_name                               
+      FROM   posting_ctrl_control_type_tab
+      WHERE view_name != '**NoView**';
+BEGIN
+   FOR rec_ IN get_control_type2_value_views LOOP
+      Client_SYS.Add_To_Attr(rec_.control_type, rec_.view_name, attr_);
+   END LOOP;
+END Get_CtrlType2ValueRef_Info_;
+
+@Override
+PROCEDURE CRUD_Default___ (
+   key_  IN  Posting_Ctrl_Comb_Det_Spec_Key,
+   attr_ IN OUT VARCHAR2,
+   info_ OUT VARCHAR2 )
+IS
+   company_             VARCHAR2(20);
+   posting_type_        VARCHAR2(10);
+   spec_comb_ctrl_type_ VARCHAR2(10);
+BEGIN
+   company_              := Client_SYS.Get_Item_Value('COMPANY', attr_);
+   posting_type_         := Client_SYS.Get_Item_Value('POSTING_TYPE', attr_);
+   spec_comb_ctrl_type_  := Client_SYS.Get_Item_Value('SPEC_COMB_CONTROL_TYPE', attr_);
+   super(key_, attr_, info_);
+   Client_SYS.Add_To_Attr('SPEC_MODULE1', Comb_Control_Type_API.Get_Spec_Module(company_, posting_type_, spec_comb_ctrl_type_, 1), attr_);
+   Client_SYS.Add_To_Attr('SPEC_MODULE2', Comb_Control_Type_API.Get_Spec_Module(company_, posting_type_, spec_comb_ctrl_type_, 2), attr_);
+   Client_SYS.Add_To_Attr('SPEC_CONTROL_TYPE1',Comb_Control_Type_API.Get_Control_Type(company_, posting_type_, spec_comb_ctrl_type_, 1) , attr_);
+   Client_SYS.Add_To_Attr('SPEC_CONTROL_TYPE2',Comb_Control_Type_API.Get_Control_Type(company_, posting_type_, spec_comb_ctrl_type_, 2) , attr_);
+END CRUD_Default___;

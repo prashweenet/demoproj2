@@ -1,0 +1,49 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CostStructureUtil
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+TABLE analytic_struct_cache_tab IS
+      ( company                  VARCHAR2(20)    NOT NULL,
+        cost_structure_id        VARCHAR2(20)    NOT NULL,
+        project_cost_element     VARCHAR2(100)   NOT NULL,
+        structure_node           VARCHAR2(100)   NOT NULL,
+        level_id                 VARCHAR2(20)    NOT NULL,
+        rowversion               DATE            NOT NULL,
+        structure_node_desc      VARCHAR2(200)   NULL,
+        level_id_desc            VARCHAR2(200)   NULL);
+
+
+PRIMARY KEY analytic_struct_cache_pk IS ANALYTIC_STRUCT_CACHE_TAB (company, cost_structure_id, project_cost_element, structure_node, level_id);
+
+
+TABLE cost_structure_det_tab IS
+      ( company                  VARCHAR2(20)   NOT NULL,
+        cost_structure_id        VARCHAR2(20)   NOT NULL,
+        level_id                 VARCHAR2(20)   NOT NULL,
+        structure_node           VARCHAR2(100)  NOT NULL,
+        project_cost_element     VARCHAR2(100)  NOT NULL,
+        level_id_desc            VARCHAR2(200)  NULL,
+        structure_node_desc      VARCHAR2(200)  NULL,
+        item_above               VARCHAR2(100)  NULL,
+        item_below               VARCHAR2(100)  NULL,
+        item_below_desc          VARCHAR2(200)  NULL,
+        item_below_type          VARCHAR2(20)   NULL,
+        level_seq                NUMBER         NULL,
+        rowversion               DATE           NOT NULL);
+        
+PRIMARY KEY cost_structure_det_pk IS cost_structure_det_tab (company, cost_structure_id, level_id, structure_node, project_cost_element);        
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+
+

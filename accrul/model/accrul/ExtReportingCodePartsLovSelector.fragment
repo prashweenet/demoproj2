@@ -1,0 +1,32 @@
+fragment ExtReportingCodePartsLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ext_reporting_code_parts_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceExtReportingCodePartsLovSelector for ExtReportingCodePartsLov {
+   static CodePart;
+}
+
+card ExtReportingCodePartsLovCard for ExtReportingCodePartsLov {
+   label = "";
+   fieldranking CodePart;
+   field CodePart;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query ExtReportingCodePartsLov {
+   from = "ext_reporting_code_parts_lov";
+   lu = AccountingCodeParts;
+   keys = CodePart;
+   ludependencies = AccountingCodeParts;
+   attribute CodePart Text {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

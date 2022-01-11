@@ -1,0 +1,101 @@
+fragment CodestringHandling;
+component ACCRUL;
+layer Core;
+description "Function and structure to handle generic codestring handling for codestring completion, pseudo codes and code part demands";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function CodestringHandling Structure(CodestringHandlingStructure) {
+   parameter Company Text;
+   parameter CodePart Text;
+   parameter CodeA Text {
+      required = [false];
+   }
+   parameter CodeB Text {
+      required = [false];
+   }
+   parameter CodeC Text {
+      required = [false];
+   }
+   parameter CodeD Text {
+      required = [false];
+   }
+   parameter CodeE Text {
+      required = [false];
+   }
+   parameter CodeF Text {
+      required = [false];
+   }
+   parameter CodeG Text {
+      required = [false];
+   }
+   parameter CodeH Text {
+      required = [false];
+   }
+   parameter CodeI Text {
+      required = [false];
+   }
+   parameter CodeJ Text {
+      required = [false];
+   }
+   parameter ProcessCode Text {
+      required = [false];
+   }
+   parameter Quantity Number {
+      required = [false];
+   }
+   parameter Text Text {
+      required = [false];
+   }
+   parameter ProjectActivityId Number {
+      required = [false];
+   }
+   parameter RequiredString Text {
+      required = [false];
+   }
+   parameter AccountOnly Text {
+      required = [false];
+   }
+}
+
+structure CodestringHandlingStructure {
+   attribute Company Text;
+   attribute CodeA Text;
+   attribute CodeB Text;
+   attribute CodeC Text;
+   attribute CodeD Text;
+   attribute CodeE Text;
+   attribute CodeF Text;
+   attribute CodeG Text;
+   attribute CodeH Text;
+   attribute CodeI Text;
+   attribute CodeJ Text;
+   attribute ProcessCode Text;
+   attribute Quantity Number;
+   attribute Text Text;
+   attribute ProjectId Text;
+   attribute ProjectActivityId Number;
+   attribute ModifiedCodeA Text;
+   attribute ModifiedCodeB Text;
+   attribute ModifiedCodeC Text;
+   attribute ModifiedCodeD Text;
+   attribute ModifiedCodeE Text;
+   attribute ModifiedCodeF Text;
+   attribute ModifiedCodeG Text;
+   attribute ModifiedCodeH Text;
+   attribute ModifiedCodeI Text;
+   attribute ModifiedCodeJ Text;
+   attribute ModifiedProcessCode Text;
+   attribute ModifiedQuantity Number;
+   attribute ModifiedText Text;
+   attribute ModifiedProjectId Text;
+   attribute ModifiedProjectActivityId Number;
+   attribute ModifiedProjectActivityIdEnable Text;
+   attribute ModifiedRequiredString Text;
+   attribute RequiredString Text;
+   attribute ModifiedCodeString Text;
+}

@@ -1,0 +1,62 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvPartNumber
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201105  majslk  LMM2020R1-1381 - Created, Added test for Check_Insert__
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Check_Insert___ should genarate next sequence value when part_number_id is NULL" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_part_number_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   test_rec1_  av_part_number_tab%ROWTYPE;
+   test_rec2_  av_part_number_tab%ROWTYPE;
+   output_  Indicator_Rec;
+
+BEGIN
+   test_rec1_.part_number_id := NULL;
+   test_rec1_.manufacturer := 'Manufacturer1';
+   test_rec1_.part_number := 1001;
+   test_rec1_.part_name := 'Part1';
+   test_rec1_.inventory_class_code := 'Inv1';
+   test_rec1_.part_use := 'true';
+   test_rec1_.mx_unique_key := NULL;
+   test_rec1_.alt_id := 'Alt1';
+
+   test_rec2_.part_number_id := 5000;
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.part_number_id IS NULL THEN
+         newrec_.part_number_id := PART_NUMBER_ID_SEQ.NEXTVAL;
+         ASSERT newrec_.part_number_id IS NOT NULL MESSAGE 'Returned '||newrec_.part_number_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+
+

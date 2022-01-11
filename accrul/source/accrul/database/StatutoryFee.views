@@ -1,0 +1,261 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: StatutoryFee
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  160714  reanpl  FINHR-2559, Added view Tax_Codes_Tax_Calc_Structure
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+-- This view should be used for customer side 
+-- Tax types Tax Wthholding and Use Tax are excluded
+VIEW Tax_Code_Restricted IS
+   Prompt = 'Tax Code'
+SELECT company                        company,
+       fee_code                       fee_code,
+       SUBSTR(NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'StatutoryFee', 
+          fee_code), description), 1, 100) description,
+       fee_rate                       fee_rate,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       Fee_Type_API.Decode(fee_type)  fee_type,
+       fee_type                       fee_type_db,
+       Vat_Method_API.Decode(vat_received) vat_received,
+       vat_received                   vat_received_db,
+       Vat_Method_API.Decode(vat_disbursed) vat_disbursed,
+       vat_disbursed                  vat_disbursed_db,
+       deductible                     deductible,
+       Tax_Amount_At_Inv_Print_API.Decode(tax_amount_at_inv_print) tax_amount_at_inv_print,
+       tax_amount_at_inv_print        tax_amount_at_inv_print_db,
+       tax_amt_limit                  tax_amt_limit,
+       Tax_Reporting_Category_API.Decode(tax_reporting_category) tax_reporting_category,
+       tax_reporting_category         tax_reporting_category_db,
+       rowkey                         objkey,
+       TO_CHAR(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   statutory_fee_tab
+WHERE  fee_type IN ('TAX', 'CALCTAX', 'NOTAX');
+
+
+-- This view should be used for customer side 
+VIEW Tax_Code_Exempt_Restricted IS
+   Prompt = 'Tax Code'   
+SELECT company                        company,
+       fee_code                       fee_code,
+       SUBSTR(NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'StatutoryFee', 
+          fee_code), description), 1, 100) description,
+       fee_rate                       fee_rate,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       Fee_Type_API.Decode(fee_type)  fee_type,
+       fee_type                       fee_type_db,
+       Vat_Method_API.Decode(vat_received) vat_received,
+       vat_received                   vat_received_db,
+       Vat_Method_API.Decode(vat_disbursed) vat_disbursed,
+       vat_disbursed                  vat_disbursed_db,
+       deductible                     deductible,
+       Tax_Amount_At_Inv_Print_API.Decode(tax_amount_at_inv_print) tax_amount_at_inv_print,
+       tax_amount_at_inv_print        tax_amount_at_inv_print_db,
+       tax_amt_limit                  tax_amt_limit,
+       Tax_Reporting_Category_API.Decode(tax_reporting_category) tax_reporting_category,
+       tax_reporting_category         tax_reporting_category_db,
+       rowkey                         objkey,
+       TO_CHAR(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   statutory_fee_tab
+WHERE  (fee_type IN ('CALCTAX', 'NOTAX')
+OR     (fee_type IN ('TAX') AND fee_rate = 0));
+
+
+-- This view should be used for supplier side and common places (meaning places which are used for both customer and supplier)
+-- Tax type Tax Wthholding is excluded
+VIEW Tax_Code_Common IS
+   Prompt = 'Tax Code'
+SELECT company                        company,
+       fee_code                       fee_code,
+       SUBSTR(NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'StatutoryFee',
+          fee_code), description), 1, 100) description,
+       fee_rate                       fee_rate,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       Fee_Type_API.Decode(fee_type)  fee_type,
+       fee_type                       fee_type_db,
+       Vat_Method_API.Decode(vat_received) vat_received,
+       vat_received                   vat_received_db,
+       Vat_Method_API.Decode(vat_disbursed) vat_disbursed,
+       vat_disbursed                  vat_disbursed_db,
+       deductible                     deductible,
+       Tax_Amount_At_Inv_Print_API.Decode(tax_amount_at_inv_print) tax_amount_at_inv_print,
+       tax_amount_at_inv_print        tax_amount_at_inv_print_db,
+       tax_amt_limit                  tax_amt_limit,
+       Tax_Reporting_Category_API.Decode(tax_reporting_category) tax_reporting_category,
+       tax_reporting_category         tax_reporting_category_db,
+       -- gelr:incoming_fiscal_note, begin
+       Tax_Type_Category_API.Decode(tax_type_category) tax_type_category,
+       tax_type_category              tax_type_category_db,
+       -- gelr:incoming_fiscal_note, end
+       rowkey                         objkey,
+       TO_CHAR(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   statutory_fee_tab
+WHERE  fee_type IN ('TAX', 'CALCTAX', 'NOTAX', 'USETX');
+
+
+-- This view should be used for supplier side and common places (meaning places which are used for both customer and supplier)
+VIEW Tax_Code_Exempt_Common IS
+   Prompt = 'Tax Code'   
+SELECT company                        company,
+       fee_code                       fee_code,
+       SUBSTR(NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'StatutoryFee',
+          fee_code), description), 1, 100) description,
+       fee_rate                       fee_rate,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       Fee_Type_API.Decode(fee_type)  fee_type,
+       fee_type                       fee_type_db,
+       Vat_Method_API.Decode(vat_received) vat_received,
+       vat_received                   vat_received_db,
+       Vat_Method_API.Decode(vat_disbursed) vat_disbursed,
+       vat_disbursed                  vat_disbursed_db,
+       deductible                     deductible,
+       Tax_Amount_At_Inv_Print_API.Decode(tax_amount_at_inv_print) tax_amount_at_inv_print,
+       tax_amount_at_inv_print        tax_amount_at_inv_print_db,
+       tax_amt_limit                  tax_amt_limit,
+       Tax_Reporting_Category_API.Decode(tax_reporting_category) tax_reporting_category,
+       tax_reporting_category         tax_reporting_category_db,
+       rowkey                         objkey,
+       TO_CHAR(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   statutory_fee_tab
+WHERE  (fee_type IN ('CALCTAX', 'NOTAX', 'USETX')
+OR     (fee_type = 'TAX' AND fee_rate = 0));
+
+
+VIEW Tax_Code_No_Tax IS
+   Prompt = 'Tax Code'
+SELECT company                        company,
+       fee_code                       fee_code,
+       SUBSTR(NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'StatutoryFee',
+          fee_code), description), 1, 100) description,
+       fee_rate                       fee_rate,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       Fee_Type_API.Decode(fee_type)  fee_type,
+       fee_type                       fee_type_db,
+       Vat_Method_API.Decode(vat_received) vat_received,
+       vat_received                   vat_received_db,
+       Vat_Method_API.Decode(vat_disbursed) vat_disbursed,
+       vat_disbursed                  vat_disbursed_db,
+       deductible                     deductible,
+       Tax_Amount_At_Inv_Print_API.Decode(tax_amount_at_inv_print) tax_amount_at_inv_print,
+       tax_amount_at_inv_print        tax_amount_at_inv_print_db,
+       tax_amt_limit                  tax_amt_limit,
+       Tax_Reporting_Category_API.Decode(tax_reporting_category) tax_reporting_category,
+       tax_reporting_category         tax_reporting_category_db,
+       rowkey                         objkey,
+       TO_CHAR(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   statutory_fee_tab
+WHERE  fee_type = 'NOTAX';
+
+
+VIEW Tax_Code_Tax_Calc_Structure IS
+   Prompt = 'Tax Code'   
+SELECT company                        company,
+       fee_code                       fee_code,
+       SUBSTR(NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'StatutoryFee',
+          fee_code), description), 1, 100) description,
+       fee_rate                       fee_rate,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       Fee_Type_API.Decode(fee_type)  fee_type,
+       fee_type                       fee_type_db,
+       Vat_Method_API.Decode(vat_received) vat_received,
+       vat_received                   vat_received_db,
+       Vat_Method_API.Decode(vat_disbursed) vat_disbursed,
+       vat_disbursed                  vat_disbursed_db,
+       deductible                     deductible,
+       Tax_Amount_At_Inv_Print_API.Decode(tax_amount_at_inv_print) tax_amount_at_inv_print,
+       tax_amount_at_inv_print        tax_amount_at_inv_print_db,
+       tax_amt_limit                  tax_amt_limit,
+       Tax_Reporting_Category_API.Decode(tax_reporting_category) tax_reporting_category,
+       tax_reporting_category         tax_reporting_category_db,
+       rowkey                         objkey,
+       TO_CHAR(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   statutory_fee_tab
+WHERE  fee_type = 'TAX'
+AND    vat_received = '1'
+AND    vat_disbursed = '1';
+
+
+VIEW Statutory_Fee_Tax_Withhold IS
+   Prompt = 'Tax Withholding Code'   
+SELECT company                        company,
+       fee_code                       fee_code,
+       SUBSTR(NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'StatutoryFee',
+          fee_code), description), 1, 100) description,
+       fee_rate                       fee_rate,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       Fee_Type_API.Decode(fee_type)  fee_type,
+       fee_type                       fee_type_db,
+       Vat_Method_API.Decode(vat_received) vat_received,
+       vat_received                   vat_received_db,
+       Vat_Method_API.Decode(vat_disbursed) vat_disbursed,
+       vat_disbursed                  vat_disbursed_db,
+       deductible                     deductible,
+       amount_not_taxable             amount_not_taxable,
+       min_withheld_amount            min_withheld_amount,
+       use_withhold_amount_table      use_withhold_amount_table,
+       tax_amt_limit                  tax_amt_limit,
+       minimum_base_amount            minimum_base_amount,
+       Tax_Reporting_Category_API.Decode(tax_reporting_category) tax_reporting_category,
+       tax_reporting_category         tax_reporting_category_db,
+       rowkey                         objkey,
+       TO_CHAR(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   statutory_fee_tab
+WHERE  fee_type IN ('IRS1099TX');
+
+
+VIEW Statutory_Fee_Tax_Withhold_Cu IS
+   Prompt = 'Tax Withholding Code'  
+SELECT company                        company,
+       fee_code                       fee_code,
+       SUBSTR(NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'StatutoryFee',
+          fee_code), description), 1, 100) description,
+       fee_rate                       fee_rate,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       Fee_Type_API.Decode(fee_type)  fee_type,
+       fee_type                       fee_type_db,
+       Vat_Method_API.Decode(vat_received) vat_received,
+       vat_received                   vat_received_db,
+       Vat_Method_API.Decode(vat_disbursed) vat_disbursed,
+       vat_disbursed                  vat_disbursed_db,
+       deductible                     deductible,
+       amount_not_taxable             amount_not_taxable,
+       min_withheld_amount            min_withheld_amount,
+       use_withhold_amount_table      use_withhold_amount_table,
+       tax_amt_limit                  tax_amt_limit,
+       minimum_base_amount            minimum_base_amount,
+       Tax_Reporting_Category_API.Decode(tax_reporting_category) tax_reporting_category,
+       tax_reporting_category         tax_reporting_category_db,
+       rowkey                         objkey,
+       TO_CHAR(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   statutory_fee_tab
+WHERE  fee_type IN ('IRS1099TX')
+AND    deductible = 100;

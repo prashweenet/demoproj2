@@ -1,0 +1,275 @@
+client AuditFormats;
+component ACCRUL;
+layer Core;
+projection AuditFormatsHandling;
+
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AuditFormatsNavEntry parent AccrulNavigator.AuditInterfaceBasicDataMenu at index 100 {
+      label = "Audit Formats";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AuditFormatSet {
+   label = "Audit Formats";
+   initcontext PageInitContext;
+   list AuditFormatList;
+}
+
+initcontext PageInitContext {
+   parameter SaftPolandEnabled Boolean;
+   init command {
+      execute {
+         -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set SaftPolandEnabled = LocalizationFunctionalityStructure.SaftPoland;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command AuditFileBasicDataCommand {
+   label = "Audit File Basic Data";
+   enabled = [ReportType != null and(ReportType = "SAFT" or ReportType = "FEC")];
+   mode = SingleRecord;
+
+   execute {
+      navigate "page/AuditFileBasicData/Form?contexts=Company:$[Company]&$filter=Country eq IfsApp.AuditFileBasicDataHandling.Lookup_IsoCountry'${Country}' and ReportType eq IfsApp.AuditFileBasicDataHandling.AuditReportTypes'${ReportType}'";
+   }
+}
+
+command AuditFileLogCommand {
+   label = "Audit File Log";
+   enabled = [(ReportType != null and(ReportType = "SAFT" or ReportType = "FEC") and not initcontext.SaftPolandEnabled)];
+   mode = SingleRecord;
+
+   execute {
+      navigate "page/AuditFileLog/List?contexts=Company:$[Company]&$filter=Country eq IfsApp.AuditFileLogHandling.Lookup_IsoCountry'${Country}' and ReportType eq IfsApp.AuditFileLogHandling.AuditReportTypes'${ReportType}'";
+   }
+}
+
+command JpkFileLogCommand {
+   label = "Audit File Log";
+   enabled = [(ReportType != null and(ReportType = "SAFT" or ReportType = "FEC") and initcontext.SaftPolandEnabled)];
+   mode = SingleRecord;
+
+   execute {
+      navigate "page/JpkFileLog/List?contexts=Company:$[Company]";
+   }
+}
+
+command AuditFileTaxInfoCommand for AuditFormat {
+   label = "Audit File Tax Information";
+   enabled = [(ReportType != null and(ReportType = "SAFT" or ReportType = "FEC"))];
+   mode = SingleRecord;
+
+   bulkexecute {
+      bulknavigate "page/AuditFileTaxInfo/Form?contexts=Company:$[Company]";
+   }
+}
+
+command SetDefaultFormatCommand for AuditFormat {
+   label = "Set Default";
+   enabled = [DefaultFormat != true];
+
+   execute {
+      call DoSetDefaultFormat();
+   }
+}
+
+--------------------------------- SELECTORS ---------------------------------
+selector ReferenceCountrySelector for IsoCountry {
+   label = "";
+
+   static Description;
+}
+
+@Override
+selector ReferenceExtFileTypeSelector for ExtFileType {
+   label = "${FileType} - ${Description}";
+   static FileType;
+   static Description {
+      searchable = false;
+   }
+   static Component {
+      searchable = false;
+   }
+   static SystemDefined {
+      visible = [false];
+      searchable = false;
+   }
+   static SystemBound {
+      visible = [false];
+      searchable = false;
+   }
+   static ViewName {
+      visible = [false];
+      searchable = false;
+   }
+   static FormName {
+      visible = [false];
+      searchable = false;
+   }
+   static TargetDefaultMethod {
+      visible = [false];
+      searchable = false;
+   }
+   static InputPackage {
+      visible = [false];
+      searchable = false;
+   }
+   static ApiToCallInput {
+      visible = [false];
+      searchable = false;
+   }
+   static ApiToCallOutput {
+      visible = [false];
+      searchable = false;
+   }
+
+}
+
+@Override
+selector ReferenceExtFileTemplateSelector for ExtFileTemplate {
+   label = "${FileTemplateId} - ${Description}";
+   static FileTemplateId {
+      label = "File Template";
+
+   }
+   static Description;
+   static FileType {
+      visible = [false];
+      searchable = false;
+   }
+   static ActiveDefinition {
+      visible = [false];
+   }
+   static ValidDefinition {
+      visible = [false];
+   }
+   static Separated {
+      visible = [false];
+   }
+   static FileFormat {
+      visible = [false];
+   }
+}
+
+
+@Override
+selector ReferenceOracleDirectoriesSelector for OracleDirectories {
+   label = "${DirectoryName} - ${Description}";
+   static DirectoryName;
+   static DirectoryPath;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AuditFormatList for AuditFormat {
+
+   lov CountryRef with ReferenceCountrySelector {
+      search = CountryCode, Description;
+      size = Large;
+      maxlength = 20;
+      format = uppercase;
+      hidekey = [true];
+      search = Description;
+      description = CountryRef.Description;
+      validate command {
+         variable DefFormatExistsStr;
+         execute {
+            call IsDefFormatExists(Company) into DefFormatExistsStr;
+            if [DefFormatExistsStr = "TRUE"] {
+               set DefaultFormat = false;
+            }
+         }
+      }
+   }
+   field ReportType {
+      size = Large;
+   }
+   field DecimalPoint {
+      size = Large;
+   }
+   field ThousandSeparator {
+      size = Large;
+   }
+   field NegativeFormat {
+      size = Large;
+   }
+   field LeadingZeroes {
+      size = Large;
+   }
+   field TimeFormat {
+      size = Large;
+   }
+   field DateFormat {
+      size = Large;
+   }
+   lov OutputFileDirServerRef with ReferenceOracleDirectoriesSelector {
+      size = Large;
+   }
+   lov FileTypeRef with ReferenceExtFileTypeSelector {
+      editable = [(ReportType != null and(ReportType = "SAFT" or ReportType = "FEC"))];
+   }
+   lov FileTemplateIdRef with ReferenceExtFileTemplateSelector using GetExtFileTemplate(FileType) {
+      editable = [(ReportType != null and(ReportType = "SAFT" or ReportType = "FEC"))];
+   }
+   field DefaultFormat {
+      editable = [false];
+   }
+
+   commandgroup AuditFileCmdGroup {
+      command AuditFileBasicDataCommand;
+      command AuditFileTaxInfoCommand;
+      command AuditFileLogCommand;
+      command JpkFileLogCommand;
+   }
+
+   commandgroup GeneralCmdGroup {
+      command SetDefaultFormatCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

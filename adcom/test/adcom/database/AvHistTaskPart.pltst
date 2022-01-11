@@ -1,0 +1,81 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistTaskPart
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210205  chdslk  DISO2020R1-516, Added installed and removed inventory id asserts to Pre_Sync_Action unit test.
+--  201013  themlk  DISO2020R1-425,Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_hist_execution_task_tab
+   VALUES
+      | task_code | et_barcode |
+      | 'TC01'    | 'ETB01'    |
+   END VALUES;
+
+   @MockTable av_hist_task_part_tab
+   VALUES
+      | et_barcode | mx_unique_key |
+      | 'ETB01'    | 'MXTP01'      |
+   END VALUES;
+
+   @MockTable av_inventory_tab
+   VALUES
+      | inventory_id |inventory_serial_no_oem|part_no_oem|manufacture_code|barcode|
+      | 1            |'SE001'                |'PN001'    |'manufacture001'|'barcode001'|
+      | 2            |'SE002'                |'PN002'    |'manufacture002'|'barcode002'|
+   END VALUES;
+
+IS
+   output1_    VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+   expected2_  VARCHAR2(2000);
+   expected3_  VARCHAR2(2000);
+   expected4_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      |'ET_BARCODE'||chr(31)||'ETB01'||chr(30)||'WITH_ET_BARCODE'|
+      |'MX_UNIQUE_KEY'||chr(31)||'MXTP01'||chr(30)||'WITH_MX_UNIQUE_KEY'|
+      |'INVENTORY_ID'||chr(31)||'1'||chr(30)||'WITH_INST_INVENTORY_ID'|
+      |'INVENTORY_ID'||chr(31)||'2'||chr(30)||'WITH_RMVD_INVENTORY_ID'|
+   LOOP
+
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'ET_BARCODE'||chr(31)||'ETB01'||chr(30)||'WITH_ET_BARCODE';
+      expected2_ := 'MX_UNIQUE_KEY'||chr(31)||'MXTP01'||chr(30)||'WITH_MX_UNIQUE_KEY';
+      expected3_ := 'INVENTORY_ID'||chr(31)||'1'||chr(30)||'WITH_INST_INVENTORY_ID';
+      expected4_ := 'INVENTORY_ID'||chr(31)||'2'||chr(30)||'WITH_RMVD_INVENTORY_ID';
+
+      IF attr_ LIKE '%WITH_ET_BARCODE%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_MX_UNIQUE_KEY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_INST_INVENTORY_ID%' THEN
+         ASSERT output1_ = expected3_ MESSAGE 'Expected '||expected3_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_RMVD_INVENTORY_ID%' THEN
+         ASSERT output1_ = expected4_ MESSAGE 'Expected '||expected4_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+
+   END LOOP;
+END UNITTEST;

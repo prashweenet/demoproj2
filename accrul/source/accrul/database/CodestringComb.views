@@ -1,0 +1,40 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CodestringComb
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Codestring_Combination IS
+   Prompt = 'Codestring comb'
+   Account.Flags = 'A-IU-'
+SELECT posting_combination_id         posting_combination_id,
+       account                        account,
+       code_b                         code_b,
+       code_c                         code_c,
+       code_d                         code_d,
+       code_e                         code_e,
+       code_f                         code_f,
+       code_g                         code_g,
+       code_h                         code_h,
+       code_i                         code_i,
+       code_j                         code_j,
+       codestring                     codestring,
+       rowid                         objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                        objkey
+FROM   codestring_comb_tab;
+

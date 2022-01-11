@@ -1,0 +1,46 @@
+fragment YearEndUserGroupLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view year_end_user_group_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceYearEndUserGroupLovSelector for YearEndUserGroupLov {
+   static UserGroup;
+   static Description;
+}
+
+card YearEndUserGroupLovCard for YearEndUserGroupLov {
+   label = "";
+   fieldranking UserGroup;
+   field UserGroup;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query YearEndUserGroupLov {
+   from = "year_end_user_group_lov";
+   lu = UserGroupFinance;
+   keys = Company, Userid, UserGroup;
+   ludependencies = UserGroupFinance;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Userid Text {
+      label = "User Id";
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute UserGroup Text {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

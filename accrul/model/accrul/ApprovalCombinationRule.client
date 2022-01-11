@@ -1,0 +1,96 @@
+client ApprovalCombinationRule;
+component ACCRUL;
+layer Core;
+projection ApprovalCombinationRuleHandling;
+
+include fragment CodeStringAllBasic;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ApproverAssigningRuleNavEntry parent AccrulNavigator.ApprovalWorkflowBasicDataMenu at index 100 {
+      label = "Approval Combination Rule";
+      page Form home ApproverCombRule;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ApproverCombRuleSet {
+   label = "Approval Combination Rule";
+   selector ApproverCombinationRuleSelector;
+   group ApproverCombRuleGroup;
+   list ApproverCombRuleDetailList(ApproverCombRuleDetailArray);
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ApproverCombinationRuleSelector for ApproverCombRule {
+   label = "${CombinationRuleId} - ${Description}";
+   static CombinationRuleId;
+   static Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ApproverCombRuleGroup for ApproverCombRule {
+   label = "";
+
+   field CombinationRuleId {
+      label = "Approval Combination Rule";
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ApproverCombRuleDetailList for ApproverCombRuleDetail {
+   label = "Combination Details";
+
+   badge AllowedComb {
+      label = "Combination Allowed";
+      required = [true];
+      style = TextOnly;
+      emphasis Info = [AllowedComb = "Allowed"];
+      emphasis Neutral = [AllowedComb = "NotAllowed"];
+   }
+   fieldset CodeStringAllBasicFreeLovFieldSet;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

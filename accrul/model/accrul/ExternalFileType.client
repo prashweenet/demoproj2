@@ -1,0 +1,298 @@
+client ExternalFileType;
+component ACCRUL;
+layer Core;
+projection ExternalFileTypeHandling;
+
+
+warningsenabled = CreateDetailsFromViewDef, ExtFileTypeRec;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry FrmExternalFileTypeDefinitionNavEntry parent AccrulNavigator.ExternalFileBasicDataMenu at index 100 {
+      label = "External File Type";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ExternalFileTypeSet {
+   label = "External File Type";
+   crudactions {
+      edit {
+         enabled = [SystemDefined != true];
+      }
+      delete {
+         enabled = [SystemDefined != true];
+      }
+      duplicate {
+         enabled = [false];
+      }
+   }
+
+   selector ExtFileTypeSelector;
+   group ExternalFileTypeDefinitionGroup bind ExtFileTypeSelector;
+   list ExtFileTypeRecList(ExternalFileTypeRecordArray) bind ExtFileTypeSelector;
+
+   commandgroup ExternalFileTypeCmdGroup {
+
+      command ExternalFileTemplateCommand;
+      command ExternalFileTypeParameterDefinitionCommand;
+      command ExternalFileLoadParametersCommand;
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ExternalFileTemplateCommand for ExtFileType {
+   label = "External File Template";
+   execute {
+      navigate "page/ExternalFileTemplate/Form?$filter=FileType eq $[FileType]";
+   }
+}
+
+
+command ExternalFileTypeParameterDefinitionCommand for ExtFileType {
+   label = "External File Type Parameter Definition";
+   execute {
+      navigate "page/ExternalFileTypeParameterDefinition/Form?$filter=FileType eq $[FileType]";
+   }
+}
+
+
+command ExternalFileLoadParametersCommand for ExtFileType {
+   label = "External File Load Parameters";
+   enabled = [FormName != null];
+   execute {
+      if [FormName = "tbwExtParameters" or FormName = "ExternalVoucherBasicData"] {
+         navigate "page/ExternalVoucherBasicData/List";
+      }
+
+      if [FormName = "tbwExtInvParam" or FormName = "ExternalCustomerInvoiceParameters"] {
+         navigate "page/ExternalCustomerInvoiceParameters/List";
+      }
+      if [FormName = "tbwExternalIncInvParam" or FormName = "ExternalSupplierInvoiceParameters"] {
+         navigate "page/ExternalSupplierInvoiceParameters/List";
+      }
+
+   }
+}
+
+
+command ExternalFileColumnDefinitionCommand for ExtFileTypeRec {
+   label = "External File Column Definition";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/ExternalFileColumnDefinition/Form?$filter=FileType eq $[FileType] and RecordTypeId eq $[RecordTypeId]";
+   }
+}
+
+
+command CreateDetailsFromViewDefiniCommand for ExtFileTypeRec {
+   label = "Create Details From View Definition";
+   enabled = [ColumnsExist != "TRUE"];
+   execute {
+      dialog CreateDetailsFromViewDefinitionDialog(FileType, parent.Description, RecordTypeId, Description) {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ExtFileTypeSelector for ExtFileType {
+   label = "${FileType} - ${Description}";
+   orderby = FileType;
+   static FileType;
+   static Description;
+}
+
+
+@Override
+selector ExtFileModuleNameSelector for ExtFileModuleName {
+   orderby = Name;
+   static Component;
+   static Name;
+   static Version;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ExternalFileTypeDefinitionGroup for ExtFileType {
+   label = "";
+
+   field FileType;
+   field Description;
+   field SystemDefined;
+   lov ComponentRef with ExtFileModuleNameSelector {
+      size = Small;
+   }
+   field ApiToCallInput {
+      size = Large;
+   }
+   field ApiToCallOutput {
+      size = Large;
+   }
+}
+
+
+group SourceGroup for CreateDetailsFromViewDefinitionStructure {
+   label = "Source";
+   lov ComponentRef with ExtFileModuleNameSelector {
+      size = Small;
+      validate command {
+         execute {
+            set InputPackage = null;
+         }
+      }
+   }
+   lov ViewNameRef with ReferenceExtFileViewNameQuerySelector {
+      size = Large;
+      validate command {
+         execute {
+            call GetInputPackage(ViewName) into InputPackage;
+         }
+      }
+   }
+   field InputPackage {
+      size = Large;
+   }
+}
+
+
+group DestinationGroup for CreateDetailsFromViewDefinitionStructure {
+   label = "Destination";
+
+   field FileType;
+   field FileTypeDescription {
+      size = Large;
+   }
+   field RecordTypeId;
+   field RecordTypeDescription {
+      size = Large;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileTypeRecList for ExtFileTypeRec {
+   label = "Record Type Information";
+   orderby = RecordSetId, OrderByFirstInRecordSet, OrderByLastInRecordSet;
+   crudactions {
+      new {
+         enabled = [parent.SystemDefined != true];
+      }
+      edit {
+         enabled = [parent.SystemDefined != true];
+      }
+      delete {
+         enabled = [parent.SystemDefined != true];
+      }
+   }
+
+   field RecordTypeId {
+      label = "Record Type ID";
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+   field RecordSetId {
+      size = Small;
+   }
+   field FirstInRecordSet {
+      size = Small;
+   }
+   field LastInRecordSet {
+      size = Small;
+   }
+   field MandatoryRecord {
+      size = Small;
+   }
+   field ParentRecordType {
+      size = Small;
+   }
+   field ViewName {
+      size = Small;
+      validate command {
+         execute {
+            if [ViewName != null] {
+               call IsViewAvailable(ViewName);
+            }
+         }
+      }
+   }
+   field InputPackage {
+      size = Small;
+      validate command {
+         execute {
+            if [InputPackage != null] {
+               call IsPackageAvailable(InputPackage);
+            }
+         }
+      }
+   }
+   field OrderByFirstInRecordSet {
+      columnexclude = [true];
+   }
+   field OrderByLastInRecordSet {
+      columnexclude = [true];
+   }
+
+   commandgroup ExternalFileTypeCmdGroup {
+
+      command ExternalFileColumnDefinitionCommand;
+      command CreateDetailsFromViewDefiniCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+dialog CreateDetailsFromViewDefinitionDialog for CreateDetailsFromViewDefinitionStructure {
+   label = "Create Details From View Definition";
+   input(FileType, FileTypeDescription, RecordTypeId, RecordTypeDescription);
+   group SourceGroup;
+   group DestinationGroup;
+
+   command Ok {
+      enabled = [Component != null and ViewName != null];
+
+      execute {
+         call CreateDetailsFromViewDef(FileType, ViewName, InputPackage, RecordTypeId, Component);
+         exit OK;
+      }
+   }
+   command Cancel;
+}
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

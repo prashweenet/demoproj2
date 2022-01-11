@@ -1,0 +1,51 @@
+fragment CompanyFinanceAuthSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view company_finance_auth";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCompanyFinanceAuthSelector for CompanyFinanceAuth {
+   static Description;
+   static CurrencyCode;
+}
+
+card CompanyFinanceAuthCard for CompanyFinanceAuth {
+   label = "";
+   fieldranking Description;
+   field Description;
+   field CurrencyCode;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CompanyFinanceAuth {
+   from = "company_finance_auth";
+   lu = CompanyFinance;
+   keys = Company;
+   ludependencies = CompanyFinance;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Description Text {
+      label = "Company Name";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute CurrencyCode Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [false];
+   }
+   attribute CorrectionType Enumeration(CorrectionType) {
+      lovcolumn = [true];
+      fetch = "correction_type_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

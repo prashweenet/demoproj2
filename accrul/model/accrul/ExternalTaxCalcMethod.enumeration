@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>ExternalTaxCalcMethod</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <NAME>NotUsed</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>VertexSalesTaxQSeries</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>VertexSalesTaxOSeries</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>AvalaraSalesTax</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <CLIENT_VALUE>Avalara Tax - Brazil</CLIENT_VALUE>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>AvalaraTaxBrazil</NAME>
+      </VALUE>
+   </VALUES>
+</ENUMERATION>

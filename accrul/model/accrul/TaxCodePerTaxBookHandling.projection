@@ -1,0 +1,55 @@
+projection TaxCodePerTaxBookHandling;
+component ACCRUL;
+layer Core;
+description "Tax Code Per Tax Book";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset TaxBookSet for TaxBook {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity TaxBook {
+   crud = Read;
+
+   array TaxCodePerTaxBookArray(Company, TaxBookId) to TaxCodePerTaxBook(Company, TaxBookId);
+}
+
+@Override
+entity TaxCodePerTaxBook {
+   crud = Create, Read, Update, Delete;
+
+   reference FeeCodeRef(Company, FeeCode) to StatutoryFee(Company, FeeCode) {
+      label = "Tax Code";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

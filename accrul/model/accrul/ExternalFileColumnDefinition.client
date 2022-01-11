@@ -1,0 +1,130 @@
+client ExternalFileColumnDefinition;
+component ACCRUL;
+layer Core;
+projection ExternalFileColumnDefinitionHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ExtFileTypeRecSet {
+   label = "External File Column Definition";
+
+   selector ExtFileTypeCustomRecSelector;
+   group ExternalFileTypeRecColumnGroup;
+   list ExtFileTypeRecColumnList(ExtFileTypeRecColumnArray);
+
+   commandgroup CommandGroupCmdGroup {
+
+      command ExternalFileTemplateCommand;
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ExternalFileTemplateCommand for ExtFileTypeRec {
+   label = "External File Template";
+   execute {
+      navigate "page/ExternalFileTemplate/Form?$filter=FileType eq $[FileType]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector ExtFileTypeCustomRecSelector for ExtFileTypeRec {
+   label = "${RecordTypeId} - ${Description}";
+   static FileType;
+   static ExtFileTypeRef.Description;
+   static RecordTypeId;
+   static Description;
+}
+
+---------------------------------- GROUPS -----------------------------------
+group ExternalFileTypeRecColumnGroup for ExtFileTypeRec {
+   label = "";
+   lov ExtFileTypeRef with ReferenceExtFileTypeSelector {
+      label = "File Type";
+      search = FileType, Description;
+      description = ExtFileTypeRef.Description;
+   }
+   field RecordTypeDescription {
+      searchable = false;
+   }
+   field RecordSetId {
+      size = Small;
+   }
+   field FirstInRecordSet {
+      size = Small;
+   }
+   field LastInRecordSet {
+      size = Small;
+   }
+   field ExtFileTypeRef.SystemDefined {
+      size = Small;
+      label = "System Defined";
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileTypeRecColumnList for ExtFileTypeRecColumn {
+   orderby = RecordTypeId, ColumnId;
+   label = "Record Type Column Information";
+   crudactions {
+      new {
+         enabled = [not parent.ExtFileTypeRef.SystemDefined];
+      }
+      edit {
+         enabled = [not parent.ExtFileTypeRef.SystemDefined];
+      }
+      delete {
+         enabled = [not parent.ExtFileTypeRef.SystemDefined];
+      }
+   }
+
+   field ColumnId;
+   field Description {
+      size = Large;
+   }
+   field Mandatory {
+      size = Small;
+   }
+   field DataType {
+      size = Small;
+   }
+   field DestinationColumn {
+      size = Small;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

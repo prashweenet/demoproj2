@@ -1,0 +1,1018 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherRow
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140408  Umdolk  PBFI-6399, Added Voucher_Row_Qry view.
+--  191031  Kagalk  GESPRING20-1261, gelr:tax_book_and_numbering, added tax_book_id, tax_series_id, tax_series_no to Voucher_Row_Qry.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Simulation_Voucher IS
+   Flags      = 'A-IU-'
+   Datatype   = 'STRING'
+   Prompt     = 'Simulation Voucher';
+
+COLUMN Session_Id IS
+   Flags      = 'A-IU-'
+   Datatype   = 'NUMBER(10)'
+   Prompt     = 'Session Id';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Voucher_Row_Qry IS
+   Prompt = 'Voucher row query'
+   Company.Flags = 'PMI-L'
+   Company.Datatype = 'STRING(20)'
+   Voucher_Type.Flags = 'PMI-L'
+   Voucher_Type.Datatype = 'STRING(3)'
+   Voucher_No.Flags = 'PMI-L'
+   Voucher_No.Datatype = 'NUMBER(10)'
+   Accounting_Year.Flags = 'PMIUL'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   Row_No.Datatype = 'STRING'
+   Row_No.Prompt = 'Row no'
+   Accounting_Period.Flags = 'AMIUL'
+   Accounting_Period.Datatype = 'NUMBER(2)'
+   Voucher_Date.Flags = 'A-I-L'
+   Account.Datatype = 'STRING(20)'
+   Code_B.Datatype = 'STRING(20)'
+   Code_C.Datatype = 'STRING(20)'
+   Code_D.Datatype = 'STRING(20)'
+   Code_E.Datatype = 'STRING(20)'
+   Code_F.Datatype = 'STRING(20)'
+   Code_G.Datatype = 'STRING(20)'
+   Code_H.Datatype = 'STRING(20)'
+   Code_I.Datatype = 'STRING(20)'
+   Code_J.Datatype = 'STRING(20)'
+   Project_Id.Datatype = 'STRING'
+   Project_Id.Prompt = 'Project id'
+   Object_Id.Datatype = 'STRING'
+   Object_Id.Prompt = 'Object id'
+   Currency_Debet_Amount.Datatype = 'NUMBER(15)'
+   Currency_Debet_Amount.Prompt = 'Currency debit amount'
+   Currency_Credit_Amount.Datatype = 'NUMBER(15)'
+   Currency_Credit_Amount.Prompt = 'Currency credit amount'
+   Currency_Amount.Flags = 'A-IU-'
+   Currency_Amount.Datatype = 'NUMBER(15)'
+   Currency_Amount.Prompt = 'Currency Amount'
+   Debet_Amount.Datatype = 'NUMBER(15)'
+   Debet_Amount.Prompt = 'Debit amount'
+   Credit_Amount.Datatype = 'NUMBER(15)'
+   Credit_Amount.Prompt = 'Credit amount'
+   Third_Currency_Debit_Amount.Flags = 'A---L'
+   Third_Currency_Debit_Amount.Datatype = 'NUMBER(15)'
+   Third_Currency_Debit_Amount.Prompt = 'Third currency debit amount'
+   Third_Currency_Credit_Amount.Flags = 'A---L'
+   Third_Currency_Credit_Amount.Datatype = 'NUMBER(15)'
+   Third_Currency_Credit_Amount.Prompt = 'Third currency credit amount'
+   Third_Currency_Amount.Flags = 'A---L'
+   Third_Currency_Amount.Prompt = 'Third currency amount'   
+   Correction.Flags = 'A-IU-'
+   Currency_Code.Datatype = 'STRING(3)'
+   Quantity.Datatype = 'STRING(3)'
+   Process_Code.Datatype = 'STRING(10)'
+   Project_Activity_Id.Flags = 'A---L'
+   Project_Activity_Id.Datatype = 'STRING'
+   Party_Type_Id.Prompt = 'Part Id'
+   Reference_Serie.Prompt = 'Reference Serie'
+   Transfer_Id.Datatype = 'STRING(20)'
+   Transfer_Id.Prompt = 'Transfer Id'
+   Corrected.Datatype = 'STRING(1)'
+   Period_Allocation.Flags = 'A---L'
+   Period_Allocation.Datatype = 'STRING'
+   Period_Allocation.Prompt = 'Period allocation'
+   Currency_Rate.Flags = 'A---L'
+   Multi_Company_Id.Prompt = 'Multi Company Id'
+   Conversion_Factor.Flags = 'A----'
+   Accounting_Year_Reference.Flags = 'A---L'
+   Accounting_Year_Reference.Datatype = 'NUMBER'
+   Accounting_Year_Reference.Prompt = 'Accounting Year Reference'
+   Approved_By_Userid.Flags = 'A----'
+   Approved_By_Userid.Datatype = 'STRING(30)'
+   Approved_By_Userid.Prompt = 'Approved By Userid'
+   Approved_By_User_group.Flags = 'A----'
+   Approved_By_User_group.Datatype = 'STRING(30)'
+   Approved_By_User_group.Prompt = 'Approved By User Group'
+   Second_Approved_By_Userid.Flags = 'A----'
+   Second_Approved_By_Userid.Datatype = 'STRING(30)'
+   Second_Approved_By_Userid.Prompt = 'Second Approved By Userid'
+   Second_Approved_By_Date.Flags = 'A----'
+   Second_Approved_By_Date.Datatype = 'DATE'
+   Second_Approved_By_Date.Prompt = 'Second Approved By Date'
+   Second_Approved_By_User_group.Flags = 'A----'
+   Second_Approved_By_User_group.Datatype = 'STRING(30)'
+   Second_Approved_By_User_group.Prompt = 'Second Approved By User Group'
+   Entered_By_User_group.Flags = 'A----'
+   Entered_By_User_group.Datatype = 'STRING(30)' 
+   Entered_By_User_group.Prompt = 'Entered By User Group'
+   Entry_Date.Flags = 'A--U-'
+   Entry_Date.Datatype = 'NUMBER' 
+   Entry_Date.Prompt = 'Entry Date'
+   Userid.Flags = 'A----'
+   Userid.Datatype = 'STRING(30)'
+   Userid.Prompt = 'User Id'
+   Voucher_No_Reference.Flags = 'A---L'
+   Voucher_No_Reference.Datatype = 'NUMBER'
+   Voucher_No_Reference.Prompt = 'Voucher No Reference'
+   Voucher_Type_Reference.Flags = 'A-IU-' 
+   Voucher_Type_Reference.Datatype = 'STRING(20)'
+   Voucher_Type_Reference.Prompt = 'Voucher Type Reference'
+   Is_Multi_Company_Row.Flags = 'A----'
+   Is_Multi_Company_Row.Datatype = 'STRING(5)'
+   Is_Multi_Company_Row.Prompt = 'Is Multi Company Row'
+   Voucher_Updated_Db.Flags = 'A----'
+   Voucher_Updated_Db.Datatype = 'STRING(1)'
+   Voucher_Updated_Db.Prompt = 'Voucher Updated Db'
+   Party_Name.Prompt = 'Name'
+   Party_Name.Flags = 'A----'
+   Party_Name.Datatype = 'STRING'
+   -- gelr:tax_book_and_numbering, begin
+   Tax_Book_Id.Flags = 'A----'
+   Tax_Book_Id.Datatype = 'STRING(10)'
+   Tax_Book_Id.Prompt = 'Tax Book ID'
+   Tax_Book_Id.Ref = 'TaxBook(company)'
+   Tax_Series_Id.Flags = 'A----'
+   Tax_Series_Id.Datatype = 'STRING(20)'
+   Tax_Series_Id.Prompt = 'Tax Series ID'
+   Tax_Series_Id.Ref = 'TaxSeries(company)'
+   Tax_Series_No.Flags = 'A----'
+   Tax_Series_No.Datatype = 'NUMBER'
+   Tax_Series_No.Prompt = 'Tax Series No'
+   -- gelr:tax_book_and_numbering, end
+SELECT vrt.company                              company,
+       vrt.voucher_type                         voucher_type,
+       vrt.voucher_no                           voucher_no,
+       vrt.accounting_year                      accounting_year,
+       vrt.accounting_period                    accounting_period,
+       vrt.voucher_date                         voucher_date,
+       vrt.row_no                               row_no,
+       p.account                                account,
+       Decode(p.account, NULL, NULL, Text_Field_Translation_API.Get_Text(vrt.company,
+                                                                         'CODEA',
+                                                                         p.account))
+                                                account_desc,
+       p.code_b                                 code_b,
+       Decode(p.code_b, NULL, NULL, Text_Field_Translation_API.Get_Text(vrt.company,
+                                                                        'CODEB',
+                                                                        p.code_b))
+                                                code_b_desc,
+       p.code_c                                 code_c,
+       Decode(p.code_c, NULL, NULL, Text_Field_Translation_API.Get_Text(vrt.company,
+                                                                        'CODEC',
+                                                                        p.code_c))
+                                                code_c_desc,
+       p.code_d                                 code_d,
+       Decode(p.code_d, NULL, NULL, Text_Field_Translation_API.Get_Text(vrt.company,
+                                                                        'CODED',
+                                                                        p.code_d))
+                                                code_d_desc,
+       p.code_e                                 code_e,
+       Decode(p.code_e, NULL, NULL, Text_Field_Translation_API.Get_Text(vrt.company,
+                                                                        'CODEE',
+                                                                        p.code_e))
+                                                code_e_desc,
+       p.code_f                                 code_f,
+       Decode(p.code_f, NULL, NULL, Text_Field_Translation_API.Get_Text(vrt.company,
+                                                                        'CODEF',
+                                                                        p.code_f))
+                                                code_f_desc,
+       p.code_g                                 code_g,
+       Decode(p.code_g, NULL, NULL, Text_Field_Translation_API.Get_Text(vrt.company,
+                                                                        'CODEG',
+                                                                        p.code_g))
+                                                code_g_desc,
+       p.code_h                                 code_h,
+       Decode(p.code_h, NULL, NULL, Text_Field_Translation_API.Get_Text(vrt.company,
+                                                                        'CODEH',
+                                                                        p.code_h))
+                                                code_h_desc,
+       p.code_i                                 code_i,
+       Decode(p.code_i, NULL, NULL, Text_Field_Translation_API.Get_Text(vrt.company,
+                                                                        'CODEI',
+                                                                        p.code_i))
+                                                code_i_desc,
+       p.code_j                                 code_j,
+       Decode(p.code_j, NULL, NULL, Text_Field_Translation_API.Get_Text(vrt.company,
+                                                                        'CODEJ',
+                                                                        p.code_j))
+                                                code_j_desc,
+       vrt.project_id                           project_id,
+       vrt.object_id                            object_id,
+       vrt.text                                 text,
+       vrt.currency_debet_amount                currency_debet_amount,
+       vrt.currency_credit_amount               currency_credit_amount,
+       NVL(vrt.currency_debet_amount,-vrt.currency_credit_amount)
+                                                currency_amount,
+       vrt.debet_amount                         debet_amount,
+       vrt.credit_amount                        credit_amount,
+       NVL(vrt.debet_amount,-vrt.credit_amount) amount,
+       vrt.third_currency_debit_amount          third_currency_debit_amount,
+       vrt.third_currency_credit_amount         third_currency_credit_amount,
+       NVL(vrt.third_currency_debit_amount,-vrt.third_currency_credit_amount)
+                                                third_currency_amount,       
+       Voucher_Row_API.Get_Correction_All__(vrt.company, vrt.voucher_type, vrt.accounting_year,
+                                                    vrt.voucher_no, vrt.reference_row_no,
+                                                    NVL(vrt.debet_amount,vrt.credit_amount),
+                                                    vrt.auto_tax_vou_entry,
+                                                    NVL(vrt.third_currency_debit_amount,vrt.third_currency_credit_amount))
+                                                correction,
+       vrt.currency_code                        currency_code,
+       vrt.quantity                             quantity,
+       vrt.process_code                         process_code,
+       vrt.optional_code                        optional_code,
+       vrt.project_activity_id                  project_activity_id,
+       vrt.party_type_id                        party_type_id,
+       Voucher_Util_Pub_API.Get_Identity_Name(vrt.company, vrt.party_type, vrt.party_type_id) 
+                                                party_name,
+       vrt.reference_serie                      reference_serie,
+       vrt.reference_number                     reference_number,
+       vrt.trans_code                           trans_code,
+       vrt.update_error                         update_error,
+       vrt.transfer_id                          transfer_id,
+       vrt.corrected                            corrected,
+       vt.voucher_updated                       voucher_updated_db,
+       Period_Allocation_API.Any_Allocation(vrt.company,   vrt.voucher_type, vrt.voucher_no,
+                                                    vrt.row_no,    vrt.accounting_year)
+                                                period_allocation,
+       vrt.currency_rate                        currency_rate,
+       vrt.multi_company_id                     multi_company_id,
+       DECODE(NVL(vrt.multi_company_id,' '),' ','FALSE','TRUE')
+                                                is_multi_company_row,
+       vt.function_group                        function_group,
+       vrt.auto_tax_vou_entry                   auto_tax_vou_entry,
+       vrt.reference_row_no                     reference_row_no,
+       vrt.year_period_key                      year_period_key,
+       vrt.posting_combination_id               posting_combination_id,
+       vrt.curr_balance                         curr_balance,
+       vrt.reference_version                    reference_version,
+       vrt.party_type                           party_type,
+       vrt.conversion_factor                    conversion_factor,
+       vt.date_reg                              entry_date,
+       vt.voucher_type_reference                voucher_type_reference,     
+       vt.voucher_no_reference                  voucher_no_reference,
+       vt.accounting_year_reference             accounting_year_reference,
+       vt.entered_by_user_group                 entered_by_user_group,
+       vt.userid                                userid,
+       vt.approved_by_user_group                approved_by_user_group,
+       vt.approved_by_userid                    approved_by_userid,
+       vt.second_approver_id                    Second_Approved_By_Userid,
+       vt.second_approval_date                  Second_Approved_By_Date,
+       vt.second_approver_user_group            Second_Approved_By_User_group,
+       vrt.parallel_currency_rate               parallel_currency_rate,
+       vrt.parallel_conversion_factor           parallel_conversion_factor,
+       vrt.parallel_curr_tax_amount             parallel_curr_tax_amount,
+       vrt.parallel_curr_gross_amount           parallel_curr_gross_amount,
+       vrt.parallel_curr_tax_base_amount        parallel_curr_tax_base_amount,
+       vrt.parallel_curr_rate_type              parallel_curr_rate_type,
+       vrt.deliv_type_id                        deliv_type_id,
+       -- gelr:tax_book_and_numbering, begin
+       vrt.tax_book_id                          tax_book_id,
+       vrt.tax_series_id                        tax_series_id,
+       vrt.tax_series_no                        tax_series_no,
+       -- gelr:tax_book_and_numbering, end
+       vrt.rowid                   objid,
+       RTRIM(RPAD(TO_CHAR(vrt.rowversion,'YYYYMMDDHH24MISS'),2000))
+                                                objversion,
+       vrt.rowkey                              objkey
+   FROM   voucher_row_tab       vrt,
+          voucher_tab           vt,
+          company_finance_auth1 c,
+          codestring_comb_tab   p
+   WHERE  vrt.company              = c.company
+   AND    p.posting_combination_id = vrt.posting_combination_id
+   AND    vt.company               = vrt.company
+   AND    vt.voucher_type          = vrt.voucher_type
+   AND    vt.voucher_no            = vrt.voucher_no
+   AND    vt.accounting_year       = vrt.accounting_year
+   AND    NOT (vrt.voucher_no <0 AND vrt.multi_company_id IS NOT NULL AND vt.function_group = 'D' AND vt.rowstate ='Waiting') ;
+
+VIEW Voucher_Row_Qry_Finrep IS
+   Prompt = 'Voucher row query Finrep'
+   Company.Flags = 'A-IU-'
+   Company.Datatype = 'STRING'
+   Company.Ref = 'CompanyFinance'
+   Voucher_Type.Flags = 'A-IU-'
+   Voucher_No.Flags = 'A-IU-'
+   Voucher_No.Datatype = 'NUMBER(10)'
+   Accounting_Year.Flags = 'A-IU-'
+   Accounting_Period.Flags = 'A-IU-'
+   Accounting_Period.Prompt = 'Accounting period'
+   Voucher_Date.Flags = 'A-I-L'
+   Row_No.Flags = 'A-IU-'
+   Row_No.Datatype = 'NUMBER(5)'
+   Internal_Seq_Number.Flags = 'A-IU-'
+   Posting_Combination_Id.Prompt = 'Posting combination id'
+   Account.Flags = 'A-IU-'
+   Account.Datatype = 'STRING'
+   Code_B.Datatype = 'STRING'
+   Code_B.Prompt = 'Code b'
+   Code_C.Datatype = 'STRING'
+   Code_C.Prompt = 'Code c'
+   Code_D.Datatype = 'STRING'
+   Code_D.Prompt = 'Code d'
+   Code_E.Datatype = 'STRING'
+   Code_E.Prompt = 'Code e'
+   Code_F.Datatype = 'STRING'
+   Code_F.Prompt = 'Code f'
+   Code_G.Datatype = 'STRING'
+   Code_G.Prompt = 'Code g'
+   Code_H.Datatype = 'STRING'
+   Code_H.Prompt = 'Code h'
+   Code_I.Datatype = 'STRING'
+   Code_I.Prompt = 'Code i'
+   Code_J.Datatype = 'STRING'
+   Code_J.Prompt = 'Code j'
+   Project_Id.Datatype = 'STRING'
+   Project_Id.Prompt = 'Project id'
+   Object_Id.Datatype = 'STRING'
+   Object_Id.Prompt = 'Object id'
+   Currency_Debet_Amount.Datatype = 'NUMBER(15)'
+   Currency_Debet_Amount.Prompt = 'Currency debit amount'
+   Currency_Credit_Amount.Datatype = 'NUMBER(15)'
+   Currency_Credit_Amount.Prompt = 'Currency credit amount'
+   Currency_Amount.Flags = 'A-IU-'
+   Currency_Amount.Datatype = 'NUMBER(15)'
+   Currency_Amount.Prompt = 'Currency Amount'
+   Debet_Amount.Datatype = 'NUMBER(15)'
+   Debet_Amount.Prompt = 'Debit amount'
+   Credit_Amount.Datatype = 'NUMBER(15)'
+   Credit_Amount.Prompt = 'Credit amount'
+   Amount.Flags = 'A-IU-'
+   Amount.Datatype = 'NUMBER(15)'
+   Amount.Prompt = 'Amount'
+   Third_Currency_Debit_Amount.Flags = 'A---L'
+   Third_Currency_Debit_Amount.Datatype = 'NUMBER(15)'
+   Third_Currency_Debit_Amount.Prompt = 'Third Currency Debit Amount'
+   Third_Currency_Credit_Amount.Flags = 'A---L'
+   Third_Currency_Credit_Amount.Datatype = 'NUMBER(15)'
+   Third_Currency_Credit_Amount.Prompt = 'Third Currency Credit Amount'
+   Third_Currency_Amount.Flags = 'A---L'
+   Third_Currency_Amount.Prompt = 'Third Currency Amount'
+   Currency_Code.Datatype = 'STRING(3)'
+   Currency_Rate.Flags = 'A---L'
+   Currency_Rate.Prompt = 'Currency rate'
+   Quantity.Datatype = 'STRING(3)'
+   Optional_Code.Datatype = 'STRING(2)'
+   Correction.Flags = 'A-IU-'
+   Party_Type_Id.Prompt = 'Part Id'
+   Reference_Serie.Prompt = 'Invoice Serie'
+   Reference_Number.Prompt = 'Invoice No'
+   Transfer_Id.Datatype = 'STRING(20)'
+   Transfer_Id.Prompt = 'Transfer Id'
+   Row_Group_Id.Flags = 'A----'
+   Row_Group_Id.Prompt = 'Row Group Id'
+SELECT vrt.company                        company,
+       vrt.voucher_type                   voucher_type,
+       vrt.voucher_no                     voucher_no,
+       vrt.accounting_year                accounting_year,
+       vrt.accounting_period              accounting_period,
+       vrt.year_period_key                year_period_key,
+       vrt.voucher_date                   voucher_date,
+       vrt.row_no                         row_no,
+       vrt.internal_seq_number            internal_seq_number,
+       vrt.posting_combination_id         posting_combination_id,
+       vrt.account                        account,
+       vrt.code_b                         code_b,
+       vrt.code_c                         code_c,
+       vrt.code_d                         code_d,
+       vrt.code_e                         code_e,
+       vrt.code_f                         code_f,
+       vrt.code_g                         code_g,
+       vrt.code_h                         code_h,
+       vrt.code_i                         code_i,
+       vrt.code_j                         code_j,
+       vrt.project_id                     project_id,
+       vrt.object_id                      object_id,
+       vrt.trans_code                     trans_code,
+       vrt.text                           text,
+       DECODE(vrt.curr_balance, 'Y', NVL(vrt.currency_debet_amount,0),0)
+                                          currency_debet_amount,
+       DECODE(vrt.curr_balance, 'Y', NVL(vrt.currency_credit_amount,0),0)
+                                          currency_credit_amount,
+       DECODE(vrt.curr_balance, 'Y', NVL(vrt.currency_debet_amount,0) -
+                                     NVL(vrt.currency_credit_amount,0),0)
+                                          currency_amount,
+       vrt.debet_amount                   debet_amount,
+       vrt.credit_amount                  credit_amount,
+       NVL(vrt.debet_amount,0) - NVL(vrt.credit_amount,0)
+                                          amount,
+       vrt.third_currency_debit_amount    third_currency_debit_amount,
+       vrt.third_currency_credit_amount   third_currency_credit_amount,
+       nvl(vrt.third_currency_debit_amount,-vrt.third_currency_credit_amount)
+                                          third_currency_amount,
+       vrt.currency_code                  currency_code,
+       vrt.currency_rate                  currency_rate,
+       vrt.quantity                       quantity,
+       vrt.process_code                   process_code,
+       vrt.optional_code                  optional_code,
+       DECODE(SIGN(NVL(vrt.debet_amount, vrt.credit_amount)),-1,'Y','N')
+                                          correction,
+       vrt.party_type_id                  party_type_id,
+       vrt.reference_serie                reference_serie,
+       vrt.reference_number               reference_number,
+       vrt.transfer_id                    transfer_id,
+       vrt.corrected                      corrected,
+       vt.simulation_voucher              simulation_voucher,
+       vrt.reference_version              reference_version,
+       vrt.party_type                     party_type,
+       vrt.row_group_id                   row_group_id,
+       vrt.rowid                          objid,
+       vrt.rowkey                        objkey
+FROM   voucher_row_tab  vrt,
+       voucher_tab      vt
+WHERE  vrt.company         = vt.company
+AND    vrt.voucher_type    = vt.voucher_type
+AND    vrt.voucher_no      = vt.voucher_no
+AND    vrt.accounting_year = vt.accounting_year
+AND    vt.voucher_updated  = 'N'
+AND    vt.rowstate         = 'Confirmed';
+
+VIEW Voucher_Row_Qry_Pid_Finrep IS
+   Prompt = 'Voucher row query Pid Finrep'
+   Company.Flags = 'A-IU-'
+   Company.Datatype = 'STRING'
+   Company.Ref = 'CompanyFinance'
+   Voucher_Type.Flags = 'A-IU-'
+   Voucher_No.Flags = 'A-IU-'
+   Voucher_No.Datatype = 'NUMBER(10)'
+   Accounting_Year.Flags = 'A-IU-'
+   Accounting_Period.Flags = 'A-IU-'
+   Accounting_Period.Prompt = 'Accounting period'
+   Voucher_Date.Flags = 'A-I-L'
+   Row_No.Flags = 'A-IU-'
+   Row_No.Datatype = 'NUMBER(5)'
+   Internal_Seq_Number.Flags = 'A-IU-'
+   Posting_Combination_Id.Prompt = 'Posting combination id'
+   Account.Flags = 'A-IU-'
+   Account.Datatype = 'STRING'
+   Code_B.Datatype = 'STRING'
+   Code_B.Prompt = 'Code b'
+   Code_C.Datatype = 'STRING'
+   Code_C.Prompt = 'Code c'
+   Code_D.Datatype = 'STRING'
+   Code_D.Prompt = 'Code d'
+   Code_E.Datatype = 'STRING'
+   Code_E.Prompt = 'Code e'
+   Code_F.Datatype = 'STRING'
+   Code_F.Prompt = 'Code f'
+   Code_G.Datatype = 'STRING'
+   Code_G.Prompt = 'Code g'
+   Code_H.Datatype = 'STRING'
+   Code_H.Prompt = 'Code h'
+   Code_I.Datatype = 'STRING'
+   Code_I.Prompt = 'Code i'
+   Code_J.Datatype = 'STRING'
+   Code_J.Prompt = 'Code j'
+   Project_Id.Datatype = 'STRING'
+   Project_Id.Prompt = 'Project id'
+   Object_Id.Datatype = 'STRING'
+   Object_Id.Prompt = 'Object id'
+   Currency_Debet_Amount.Datatype = 'NUMBER(15)'
+   Currency_Debet_Amount.Prompt = 'Currency debit amount'
+   Currency_Credit_Amount.Datatype = 'NUMBER(15)'
+   Currency_Credit_Amount.Prompt = 'Currency credit amount'
+   Currency_Amount.Flags = 'A-IU-'
+   Currency_Amount.Datatype = 'NUMBER(15)'
+   Currency_Amount.Prompt = 'Currency Amount'
+   Debet_Amount.Datatype = 'NUMBER(15)'
+   Debet_Amount.Prompt = 'Debit amount'
+   Credit_Amount.Datatype = 'NUMBER(15)'
+   Credit_Amount.Prompt = 'Credit amount'
+   Amount.Flags = 'A-IU-'
+   Amount.Datatype = 'NUMBER(15)'
+   Amount.Prompt = 'Amount'
+   Third_Currency_Debit_Amount.Flags = 'A---L'
+   Third_Currency_Debit_Amount.Datatype = 'NUMBER(15)'
+   Third_Currency_Debit_Amount.Prompt = 'Third currency debit amount'
+   Third_Currency_Credit_Amount.Flags = 'A---L'
+   Third_Currency_Credit_Amount.Datatype = 'NUMBER(15)'
+   Third_Currency_Credit_Amount.Prompt = 'Third currency credit amount'
+   Third_Currency_Amount.Flags = 'A---L'
+   Third_Currency_Amount.Prompt = 'Third currency amount'
+   Currency_Code.Datatype = 'STRING(3)'
+   Currency_Rate.Flags = 'A---L'
+   Currency_Rate.Prompt = 'Currency rate'
+   Quantity.Datatype = 'STRING(3)'
+   Optional_Code.Datatype = 'STRING(2)'
+   Correction.Flags = 'A-IU-'
+   Party_Type_Id.Prompt = 'Part Id'
+   Reference_Serie.Prompt = 'Invoice Serie'
+   Reference_Number.Prompt = 'Invoice No'
+   Transfer_Id.Datatype = 'STRING(20)'
+   Transfer_Id.Prompt = 'Transfer Id'
+SELECT p.session_id                       session_id,
+       vrt.company                        company,
+       vrt.voucher_type                   voucher_type,
+       vrt.voucher_no                     voucher_no,
+       vrt.accounting_year                accounting_year,
+       vrt.accounting_period              accounting_period,
+       vrt.year_period_key                year_period_key,
+       vrt.voucher_date                   voucher_date,
+       vrt.row_no                         row_no,
+       vrt.internal_seq_number            internal_seq_number,
+       vrt.posting_combination_id         posting_combination_id,
+       vrt.account                        account,
+       vrt.code_b                         code_b,
+       vrt.code_c                         code_c,
+       vrt.code_d                         code_d,
+       vrt.code_e                         code_e,
+       vrt.code_f                         code_f,
+       vrt.code_g                         code_g,
+       vrt.code_h                         code_h,
+       vrt.code_i                         code_i,
+       vrt.code_j                         code_j,
+       vrt.project_id                     project_id,
+       vrt.object_id                      object_id,
+       vrt.trans_code                     trans_code,
+       vrt.text                           text,
+       DECODE(vrt.curr_balance, 'Y', NVL(vrt.currency_debet_amount,0),0)
+                                          currency_debet_amount,
+       DECODE(vrt.curr_balance, 'Y', NVL(vrt.currency_credit_amount,0),0)
+                                          currency_credit_amount,
+       DECODE(vrt.curr_balance, 'Y', NVL(vrt.currency_debet_amount,0) -
+                                     NVL(vrt.currency_credit_amount,0),0)
+                                          currency_amount,
+       vrt.debet_amount                   debet_amount,
+       vrt.credit_amount                  credit_amount,
+       NVL(vrt.debet_amount,0) - NVL(vrt.credit_amount,0)
+                                          amount,
+       vrt.third_currency_debit_amount    third_currency_debit_amount,
+       vrt.third_currency_credit_amount   third_currency_credit_amount,
+       nvl(vrt.third_currency_debit_amount,-vrt.third_currency_credit_amount)
+                                          third_currency_amount,
+       vrt.currency_code                  currency_code,
+       vrt.currency_rate                  currency_rate,
+       vrt.quantity                       quantity,
+       vrt.process_code                   process_code,
+       vrt.optional_code                  optional_code,
+       DECODE(SIGN(NVL(vrt.debet_amount, vrt.credit_amount)),-1,'Y','N')
+                                          correction,
+       vrt.party_type_id                  party_type_id,
+       vrt.reference_serie                reference_serie,
+       vrt.reference_number               reference_number,
+       vrt.transfer_id                    transfer_id,
+       vrt.corrected                      corrected,
+       vt.simulation_voucher              simulation_voucher,
+       vrt.reference_version              reference_version,
+       vrt.party_type                     party_type,
+       vrt.rowid                          objid,
+       vrt.rowkey                        objkey
+FROM   accrul_session_pid_tmp p,
+       voucher_row_tab        vrt,
+       voucher_tab            vt
+WHERE  p.posting_combination_id = vrt.posting_combination_id
+AND    vrt.company              = vt.company
+AND    vrt.voucher_type         = vt.voucher_type
+AND    vrt.voucher_no           = vt.voucher_no
+AND    vrt.accounting_year      = vt.accounting_year
+AND    vt.voucher_updated       = 'N'
+AND    vt.rowstate              = 'Confirmed';
+
+@SecurityCheck Company.UserAuthorized(vt.company)
+VIEW Accrul_Voucher_Row_Qry IS
+   Prompt = 'Voucher row query'
+   Company.Flags = 'KMI-L'
+   Company.Datatype = 'STRING(20)'
+   Voucher_Type.Flags = 'KMI-L'
+   Voucher_Type.Datatype = 'STRING(3)'
+   Voucher_No.Flags = 'KMI-L'
+   Voucher_No.Datatype = 'NUMBER(10)'
+   Accounting_Year.Flags = 'KMIUL'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   Accounting_Period.Flags = 'AMIUL'
+   Accounting_Period.Datatype = 'NUMBER(2)'
+   Voucher_Date.Flags = 'A-I-L'
+   Row_No.Flags = 'A---L'
+   Row_No.Datatype = 'STRING'
+   Row_No.Prompt = 'Row no'
+   Account.Datatype = 'STRING(20)'
+   Code_B.Datatype = 'STRING(20)'
+   Code_C.Datatype = 'STRING(20)'
+   Code_D.Datatype = 'STRING(20)'
+   Code_E.Datatype = 'STRING(20)'
+   Code_F.Datatype = 'STRING(20)'
+   Code_G.Datatype = 'STRING(20)'
+   Code_H.Datatype = 'STRING(20)'
+   Code_I.Datatype = 'STRING(20)'
+   Code_J.Datatype = 'STRING(20)'
+   Project_Id.Datatype = 'STRING'
+   Project_Id.Prompt = 'Project id'
+   Object_Id.Datatype = 'STRING'
+   Object_Id.Prompt = 'Object id'
+   Currency_Debet_Amount.Datatype = 'NUMBER(15)'
+   Currency_Debet_Amount.Prompt = 'Currency debit amount'
+   Currency_Credit_Amount.Datatype = 'NUMBER(15)'
+   Currency_Credit_Amount.Prompt = 'Currency credit amount'
+   Currency_Amount.Flags = 'A-IU-'
+   Currency_Amount.Datatype = 'NUMBER(15)'
+   Currency_Amount.Prompt = 'Currency Amount'
+   Debet_Amount.Datatype = 'NUMBER(15)'
+   Debet_Amount.Prompt = 'Debit amount'
+   Credit_Amount.Datatype = 'NUMBER(15)'
+   Credit_Amount.Prompt = 'Credit amount'
+   Third_Currency_Debit_Amount.Flags = 'A---L'
+   Third_Currency_Debit_Amount.Datatype = 'NUMBER(15)'
+   Third_Currency_Debit_Amount.Prompt = 'Third currency debit amount'
+   Third_Currency_Credit_Amount.Flags = 'A---L'
+   Third_Currency_Credit_Amount.Datatype = 'NUMBER(15)'
+   Third_Currency_Credit_Amount.Prompt = 'Third currency credit amount'
+   Third_Currency_Amount.Flags = 'A---L'
+   Third_Currency_Amount.Prompt = 'Third currency amount'
+   Third_Currency_Rate.Flags = 'A---L'
+   Third_Currency_Rate.Prompt = 'Third currency rate'
+   Correction.Flags = 'A-IU-'
+   Currency_Code.Datatype = 'STRING(3)'
+   Quantity.Datatype = 'STRING(3)'
+   Process_Code.Datatype = 'STRING(10)'
+   Project_Activity_Id.Flags = 'A---L'
+   Project_Activity_Id.Datatype = 'STRING'
+   Party_Type_Id.Prompt = 'Part Id'
+   Reference_Serie.Prompt = 'Reference Serie'
+   Transfer_Id.Datatype = 'STRING(20)'
+   Transfer_Id.Prompt = 'Transfer Id'
+   Corrected.Datatype = 'STRING(1)'
+   Period_Allocation.Flags = 'A---L'
+   Period_Allocation.Datatype = 'STRING'
+   Period_Allocation.Prompt = 'Period allocation'
+   Currency_Rate.Flags = 'A---L'
+   Multi_Company_Id.Prompt = 'Multi Company Id'
+   Is_Multi_Company_Row.Flags = 'A----'
+   Is_Multi_Company_Row.Datatype = 'STRING(5)'
+   Is_Multi_Company_Row.Prompt = 'Is Multi Company Row'
+   Voucher_Updated_Db.Flags = 'A----'
+   Voucher_Updated_Db.Datatype = 'STRING(1)'
+   Voucher_Updated_Db.Prompt = 'Voucher Updated Db'
+SELECT vrt.company                              company,
+       vrt.voucher_type                         voucher_type,
+       vrt.voucher_no                           voucher_no,
+       vrt.accounting_year                      accounting_year,
+       vrt.accounting_period                    accounting_period,
+       vrt.voucher_date                         voucher_date,
+       vrt.row_no                               row_no,
+       p.account                                account,
+       Decode(p.account, NULL, NULL, substr(Text_Field_Translation_API.Get_Text(vrt.company, 
+                                          'CODEA', p.account),1,100))       
+                                                account_desc,
+       p.code_b                                 code_b,
+       Decode(p.code_b, NULL, NULL, substr(Text_Field_Translation_API.Get_Text(vrt.company, 
+                                          'CODEB', p.code_b),1,100))       
+                                                code_b_desc,       
+       p.code_c                                 code_c,
+       Decode(p.code_c, NULL, NULL, substr(Text_Field_Translation_API.Get_Text(vrt.company, 
+                                          'CODEC', p.code_c),1,100))       
+                                                code_c_desc,
+       p.code_d                                 code_d,
+       Decode(p.code_d, NULL, NULL, substr(Text_Field_Translation_API.Get_Text(vrt.company, 
+                                          'CODED', p.code_d),1,100))       
+                                                code_d_desc,
+       p.code_e                                 code_e,
+       Decode(p.code_e, NULL, NULL, substr(Text_Field_Translation_API.Get_Text(vrt.company, 
+                                          'CODEE', p.code_e),1,100))       
+                                                code_e_desc,
+       p.code_f                                 code_f,
+       Decode(p.code_f, NULL, NULL, substr(Text_Field_Translation_API.Get_Text(vrt.company, 
+                                          'CODEF', p.code_f),1,100))       
+                                                code_f_desc,
+       p.code_g                                 code_g,
+       Decode(p.code_g, NULL, NULL, substr(Text_Field_Translation_API.Get_Text(vrt.company, 
+                                          'CODEG', p.code_g),1,100))       
+                                                code_g_desc,
+       p.code_h                                 code_h,
+       Decode(p.code_h, NULL, NULL, substr(Text_Field_Translation_API.Get_Text(vrt.company, 
+                                          'CODEH', p.code_h),1,100))       
+                                                code_h_desc,
+       p.code_i                                 code_i,
+       Decode(p.code_i, NULL, NULL, substr(Text_Field_Translation_API.Get_Text(vrt.company, 
+                                          'CODEI', p.code_i),1,100))       
+                                                code_i_desc,
+       p.code_j                                 code_j,
+       Decode(p.code_j, NULL, NULL, substr(Text_Field_Translation_API.Get_Text(vrt.company, 
+                                          'CODEJ', p.code_j),1,100))       
+                                                code_j_desc,       
+       vrt.project_id                           project_id,  
+       vrt.object_id                            object_id,    
+       vrt.text                                 text,
+       vrt.currency_debet_amount                currency_debet_amount,
+       vrt.currency_credit_amount               currency_credit_amount,
+       NVL(vrt.currency_debet_amount,-vrt.currency_credit_amount)
+                                                currency_amount,
+       vrt.debet_amount                         debet_amount,
+       vrt.credit_amount                        credit_amount,
+       NVL(vrt.debet_amount,-vrt.credit_amount) amount,
+       vrt.third_currency_debit_amount          third_currency_debit_amount,
+       vrt.third_currency_credit_amount         third_currency_credit_amount,
+       NVL(vrt.third_currency_debit_amount,-vrt.third_currency_credit_amount)
+                                                third_currency_amount,
+       vrt.parallel_currency_rate               third_currency_rate,
+       substr(Voucher_Row_API.Get_Correction_All__(vrt.company, vrt.voucher_type, vrt.accounting_year, 
+                                                    vrt.voucher_no, vrt.reference_row_no, 
+                                                    NVL(vrt.debet_amount,vrt.credit_amount),
+                                                    vrt.auto_tax_vou_entry,
+                                                    NVL(vrt.third_currency_debit_amount,vrt.third_currency_credit_amount)),1,1) 
+                                                correction,
+       vrt.currency_code                        currency_code,
+       vrt.quantity                             quantity,
+       vrt.process_code                         process_code,
+       vrt.optional_code                        optional_code,
+       vrt.project_activity_id                  project_activity_id,
+       vrt.party_type_id                        party_type_id,
+       vrt.reference_serie                      reference_serie,
+       vrt.reference_number                     reference_number,
+       vrt.trans_code                           trans_code,
+       vrt.update_error                         update_error,
+       vrt.transfer_id                          transfer_id,
+       vrt.corrected                            corrected,
+       vt.voucher_updated                       voucher_updated_db,
+       substr(Period_Allocation_API.Any_Allocation(vrt.company,   vrt.voucher_type, vrt.voucher_no,
+                                                    vrt.row_no,    vrt.accounting_year ),1,1)
+                                                period_allocation,
+       vrt.currency_rate                        currency_rate,
+       vrt.multi_company_id                     multi_company_id,
+       DECODE(NVL(vrt.multi_company_id,' '),' ','FALSE','TRUE')
+                                                is_multi_company_row,   
+       vt.function_group                        function_group,         
+       vrt.auto_tax_vou_entry                   auto_tax_vou_entry,     
+       vrt.reference_row_no                     reference_row_no,       
+       vrt.year_period_key                      year_period_key,        
+       vrt.posting_combination_id               posting_combination_id, 
+       vrt.curr_balance                         curr_balance,           
+       vrt.reference_version                    reference_version,
+       vrt.party_type                           party_type, 
+       vrt.rowid                                objid,
+       RTRIM(RPAD(TO_CHAR(vrt.rowversion,'YYYYMMDDHH24MISS'),2000))
+                                                objversion,
+       vrt.rowkey                              objkey
+FROM   voucher_row_tab       vrt,
+       voucher_tab           vt,
+       codestring_comb_tab   p
+WHERE    p.posting_combination_id = vrt.posting_combination_id
+AND    vt.company               = vrt.company
+AND    vt.voucher_type          = vrt.voucher_type
+AND    vt.voucher_no            = vrt.voucher_no
+AND    vt.accounting_year       = vrt.accounting_year
+AND    NOT (vrt.voucher_no <0 AND vrt.multi_company_id IS NOT NULL AND vt.function_group = 'D' AND vt.rowstate ='Waiting') ;
+
+
+VIEW Multi_Company_Voucher_Row1 IS
+   Prompt = 'Multi Company Voucher Row'
+   Row_No.Flags = 'K----'
+   Company.Flags = 'P----'
+   Voucher_Type.Flags = 'P----'
+   Voucher_No.Flags = 'P----'
+   Accounting_Year.Flags = 'P----'
+SELECT v.multi_company_id               company,
+       v.multi_company_voucher_type     voucher_type,
+       v.multi_company_voucher_no       voucher_no,
+       v.multi_company_acc_year         accounting_year,
+       v.multi_company_row_no           row_no,
+       voucher_no                       voucher_no_ref,
+       voucher_type                     voucher_type_ref,
+       accounting_year                  accounting_year_ref,
+       row_no                           row_no_ref,
+       v.company                        voucher_company,
+       v.currency_type                  currency_type,
+       v.company                        code_part,
+       v.internal_seq_number            internal_seq_number,
+       nvl(v.currency_debet_amount,-v.currency_credit_amount)  currency_amount,
+       nvl(v.debet_amount,-v.credit_amount)                    amount,
+       nvl(v.third_currency_debit_amount,-v.third_currency_credit_amount) third_currency_amount,
+       v.quantity                       quantity,
+       v.optional_code                  optional_code,
+       v.text                           text,
+       v.party_type_id                  party_type_id,
+       v.reference_number               reference_number,
+       v.reference_serie                reference_serie,
+       v.trans_code                     trans_code,
+       v.update_error                   update_error,
+       v.transfer_Id                    transfer_id,
+       Period_Allocation_API.Any_Allocation(v.company, v.voucher_type, v.voucher_no, v.row_no, v.accounting_year )
+                                        period_allocation,
+       replace(Accounting_Code_Part_A_API.Get_Required_Code_Part(v.company, v.account), '_', '')
+                                        code_demand,
+       v.conversion_factor              conversion_factor,
+       v.currency_rate                  currency_rate,
+       nvl(Currency_Code_API.Get_Currency_Rounding(v.company, v.currency_code), 0)
+                                        decimals_in_amount,
+       nvl(Currency_Code_API.Get_No_Of_Decimals_In_Rate(v.company, v.currency_code), 0)
+                                        decimals_in_rate,
+       nvl(Currency_Code_API.Get_Currency_Rounding(v.company, Company_Finance_API.Get_Currency_Code(v.company)), 0)
+                                        acc_decimals_in_amount,
+       Company_Finance_API.Get_Currency_Code(v.company) acc_currency,                                        
+       Company_Finance_API.Get_Parallel_Acc_Currency(v.company) parallel_acc_currency,
+       0                                dummy_number,
+       v.currency_Debet_amount          currency_debit_amount,
+       v.currency_Credit_amount         currency_credit_amount,
+       v.debet_amount                   debit_amount,
+       v.credit_amount                  credit_amount,       
+       v.third_currency_debit_amount    third_currency_debit_amount,
+       v.third_currency_credit_amount   third_currency_credit_amount,
+       v.parallel_currency_rate         parallel_currency_rate,
+       v.parallel_conversion_factor     parallel_conversion_factor,
+       v.currency_code                  currency_code,
+       v.process_code                   process_code,
+       v.account                        account,
+       Decode(v.account, NULL, NULL, Text_Field_Translation_API.Get_Text(v.company, 
+                                          'CODEA', v.account))
+                                                account_desc,
+       v.code_b                         code_b,
+       Decode(v.code_b, NULL, NULL, Text_Field_Translation_API.Get_Text(v.company, 
+                                          'CODEB', v.code_b))
+                                                code_b_desc,       
+       v.code_c                         code_c,
+       Decode(v.code_c, NULL, NULL, Text_Field_Translation_API.Get_Text(v.company, 
+                                          'CODEC', v.code_c))
+                                                code_c_desc,
+       v.code_d                         code_d,
+       Decode(v.code_d, NULL, NULL, Text_Field_Translation_API.Get_Text(v.company, 
+                                          'CODED', v.code_d))
+                                                code_d_desc,
+       v.code_e                         code_e,
+       Decode(v.code_e, NULL, NULL, Text_Field_Translation_API.Get_Text(v.company, 
+                                          'CODEE', v.code_e))
+                                                code_e_desc,
+       v.code_f                         code_f,
+       Decode(v.code_f, NULL, NULL, Text_Field_Translation_API.Get_Text(v.company, 
+                                          'CODEF', v.code_f))
+                                                code_f_desc,       
+       v.code_g                         code_g,
+       Decode(v.code_g, NULL, NULL, Text_Field_Translation_API.Get_Text(v.company, 
+                                          'CODEG', v.code_g))
+                                                code_g_desc,       
+       v.code_h                         code_h,
+       Decode(v.code_h, NULL, NULL, Text_Field_Translation_API.Get_Text(v.company, 
+                                          'CODEH', v.code_h))
+                                                code_h_desc,
+       v.code_i                         code_i,
+       Decode(v.code_i, NULL, NULL, Text_Field_Translation_API.Get_Text(v.company, 
+                                          'CODEI', v.code_i))
+                                                code_i_desc,       
+       v.code_j                         code_j,
+       Decode(v.code_j, NULL, NULL, Text_Field_Translation_API.Get_Text(v.company, 
+                                          'CODEJ', v.code_j))
+                                                code_j_desc,       
+       v.accounting_period             accounting_period,
+       v.project_activity_id           project_activity_id,
+       v.deliv_type_id                 deliv_type_id,
+       v.row_group_id                  row_group_id,
+       NULL                            aut_coding_rule,
+       0                               aut_coding_seq,
+       0                               aut_coding_parent_row,
+       NULL                            curr_accounting_db,
+       Voucher_API.Get_Function_Group(v.company,v.accounting_year,v.voucher_type,v.voucher_no)
+                                       function_group,
+       NULL                            internal_accounting,
+       NULL                            journal_id,
+       mpccom_accounting_id            mpccom_accounting_id,
+       v.multi_company_id              multi_company_id,
+       0                               org_parent_row,
+       0                               parent_row,
+       v.posting_combination_id        posting_combination_id,
+       NULL                            project_accounting_db,
+       NULL                            sequence_no,
+       NULL                            summerized_db,
+       'FALSE'                         voucher_updated,
+       v.rowid||'#'||v.company||'#'    objid,
+       ltrim(lpad(to_char(v.rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       v.rowkey                        objkey
+FROM   voucher_row_tab v
+WHERE  v.multi_company_id IS NOT NULL
+$IF Component_Genled_SYS.INSTALLED $THEN
+UNION ALL
+SELECT gv.multi_company_id                company,
+       gv.multi_company_voucher_type      voucher_type,
+       gv.multi_company_voucher_no        voucher_no,
+       gv.multi_company_acc_year          accounting_year,
+       gv.multi_company_row_no            row_no,
+       gv.voucher_no                      voucher_no_ref,
+       gv.voucher_type                    voucher_type_ref,
+       gv.accounting_year                 accounting_year_ref,
+       NULL                               row_no_ref,
+       gv.company                         voucher_company,
+       NULL                              currency_type,
+       NULL                              code_part,
+       NULL                              internal_seq_number,
+       nvl(gv.currency_debet_amount,-gv.currency_credit_amount)   currency_amount,
+       nvl(gv.debet_amount,-gv.credit_amount)                     amount,
+       nvl(gv.third_currency_debit_amount,-gv.third_currency_credit_amount) third_currency_amount,                                              
+       gv.quantity                       quantity,
+       gv.optional_code                  optional_code,
+       gv.text                           text,
+       gv.party_type_id                  party_type_id,
+       gv.reference_number               reference_number,
+       gv.reference_serie                reference_serie,
+       gv.trans_code                     trans_code,
+       NULL                              update_error,
+       gv.transfer_Id                    transfer_id,
+       NULL                              period_allocation,
+       NULL                              code_demand,
+       gv.conversion_factor              conversion_factor,
+       gv.currency_rate                  currency_rate,
+       NULL                              decimals_in_amount,
+       NULL                              decimals_in_rate,
+       NULL                              acc_decimals_in_amount,
+       Company_Finance_API.Get_Currency_Code(gv.company) acc_currency,
+       Company_Finance_API.Get_Parallel_Acc_Currency(gv.company) parallel_acc_currency,
+       NULL                              dummy_number,
+       gv.currency_Debet_amount          currency_debit_amount,
+       gv.currency_Credit_amount         currency_credit_amount,
+       gv.debet_amount                   debit_amount,
+       gv.credit_amount                  credit_amount,
+       gv.third_currency_debit_amount    third_currency_debit_amount,
+       gv.third_currency_credit_amount   third_currency_credit_amount,
+       gv.parallel_currency_rate         parallel_currency_rate,
+       gv.parallel_conversion_factor     parallel_conversion_factor,
+       gv.currency_code                  currency_code,
+       gv.process_code                   process_code,
+       ac.account                        account,
+       Decode(ac.account, NULL, NULL, Text_Field_Translation_API.Get_Text(gv.company, 
+                                                                          'CODEA',
+                                                                          ac.account))
+                                         account_desc,       
+       ac.code_b                         code_b,
+       Decode(ac.code_b, NULL, NULL, Text_Field_Translation_API.Get_Text(gv.company, 
+                                                                         'CODEB',
+                                                                         ac.code_b))
+                                         code_b_desc,              
+       ac.code_c                         code_c,
+       Decode(ac.code_c, NULL, NULL, Text_Field_Translation_API.Get_Text(gv.company, 
+                                                                         'CODEC',
+                                                                         ac.code_c))
+                                         code_c_desc,       
+       ac.code_d                         code_d,
+       Decode(ac.code_d, NULL, NULL, Text_Field_Translation_API.Get_Text(gv.company, 
+                                                                         'CODED',
+                                                                         ac.code_d))
+                                         code_d_desc,       
+       ac.code_e                         code_e,
+       Decode(ac.code_e, NULL, NULL, Text_Field_Translation_API.Get_Text(gv.company, 
+                                                                         'CODEE',
+                                                                         ac.code_e))
+                                         code_e_desc,       
+       ac.code_f                         code_f,
+       Decode(ac.code_f, NULL, NULL, Text_Field_Translation_API.Get_Text(gv.company, 
+                                                                         'CODEF',
+                                                                         ac.code_f))
+                                         code_f_desc,       
+       ac.code_g                         code_g,
+       Decode(ac.code_g, NULL, NULL, Text_Field_Translation_API.Get_Text(gv.company, 
+                                                                         'CODEG',
+                                                                         ac.code_g))
+                                         code_g_desc,       
+       ac.code_h                         code_h,
+       Decode(ac.code_h, NULL, NULL, Text_Field_Translation_API.Get_Text(gv.company, 
+                                                                         'CODEH',
+                                                                         ac.code_h))
+                                         code_h_desc,       
+       ac.code_i                         code_i,
+       Decode(ac.code_i, NULL, NULL, Text_Field_Translation_API.Get_Text(gv.company, 
+                                                                         'CODEI',
+                                                                         ac.code_i))
+                                         code_i_desc,       
+       ac.code_j                         code_j,
+       Decode(ac.code_j, NULL, NULL, Text_Field_Translation_API.Get_Text(gv.company, 
+                                                                         'CODEJ',
+                                                                         ac.code_j))
+                                         code_j_desc,
+       NULL                              accounting_period,
+       gv.project_activity_id            project_activity_id,
+       gv.deliv_type_id                  deliv_type_id,
+       gv.row_group_id                   row_group_id,    
+       gv.aut_coding_rule                aut_coding_rule,
+       gv.aut_coding_seq                 aut_coding_seq,
+       gv.aut_coding_parent_row          aut_coding_parent_row,
+       gv.curr_accounting                curr_accounting_db,
+       Gen_Led_Voucher_API.Get_Function_Group(gv.company,gv.voucher_type,gv.accounting_year,gv.voucher_no)
+                                         function_group,
+       gv.internal_accounting            internal_accounting,
+       gv.journal_id                     journal_id,
+       mpccom_accounting_id              mpccom_accounting_id,
+       gv.multi_company_id               multi_company_id,
+       gv.org_parent_row                 org_parent_row,
+       gv.parent_row                     parent_row,
+       gv.posting_combination_id         posting_combination_id,
+       gv.project_accounting             project_accounting_db,
+       gv.sequence_no                    sequence_no,
+       gv.summerized                     summerized_db,
+       'TRUE'                            voucher_updated,
+       gv.rowid||'#'||gv.company||'#'    objid,
+       ltrim(lpad(to_char(gv.rowversion,'YYYYMMDDHH24MISS'),2000))                     objversion,
+       gv.rowkey                          objkey
+FROM   gen_led_voucher_row_tab       gv,
+       codestring_combination        ac
+WHERE  gv.multi_company_id IS NOT NULL
+AND    gv.posting_combination_id = ac.posting_combination_id
+AND    ('TRUE'=(SELECT Authorize_Comb_Finance_Api.Is_Allowed(gv.company, gv.posting_combination_id) FROM dual))
+$END
+;
+

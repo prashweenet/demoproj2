@@ -1,0 +1,48 @@
+fragment UserGroupPeriodLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view user_group_period_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceUserGroupPeriodLovSelector for UserGroupPeriodLov {
+   static UserGroup;
+   static LedgerId;
+}
+
+card UserGroupPeriodLovCard for UserGroupPeriodLov {
+   label = "";
+   fieldranking UserGroup;
+   field UserGroup;
+   field LedgerId;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query UserGroupPeriodLov {
+   from = "user_group_period_lov";
+   lu = UserGroupPeriod;
+   keys = Company, AccountingYear, AccountingPeriod, UserGroup;
+   ludependencies = UserGroupPeriod;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute AccountingYear Number {
+      lovcolumn = [false];
+   }
+   attribute AccountingPeriod Number {
+      lovcolumn = [false];
+   }
+   attribute UserGroup Text {
+      lovcolumn = [true];
+   }
+   attribute LedgerId Text {
+      label = "Ledger ID";
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

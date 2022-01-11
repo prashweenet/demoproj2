@@ -1,0 +1,108 @@
+projection DefaultExternalFileTemplatesHandling;
+component ACCRUL;
+layer Core;
+description "Default External File Templates";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtFileCompanyDefaultSet for ExtFileCompanyDefault {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileCompanyDefault {
+   attribute Company Text {
+      required = [true];
+   }
+   attribute FileTemplateId Text {
+      label = "File Template";
+   }
+
+   reference FileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+   reference UserIdRef(Company, UserId) to UserFinance(Company, Userid) {
+      label = "User ID";
+   }
+   reference FileTemplateIdRef(FileType, FileTemplateId) to ExtFileTemplateLov2Query(FileType, FileTemplateId) {
+      label = "File Template";
+   }
+   reference SetIdRef(FileType, SetId) to ExtTypeParamSet(FileType, SetId) {
+      label = "Parameter Set ID";
+   }
+}
+
+@Override
+entity ExtFileType {
+   crud = Read, Delete;
+
+   attribute SystemDefined Boolean("TRUE", "FALSE");
+   attribute UsableFileTemplate Number {
+      fetch = "Ext_File_Template_API.Count_Usable_File_Template(file_type)";
+   }
+
+   reference ExtFileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+}
+
+@Override
+entity UserFinance {
+   attribute Userid Text {
+      label = "User ID";
+   }
+}
+
+@Override
+entity ExtTypeParamSet {
+   attribute SetId Text {
+      label = "Parameter Set ID";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query ExtFileTemplateLov2Query {
+   from = "ext_file_template_lov2";
+   lu = ExtFileTemplate;
+   keys = FileType, FileTemplateId;
+
+   attribute FileType Text;
+   attribute FileTemplateId Text {
+      label = "File Template";
+   }
+   attribute Description Text;
+   attribute Separated Text;
+   attribute FileFormat Text;
+   attribute FileTemplateIdx Text {
+      label = "File Template";
+   }
+   attribute FileTypex Text {
+      label = "File Type";
+   }
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

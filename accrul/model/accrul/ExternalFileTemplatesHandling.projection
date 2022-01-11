@@ -1,0 +1,121 @@
+projection  ExternalFileTemplatesHandling;
+component ACCRUL;
+layer Core;
+description "Handle External File Templates";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExternalFileTemplateSet for  ExtFileTemplate;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileTemplate {
+   -- Note: Where clause was added to support solution sets. Inactive component data should not be shown.
+   where = "exists (select 1
+                    from ext_file_type
+                    where ext_file_type.file_type = ext_file_template.file_type)";
+   crud = Read, Delete;
+
+   attribute FileTemplateId Text {
+      label = "File Template";
+   }
+   attribute SystemDefined    Boolean;
+   attribute ActiveDefinition Boolean;
+   attribute ValidDefinition  Boolean;
+
+   reference FileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+   reference FileTemplateIdRef(FileTemplateId) to ExtFileTemplate(FileTemplateId) {
+      label = "File Template";
+   }
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+action CopyDefFromFileDef Text {
+   initialcheck none;
+   ludependencies = ExtFileTemplate;
+
+   parameter FileTemplate Text;
+   parameter Description Text;
+   parameter FileId Text;
+}
+
+
+action CopyDefFromFileType Text {
+   initialcheck none;
+   ludependencies = ExtFileTemplate;
+
+   parameter FileTemplate Text;
+   parameter Description Text;
+   parameter FileType Text;
+   parameter Mandatory Boolean;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure ExtFileCopyFileTemplateStructure {
+   attribute FileId Text {
+      maxlength = 30;
+   }
+   attribute FileType Text {
+      maxlength = 30;
+   }
+   attribute FileTemplate Text {
+      maxlength = 30;
+   }
+   attribute Description Text {
+      maxlength = 100;
+   }
+   attribute NewKeyRef Text;
+
+   reference FileTemplateRef(FileId) to ExtFileTemplate(FileTemplateId) {
+      label = "File Template";
+      copy FileType to FileType;
+   }
+   reference FileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+}
+
+
+structure CreateTemplateFromTypeStructure {
+   attribute FileType Text {
+      maxlength = 30;
+   }
+   attribute FileTemplate Text {
+      maxlength = 30;
+   }
+   attribute Description Text {
+      maxlength = 100;
+   }
+   attribute Mandatory Boolean("TRUE", "FALSE") {
+      label = "Only Mandatory Columns";
+      required = [true];
+   }
+   attribute NewKeyRef Text;
+
+   reference FileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+

@@ -1,0 +1,63 @@
+projection TaxWithholdingHandling;
+component ACCRUL;
+layer Core;
+description "Tax Withholding Handling";
+category Users;
+
+include fragment AccLibCurrencyAmount;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset TaxWithholdingCodeSet for StatutoryFee {
+   context Company(Company);
+   where = "fee_type_db = 'IRS1099TX'";
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity StatutoryFee {
+   crud = Read, Update;
+
+   reference FeeCodeRef(Company, FeeCode) to StatutoryFee(Company, FeeCode) {
+      label = "Tax Code";
+   }
+   attribute AmountNotTaxable Number {
+      format = ifscurrency;
+      label = "Not Taxable Amount in Accounting Currency";
+   }
+   attribute MinWithheldAmount Number {
+      format = ifscurrency;
+      label = "Minimum Withheld Amount in Accounting Currency";
+   }
+   attribute MinimumBaseAmount Number {
+      format = ifscurrency;
+      label = "Minimum Base Amount in Accounting Currency";
+   }
+   attribute UseWithholdAmountTable Boolean("TRUE", "FALSE");
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

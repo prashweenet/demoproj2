@@ -1,0 +1,462 @@
+fragment AddPseudoCodeAssistant;
+component ACCRUL;
+layer Core;
+description "Add Pseudo code";
+
+@DynamicComponentDependency PROJ
+include fragment ProjectActivityPostableSelector;
+----------------------------- CLIENT FRAGMENTS ------------------------------
+assistant AddPseudoCodeAssistant using PseudoCodesHeadVirtuals {
+   label = "Pseudo Codes";
+   savemode = OnFinish;
+
+   input(Company, Account, CodeB, CodeC, CodeD, CodeE, CodeF, CodeG, CodeH, CodeI, CodeJ, ProcessCode, Quantity, ProjectId, ProjectActivityId);
+
+   init command {
+      execute {
+         set CodeAChar = "A";
+         set CodeBChar = "B";
+         set CodeCChar = "C";
+         set CodeDChar = "D";
+         set CodeEChar = "E";
+         set CodeFChar = "F";
+         set CodeGChar = "G";
+         set CodeHChar = "H";
+         set CodeIChar = "I";
+         set CodeJChar = "J";
+         call GetProjectCodePart(Company) into ProjectCodePart;
+      }
+   }
+   steps {
+      step {
+         group AddPseudoCodeGroup {
+            visible = [false];
+         }
+         list PseudoCodesList(PseudoCodesArray);
+      }
+      final step {
+
+      }
+      cancelled step {
+
+      }
+   }
+   finish command {
+      variable ExecuteStatus;
+
+      execute {
+         call AddPseudoCodes(Objkey) into ExecuteStatus;
+         if[ExecuteStatus = "TRUE"] {
+            success("Pseudo code(s) added successfully");
+            exit OK;
+         }
+         else {
+            refresh;
+         }
+      }
+   }
+   cancel command {
+      execute {
+         exit OK;
+      }
+   }
+   restart command {
+      visible = [false];
+   }
+}
+
+command ValidateAccountRef {
+   variable ProjOriginRec Structure(ProjectOriginStructure);
+   execute {
+      if [ProjectId != null] {
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+command ValidateCodeBRef {
+   variable ProjOriginRec Structure(ProjectOriginStructure);
+   execute {
+      if [parent.ProjectCodePart = "B" and CodeB != null] {
+         set ProjectId = CodeB;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+command ValidateCodeCRef {
+   variable ProjOriginRec Structure(ProjectOriginStructure);
+   execute {
+      if [parent.ProjectCodePart = "C" and CodeC != null] {
+         set ProjectId = CodeC;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+command ValidateCodeDRef {
+   variable ProjOriginRec Structure(ProjectOriginStructure);
+   execute {
+      if [parent.ProjectCodePart = "D" and CodeD != null] {
+         set ProjectId = CodeD;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+command ValidateCodeERef {
+   variable ProjOriginRec Structure(ProjectOriginStructure);
+   execute {
+      if [parent.ProjectCodePart = "E" and CodeE != null] {
+         set ProjectId = CodeE;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+command ValidateCodeFRef {
+   variable ProjOriginRec Structure(ProjectOriginStructure);
+   execute {
+      if [parent.ProjectCodePart = "F" and CodeF != null] {
+         set ProjectId = CodeF;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+command ValidateCodeGRef {
+   variable ProjOriginRec Structure(ProjectOriginStructure);
+   execute {
+      if [parent.ProjectCodePart = "G" and CodeG != null] {
+         set ProjectId = CodeG;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+command ValidateCodeHRef {
+   variable ProjOriginRec Structure(ProjectOriginStructure);
+   execute {
+      if [parent.ProjectCodePart = "H" and CodeH != null] {
+         set ProjectId = CodeH;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+command ValidateCodeIRef {
+   variable ProjOriginRec Structure(ProjectOriginStructure);
+   execute {
+      if [parent.ProjectCodePart = "I" and CodeI != null] {
+         set ProjectId = CodeI;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+command ValidateCodeJRef {
+   variable ProjOriginRec Structure(ProjectOriginStructure);
+   execute {
+      if [parent.ProjectCodePart = "J" and CodeJ != null] {
+         set ProjectId = CodeJ;
+         call ValidateProjectOrigin(Company, ProjectId) into ProjOriginRec;
+         if [ProjOriginRec.ValidOrigin = "FALSE"] {
+            set ProjectActivityId = ProjOriginRec.ActivityId;
+            set ActivityIdEnabled = false;
+         }
+         else {
+            set ActivityIdEnabled = true;
+         }
+      }
+   }
+}
+
+group AddPseudoCodeGroup for PseudoCodesHeadVirtual {
+   field Company;
+}
+
+list PseudoCodesList for PseudoCodesVirtual {
+   label = "Company : ${parent.Company}";
+   editmode = SingleRowEdit;
+
+   field UserName {
+      size = Small;
+      format = uppercase;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field PseudoCode;
+   field Description;
+   lov AccountRef with ReferenceAccountSelector {
+      label = "${parent.AccountingCodePartsARef.CodeName}";
+      validate command ValidateAccountRef;
+   }
+   lov CodeBRef with ReferenceCodeBSelector {
+      label = "${parent.AccountingCodePartsBRef.CodeName}";
+      editable = [parent.AccountingCodePartsBRef.CodePartUsed = "Yes"];
+      search = CodeB, Description;
+      description = CodeBRef.Description;
+      validate command ValidateCodeBRef;
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      label = "${parent.AccountingCodePartsCRef.CodeName}";
+      search = CodeC, Description;
+      editable = [parent.AccountingCodePartsCRef.CodePartUsed = "Yes"];
+      description = CodeCRef.Description;
+      validate command ValidateCodeCRef;
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      label = "${parent.AccountingCodePartsDRef.CodeName}";
+      search = CodeD, Description;
+      editable = [parent.AccountingCodePartsDRef.CodePartUsed = "Yes"];
+      description = CodeDRef.Description;
+      validate command ValidateCodeDRef;
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      label = "${parent.AccountingCodePartsERef.CodeName}";
+      search = CodeE, Description;
+      editable = [parent.AccountingCodePartsERef.CodePartUsed = "Yes"];
+      description = CodeERef.Description;
+      validate command ValidateCodeERef;
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      label = "${parent.AccountingCodePartsFRef.CodeName}";
+      search = CodeF, Description;
+      editable = [parent.AccountingCodePartsFRef.CodePartUsed = "Yes"];
+      description = CodeFRef.Description;
+      validate command ValidateCodeFRef;
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      label = "${parent.AccountingCodePartsGRef.CodeName}";
+      search = CodeG, Description;
+      editable = [parent.AccountingCodePartsGRef.CodePartUsed = "Yes"];
+      description = CodeGRef.Description;
+      validate command ValidateCodeGRef;
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      label = "${parent.AccountingCodePartsHRef.CodeName}";
+      search = CodeH, Description;
+      editable = [parent.AccountingCodePartsHRef.CodePartUsed = "Yes"];
+      description = CodeHRef.Description;
+      validate command ValidateCodeHRef;
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      label = "${parent.AccountingCodePartsIRef.CodeName}";
+      search = CodeI, Description;
+      editable = [parent.AccountingCodePartsIRef.CodePartUsed = "Yes"];
+      description = CodeIRef.Description;
+      validate command ValidateCodeIRef;
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      label = "${parent.AccountingCodePartsJRef.CodeName}";
+      search = CodeJ, Description;
+      editable = [parent.AccountingCodePartsJRef.CodePartUsed = "Yes"];
+      description = CodeJRef.Description;
+      validate command ValidateCodeJRef;
+   }
+   @DynamicComponentDependency PROJ
+   lov ProjectActivityIdRef with ReferenceProjectActivityPostableSelector {
+      editable = [ActivityIdEnabled];
+   }
+   field Text {
+      multiline = true;
+   }
+   field Quantity {
+      size = Small;
+   }
+   field PseudoCodeOwnership;
+   field RequiredString {
+      columnexclude = [true];
+   }
+   field ProjectId {
+      columnexclude = [true];
+   }
+   field ActivityIdEnabled {
+      columnexclude = [true];
+   }
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+entityset PseudoCodesHeadVirtuals for PseudoCodesHeadVirtual;
+
+virtual PseudoCodesHeadVirtual {
+   attribute Company Text;
+   attribute Account Text;
+   attribute CodeAChar Text;
+   attribute CodeBChar Text;
+   attribute CodeCChar Text;
+   attribute CodeDChar Text;
+   attribute CodeEChar Text;
+   attribute CodeFChar Text;
+   attribute CodeGChar Text;
+   attribute CodeHChar Text;
+   attribute CodeIChar Text;
+   attribute CodeJChar Text;
+   attribute CodeB Text;
+   attribute CodeC Text;
+   attribute CodeD Text;
+   attribute CodeE Text;
+   attribute CodeF Text;
+   attribute CodeG Text;
+   attribute CodeH Text;
+   attribute CodeI Text;
+   attribute CodeJ Text;
+   attribute ProcessCode Text;
+   attribute Quantity Number;
+   attribute ProjectId Text;
+   attribute ProjectActivityId Number;
+   attribute ProjectCodePart Text;
+
+   reference AccountingCodePartsARef(Company, CodeAChar) to AccountingCodeParts(Company, CodePart);
+   reference AccountingCodePartsBRef(Company, CodeBChar) to AccountingCodeParts(Company, CodePart);
+   reference AccountingCodePartsCRef(Company, CodeCChar) to AccountingCodeParts(Company, CodePart);
+   reference AccountingCodePartsDRef(Company, CodeDChar) to AccountingCodeParts(Company, CodePart);
+   reference AccountingCodePartsERef(Company, CodeEChar) to AccountingCodeParts(Company, CodePart);
+   reference AccountingCodePartsFRef(Company, CodeFChar) to AccountingCodeParts(Company, CodePart);
+   reference AccountingCodePartsGRef(Company, CodeGChar) to AccountingCodeParts(Company, CodePart);
+   reference AccountingCodePartsHRef(Company, CodeHChar) to AccountingCodeParts(Company, CodePart);
+   reference AccountingCodePartsIRef(Company, CodeIChar) to AccountingCodeParts(Company, CodePart);
+   reference AccountingCodePartsJRef(Company, CodeJChar) to AccountingCodeParts(Company, CodePart);
+
+   array PseudoCodesArray(Company) to PseudoCodesVirtual(Company);
+}
+
+virtual PseudoCodesVirtual using PseudoCodes {
+   attribute UserName Text {
+      label = "User ID";
+   }
+   attribute PseudoCode Text {
+      insertable = [true];
+      updatable = [true];
+      editable = [true];
+      format = uppercase;
+   }
+   attribute Description Text {
+      label = "Pseudo Code Description";
+   }
+   attribute Account Text {
+      required = [true];
+   }
+   attribute CodeB Text;
+   attribute CodeC Text;
+   attribute CodeD Text;
+   attribute CodeE Text;
+   attribute CodeF Text;
+   attribute CodeG Text;
+   attribute CodeH Text;
+   attribute CodeI Text;
+   attribute CodeJ Text;
+   attribute ProjectActivityId Number {
+      label = "Proj Activity Seq No";
+   }
+   attribute PseudoCodeOwnership Enumeration(FinOwnership) {
+      label = "Ownership";
+   }
+   attribute Text Text;
+   attribute RequiredString Text;
+   attribute ProjectId Text;
+   attribute ActivityIdEnabled Boolean("TRUE", "FALSE");
+
+   reference ProcessCodeRef(Company, ProcessCode) to AccountProcessCode(Company, ProcessCode) {
+      label = "Process Code";
+   }
+   reference AccountRef(Company, Account) to Account(Company, Account);
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+   @DynamicComponentDependency PROJ
+   reference ProjectActivityIdRef(ProjectId, ProjectActivityId) to ProjectActivityPostable(ProjectId, ActivitySeq) {
+      label = "Project Activity Sequence Number";
+   }
+}
+
+action AddPseudoCodes Text {
+   initialcheck implementation;
+   parameter Objkey Text;
+}
+
+function ValidateProjectOrigin Structure(ProjectOriginStructure) {
+   parameter Company Text;
+   parameter ProjectId Text;
+}
+
+function GetProjectCodePart Text {
+   parameter Company Text;
+}
+
+structure ProjectOriginStructure {
+   attribute ValidOrigin Text;
+   attribute ActivityId  Number;
+}

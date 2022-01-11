@@ -1,0 +1,28 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: RpdCompanyPeriodDet
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+
+UNIQUE CONSTRAINT rpd_company_period_det_uc1 IS rpd_company_period_det_tab (rpd_id, company, reporting_date);
+
+INDEX rpd_company_period_det_ix1 IS rpd_company_period_det_tab (rpd_id, company, accounting_date);
+
+
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------

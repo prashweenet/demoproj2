@@ -1,0 +1,116 @@
+client SecondaryCostRevenueElement;
+component ACCRUL;
+layer Core;
+projection SecondaryCostRevenueElementHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using CostEleToAccntSecmapSet {
+   label = "Secondary Cost/Revenue Element";
+   list CostEleToAccntSecmapList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command CopyCRESecondaryMappingCommand {
+   label = "Copy Cost/Revenue Elements to Secondary Mapping";
+   mode = Global;
+   --enabled = [CodePart = "A"];
+   //   This is commented because we have a blocker related to this functionality. This should be revisited when the
+   //   PRIOUXX-41 is closed.
+   variable BaseCodepartStr {
+      type = Text;
+   }
+
+
+   execute {
+
+      set Company = "${context.Company}";
+
+      call GetBaseForFollowupElement(Company) into BaseCodepartStr;
+
+      if[BaseCodepartStr != "A"] {
+         error("Copying Cost/Revenue Elements to Secondary Mapping is only allowed for Code Part A.");
+      }
+      else {
+         confirm("Any existing Secondary Cost/Revenue mappings will be overwritten. Do you want to continue?") {
+            when OK {
+               call CopyElementsToSecMap(Company);
+            }
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list CostEleToAccntSecmapList for CostEleToAccntSecmap {
+   orderby = Account;
+
+   lov AccountRef with ReferenceSecondaryAccCodePartValueSelector {
+      search = CodePartValue, Description;
+      description = AccountRef.Description;
+   }
+   lov ProjectCostElementRef with ReferenceProjectCostElementLovSelector {
+      search = ProjectCostElement, Description;
+      description = ProjectCostElementRef.Description;
+      validate command {
+         execute {
+            if[ProjectCostElement != null and ValidFrom = null] {
+               call GetCurrentDate() into ValidFrom;
+            }
+            else {
+               set ValidFrom = null;
+            }
+            call GetElementTypeClient(Company, ProjectCostElement) into ElementType;
+         }
+      }
+   }
+   field ValidFrom {
+      size = Small;
+   }
+   field ElementType {
+      size = Small;
+   }
+
+   command CopyCRESecondaryMappingCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+

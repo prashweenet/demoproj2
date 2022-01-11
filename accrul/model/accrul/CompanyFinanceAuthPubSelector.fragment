@@ -1,0 +1,33 @@
+fragment CompanyFinanceAuthPubSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view company_finance_auth_pub";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCompanyFinanceAuthPubSelector for CompanyFinanceAuthPub {
+   static Company;
+}
+
+card CompanyFinanceAuthPubCard for CompanyFinanceAuthPub {
+   label = "";
+   fieldranking Company;
+   field Company;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CompanyFinanceAuthPub {
+   from = "company_finance_auth_pub";
+   lu = CompanyFinance;
+   keys = Company;
+   ludependencies = AccountingCodePartUtil;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

@@ -1,0 +1,642 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: Account
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200904  Jadulk  FISPRING20-6695, Removed CONACC related obsolete component logic.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Value IS
+   Flags      = 'KM--L'
+   Datatype   = 'STRING(20)/UPPERCASE'
+   Prompt     = 'Value';
+
+COLUMN Type IS
+   Flags      = 'AM--L'
+   Datatype   = 'STRING(20)'
+   Prompt     = 'Type'
+   Ref        = 'PseudoCodeValue';
+
+COLUMN Display_Order IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(1)'
+   Prompt     = 'Display Order';
+
+COLUMN Matching_Date IS
+   Flags      = 'A-IU-'
+   Datatype   = 'DATE'
+   Prompt     = 'Matcing Date';
+
+COLUMN Accnt IS
+   Flags      = 'KMI-L'
+   Datatype   = 'STRING(20)/UPPERCASE'
+   Prompt     = 'Account';
+
+COLUMN Ledaccnt IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(1)/UPPERCASE'
+   Prompt     = 'Ledger Account';
+
+COLUMN Accnt_Group_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(200)'
+   Prompt     = 'Account Group Description';
+
+COLUMN Accnt_Type_Desc IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(200)'
+   Prompt     = 'Account Type Description';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Account_Lov IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'DISPLAY_ORDER,SORT_VALUE'
+   Description.Flags = 'AM--L'
+   Description.Datatype = 'STRING(200)'
+   Valid_From.Flags = 'A----'
+   Valid_Until.Flags = 'A----'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+SELECT company                                                 company,
+       pseudo_code                                             value,
+       Pseudo_Code_Value_API.Decode('1')||' - '|| user_name    type,
+       description                                             description,
+       To_Date('18000101','YYYYMMDD', 'NLS_CALENDAR=GREGORIAN')                          valid_from,
+       To_Date(Accrul_Attribute_API.Get_Attribute_Value('DEFAULT_VALID_TO'),'YYYYMMDD')   valid_until,
+       pseudo_code                                             sort_value,
+       '1'                                                     display_order
+FROM   pseudo_codes_tab
+WHERE  user_name = Fnd_Session_API.Get_Fnd_User
+AND    user_name != Fnd_Session_API.Get_App_Owner
+AND    pseudo_code_ownership = 'PRIVATE'
+UNION ALL
+SELECT company                            company,
+       pseudo_code                        value,
+       Pseudo_Code_Value_API.Decode('1')||' - '|| user_name    type,
+       description                                             description,
+       To_Date('18000101','YYYYMMDD', 'NLS_CALENDAR=GREGORIAN')                          valid_from,
+       To_Date(Accrul_Attribute_API.Get_Attribute_Value('DEFAULT_VALID_TO'),'YYYYMMDD')   valid_until,
+       pseudo_code                                             sort_value,
+       Decode(user_name,Fnd_Session_API.Get_Fnd_User,'1','2')  display_order
+FROM   pseudo_codes_tab
+WHERE  (pseudo_code_ownership = 'PUBLIC' OR Fnd_Session_API.Get_App_Owner = Fnd_Session_API.Get_Fnd_User)
+UNION ALL
+SELECT company                                                 company,
+       code_part_value                                         value,
+       logical_account_type                                    type,
+       description                                             description,
+       valid_from                                              valid_from,
+       valid_until                                             valid_until,
+       sort_value                                              sort_value,
+       '3'                                                     display_order
+FROM   accounting_code_part_a;
+
+VIEW Account_Code_A1 IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'SORT_VALUE'
+   Account.Flags = 'KMI-L'
+   Logical_Account_Type.Flags = 'AMIUL'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Valid_From.Flags = 'A----'
+   Valid_Until.Flags = 'A----'
+SELECT company                                  company,
+       code_part_value                          account,
+       nvl(Text_Field_Translation_API.Get_Text ( company,'CODEA',code_part_value), description) description,
+       sort_value                               sort_value,
+       Account_Type_Value_API.Decode(logical_account_type)              
+                                                logical_account_type,
+       logical_account_type                     logical_account_type_db,
+       valid_from                               valid_from,
+       valid_until                              valid_until,       
+       rowid                                   objid,
+       rtrim(rpad(ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000)),2000))            objversion,
+       rowkey                                  objkey
+FROM   accounting_code_part_value_tab
+WHERE  code_part = 'A';
+
+VIEW Account_Code_A IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'SORT_VALUE'
+   Accounting_Text_Id.Datatype = 'NUMBER()'
+   Accnt_Type.Datatype = 'STRING(200)/UPPERCASE'
+   Accnt_Type.Ref = 'AccntType'
+   Logical_Account_Type.Datatype = 'STRING(200)/UPPERCASE'
+   Logical_Account_Type_Db.Datatype = 'STRING(20)/UPPERCASE'
+   Process_Code.Datatype = 'STRING(2)/UPPERCASE'
+   Req_Code_B_Db.Datatype = 'STRING(20)'
+   Req_Code_C_Db.Datatype = 'STRING(20)'
+   Req_Code_D_Db.Datatype = 'STRING(20)'
+   Req_Code_E_Db.Datatype = 'STRING(20)'
+   Req_Code_F_Db.Datatype = 'STRING(20)'
+   Req_Code_G_Db.Datatype = 'STRING(20)'
+   Req_Code_H_Db.Datatype = 'STRING(20)'
+   Req_Code_I_Db.Datatype = 'STRING(20)'
+   Req_Code_J_Db.Datatype = 'STRING(20)'
+   Req_Quantity.Flags = 'A---L'
+   Req_Quantity.Prompt = 'Req quantity'
+   Req_Quantity_Db.Datatype = 'STRING(20)'
+   Req_Quantity_Db.Prompt = 'Req quantity'
+   Req_Text_Db.Datatype = 'STRING(20)'
+   Req_Process_Code_Db.Datatype = 'STRING(20)'
+   Curr_Balance_Db.Datatype = 'STRING(20)'
+   Tax_Flag.Flags = 'AMIU-'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+SELECT company                                                          company,
+       code_part_value                                                  account,
+       nvl(Text_Field_Translation_API.Get_Text ( company,'CODEA',code_part_value), description) description,
+       valid_from                                                       valid_from,
+       valid_until                                                      valid_until,
+       accounting_text_id                                               accounting_text_id,
+       accnt_group                                                      accnt_group,
+       accnt_type                                                       accnt_type,
+       Account_Type_Value_API.Decode(logical_account_type)              logical_account_type,
+       logical_account_type                                             logical_account_type_db,
+       process_code                                                     process_code,
+       Accounting_Ledg_Flag_API.Decode(ledg_flag)                       ledg_flag,
+       ledg_flag                                                        ledg_flag_db,
+       Account_Request_API.Decode(req_code_b)                           req_code_b,
+       req_code_b                                                       req_code_b_db,
+       Account_Request_API.Decode(req_code_c)                           req_code_c,
+       req_code_c                                                       req_code_c_db,
+       Account_Request_API.Decode(req_code_d)                           req_code_d,
+       req_code_d                                                       req_code_d_db,
+       Account_Request_API.Decode(req_code_e)                           req_code_e,
+       req_code_e                                                       req_code_e_db,
+       Account_Request_API.Decode(req_code_f)                           req_code_f,
+       req_code_f                                                       req_code_f_db,
+       Account_Request_API.Decode(req_code_g)                           req_code_g,
+       req_code_g                                                       req_code_g_db,
+       Account_Request_API.Decode(req_code_h)                           req_code_h,
+       req_code_h                                                       req_code_h_db,
+       Account_Request_API.Decode(req_code_i)                           req_code_i,
+       req_code_i                                                       req_code_i_db,
+       Account_Request_API.Decode(req_code_j)                           req_code_j,
+       req_code_j                                                       req_code_j_db,
+       Account_Request_API.Decode(req_quantity)                         req_quantity,
+       req_quantity                                                     req_quantity_db,
+       Account_Request_Text_API.Decode(req_text)                        req_text,
+       req_text                                                         req_text_db,
+       Account_Request_API.Decode(req_process_code)                     req_process_code,
+       req_process_code                                                 req_process_code_db,
+       Acc_Currency_Balance_Flag_API.Decode(curr_balance)               curr_balance,
+       curr_balance                                                     curr_balance_db,
+       Tax_Account_Flag_API.Decode(tax_flag)                            tax_flag,
+       tax_flag                                                         tax_flag_db,
+       rtrim(rpad(text,2000))                                           text,
+       sort_value                                                       sort_value,
+       rowid                                                           objid,
+       rtrim(rpad(ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000)),2000))                                    objversion,
+       rowkey                                                          objkey
+FROM   accounting_code_part_value_tab
+WHERE  code_part = 'A'
+AND    NVL(bud_account,'N') = 'N';
+
+VIEW Ps_Code_Account IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'DISPLAY_ORDER,SORT_VALUE'
+   Logical_Account_Type.Flags = 'AM--L'
+   Description.Flags = 'AM--L'
+   Description.Datatype = 'STRING(200)'
+   Sort_Value.Flags = 'A---L'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'   
+SELECT pc1.company                           company,
+       pc1.pseudo_code                       value,
+       Pseudo_Code_Value_API.Decode('1')||' - '|| user_name type,
+       NULL                                  logical_account_type,
+       NULL                                  logical_account_type_db,
+       pc1.description                       description,
+       To_Date('18000101','YYYYMMDD', 'NLS_CALENDAR=GREGORIAN')    valid_from,
+       To_Date(Accrul_Attribute_API.Get_Attribute_Value('DEFAULT_VALID_TO'),'YYYYMMDD')   valid_until,
+       a1.stat_account                       stat_account_db,
+       pc1.pseudo_code                       sort_value,
+       '1'                                   display_order
+FROM   pseudo_codes_tab pc1, accounting_code_part_value_tab a1
+WHERE  pc1.user_name IN (Fnd_Session_API.Get_App_Owner, Fnd_Session_API.Get_Fnd_User)
+AND    pc1.company = a1.company
+AND    pc1.ACCOUNT = a1.code_part_value
+UNION ALL
+SELECT pc2.company                           company,
+       pc2.pseudo_code                       value,
+       Pseudo_Code_Value_API.Decode('1')||' - '|| user_name type,
+       NULL                                  logical_account_type,
+       NULL                                  logical_account_type_db,
+       pc2.description                       description,
+       To_Date('18000101','YYYYMMDD', 'NLS_CALENDAR=GREGORIAN')    valid_from,
+       To_Date(Accrul_Attribute_API.Get_Attribute_Value('DEFAULT_VALID_TO'),'YYYYMMDD')   valid_until,
+       a2.stat_account                       stat_account_db,
+       pc2.pseudo_code                       sort_value,
+       '2'                                   display_order
+FROM   pseudo_codes_tab pc2, accounting_code_part_value_tab a2
+WHERE  pc2.pseudo_code_ownership = 'PUBLIC'
+AND    pc2.user_name NOT IN (Fnd_Session_API.Get_Fnd_User)
+AND    pc2.company = a2.company
+AND    pc2.account = a2.code_part_value
+UNION ALL
+SELECT a3.company                                              company,
+       a3.code_part_value                                      value,
+       a3.accnt_type                                           type,
+       Account_Type_Value_API.Decode(a3.logical_account_type)  logical_account_type,
+       a3.logical_account_type                                 logical_account_type_db,
+       Nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a3.company, 'ACCRUL', 'Account',
+           a3.code_part_value), a3.description)                description,       
+       a3.valid_from                                           valid_from,
+       a3.valid_until                                          valid_until,
+       a3.stat_account                                         stat_account_db,
+       a3.sort_value                                           sort_value,
+       '3'                                                     display_order
+FROM   accounting_code_part_value_tab a3
+WHERE  a3.code_part = 'A'
+AND    NVL(a3.bud_account, 'N') = 'N';
+
+-- ps_code_all_account 
+--   The view displays all accounts (normal and budget) and pseudo codes
+VIEW Ps_Code_All_Account IS
+   Prompt = 'Account'
+   Sort = 'DISPLAY_ORDER,SORT_VALUE'
+   Type.Flags = 'AM--L'
+   Type.Datatype = 'STRING(20)'
+   Type.Ref = ''
+   Logical_Account_Type.Flags = 'AM--L'
+   Description.Flags = 'AM--L'
+   Description.Datatype = 'STRING(200)'
+   Sort_Value.Flags = 'A---L'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'   
+SELECT company                           company,
+       value                             value,       
+       type                              type,
+       logical_account_type              logical_account_type,
+       logical_account_type_db           logical_account_type_db,
+       description                       description,
+       valid_from                        valid_from,
+       valid_until                       valid_until,
+       sort_value                        sort_value,
+       stat_account_db                   stat_account_db,
+       display_order                     display_order,
+       'N'                               bud_account_db
+FROM   ps_code_account
+UNION ALL
+SELECT company                           company,
+       code_part_value                   value,
+       accnt_type                        type,
+       Account_Type_Value_API.Decode(logical_account_type) logical_account_type,
+       logical_account_type              logical_account_type_db,
+       description                       description,
+       valid_from                        valid_from,
+       valid_until                       valid_until,
+       stat_account                      stat_account,
+       sort_value                        sort_value,
+       '3'                               display_order,
+       bud_account                       bud_account_db
+FROM   accounting_code_part_value_tab
+WHERE  code_part = 'A'
+AND    bud_account = 'Y';
+
+VIEW Account_Matching_Code_A IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'SORT_VALUE'
+   Account.Flags = 'KMI--'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+SELECT company                                  company,
+       code_part_value                          account,
+       nvl(Text_Field_Translation_API.Get_Text ( company,'CODEA',code_part_value), description) description,
+       NULL                                     matching_date,
+       sort_value                               sort_value,
+       rowid                                   objid,
+       rtrim(rpad(ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000)),2000))            objversion,
+       rowkey                                  objkey
+FROM   accounting_code_part_value_tab
+WHERE  code_part = 'A'
+AND    NVL(bud_account,'N') = 'N';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Tax_Account IS
+   Prompt = 'Tax Account'
+   Sort = 'SORT_VALUE'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+SELECT a.company                                                        company,
+       code_part_value                                                  account,
+       nvl(Text_Field_Translation_API.Get_Text ( a.company,'CODEA',code_part_value), description) description,
+       sort_value                                                       sort_value,
+       rowkey                                                          objkey
+FROM   accounting_code_part_value_tab a
+WHERE  code_part = 'A'
+AND    tax_flag = 'Y';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Accounts_Consolidation IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'SORT_VALUE'
+   Accnt_Type.Flags = 'AMIUL'
+   Accnt_Type.Datatype = 'STRING(200)'
+   Accnt_Type.Ref = 'AccountType'
+   Logical_Account_Type.Datatype = 'STRING(2)'
+   Accnt_Group.Flags = 'AMIUL'
+   Accnt_Group.Ref = 'AccountGroup'
+   Valid_From.Flags = 'AMIUL'
+   Valid_Until.Flags = 'AMIUL'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+SELECT a.company                                               company,
+       code_part_value                                         account,
+       nvl(Text_Field_Translation_API.Get_Text ( a.company,'CODEA',code_part_value), description) description,
+       accnt_type                                              accnt_type,
+       Account_Type_Value_API.Decode(logical_account_type)     logical_account_type,
+       logical_account_type                                    logical_account_type_db,
+       accnt_group                                             accnt_group,       
+       a.valid_from                                            valid_from,
+       valid_until                                             valid_until,
+       sort_value                                              sort_value,
+       rowkey                                                 objkey
+FROM   accounting_code_part_value_tab a
+WHERE  code_part = 'A';
+
+VIEW Mc_Accounting_Codepart_A IS
+   Prompt = 'Accounting code part value'
+   Sort = 'SORT_VALUE'
+   Description.Datatype = 'STRING(35)'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+SELECT a.company                                company,
+       code_part_value                          accnt,
+       nvl(Text_Field_Translation_API.Get_Text ( a.company,'CODEA',code_part_value), a.description) DESCRIPTION,
+       ledg_flag                                ledaccnt,
+       sort_value                               sort_value,
+       a.rowid                                 objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                              objversion,
+       rowkey                                  objkey
+FROM   accounting_code_part_value_tab a, company_finance_auth c
+WHERE  a.company = c.company
+AND    code_part = 'A';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Pre_Account_Codepart_A_Mpccom IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'SORT_VALUE'
+   Ledaccnt.Flags = 'AMIU-'
+   Ledaccnt.Datatype = 'STRING(200)'
+   Ledaccnt.Prompt = 'Ledg Flag'
+   Ledaccnt.Ref = 'AccountingLedgFlag'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Valid_From.Flags = 'A----'
+   Valid_Until.Flags = 'A----'
+SELECT a.company                                                        company,
+       code_part_value                                                  account,
+       nvl(substr(Text_Field_Translation_API.Get_Text ( a.company,'CODEA',code_part_value),1, 100), description) description,
+       ledg_flag                                                        ledaccnt,
+       sort_value                                                       sort_value,
+       valid_from                                                       valid_from,
+       valid_until                                                      valid_until,
+       a.rowid                                                         objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                                                      objversion,
+       rowkey                                                          objkey
+FROM   accounting_code_part_value_tab a
+WHERE  ledg_flag = 'N'
+AND    code_part = 'A'
+AND    stat_account = 'N';
+
+VIEW Stat_Account_Lov IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'DISPLAY_ORDER,SORT_VALUE'
+   Description.Flags = 'AM--L'
+   Description.Datatype = 'STRING(200)'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+SELECT t.company                           company,
+       t.pseudo_code                       value, 
+       Pseudo_Code_Value_API.Decode('1')||' - '|| t.user_name type, 
+       t.description                       description, 
+       To_Date('18000101','YYYYMMDD', 'nls_calendar=GREGORIAN')    valid_from, 
+       To_Date(Accrul_Attribute_API.Get_Attribute_Value('DEFAULT_VALID_TO'),'YYYYMMDD')   valid_until, 
+       t.pseudo_code                       sort_value, 
+       '1'                               display_order
+FROM   pseudo_codes_tab t,
+       Accounting_Code_Part_Value_Tab a
+WHERE  t.user_name IN (Fnd_Session_API.Get_App_Owner, Fnd_Session_API.Get_Fnd_User) 
+AND    t.company = a.company
+AND    t.ACCOUNT = a.code_part_value
+AND    a.stat_account = 'N'
+UNION ALL 
+SELECT n.company                           company,
+       n.pseudo_code                       value,
+       Pseudo_Code_Value_API.Decode('1')||' - '|| n.user_name type,
+       n.description                       description,
+       To_Date('18000101','YYYYMMDD', 'nls_calendar=GREGORIAN')    valid_from,
+       To_Date(Accrul_Attribute_API.Get_Attribute_Value('DEFAULT_VALID_TO'),'YYYYMMDD')   valid_until,
+       n.pseudo_code                       sort_value,
+       '2'                               display_order
+FROM   pseudo_codes_tab n,
+       Accounting_Code_Part_Value_Tab m
+WHERE  n.pseudo_code_ownership = 'PUBLIC'
+AND    n.user_name NOT IN (Fnd_Session_API.Get_Fnd_User)
+AND    n.company = m.company
+AND    n.ACCOUNT = m.code_part_value
+AND    m.stat_account = 'N'
+UNION  ALL 
+SELECT p.company                           company, 
+       p.code_part_value                   value, 
+       p.logical_account_type              type, 
+       p.description                       description, 
+       p.valid_from                        valid_from, 
+       p.valid_until                       valid_until, 
+       p.sort_value                        sort_value, 
+       '3'                                 display_order 
+FROM   Accounting_Code_Part_A p,
+       Accounting_Code_Part_Value_Tab q  
+WHERE  p.company =q.company
+AND    p.code_part = 'A'
+AND    p.code_part = q.code_part
+AND    p.code_part_value = q.code_part_value
+AND    q.stat_account ='N' ;
+
+VIEW Account_Av IS
+   Prompt = 'Account Tax Audit'
+   Sort = 'SORT_VALUE'
+   Account.Flags = 'KMI--'
+   Description.Flags = 'A----'
+   Valid_From.Flags = 'A----'
+   Valid_Until.Flags = 'A----'
+   Accnt_Group.Flags = 'A----'
+   Accnt_Group.Prompt = 'Account Group'
+   Accnt_Type.Flags = 'A----'
+   Accnt_Type.Prompt = 'Account Type'
+   Logical_Account_Type.Flags = 'A----'
+   Ledg_Flag.Flags = 'A----'
+   Curr_Balance.Flags = 'A----'
+   Tax_Flag.Flags = 'A----'
+SELECT company                                  company,
+       account                                  account,
+       description                              description,
+       valid_from                               valid_from,
+       valid_until                              valid_until,
+       accnt_group                              accnt_group,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'AccountGroup',
+           accnt_group, language_sys.get_language ), description)
+                                                accnt_group_desc,
+       accnt_type                               accnt_type,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'AccountType',
+           accnt_type, language_sys.get_language ), description)
+                                                accnt_type_desc,
+       logical_account_type                     logical_account_type,
+       ledg_flag                                ledg_flag,
+       curr_balance                             curr_balance,
+       tax_flag                                 tax_flag
+FROM   account;
+
+VIEW Accounting_Codepart_A IS
+   Prompt = 'Accounting code part value'
+   Sort = 'SORT_VALUE'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Accnt.Flags = 'KMI-L'
+   Accnt.Datatype = 'STRING(20)/UPPERCASE'
+   Accnt.Prompt = 'Account'
+   Description.Flags = 'AMIUL'
+   Description.Datatype = 'STRING(100)'
+   Description.Prompt = 'Description'
+   Ledaccnt.Flags = 'A----'
+   Ledaccnt.Datatype = 'STRING(1)/UPPERCASE'
+   Ledaccnt.Prompt = 'Ledger Account'
+   Sort_Value.Flags = 'A-I--'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Sort_Value.Prompt = 'Sort Value'
+   Valid_From.Flags = 'A-I-L'
+   Valid_From.Datatype = 'DATE/DATE'
+   Valid_From.Prompt = 'Valid From'
+   Valid_Until.Flags = 'A-I-L'
+   Valid_Until.Datatype = 'DATE/DATE'
+   Valid_Until.Prompt = 'Valid Until'
+SELECT COMPANY                                  COMPANY,
+       CODE_PART_VALUE                          ACCNT,
+       nvl(rtrim(rpad(text_field_translation_api.get_text( COMPANY, 'CODEA', CODE_PART_VALUE), 100)),description)
+                                                DESCRIPTION,
+       LEDG_FLAG                                LEDACCNT,
+       sort_value                               SORT_VALUE,
+       valid_from                               VALID_FROM,
+       valid_until                              VALID_UNTIL,
+       rowid                                   OBJID,
+       to_char(rowversion,'YYYYMMDDHH24MISS')                              OBJVERSION,
+       rowkey                                  objkey
+FROM   accounting_code_part_value_tab
+WHERE  code_part = 'A';
+
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Account_Code_Mc_Lov IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'SORT_VALUE'
+   Account.Flags = 'KMI-L'
+   Logical_Account_Type.Flags = 'AMIUL'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+SELECT DISTINCT
+       code_part_value                          account,
+       nvl(Text_Field_Translation_API.Get_Text ( company,'CODEA',code_part_value), description) description,
+       sort_value                               sort_value,
+       Account_Type_Value_API.Decode(logical_account_type)              
+                                                logical_account_type,
+       logical_account_type                     logical_account_type_db
+FROM   accounting_code_part_value_tab a
+WHERE  code_part = 'A';
+
+VIEW Ext_Ps_Code_Account IS
+   Prompt = 'Accounting Code Part A'
+   Sort = 'DISPLAY_ORDER,SORT_VALUE'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Value.Flags = 'KM--L'
+   Value.Datatype = 'STRING(20)/UPPERCASE'
+   Value.Prompt = 'Account'
+   Type.Flags = 'AM--L'
+   Type.Datatype = 'STRING(20)'
+   Type.Prompt = 'Logical Account Type'
+   Description.Flags = 'AM--L'
+   Description.Datatype = 'STRING(200)'
+   Description.Prompt = 'Account Description'
+   Sort_Value.Flags = 'A-I--'
+   Sort_Value.Datatype = 'STRING(20)'
+   Sort_Value.Prompt = 'Sort Value'
+   Display_Order.Flags = 'A----'
+   Display_Order.Datatype = 'STRING(1)'
+   Display_Order.Prompt = 'Display Order'
+   Tax_Handling_Value.Flags = 'AM--L'
+   Tax_Handling_Value.Datatype = 'STRING(200)'
+   Tax_Handling_Value.Prompt = 'Tax Handling'
+   Tax_Flag.Flags = 'AM--L'
+   Tax_Flag.Datatype = 'STRING(200)'
+   Tax_Flag.Prompt = 'Tax Account'
+   Archiving_Trans_Value.Flags = 'A-IUL'
+   Archiving_Trans_Value.Datatype = 'STRING(200)'
+   Archiving_Trans_Value.Prompt = 'Archiving Options'
+   Tax_Code_Mandatory.Flags = 'AMIUL'
+   Tax_Code_Mandatory.Datatype = 'BOOLEAN'
+   Tax_Code_Mandatory.Prompt = 'Tax Code Mandatory in Voucher Entry'
+SELECT company                                                 company,
+       pseudo_code                                             value,
+       Pseudo_Code_Value_API.Decode('1') ||' - '|| user_name   type,
+       description                                             description,
+       NULL                                                    tax_handling_value,
+       NULL                                                    tax_handling_value_db,
+       NULL                                                    tax_flag,
+       NULL                                                    archiving_trans_value,
+       NULL                                                    tax_code_mandatory,
+       pseudo_code                                             sort_value,
+       '1'                                                     display_order
+FROM   pseudo_codes_tab
+WHERE  user_name = Fnd_Session_API.Get_Fnd_User
+AND    user_name != Fnd_Session_API.Get_App_Owner
+AND    pseudo_code_ownership = 'PRIVATE'
+UNION ALL
+SELECT company                                                 company,
+       pseudo_code                                             value,
+       Pseudo_Code_Value_API.Decode('1') ||' - '|| user_name   type,
+       description                                             description,
+       NULL                                                    tax_handling_value,
+       NULL                                                    tax_handling_value_db,
+       NULL                                                    tax_flag,
+       NULL                                                    archiving_trans_value,
+       NULL                                                    tax_code_mandatory,
+       pseudo_code                                             sort_value,
+       Decode(user_name,Fnd_Session_API.Get_Fnd_User,'1','2')  display_order
+FROM   pseudo_codes_tab
+WHERE  pseudo_code_ownership = 'PUBLIC'
+OR     Fnd_Session_API.Get_App_Owner = Fnd_Session_API.Get_Fnd_User
+UNION ALL
+SELECT company                                                 company,
+       code_part_value                                         value,
+       accnt_type                                              type,
+       description                                             description,
+       Tax_Handling_Value_API.Decode(tax_handling_value)       tax_handling_value,
+       tax_handling_value                                      tax_handling_value_db,
+       Tax_Account_Flag_API.Decode(tax_flag)                   tax_flag,
+       Archiving_Trans_Value_API.Decode(no_archiving_trans)    archiving_trans_value,
+       tax_code_mandatory                                      tax_code_mandatory,
+       sort_value                                              sort_value,
+       '3'                                                     display_order
+FROM   accounting_code_part_value_tab
+WHERE  code_part = 'A'
+AND    EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE accounting_code_part_value_tab.company = company);
+
+VIEW Buspln_Acc_Lov IS
+ Company.Flags = 'PMI--'
+ Value.Flags = 'KM--L'
+ Value.Datatype = 'STRING(20)/UPPERCASE' 
+ Type.Flags = 'AM--L'
+ Description.Flags = 'AM--L' 
+SELECT company                        company,
+       code_part_value                value,
+       substr(nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'Account',
+        code_part_value), description), 1, 100) description,
+       accnt_type                     type,
+       logical_account_type           logical_account_type,
+       logical_account_type           logical_account_type_db
+FROM   accounting_code_part_value_tab
+WHERE  code_part = 'A';

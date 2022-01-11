@@ -1,0 +1,42 @@
+fragment VouTypeMultiFuncGroupSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view vou_type_multi_func_group";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceVouTypeMultiFuncGroupSelector for VouTypeMultiFuncGroup {
+   static VoucherType;
+   static Description;
+}
+
+card VouTypeMultiFuncGroupCard for VouTypeMultiFuncGroup {
+   label = "";
+   fieldranking VoucherType;
+   field VoucherType;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query VouTypeMultiFuncGroup {
+   from = "vou_type_multi_func_group";
+   lu = VoucherType;
+   keys = Company, VoucherType;
+   ludependencies = VoucherType;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute VoucherType Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

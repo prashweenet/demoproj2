@@ -1,0 +1,52 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountGroup
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Account_Group_Av IS
+   Prompt = 'Account group Tax Audit'
+   Company.Flags = 'P----'
+   Accnt_Group.Flags = 'K----'
+   Description.Flags = 'A----'
+SELECT company                         company,
+       accnt_group                     accnt_group,
+       description                     description
+FROM   account_group;
+
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Account_Group_Mc_Lov IS
+SELECT DISTINCT
+   accnt_group    accnt_group,
+   substr(nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'AccountGroup',
+          accnt_group), description), 1, 100) description
+FROM account_group_tab a;
+
+
+VIEW Include_Exclude_Acc_Grp IS
+   Prompt = 'ACCOUNT_GROUP'
+   Company.Datatype = 'STRING(20)'
+   Term_Value.Datatype = 'STRING(3)'
+   Term_Value.Prompt = 'Account Group'
+   Alphasort.Datatype = 'STRING(200)'
+SELECT company                                  company,
+       accnt_group                              term_value,
+       description                              description,
+       description                              alphasort,
+       objkey                                   objkey
+FROM   account_group;

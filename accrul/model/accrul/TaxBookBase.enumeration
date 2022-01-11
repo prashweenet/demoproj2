@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>TaxBookBase</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <NAME>InvoiceType</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>TaxCode</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>InvoiceSeries</NAME>
+      </VALUE>
+   </VALUES>
+   <SUBSETS>
+      <SUBSET>
+         <VALUES>
+            <SUBSET_VALUE>
+               <NAME>InvoiceType</NAME>
+            </SUBSET_VALUE>
+            <SUBSET_VALUE>
+               <NAME>TaxCode</NAME>
+            </SUBSET_VALUE>
+            <SUBSET_VALUE>
+               <NAME>InvoiceSeries</NAME>
+            </SUBSET_VALUE>
+         </VALUES>
+      </SUBSET>
+      <SUBSET>
+         <NAME>SubTaxBookBase</NAME>
+         <VALUES>
+            <SUBSET_VALUE>
+               <NAME>TaxCode</NAME>
+            </SUBSET_VALUE>
+         </VALUES>
+      </SUBSET>
+   </SUBSETS>
+</ENUMERATION>

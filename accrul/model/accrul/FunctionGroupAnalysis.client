@@ -1,0 +1,87 @@
+client FunctionGroupAnalysis;
+component ACCRUL;
+layer Core;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry FunctionGroupAnalysisNavEntry parent AccrulNavigator.UserRelatedDataMenu at index 800 {
+      label = "Function Group Analysis";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using FunctionGroupSet {
+   label = "Function Group Analysis";
+
+   list FunctionGroupList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list FunctionGroupList for FunctionGroup {
+   orderby = FunctionGroup;
+
+
+   lov FunctionGroupRef with ReferenceFunctionGroupSelector {
+      search = FunctionGroup, Description;
+      size = Large;
+      description = FunctionGroupRef.Description;
+   }
+   field AutomaticAllotmentReqDb;
+   field StoreOriginalMandatoryDb;
+   field SimulationVoucherAllowedDb;
+   field SingleFunctionRequiredDb;
+   field VouRowGrpValAllowedDb;
+   field RefMandatoryAllowedDb;
+   field SepUserApprovalAllowedDb;
+   field InternalLedgerAllowedDb;
+   field AutomaticVoucherBalanceDb;
+   field ConnFuncGroupAllowedDb;
+   field ParAmountBalancedInSrcDb;
+   field ProjectConnSupportedDb;
+   field StoreOriginalAllowedDb;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

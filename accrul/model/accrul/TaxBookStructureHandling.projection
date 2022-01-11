@@ -1,0 +1,247 @@
+projection TaxBookStructureHandling;
+component ACCRUL;
+layer Core;
+description "Definition of structure related to tax books. ";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset TaxBookStructureSet for TaxBookStructure {
+   context Company(Company);
+}
+
+entityset TaxBookStructureItemSet for TaxBookStructureItem {
+   context Company(Company);
+}
+
+entityset TaxBookSet for TaxBook {
+   context Company(Company);
+}
+
+entityset TaxBookStructureVirtualSet for TaxBookStructureVirtual {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity TaxBookStructure {
+   supportwarnings = [true];
+
+   attribute StructureId Text {
+      label = "Structure ID";
+      format = uppercase;
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference StructureIdRef(Company, StructureId) to TaxBookStructure(Company, StructureId) {
+      label = "Structure ID";
+   }
+
+   array TaxBookStructureTopNodeArray(Company, StructureId) to TaxBookStructureItem(Company, StructureId) {
+      where = ":child.ItemAbove IS NULL";
+   }
+}
+
+@Override
+entity TaxBookStructureItem {
+   ludependencies = TaxBook, TaxBookStructureItem;
+   from = "tax_book_struct_item_disp";
+
+   attribute StructureId Text {
+      label = "Structure ID";
+   }
+   attribute LevelId Text {
+      label = "Level ID";
+   }
+   attribute NameValue Text {
+      label = "Node";
+      format = uppercase;
+   }
+   attribute ItemAbove Text {
+      label = "Node Above";
+   }
+   attribute StructureItemType Enumeration(TaxBookStrucItemType) {
+      required = [false];
+   }
+   attribute StructureItemTypeDb Text;
+   attribute TaxBookValueConcat Text {
+      fetch = "name_value || '-' || description";
+   }
+
+   reference LevelIdRef(Company, StructureId, LevelId) to TaxBookStructureLevel(Company, StructureId, LevelId) {
+      label = "Level ID";
+   }
+   reference StructureIdRef(Company, StructureId) to TaxBookStructure(Company, StructureId) {
+      label = "Structure ID";
+   }
+   reference ItemAboveRef(Company, StructureId, ItemAbove) to TaxBookStructureItem(Company, StructureId, NameValue) {
+      label = "Node Above";
+   }
+   reference NodeIdRef(Company, StructureId, NameValue) to TaxBookStructureItem(Company, StructureId, NameValue) {
+      label = "Tax Book Value";
+   }
+
+   array TaxBookStructureItemArray(Company, StructureId, NameValue) to TaxBookStructureItem(Company, StructureId, ItemAbove) {
+      where = ":child.ItemAbove IS NOT NULL";
+   }
+}
+
+@Override
+entity TaxBook {
+   ludependencies = TaxBook, TaxBookStructureItem;
+
+   attribute TaxBookId Text {
+      format = uppercase;
+   }
+   attribute TaxBookValueConcat Text {
+      fetch = "tax_book_id || '-' || description";
+   }
+   attribute StructId Text {
+      fetch = "NULL";
+   }
+   attribute ItemAbove Text {
+      fetch = "NULL";
+   }
+
+   reference TaxBookIdRef(Company, TaxBookId) to TaxBook(Company, TaxBookId) {
+      label = "Tax Book ID";
+   }
+}
+
+@Override
+entity TaxBookStructureLevel {
+   ludependencies = TaxBookStructureLevel;
+   supportwarnings = [true];
+
+   attribute LevelAbove Text {
+      insertable = [true];
+   }
+
+   reference LevelAboveRef(Company, StructureId, LevelAbove) to TaxBookStructureLevel(Company, StructureId, LevelId) {
+      label = "Level Above";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+action CreateNewStructure {
+   initialcheck implementation;
+   ludependencies = TaxBookStructure;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter Description Text;
+}
+
+action MoveItems {
+   initialcheck implementation;
+   ludependencies = TaxBookStructureItem;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter CurrentItem Text;
+   parameter ItemAbove Text;
+   parameter DestinationNodeId Text;
+}
+
+action ConnectDisconnectValues {
+   initialcheck implementation;
+   ludependencies = TaxBookStructureItem, TaxBook;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter ItemAbove Text;
+   parameter Selection Text;
+   parameter Action Text;
+   parameter StructureItemType Enumeration(TaxBookStrucItemType);
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function FetchTaxBookValues List<Entity(TaxBook)> {
+   basedon TaxBookSet;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter SourceNode Text;
+   alterattribute StructId {
+      fetch = "decode('TRUE', 'TRUE', :StructureId)";
+   }
+   alterattribute ItemAbove {
+      fetch = "decode('TRUE', 'TRUE', :SourceNode)";
+   }
+
+   where = "company = :Company  AND
+            NOT EXISTS (SELECT 1
+                        FROM tax_book_structure_item a
+                        WHERE a.company = :Company AND
+                              a.name_value = tax_book_id AND
+                              a.structure_id = :StructureId AND
+                              a.structure_item_type_db = 'TAXBOOK')";
+}
+
+function FetchUsedTaxBookValues List<Entity(TaxBookStructureItem)> {
+   basedon TaxBookStructureItemSet;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter NameValue Text;
+
+   where = "company = :Company  AND
+            structure_id  = :StructureId AND
+            structure_item_type_db = 'TAXBOOK' AND
+            item_above = :NameValue";
+}
+
+function FetchPageSearchContextDefaults Structure(PageSearchContextStructure) {
+   parameter StructureItemType Enumeration(TaxBookStrucItemType);
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+structure NewTaxBookStructure {
+   attribute Company Text;
+   attribute StructureId Text {
+      label = "Structure ID";
+      required = [true];
+      format = uppercase;
+   }
+   attribute Description Text {
+      required = [true];
+   }
+}
+
+structure PageSearchContextStructure {
+   attribute StructureItemType Enumeration(TaxBookStrucItemType);
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+virtual TaxBookStructureVirtual {
+   ludependencies = TaxBookStructureItem, TaxBookStructureLevel;
+
+   attribute Company Text;
+   attribute StructureId Text;
+   attribute NodeCount Number {
+      fetch = "Tax_Book_Structure_Item_API.Get_Node_Count(company, structure_id)";
+   }
+
+   array TaxBookStructureLevelArray(Company, StructureId) to TaxBookStructureLevel(Company, StructureId);
+   array TaxBookStructureItemArray(Company, StructureId) to TaxBookStructureItem(Company, StructureId) {
+      where = ":child.StructureItemTypeDb = 'NODE'";
+   }
+}
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

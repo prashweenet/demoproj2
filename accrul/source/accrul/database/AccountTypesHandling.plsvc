@@ -1,0 +1,56 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountTypesHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Get_Record_Before_Modify___(
+   company_ IN VARCHAR2,
+   accnt_type_ IN VARCHAR2 ) RETURN Account_Type_Rec_Structure_Rec
+IS
+   account_type_rec_structure_rec_ Account_Type_Rec_Structure_Rec;
+   
+   CURSOR get_account_type IS 
+      SELECT *
+      FROM   Account_Type
+      WHERE  company = company_
+      AND    accnt_type = accnt_type_;
+BEGIN
+   FOR rec_ IN get_account_type LOOP
+      account_type_rec_structure_rec_.company := rec_.company;
+      account_type_rec_structure_rec_.logical_account_type := rec_.logical_account_type_db;
+      account_type_rec_structure_rec_.description := rec_.description;
+      account_type_rec_structure_rec_.req_code_b_default := rec_.req_code_b_default_db;
+      account_type_rec_structure_rec_.req_code_c_default := rec_.req_code_c_default_db;
+      account_type_rec_structure_rec_.req_code_d_default := rec_.req_code_d_default_db;
+      account_type_rec_structure_rec_.req_code_e_default := rec_.req_code_e_default_db;
+      account_type_rec_structure_rec_.req_code_f_default := rec_.req_code_f_default_db;
+      account_type_rec_structure_rec_.req_code_g_default := rec_.req_code_g_default_db;
+      account_type_rec_structure_rec_.req_code_h_default := rec_.req_code_h_default_db;
+      account_type_rec_structure_rec_.req_code_i_default := rec_.req_code_i_default_db;
+      account_type_rec_structure_rec_.req_code_j_default := rec_.req_code_j_default_db;
+      account_type_rec_structure_rec_.req_quantity_default := rec_.req_quantity_default_db;
+      account_type_rec_structure_rec_.process_code_default := rec_.process_code_default_db;
+      account_type_rec_structure_rec_.text_default := rec_.text_default_db;
+      account_type_rec_structure_rec_.req_bud_code_b_default := rec_.req_bud_code_b_default_db;
+      account_type_rec_structure_rec_.req_bud_code_c_default := rec_.req_bud_code_c_default_db;
+      account_type_rec_structure_rec_.req_bud_code_d_default := rec_.req_bud_code_d_default_db;
+      account_type_rec_structure_rec_.req_bud_code_e_default := rec_.req_bud_code_e_default_db;
+      account_type_rec_structure_rec_.req_bud_code_f_default := rec_.req_bud_code_f_default_db;
+      account_type_rec_structure_rec_.req_bud_code_g_default := rec_.req_bud_code_g_default_db;
+      account_type_rec_structure_rec_.req_bud_code_h_default := rec_.req_bud_code_h_default_db;
+      account_type_rec_structure_rec_.req_bud_code_i_default := rec_.req_bud_code_i_default_db;
+      account_type_rec_structure_rec_.req_bud_code_j_default := rec_.req_bud_code_j_default_db;
+      account_type_rec_structure_rec_.req_bud_quantity_default := rec_.req_bud_quantity_default_db;
+      account_type_rec_structure_rec_.objversion := rec_.objversion;
+   END LOOP;
+   RETURN account_type_rec_structure_rec_;
+END Get_Record_Before_Modify___;
+

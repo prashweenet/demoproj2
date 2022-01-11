@@ -1,0 +1,142 @@
+fragment AccountCodeASelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view account_code_a";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccountCodeASelector for AccountCodeA {
+   orderby = SortValue;
+   static Account;
+   static Description;
+}
+
+@Override
+list AccountCodeALovList for AccountCodeA {
+   orderby = SortValue;
+}
+
+card AccountCodeACard for AccountCodeA {
+   label = "";
+   fieldranking Account;
+   field Account;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccountCodeA {
+   from = "account_code_a";
+   lu = Account;
+   keys = Company, Account;
+   ludependencies = Account;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Account Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [false];
+   }
+   attribute ValidUntil Date {
+      lovcolumn = [false];
+   }
+   attribute AccountingTextId Number {
+      lovcolumn = [false];
+   }
+   attribute AccntGroup Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute AccntType Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute LogicalAccountType Enumeration(AccountTypeValue) {
+      format = uppercase;
+      lovcolumn = [false];
+      fetch = "logical_account_type_db";
+   }
+   attribute ProcessCode Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute LedgFlag Enumeration(AccountingLedgFlag) {
+      lovcolumn = [false];
+      fetch = "ledg_flag_db";
+   }
+   attribute ReqCodeB Enumeration(AccountRequest) {
+      lovcolumn = [false];
+      fetch = "req_code_b_db";
+   }
+   attribute ReqCodeC Enumeration(AccountRequest) {
+      lovcolumn = [false];
+      fetch = "req_code_c_db";
+   }
+   attribute ReqCodeD Enumeration(AccountRequest) {
+      lovcolumn = [false];
+      fetch = "req_code_d_db";
+   }
+   attribute ReqCodeE Enumeration(AccountRequest) {
+      lovcolumn = [false];
+      fetch = "req_code_e_db";
+   }
+   attribute ReqCodeF Enumeration(AccountRequest) {
+      lovcolumn = [false];
+      fetch = "req_code_f_db";
+   }
+   attribute ReqCodeG Enumeration(AccountRequest) {
+      lovcolumn = [false];
+      fetch = "req_code_g_db";
+   }
+   attribute ReqCodeH Enumeration(AccountRequest) {
+      lovcolumn = [false];
+      fetch = "req_code_h_db";
+   }
+   attribute ReqCodeI Enumeration(AccountRequest) {
+      lovcolumn = [false];
+      fetch = "req_code_i_db";
+   }
+   attribute ReqCodeJ Enumeration(AccountRequest) {
+      lovcolumn = [false];
+      fetch = "req_code_j_db";
+   }
+   attribute ReqQuantity Enumeration(AccountRequest) {
+      label = "Req quantity";
+      lovcolumn = [true];
+      fetch = "req_quantity_db";
+   }
+   attribute ReqText Enumeration(AccountRequestText) {
+      lovcolumn = [false];
+      fetch = "req_text_db";
+   }
+   attribute ReqProcessCode Enumeration(AccountRequest) {
+      lovcolumn = [false];
+      fetch = "req_process_code_db";
+   }
+   attribute CurrBalance Enumeration(AccCurrencyBalanceFlag) {
+      lovcolumn = [false];
+      fetch = "curr_balance_db";
+   }
+   attribute TaxFlag Enumeration(TaxAccountFlag) {
+      lovcolumn = [false];
+      fetch = "tax_flag_db";
+   }
+   attribute Text Text {
+      lovcolumn = [false];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

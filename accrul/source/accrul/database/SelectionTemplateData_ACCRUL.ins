@@ -1,0 +1,256 @@
+-----------------------------------------------------------------------------
+--  Module : ACCRUL
+--  
+--  File   : SelectionTemplateData_ACCRUL.ins
+--
+--  IFS/Design Template Version 2.3
+--
+--  Date    Sign  History
+--  ------  ----  -----------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+-------------------------------------DEFINE SELECTION OBJECTS---------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+-- This section defines Selection Object Data for the Component, i.e. Selection Object Id, LoV Reference etc.
+-- The section also covers what operators that should be valid for the Selection Object
+-------------------------------------------------------------------------------------------------------------
+-- Definition of arguments for the Selection Object Data:
+-- No1:  Select Object Id. The identity of the Selection Object (varchar2(100))
+-- No2:  Description. The description of the Selection Object
+-- No3:  Data Type. The data type of the Selection Object, i.e. STRING, NUMBER, DATE.
+-- No4:  Selection Object Type. The 
+-- No5:  Module. The owning module of the Selection Object. This will be the owner, together with LU, of the translation
+--       (Basic Data Translation) for the Selection Object. This means the translation for the Selectio Object resides 
+--       under this Module and LU
+-- No6:  LU. The LU acting as the owning Lu of the Selection Object. This will be the owner, together with Module, of 
+--       the translation (Basic Data Translation) for the Selection Object. This means the translation for the Selectio 
+--       Object resides under this Module and LU.
+--       Recommendation is to use LU that does not have any Basic Data Translation before and that can be a good enough
+--       representative for the Selection Objects in the component. It is not important to find a LU that has a direct
+--       relation to each Selection Object, it only nee to be a logical "placeholder" for the Basic Data Translations.
+-- No7:  LoV Reference. The view, and if it exists the parent refeference, used for the Selection Object to 
+--       support LoV functionality, i.e. STATUTORY_FEE(COMPANY)
+-- No8:  Dynamic LoV Depedency. Defines if the LoV reference (the view) exists in a dynamic (or static) dependant component.
+--       This is used by the business logic to know how to validate the LoV Reference (if the view exists or not).
+-- No9:  Zoom Window. The window to zoom to when pressing zoom button
+-- No10: Zoom Window Col Key. Used for the Zoom functionality, to set the key column in the zoom data transfer
+-- No11: Zoom Wwindow Parent Col Key: The column name of the parent key in the Zoom Window.
+-- No12: Is Code Part. Defines if the Selection Object is a code part or not.
+-- No13: Code Part. The code part identity. i.e. CODE_A, CODE_B
+-- No14: Object Col Id. Used by Include/Exclude dialog, the column to select values from. Also used for the Zoom 
+--       functionality, to set the key column in the zoom
+-- No15: Object Col Desc. Used by Include/Exclude dialog, the description column to select values from.
+-- No16: Manual Input. Control if the Include/Exclude dialog should be automatically populated or go into manual input mode.
+--
+-- NOTE! If the Selection Object is already defined in some static dependant component and the meaning of the object is
+--       the same then there is no need to define that Selection Object again, it only needs to be defined that 
+--       the Report Group Id uses that existing Selection Object. 
+--       If the Selection already exists but the meaning of the object is different on how the object 
+--       is used then the component should define its own version of the object by setting a prefix or suffix, using 
+--       the Report Group Id, around the Selection Object Id, i.e. "<Report_Group_Id>_<SELECTION_OBJECT_ID>" or 
+--       "<SELECTION_OBJECT_ID>_<Report_Group_Id>".
+-------------------------------------------------------------------------------------------------------------
+-- Definition of arguments for the allowed operators for the Selection Object:
+-- No1:  Select Object Id. The identity of the Selection Object (varchar2(100))
+-- No2:  List of allowed operators (DB-values) separated with the '^' character.
+-------------------------------------------------------------------------------------------------------------
+--
+SET SERVEROUT ON
+
+DECLARE
+   PROCEDURE Insert_Fin_Sel_Object (
+      selection_object_id_          IN VARCHAR2,
+      description_                  IN VARCHAR2,
+      data_type_                    IN VARCHAR2,
+      selection_object_type_        IN VARCHAR2,
+      module_                       IN VARCHAR2,
+      lu_                           IN VARCHAR2, 
+      lov_reference_                IN VARCHAR2,
+      dynamic_lov_dependency_       IN VARCHAR2,
+      zoom_window_                  IN VARCHAR2,
+      zoom_window_col_key_          IN VARCHAR2,
+      zoom_window_parent_col_key_   IN VARCHAR2,
+      is_code_part_                 IN VARCHAR2,
+      code_part_                    IN VARCHAR2,
+      object_col_id_                IN VARCHAR2,
+      object_col_desc_              IN VARCHAR2,
+      manual_input_                 IN VARCHAR2 DEFAULT 'FALSE')
+   IS
+      newrec_      Fin_Sel_Object_TAB%ROWTYPE;
+    BEGIN
+      newrec_.selection_object_id   := selection_object_id_;
+      newrec_.description           := description_;
+      newrec_.data_type             := data_type_;
+      newrec_.selection_object_type := selection_object_type_;
+      newrec_.module                := module_;
+      newrec_.lu                    := lu_;
+      newrec_.lov_reference         := lov_reference_;
+      newrec_.dynamic_lov_dependency:= dynamic_lov_dependency_;
+      newrec_.zoom_window           := zoom_window_;
+      newrec_.zoom_window_col_key   := zoom_window_col_key_;
+      newrec_.zoom_window_parent_col_key   := zoom_window_parent_col_key_;
+      newrec_.is_code_part          := is_code_part_;
+      newrec_.code_part             := code_part_;
+      newrec_.object_col_id         := object_col_id_;
+      newrec_.object_col_desc       := object_col_desc_;
+      newrec_.manual_input          := manual_input_;
+      newrec_.rowversion            := SYSDATE;
+      Fin_Sel_Object_API.Insert_Lu_Data_Rec__(newrec_);
+   END Insert_Fin_Sel_Object;
+
+   FUNCTION Get_Next_From_List___ (
+      attr_             IN VARCHAR2,
+      ptr_              IN OUT NUMBER,
+      value_            IN OUT VARCHAR2,
+      record_separator_ IN VARCHAR2 ) RETURN BOOLEAN
+   IS
+      from_  NUMBER;
+      to_    NUMBER;
+      index_ NUMBER;
+   BEGIN
+      from_ := nvl(ptr_, 1);
+      to_   := instr(attr_, record_separator_, from_);
+      IF (to_ > 0) THEN
+         index_ := instr(attr_, record_separator_, from_);
+         value_ := substr(attr_, from_, index_-from_);
+         ptr_   := to_+1;
+         RETURN(TRUE);
+      ELSE
+         RETURN(FALSE);
+      END IF;
+   END Get_Next_From_List___;
+
+
+   PROCEDURE Insert_Allowed_Sel_Oper (
+      selection_object_id_    IN VARCHAR2,
+      operator_list_          IN VARCHAR)
+   IS
+      insert_rec_    FIN_SEL_OBJECT_ALLOW_OPER_TAB%ROWTYPE;
+      ptr_           NUMBER;
+      value_         VARCHAR2(2000);
+   BEGIN
+      insert_rec_.selection_object_id  := selection_object_id_;
+      insert_rec_.rowversion           := SYSDATE;
+      WHILE (Get_Next_From_List___( operator_list_, ptr_, value_, '^' ) ) LOOP
+         insert_rec_.selection_operator := value_;
+         Fin_Sel_Object_Allow_Oper_API.Insert_Lu_Data_Rec__(insert_rec_);
+      END LOOP;
+   END Insert_Allowed_Sel_Oper;
+
+BEGIN
+   Insert_Fin_Sel_Object('COUNTRY',                      'Country',           'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',
+                         'ISO_COUNTRY',                  'FALSE',             'tbwIsoCountry', 
+                         'COUNTRY_CODE',                 NULL,                'FALSE',             
+                         NULL,                           'COUNTRY_CODE',      'DESCRIPTION');
+   Insert_Allowed_Sel_Oper('COUNTRY',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('CURRENCY',                     'Currency',          'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',
+                         'ISO_CURRENCY',                 'FALSE',             'tbwIsoCurrency', 
+                         'CURRENCY_CODE',                NULL,                'FALSE',             
+                         NULL,                           'CURRENCY_CODE',     'DESCRIPTION');
+   Insert_Allowed_Sel_Oper('CURRENCY',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('VOUCHER_TYPE',                 'Voucher Type',      'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',
+                         'VOUCHER_TYPE(COMPANY)',        'FALSE',             'frmVoucherType', 
+                         'VOUCHER_TYPE',                 'COMPANY',           'FALSE',             
+                         NULL,                           'VOUCHER_TYPE',      'DESCRIPTION');
+   Insert_Allowed_Sel_Oper('VOUCHER_TYPE',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('ACCOUNT',                      '@A',                'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',                
+                         'ACCOUNT(COMPANY)',             'FALSE',             'tbwAccountOverview', 
+                         'ACCOUNT',                      'COMPANY',           'TRUE',              
+                         'CODE_A',                       'ACCOUNT',           'DESCRIPTION');
+   Insert_Allowed_Sel_Oper('ACCOUNT',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('CODE_B',                       '@B',                'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',                
+                         'CODE_B(COMPANY)',              'FALSE',             'tbwCodeB', 
+                         'CODE_B',                       'COMPANY',           'TRUE',              
+                         'CODE_B',                       'CODE_B',            'DESCRIPTION');
+   Insert_Allowed_Sel_Oper('CODE_B',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('CODE_C',                       '@C',                'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',                
+                         'CODE_C(COMPANY)',              'FALSE',             'tbwCodeC', 
+                         'CODE_C',                       'COMPANY',           'TRUE',              
+                         'CODE_C',                       'CODE_C',            'DESCRIPTION');
+   Insert_Allowed_Sel_Oper('CODE_C',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('CODE_D',                       '@D',                'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',                
+                         'CODE_D(COMPANY)',              'FALSE',             'tbwCodeD', 
+                         'CODE_D',                       'COMPANY',           'TRUE',              
+                         'CODE_D',                       'CODE_D',            'DESCRIPTION');
+   Insert_Allowed_Sel_Oper('CODE_D',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('CODE_E',                       '@E',                'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',                
+                         'CODE_E(COMPANY)',              'FALSE',             'tbwCodeE', 
+                         'CODE_E',                       'COMPANY',           'TRUE',              
+                         'CODE_E',                       'CODE_E',            'DESCRIPTION');
+   
+   Insert_Allowed_Sel_Oper('CODE_E',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('CODE_F',                       '@F',                'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',                
+                         'CODE_F(COMPANY)',              'FALSE',             'tbwCodeF', 
+                         'CODE_F',                       'COMPANY',           'TRUE',              
+                         'CODE_F',                       'CODE_F',            'DESCRIPTION');
+   
+   Insert_Allowed_Sel_Oper('CODE_F',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('CODE_G',                       '@G',                'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',                
+                         'CODE_G(COMPANY)',              'FALSE',             'tbwCodeG', 
+                         'CODE_G',                       'COMPANY',           'TRUE',              
+                         'CODE_G',                       'CODE_G',            'DESCRIPTION');
+   
+   Insert_Allowed_Sel_Oper('CODE_G',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('CODE_H',                       '@H',                'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',                
+                         'CODE_H(COMPANY)',              'FALSE',             'tbwCodeH', 
+                         'CODE_H',                       'COMPANY',           'TRUE',              
+                         'CODE_H',                       'CODE_H',            'DESCRIPTION');
+   
+   Insert_Allowed_Sel_Oper('CODE_H',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('CODE_I',                       '@I',                'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',                
+                         'CODE_I(COMPANY)',              'FALSE',             'tbwCodeI', 
+                         'CODE_I',                       'COMPANY',           'TRUE',              
+                         'CODE_I',                       'CODE_I',            'DESCRIPTION');
+   
+   Insert_Allowed_Sel_Oper('CODE_I',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+
+   Insert_Fin_Sel_Object('CODE_J',                       '@J',                'STRING',            
+                         'InDataSource',                 'ACCRUL',            'Voucher',                
+                         'CODE_J(COMPANY)',              'FALSE',             'tbwCodeJ', 
+                         'CODE_J',                       'COMPANY',           'TRUE',              
+                         'CODE_J',                       'CODE_J',            'DESCRIPTION');
+   Insert_Allowed_Sel_Oper('CODE_J',
+                           'EQUAL^NOTEQUAL^BETWEEN^NOTBETWEEN^LESS^LESS_EQUAL^GREATER^GREATER_EQUAL^INCL^EXCL^');
+END;
+/
+COMMIT;
+
+
+

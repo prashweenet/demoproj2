@@ -1,0 +1,98 @@
+projection SecondaryCostRevenueElementHandling;
+component ACCRUL;
+layer Core;
+description "Secondary Cost Revenue Element Handling";
+category Users;
+include fragment ProjectCostElementLovSelector;
+include fragment SecondaryAccCodePartValueSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CostEleToAccntSecmapSet for CostEleToAccntSecmap {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CostEleToAccntSecmap {
+   where = "code_part = Accounting_Code_Parts_API.Get_Base_For_Followup_Element(company)";
+   supportwarnings = [true];
+
+   attribute Company Text {
+      maxlength = 80;
+   }
+   attribute CodePart Text {
+      maxlength = 100;
+      fetch = "Accounting_Code_Parts_API.Get_Base_For_Followup_Element(company)";
+      editable = [ETag = null];
+      format = uppercase;
+   }
+   attribute Account Text {
+      label = "Code Part";
+   }
+   attribute Description Text {
+      fetch = "Accounting_Code_Part_Value_API.Get_Desc_For_Code_Part(company, code_part, account)";
+      maxlength = 100;
+      editable = [false];
+   }
+   attribute ProjectCostElement Text {
+      label = "Cost/Revenue Element";
+      required = [false];
+      updatable = [true];
+   }
+   attribute ElementType Text {
+      fetch = "Project_Cost_Element_API.Get_Element_Type_Client(company, project_cost_element)";
+      maxlength = 20;
+      editable = [true];
+      updatable = [true];
+      required = [false];
+   }
+
+   reference AccountRef(Company, CodePart, Account) to SecondaryAccCodePartValue(Company, CodePart, CodePartValue) {
+      label = "Code Part";
+   }
+   reference ProjectCostElementRef(Company, ProjectCostElement) to ProjectCostElementLov(Company, ProjectCostElement) {
+      label = "Cost/Revenue Element";
+   }
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+action CopyElementsToSecMap {
+   initialcheck implementation;
+   ludependencies = CostEleToAccntSecmap;
+
+   parameter Company Text;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetElementTypeClient Text {
+   parameter Company Text;
+   parameter ProjectCostElement Text;
+}
+
+
+function GetCurrentDate Date {
+}
+
+
+function GetBaseForFollowupElement Text {
+   parameter Company Text;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+

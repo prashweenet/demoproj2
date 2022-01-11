@@ -1,0 +1,211 @@
+projection VoucherTypeHandling;
+component ACCRUL;
+layer Core;
+description "Voucher Type Handling";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherTypes for VoucherType {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity VoucherType {
+   crud = Read, Update, Delete;
+   supportwarnings = [true];
+   ludependencies = VoucherTypeDetail;
+
+   attribute VoucherType Text;
+   attribute Description Text {
+      label = "Description";
+   }
+   attribute Ledger Enumeration(Ledger.GAIGILedger) {
+      label = "Ledger Type";
+      fetch = "Ledger_API.Get_Ledger_DB(ledger_id)";
+      default = "Ledger_API.Get_Ledger_DB('*')";
+      editable = [true];
+      updatable = [true];
+   }
+   attribute LedgerId Text {
+      format = uppercase;
+      default = "Ledger_API.Get_Db_Value(0)";
+      editable = [ETag != null];
+      updatable = [true];
+   }
+   attribute UseManual Boolean("TRUE", "FALSE") {
+      label = "Use Manual Internal Methods";
+   }
+   attribute Balance Boolean("TRUE", "FALSE") {
+      label = "Balance Mandatory";
+      editable = [false];
+   }
+   attribute StoreOriginal Enumeration(FinanceYesNo) {
+      required = [false];
+   }
+   attribute LablePrint Enumeration(FinanceYesNo) {
+      required = [false];
+   }
+   attribute AutomaticAllot Enumeration(FinanceYesNo) {
+      required = [false];
+   }
+   attribute AutomaticAllotDb Boolean("Y", "N") {
+      label = "Automatic Allotment";
+      fetch = "automatic_allot_db";
+      required = [true];
+   }
+   attribute SingleFunctionGroup Boolean("Y", "N") {
+      editable = [true];
+   }
+   attribute SimulationVoucher Boolean("TRUE", "FALSE") {
+      editable = [true];
+   }
+   attribute SeparateUserApproval Boolean("TRUE", "FALSE");
+   attribute UseApprovalWorkflow Boolean("TRUE", "FALSE") {
+      label = "Use Voucher Approval Workflow";
+   }
+   attribute FunctionGroupCount Number {
+      fetch = "Voucher_Type_API.Get_Function_Group_Count(company, voucher_type)";
+      required = [false];
+   }
+   attribute VoucherApproval Text {
+      fetch = "Voucher_Type_API.Is_Approval_Workflow_Allowed(company, voucher_type, Ledger_API.Get_Ledger_DB(ledger_id), single_function_group)";
+      required = [false];
+      editable = [true];
+   }
+   attribute VoucherPrivilege Text {
+      fetch = "Voucher_Type_API.Is_Sep_User_Apporval_Allowed(company, voucher_type, single_function_group)";
+      required = [false];
+      editable = [true];
+   }
+   attribute IntledActiveNum Number {
+      fetch = "Dictionary_SYS.Component_Is_Active_Num('INTLED')";
+      required = [false];
+      editable = [true];
+   }
+
+   @DynamicComponentDependency INTLED
+   reference LedgerIdRef(Company, LedgerId) to InternalLedgerCurrent(Company, LedgerId) {
+      label = "Ledger ID";
+   }
+   array DetailVoucherTypeDetails(Company, VoucherType) to VoucherTypeDetail(Company, VoucherType);
+
+}
+
+
+@Override
+entity VoucherTypeDetail {
+   supportwarnings = [true];
+   ludependencies = VoucherType;
+
+   attribute FunctionGroup Text {
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute AutomaticVouBalance Boolean("Y", "N") {
+      label = "Optional Auto Balance";
+      default = "FALSE";
+   }
+   attribute StoreOriginal Enumeration(FinanceYesNo) {
+      required = [false];
+   }
+   attribute StoreOriginalDb Boolean("Y", "N") {
+      fetch = "store_original_db";
+      label = "Store Original";
+      default = "FALSE";
+      required = [true];
+      updatable = [true];
+   }
+   attribute AutomaticAllot Enumeration(FinanceYesNo) {
+      required = [false];
+   }
+   attribute AutomaticAllotDb Boolean("Y", "N") {
+      fetch = "automatic_allot_db";
+      label = "Automatic Allotment Required";
+      required = [true];
+      updatable = [true];
+      editable = [false];
+   }
+   attribute SingleFunctionGroup Boolean("Y", "N") {
+      label = "Single Function Group Required";
+      editable = [false];
+   }
+   attribute RowGroupValidation Boolean("Y", "N") {
+      label = "Voucher Row Group Validation";
+      editable = [false];
+      required = [true];
+   }
+   attribute ReferenceMandatory Boolean("Y", "N") {
+      editable = [false];
+      required = [true];
+   }
+
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+   reference FunctionGroupRef(FunctionGroup) to FunctionGroup(FunctionGroup) {
+      label = "Function Group";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+@DynamicComponentDependency INTLED
+query InternalLedgerCurrent {
+   from = "INTERNAL_LEDGER_CURRENT";
+   lu = InternalLedger;
+
+   keys = Company, LedgerId;
+   attribute Company Text;
+   attribute LedgerId Text;
+   attribute Description Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function IsExcluded Text {
+   parameter Company Text;
+   parameter VoucherType Text;
+}
+
+
+function IsVoucherTypeExist Boolean {
+   parameter Company Text;
+   parameter VoucherType Text;
+}
+
+
+function RetrieveFunctionGroups List<Entity(FunctionGroup)> {
+   parameter Ledger Enumeration(Ledger.GAIGILedger);
+
+   where = ":Ledger = '01' AND function_group IN ('A', 'K', 'M', 'Q', 'R', 'X', 'Z', 'PPC', 'P' , 'H' , 'YE')
+   OR :Ledger != '01'";
+}
+
+
+function IsVoucherWithRowGroupIdExist Boolean {
+   parameter Company Text;
+   parameter VoucherType Text;
+}
+function CheckFunctionGroup Text {
+   parameter FunctionGroup Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

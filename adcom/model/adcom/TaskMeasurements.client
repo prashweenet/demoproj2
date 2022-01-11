@@ -1,0 +1,90 @@
+--  Date    Sign    History
+--  ------  ------  -----------------------------------------------------
+--  201013  majslk  LMM2020R1-1285, Changed Task field's value.
+--  200908  KAWJLK  LMM2020R1-865, Removed MeasurementDateTime in TaskMeasurementsList.
+--  200808  DILDLK  LMM2020R1-516, Modified navigation.
+--  200728  TAJALK  LMM2020R1-89, Created.
+-----------------------------------------------------------------------------
+client TaskMeasurements;
+component ADCOM;
+layer Core;
+projection TaskMeasurementsHandling;
+description "Task Measurements List";
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TaskMeasurementsNavEntry parent AdcomNavigator.AviationMaintenance at index 500 {
+      label = "Task Measurements";
+      page List home AvExeTaskMeasurement;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AvExeTaskMeasurementSet {
+   label = "Task Measurements";
+   list TaskMeasurementsList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AvExeTaskNewSelector for AvExeTask {
+   label = "${Barcode} - ${TaskName}";
+   static Barcode;
+   static TaskName;
+}
+selector AvExeTaskMeasurementNewSelector for AvMeasurementType {
+   label = "${MeasurementTypeCode} - ${MeasurementTypeDesc}";
+   static MeasurementTypeCode;
+   static MeasurementTypeDesc;
+}
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list TaskMeasurementsList for AvExeTaskMeasurement {
+   lov TaskRef with AvExeTaskNewSelector {
+      label = "Task";
+      description = "${TaskRef.Barcode} - ${TaskRef.TaskName}";
+      hidekey = [true];
+   }
+   lov MeasurementTypeCodeRef with AvExeTaskMeasurementNewSelector {
+      label = "Measurement Type";
+      description = MeasurementTypeCodeRef.MeasurementTypeDesc;
+   }
+   field MeasurementOrder;
+   field MeasurementQty;
+   field MeasurementText;
+   field MeasuredUser;
+   field MeasuredDate;
+}
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

@@ -1,0 +1,47 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 191121      Kagalk  gelr: Added to support Global Extension Functionalities.
+-- 191121              GESPRING20-4, Added for es_sii_reporting
+----------------------------------------------------------------------------------------------------
+projection SiiTaxInformationHandling;
+component ACCRUL;
+layer Core;
+description "Put some useful description here ...";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+entityset SiiTaxCodeSet for StatutoryFee {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity StatutoryFee {
+   crud = Read, Update;
+   @DynamicComponentDependency EREP
+   reference SiiExemptReasonRef(Company, SiiExemptReason) to SiiExemptionReason(Company, SiiExemptReason) {
+      label = "SII Exemption Reason";
+   }
+   @DynamicComponentDependency EREP
+   reference BusinessTransTypeCustRef(Company, BusinessTransTypeCust) to SiiBusinessTransType(Company, BusinessTransType) {
+      label = "SII Business Transaction Type Customer";
+   }
+   @DynamicComponentDependency EREP
+   reference BusinessTransTypeSuppRef(Company, BusinessTransTypeSup) to SiiBusinessTransType(Company, BusinessTransType) {
+      label = "SII Business Transaction Type Supplier";
+   }
+
+   reference FeeCodeRef(Company, FeeCode) to StatutoryFee(Company, FeeCode) {
+      label = "Tax Code";
+   }
+}
+@DynamicComponentDependency EREP
+function SiiBusTransUserWhere List<Entity(SiiBusinessTransType)> {
+   parameter PartyType  Text;
+   where = "Party_Type_Db = :PartyType";
+}

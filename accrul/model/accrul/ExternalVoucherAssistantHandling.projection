@@ -1,0 +1,17 @@
+projection ExternalVoucherAssistantHandling;
+component ACCRUL;
+layer Core;
+description "External Voucher Assistant";
+category Users;
+
+include fragment ExtFileAssistant;
+
+--------------------------- FUNCTION DEFINITIONS ----------------------------
+
+---------------------------- ACTION DEFINITIONS -----------------------------
+
+-------------------------------- STRUCTURES ---------------------------------
+
+--------------------------------- VIRTUALS ----------------------------------
+
+

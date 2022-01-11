@@ -1,0 +1,48 @@
+fragment ExtFileTemplateDetailDestSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ext_file_template_detail_dest";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceExtFileTemplateDetailDestSelector for ExtFileTemplateDetailDest {
+   static DestinationColumn;
+   static Description;
+}
+
+card ExtFileTemplateDetailDestCard for ExtFileTemplateDetailDest {
+   label = "";
+   fieldranking DestinationColumn;
+   field DestinationColumn;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query ExtFileTemplateDetailDest {
+   from = "ext_file_template_detail_dest";
+   lu = ExtFileTemplateDetail;
+   keys = FileType, RecordTypeId, FileTemplateId, DestinationColumn;
+   ludependencies = ExtFileTemplateDetail;
+   attribute FileType Text {
+      lovcolumn = [false];
+   }
+   attribute RecordTypeId Text {
+      label = "Record Type ID";
+      lovcolumn = [false];
+   }
+   attribute FileTemplateId Text {
+      label = "File Template ID";
+      lovcolumn = [false];
+   }
+   attribute DestinationColumn Text {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

@@ -1,0 +1,467 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingCodePartUtil
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+VIEW Company_Finance_Auth_Pub IS
+   Prompt = 'User Finance'
+   Company.Flags = 'K---L'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+SELECT c.company                           company,
+       rowkey                              objkey
+FROM   company_finance_tab c
+WHERE  EXISTS (SELECT 1 
+               FROM   user_finance_tab u 
+               WHERE  u.company = c.company
+               AND    u.userid  = Fnd_Session_API.Get_Fnd_User)
+OR     ('TRUE' = (SELECT User_Finance_API.Has_Finance_Company_Adm_Priv(c.company) FROM DUAL)) ;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Code_Parts_Used_Pub IS
+   Prompt = 'Accounting Code Parts Used'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)'
+   Company.Prompt = 'Company'
+   Code_Part.Flags = 'K---L'
+   Code_Part.Datatype = 'STRING(1)'
+   Code_Part.Prompt = 'Code Part'
+   Internal_Name.Flags = 'AMIUL'
+   Internal_Name.Datatype = 'STRING(10)'
+   Internal_Name.Prompt = 'Internal Name'
+   Description.Flags = 'A---L'
+   Description.Datatype = 'STRING(35)'
+   Description.Prompt = 'Description'
+   Code_Part_Function.Flags = 'A---L'
+   Code_Part_Function.Datatype = 'STRING(200)'
+   Code_Part_Function.Prompt = 'Code Part Function'
+SELECT a.company                          company,
+       code_part                          code_part,
+       NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company, 'ACCRUL', 'AccountingCodeParts', code_part), a.code_name)
+                                          internal_name,
+       NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation (a.company,'ACCRUL', 'AccountingCodePartUtil', code_part||'^DESCRIPTION'), a.description)
+                                          description,
+       Accounting_Code_Parts_API.Get_Code_Part_Function(a.company,code_part) 
+                                          code_part_function,
+       rowkey                             objkey
+FROM   accounting_code_part_tab  a
+WHERE  code_part_used = 'Y'
+AND    code_part     != 'A'
+ORDER BY code_part ;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Account_Group_Pub IS
+   Prompt = 'Account group'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Company.Ref = 'CompanyFinance/NOCHECK'
+   Accnt_Group.Flags = 'KMI-L'
+   Accnt_Group.Datatype = 'STRING(20)/UPPERCASE'
+   Accnt_Group.Prompt = 'Account Group'
+   Description.Flags = 'AMIUL'
+   Description.Datatype = 'STRING(100)'
+   Description.Prompt = 'Description'
+SELECT a.company                                                     company,
+       accnt_group                                                   accnt_group,
+       NVL(Enterp_Comp_Connect_V170_API.Get_Company_Translation
+          (a.company, 'ACCRUL', 'AccountingCodePartUtil',a.accnt_group,
+          language_sys.get_language), description)                   description,
+          rowkey                                                     objkey
+FROM   account_group_tab a;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Account_Type_Pub IS
+   Prompt = 'Account type'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Company.Ref = 'CompanyFinance/NOCHECK'
+   Accnt_Type.Flags = 'KMI-L'
+   Accnt_Type.Datatype = 'STRING(20)'
+   Accnt_Type.Prompt = 'Account Type'
+   Description.Flags = 'AMIUL'
+   Description.Datatype = 'STRING(100)'
+   Description.Prompt = 'Description'
+   Logical_Account_Type.Flags = 'AMIUL'
+   Logical_Account_Type.Datatype = 'STRING(200)'
+   Logical_Account_Type.Prompt = 'Logical Account Type'
+   Logical_Account_Type.Ref = 'AccountTypeValue'
+   Logical_Account_Type_Db.Flags = 'A----'
+   Logical_Account_Type_Db.Datatype = 'STRING(20)'
+   Logical_Account_Type_Db.Prompt = 'Logical Account Type'
+   Req_Code_B_Default.Flags = 'AMIU-'
+   Req_Code_B_Default.Datatype = 'STRING(200)'
+   Req_Code_B_Default.Prompt = 'Req Code B Default'
+   Req_Code_B_Default.Ref = 'AccountRequest'
+   Req_Code_B_Default_Db.Flags = 'A----'
+   Req_Code_B_Default_Db.Datatype = 'STRING(20)'
+   Req_Code_B_Default_Db.Prompt = 'Req Code B Default'
+   Req_Code_C_Default.Flags = 'AMIU-'
+   Req_Code_C_Default.Datatype = 'STRING(200)'
+   Req_Code_C_Default.Prompt = 'Req Code C Default'
+   Req_Code_C_Default.Ref = 'AccountRequest'
+   Req_Code_C_Default_Db.Flags = 'A----'
+   Req_Code_C_Default_Db.Datatype = 'STRING(20)'
+   Req_Code_C_Default_Db.Prompt = 'Req Code C Default'
+   Req_Code_D_Default.Flags = 'AMIU-'
+   Req_Code_D_Default.Datatype = 'STRING(200)'
+   Req_Code_D_Default.Prompt = 'Req Code D Default'
+   Req_Code_D_Default.Ref = 'AccountRequest'
+   Req_Code_D_Default_Db.Flags = 'A----'
+   Req_Code_D_Default_Db.Datatype = 'STRING(20)'
+   Req_Code_D_Default_Db.Prompt = 'Req Code D Default'
+   Req_Code_E_Default.Flags = 'AMIU-'
+   Req_Code_E_Default.Datatype = 'STRING(200)'
+   Req_Code_E_Default.Prompt = 'Req Code E Default'
+   Req_Code_E_Default.Ref = 'AccountRequest'
+   Req_Code_E_Default_Db.Flags = 'A----'
+   Req_Code_E_Default_Db.Datatype = 'STRING(20)'
+   Req_Code_E_Default_Db.Prompt = 'Req Code E Default'
+   Req_Code_F_Default.Flags = 'AMIU-'
+   Req_Code_F_Default.Datatype = 'STRING(200)'
+   Req_Code_F_Default.Prompt = 'Req Code F Default'
+   Req_Code_F_Default.Ref = 'AccountRequest'
+   Req_Code_F_Default_Db.Flags = 'A----'
+   Req_Code_F_Default_Db.Datatype = 'STRING(20)'
+   Req_Code_F_Default_Db.Prompt = 'Req Code F Default'
+   Req_Code_G_Default.Flags = 'AMIU-'
+   Req_Code_G_Default.Datatype = 'STRING(200)'
+   Req_Code_G_Default.Prompt = 'Req Code G Default'
+   Req_Code_G_Default.Ref = 'AccountRequest'
+   Req_Code_G_Default_Db.Flags = 'A----'
+   Req_Code_G_Default_Db.Datatype = 'STRING(20)'
+   Req_Code_G_Default_Db.Prompt = 'Req Code G Default'
+   Req_Code_H_Default.Flags = 'AMIU-'
+   Req_Code_H_Default.Datatype = 'STRING(200)'
+   Req_Code_H_Default.Prompt = 'Req Code H Default'
+   Req_Code_H_Default.Ref = 'AccountRequest'
+   Req_Code_H_Default_Db.Flags = 'A----'
+   Req_Code_H_Default_Db.Datatype = 'STRING(20)'
+   Req_Code_H_Default_Db.Prompt = 'Req Code H Default'
+   Req_Code_I_Default.Flags = 'AMIU-'
+   Req_Code_I_Default.Datatype = 'STRING(200)'
+   Req_Code_I_Default.Prompt = 'Req Code I Default'
+   Req_Code_I_Default.Ref = 'AccountRequest'
+   Req_Code_I_Default_Db.Flags = 'A----'
+   Req_Code_I_Default_Db.Datatype = 'STRING(20)'
+   Req_Code_I_Default_Db.Prompt = 'Req Code I Default'
+   Req_Code_J_Default.Flags = 'AMIU-'
+   Req_Code_J_Default.Datatype = 'STRING(200)'
+   Req_Code_J_Default.Prompt = 'Req Code J Default'
+   Req_Code_J_Default.Ref = 'AccountRequest'
+   Req_Code_J_Default_Db.Flags = 'A----'
+   Req_Code_J_Default_Db.Datatype = 'STRING(20)'
+   Req_Code_J_Default_Db.Prompt = 'Req Code J Default'
+   Req_Quantity_Default.Flags = 'AMIU-'
+   Req_Quantity_Default.Datatype = 'STRING(200)'
+   Req_Quantity_Default.Prompt = 'Req Quantity Default'
+   Req_Quantity_Default.Ref = 'AccountRequest'
+   Req_Quantity_Default_Db.Flags = 'A----'
+   Req_Quantity_Default_Db.Datatype = 'STRING(20)'
+   Req_Quantity_Default_Db.Prompt = 'Req Quantity Default'
+   Process_Code_Default.Flags = 'AMIU-'
+   Process_Code_Default.Datatype = 'STRING(200)'
+   Process_Code_Default.Prompt = 'Process Code Default'
+   Process_Code_Default.Ref = 'AccountRequest'
+   Process_Code_Default_Db.Flags = 'A----'
+   Process_Code_Default_Db.Datatype = 'STRING(20)'
+   Process_Code_Default_Db.Prompt = 'Process Code Default'
+   Text_Default.Flags = 'AMIU-'
+   Text_Default.Datatype = 'STRING(200)'
+   Text_Default.Prompt = 'Text Default'
+   Text_Default.Ref = 'AccountRequestText'
+   Text_Default_Db.Flags = 'A----'
+   Text_Default_Db.Datatype = 'STRING(20)'
+   Text_Default_Db.Prompt = 'Text Default'
+   Action.Flags = 'A-IU-'
+   Action.Datatype = 'STRING(5)'
+   Action.Prompt = 'Action'
+   Req_Bud_Code_B_Default.Flags = 'AMIU-'
+   Req_Bud_Code_B_Default.Datatype = 'STRING(200)'
+   Req_Bud_Code_B_Default.Prompt = 'Req Bud Code B Default'
+   Req_Bud_Code_B_Default.Ref = 'AccountRequest'
+   Req_Bud_Code_B_Default_Db.Flags = 'A----'
+   Req_Bud_Code_B_Default_Db.Datatype = 'STRING(20)'
+   Req_Bud_Code_B_Default_Db.Prompt = 'Req Bud Code B Default'
+   Req_Bud_Code_C_Default.Flags = 'AMIU-'
+   Req_Bud_Code_C_Default.Datatype = 'STRING(200)'
+   Req_Bud_Code_C_Default.Prompt = 'Req Bud Code C Default'
+   Req_Bud_Code_C_Default.Ref = 'AccountRequest'
+   Req_Bud_Code_C_Default_Db.Flags = 'A----'
+   Req_Bud_Code_C_Default_Db.Datatype = 'STRING(20)'
+   Req_Bud_Code_C_Default_Db.Prompt = 'Req Bud Code C Default'
+   Req_Bud_Code_D_Default.Flags = 'AMIU-'
+   Req_Bud_Code_D_Default.Datatype = 'STRING(200)'
+   Req_Bud_Code_D_Default.Prompt = 'Req Bud Code D Default'
+   Req_Bud_Code_D_Default.Ref = 'AccountRequest'
+   Req_Bud_Code_D_Default_Db.Flags = 'A----'
+   Req_Bud_Code_D_Default_Db.Datatype = 'STRING(20)'
+   Req_Bud_Code_D_Default_Db.Prompt = 'Req Bud Code D Default'
+   Req_Bud_Code_E_Default.Flags = 'AMIU-'
+   Req_Bud_Code_E_Default.Datatype = 'STRING(200)'
+   Req_Bud_Code_E_Default.Prompt = 'Req Bud Code E Default'
+   Req_Bud_Code_E_Default.Ref = 'AccountRequest'
+   Req_Bud_Code_E_Default_Db.Flags = 'A----'
+   Req_Bud_Code_E_Default_Db.Datatype = 'STRING(20)'
+   Req_Bud_Code_E_Default_Db.Prompt = 'Req Bud Code E Default'
+   Req_Bud_Code_F_Default.Flags = 'AMIU-'
+   Req_Bud_Code_F_Default.Datatype = 'STRING(200)'
+   Req_Bud_Code_F_Default.Prompt = 'Req Bud Code F Default'
+   Req_Bud_Code_F_Default.Ref = 'AccountRequest'
+   Req_Bud_Code_F_Default_Db.Flags = 'A----'
+   Req_Bud_Code_F_Default_Db.Datatype = 'STRING(20)'
+   Req_Bud_Code_F_Default_Db.Prompt = 'Req Bud Code F Default'
+   Req_Bud_Code_G_Default.Flags = 'AMIU-'
+   Req_Bud_Code_G_Default.Datatype = 'STRING(200)'
+   Req_Bud_Code_G_Default.Prompt = 'Req Bud Code G Default'
+   Req_Bud_Code_G_Default.Ref = 'AccountRequest'
+   Req_Bud_Code_G_Default_Db.Flags = 'A----'
+   Req_Bud_Code_G_Default_Db.Datatype = 'STRING(20)'
+   Req_Bud_Code_G_Default_Db.Prompt = 'Req Bud Code G Default'
+   Req_Bud_Code_H_Default.Flags = 'AMIU-'
+   Req_Bud_Code_H_Default.Datatype = 'STRING(200)'
+   Req_Bud_Code_H_Default.Prompt = 'Req Bud Code H Default'
+   Req_Bud_Code_H_Default.Ref = 'AccountRequest'
+   Req_Bud_Code_H_Default_Db.Flags = 'A----'
+   Req_Bud_Code_H_Default_Db.Datatype = 'STRING(20)'
+   Req_Bud_Code_H_Default_Db.Prompt = 'Req Bud Code H Default'
+   Req_Bud_Code_I_Default.Flags = 'AMIU-'
+   Req_Bud_Code_I_Default.Datatype = 'STRING(200)'
+   Req_Bud_Code_I_Default.Prompt = 'Req Bud Code I Default'
+   Req_Bud_Code_I_Default.Ref = 'AccountRequest'
+   Req_Bud_Code_I_Default_Db.Flags = 'A----'
+   Req_Bud_Code_I_Default_Db.Datatype = 'STRING(20)'
+   Req_Bud_Code_I_Default_Db.Prompt = 'Req Bud Code I Default'
+   Req_Bud_Code_J_Default.Flags = 'AMIU-'
+   Req_Bud_Code_J_Default.Datatype = 'STRING(200)'
+   Req_Bud_Code_J_Default.Prompt = 'Req Bud Code J Default'
+   Req_Bud_Code_J_Default.Ref = 'AccountRequest'
+   Req_Bud_Code_J_Default_Db.Flags = 'A----'
+   Req_Bud_Code_J_Default_Db.Datatype = 'STRING(20)'
+   Req_Bud_Code_J_Default_Db.Prompt = 'Req Bud Code J Default'
+   Req_Bud_Quantity_Default.Flags = 'AMIU-'
+   Req_Bud_Quantity_Default.Datatype = 'STRING(200)'
+   Req_Bud_Quantity_Default.Prompt = 'Req Bud Quantity Default'
+   Req_Bud_Quantity_Default.Ref = 'AccountRequest'
+   Req_Bud_Quantity_Default_Db.Flags = 'A----'
+   Req_Bud_Quantity_Default_Db.Datatype = 'STRING(20)'
+   Req_Bud_Quantity_Default_Db.Prompt = 'Req Bud Quantity Default'
+SELECT a.company                                                   company,
+       user_defined_account_type                                   accnt_type,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company, 'ACCRUL', 'AccountingCodePartUtil',
+           user_defined_account_type, language_sys.get_language ), description)
+                                                                   description,
+       Account_Type_Value_API.Decode(logical_account_type)
+                                                                   logical_account_type,
+       logical_account_type                                        logical_account_type_db,
+       Account_Request_API.Decode(req_code_b_default)
+                                                                   req_code_b_default,
+       req_code_b_default                                          req_code_b_default_db,
+       Account_Request_API.Decode(req_code_c_default)
+                                                                   req_code_c_default,
+       req_code_c_default                                          req_code_c_default_db,
+       Account_Request_API.Decode(req_code_d_default)
+                                                                   req_code_d_default,
+       req_code_d_default                                          req_code_d_default_db,
+       Account_Request_API.Decode(req_code_e_default)
+                                                                   req_code_e_default,
+       req_code_e_default                                          req_code_e_default_db,
+       Account_Request_API.Decode(req_code_f_default)
+                                                                   req_code_f_default,
+       req_code_f_default                                          req_code_f_default_db,
+       Account_Request_API.Decode(req_code_g_default)
+                                                                   req_code_g_default,
+       req_code_g_default                                          req_code_g_default_db,
+       Account_Request_API.Decode(req_code_h_default)
+                                                                   req_code_h_default,
+       req_code_h_default                                          req_code_h_default_db,
+       Account_Request_API.Decode(req_code_i_default)
+                                                                   req_code_i_default,
+       req_code_i_default                                          req_code_i_default_db,
+       Account_Request_API.Decode(req_code_j_default)
+                                                                   req_code_j_default,
+       req_code_j_default                                          req_code_j_default_db,
+       Account_Request_API.Decode(req_quantity_default)
+                                                                   req_quantity_default,
+       req_quantity_default                                        req_quantity_default_db,
+       Account_Request_API.Decode(process_code_default)
+                                                                   process_code_default,
+       process_code_default                                        process_code_default_db,
+       Account_Request_Text_API.Decode(text_default)
+                                                                   text_default,
+       text_default                                                text_default_db,
+       'FALSE'                                                     action,
+       Account_Request_API.Decode(req_bud_code_b_default)
+                                                                   req_bud_code_b_default,
+       req_bud_code_b_default                                      req_bud_code_b_default_db,
+       Account_Request_API.Decode(req_bud_code_c_default)
+                                                                   req_bud_code_c_default,
+       req_bud_code_c_default                                      req_bud_code_c_default_db,
+       Account_Request_API.Decode(req_bud_code_d_default)
+                                                                   req_bud_code_d_default,
+       req_bud_code_d_default                                      req_bud_code_d_default_db,
+       Account_Request_API.Decode(req_bud_code_e_default)
+                                                                   req_bud_code_e_default,
+       req_bud_code_e_default                                      req_bud_code_e_default_db,
+       Account_Request_API.Decode(req_bud_code_f_default)
+                                                                   req_bud_code_f_default,
+       req_bud_code_f_default                                      req_bud_code_f_default_db,
+       Account_Request_API.Decode(req_bud_code_g_default)
+                                                                   req_bud_code_g_default,
+       req_bud_code_g_default                                      req_bud_code_g_default_db,
+       Account_Request_API.Decode(req_bud_code_h_default)
+                                                                   req_bud_code_h_default,
+       req_bud_code_h_default                                      req_bud_code_h_default_db,
+       Account_Request_API.Decode(req_bud_code_i_default)
+                                                                   req_bud_code_i_default,
+       req_bud_code_i_default                                      req_bud_code_i_default_db,
+       Account_Request_API.Decode(req_bud_code_j_default)
+                                                                   req_bud_code_j_default,
+       req_bud_code_j_default                                      req_bud_code_j_default_db,
+       Account_Request_API.Decode(req_bud_quantity_default)
+                                                                   req_bud_quantity_default,
+       req_bud_quantity_default                                    req_bud_quantity_default_db,
+       rowkey                                                      objkey
+FROM   account_type_tab a;
+
+VIEW Accounting_Code_Part_Value_Pub IS
+   Prompt = 'Accounting code part value'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Code_Part.Flags = 'PMI-L'
+   Code_Part.Datatype = 'STRING(1)/UPPERCASE'
+   Code_Part.Prompt = 'Code Part'
+   Code_Part_Value.Flags = 'KMI-L'
+   Code_Part_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Code_Part_Value.Prompt = 'Code Part Value'
+   Description.Flags = 'AMIUL'
+   Description.Datatype = 'STRING(100)'
+   Description.Prompt = 'Description'
+   Accnt_Group.Flags = 'AMIU-'
+   Accnt_Group.Datatype = 'STRING(20)/UPPERCASE'
+   Accnt_Group.Prompt = 'Accnt Group'
+   Valid_From.Flags = 'AMIU-'
+   Valid_From.Datatype = 'DATE/DATE'
+   Valid_From.Prompt = 'Valid From'
+   Valid_Until.Flags = 'AMIU-'
+   Valid_Until.Datatype = 'DATE/DATE'
+   Valid_Until.Prompt = 'Valid Until'
+   Accounting_Text_Id.Flags = 'A-IU-'
+   Accounting_Text_Id.Datatype = 'NUMBER'
+   Accounting_Text_Id.Prompt = 'Accounting Text Id'
+   Text.Flags = 'A-IU-'
+   Text.Datatype = 'STRING(2000)'
+   Text.Prompt = 'Text'
+SELECT a.company                      company,
+       a.code_part                    code_part,
+       code_part_value                code_part_value,
+       a.description                  description,
+       a.accnt_type                   accnt_type,
+       a.accnt_group                  accnt_group,
+       a.valid_from                   valid_from,
+       valid_until                    valid_until,
+       accounting_text_id             accounting_text_id,
+       rtrim(rpad(text,2000))         text,
+       a.rowkey                       objkey
+FROM   accounting_code_part_value_tab a, accounting_code_part_tab b
+WHERE  EXISTS (SELECT * FROM company_finance_auth_pub c WHERE a.company = c.company)
+AND    NVL(bud_account,'N') = 'N'
+AND    a.company   = b.company
+AND    a.code_part = b.code_part;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Accounting_Code_Part_Val_Pub IS
+   Prompt = 'Accounting code part value'
+   Company.Flags = 'A---L'
+   Company.Datatype = 'STRING'
+   Company.Prompt = 'Company'
+   Code_Part.Flags = 'A---L'
+   Code_Part.Datatype = 'STRING'
+   Code_Part.Prompt = 'Code part'
+   Code_Part_Value.Flags = 'A---L'
+   Code_Part_Value.Datatype = 'STRING'
+   Code_Part_Value.Prompt = 'Code part value'
+   Logical_Account_Type.Flags = 'A---L'
+   Logical_Account_Type.Datatype = 'STRING'
+   Logical_Account_Type.Prompt = 'Logical account type'
+SELECT a.company                           company,
+       a.code_part                         code_part,
+       a.code_part_value                   code_part_value,
+       a.logical_account_type              logical_account_type,
+       rowkey                              objkey
+FROM   accounting_code_part_value_tab  a
+WHERE  code_part = 'A';
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Allowed_Periods_Pub IS
+   Prompt = 'Accounting Period'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Accounting_Year.Flags = 'KMI-L'
+   Accounting_Year.Datatype = 'NUMBER'
+   Accounting_Year.Prompt = 'Accounting Year'
+   Accounting_Period.Flags = 'KMI-L'
+   Accounting_Period.Datatype = 'NUMBER'
+   Accounting_Period.Prompt = 'Accounting Period'
+   Description.Flags = 'AMIUL'
+   Description.Datatype = 'STRING(35)'
+   Description.Prompt = 'Description'
+SELECT a.company                                company,
+       accounting_year                          accounting_year,
+       accounting_period                        accounting_period,
+       description                              description,
+       rowkey                                   objkey
+FROM   Accounting_Period_Tab a
+WHERE  year_end_period = 'ORDINARY';
+
+VIEW Cost_Centers_Pub IS
+   Prompt = 'Accounting Code Part Util'
+   Sort = 'SORT_VALUE'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Company.Ref = 'CompanyFinance'
+   Code_Part_Value.Flags = 'KMI-L'
+   Code_Part_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Code_Part_Value.Prompt = 'Code Part Value'
+   Description.Flags = 'AMIUL'
+   Description.Datatype = 'STRING(100)'
+   Description.Prompt = 'Description'
+   Valid_From.Flags = 'AMIU-'
+   Valid_From.Datatype = 'DATE/DATE'
+   Valid_From.Prompt = 'Valid From'
+   Valid_Until.Flags = 'AMIU-'
+   Valid_Until.Datatype = 'DATE/DATE'
+   Valid_Until.Prompt = 'Valid Until'
+   Sort_Value.Flags = 'A-I--'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Sort_Value.Prompt = 'Sort Value'
+SELECT a.company                      company,
+              a.code_part_value       code_part_value,
+              a.description           description,
+              a.valid_from            valid_from,
+              a.valid_until           valid_until,
+              a.sort_value            sort_value
+FROM   accounting_code_part_value_tab a, accounting_code_part_tab b
+WHERE  EXISTS (SELECT * FROM Company_Finance_Auth_Pub c WHERE a.company = c.company)
+AND    a.company           = b.company 
+AND    a. code_part        = b.code_part
+AND    b.logical_code_part = 'CostCenter';
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>ExcludePeriodicalCap</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>INCLUDE</DB_VALUE>
+               <CLIENT_VALUE>Include in All Ledgers</CLIENT_VALUE>
+               <CONSTANT_NAME>INCLUDE</CONSTANT_NAME>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>IncludeInAllLedgers</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>EXCLUDE_IN_ALL</DB_VALUE>
+               <CLIENT_VALUE>Exclude from All Ledgers</CLIENT_VALUE>
+               <CONSTANT_NAME>EXCLUDE_IN_ALL</CONSTANT_NAME>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>ExcludeFromAllLedgers</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>EXCLUDE_IN_GL</DB_VALUE>
+               <CLIENT_VALUE>Exclude from GL</CLIENT_VALUE>
+               <CONSTANT_NAME>EXCLUDE_IN_GL</CONSTANT_NAME>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>ExcludeFromGL</NAME>
+      </VALUE>
+      <VALUE>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <DB_VALUE>EXCLUDE_IN_IL</DB_VALUE>
+               <CLIENT_VALUE>Exclude from IL</CLIENT_VALUE>
+               <CONSTANT_NAME>EXCLUDE_IN_IL</CONSTANT_NAME>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>ExcludeFromIL</NAME>
+      </VALUE>
+   </VALUES>
+</ENUMERATION>

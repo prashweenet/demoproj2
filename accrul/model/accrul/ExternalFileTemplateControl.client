@@ -1,0 +1,114 @@
+client ExternalFileTemplateControl;
+component ACCRUL;
+layer Core;
+projection ExternalFileTemplateControlHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using ExtFileTemplateDirSet {
+   label = "External File Template Control";
+   selector ExtFileTemplateDirSelector;
+   group ExternalFileTemplateControlGroup bind ExtFileTemplateDirSelector;
+   list ExtFileTemplateControlList(ExtFileTemplateControlArray) bind ExtFileTemplateDirSelector;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ExtFileTemplateDirSelector for ExtFileTemplateDir {
+   label = "${FileTemplateId} - ${FileDirection}";
+   orderby = FileTemplateId, FileDirection;
+   static FileTemplateId;
+   static FileDirection;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group ExternalFileTemplateControlGroup for ExtFileTemplateDir {
+   label = "";
+   lov ExtFileTemplateRef with ExtFileTemplateSelector {
+      search = FileTemplateId, Description;
+      description = ExtFileTemplateRef.Description;
+   }
+   field ExtFileTemplateRef.SystemDefined;
+   lov ExtFileTypeRef with ExtFileTypeSelector {
+      search = FileType, Description;
+      description = ExtFileTypeRef.Description;
+   }
+   field FileDirection {
+      size = Small;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileTemplateControlList for ExtFileTemplateControl {
+   label = "Control Records";
+   crudactions {
+      new {
+         enabled = [parent.ExtFileTemplateRef.SystemDefined != true];
+      }
+      edit {
+         enabled = [parent.ExtFileTemplateRef.SystemDefined != true];
+      }
+      delete {
+         enabled = [parent.ExtFileTemplateRef.SystemDefined != true];
+      }
+   }
+
+   lov RecordTypeIdRef with ReferenceExtFileTemplateDetailRecSelector {
+      size = Small;
+   }
+   field RowNo;
+   field GroupNo;
+   field Condition {
+      size = Small;
+   }
+   field ColumnNo;
+   field StartPosition;
+   field EndPosition;
+   field ControlString {
+      size = Small;
+   }
+   lov DestinationColumnRef with ReferenceExtFileTemplateDetailDestSelector {
+      size = Small;
+   }
+   field NoOfLines;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

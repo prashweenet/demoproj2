@@ -1,0 +1,214 @@
+fragment CopyDetailsSetup;
+component ACCRUL;
+layer Core;
+description "Copy Details Set-up Dialog";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+assistant CopyDetailsSetupAssistant using CopyDetailsSetupVirtuals {
+   label = "Copy Details Set-up";
+
+   input(Company, PostingType, PostingTypeDescription, CodeName, ControlType, ControlTypeDescription, CodePart, Module, PcValidFrom, ParentPage);
+
+   steps {
+      step {
+         group PostingCtrlCopyDetailsGroup;
+         list PostingCtrlDetailsVirtualList(PostingCtrlDetailsArray);
+      }
+      final step {
+
+      }
+      cancelled step {
+
+      }
+   }
+   finish command {
+      variable ReplaceStr;
+      execute {
+         call CheckReplace(Company, PostingType, CodePart, Objkey) into ReplaceStr;
+
+         if[ReplaceStr = "TRUE"] {
+            confirm("Existing Posting Control instructions will be replaced. Do you want to continue?") {
+               when OK {
+                  call CopyDetailsSetup(Company, PostingType, CodePart, PcValidFrom, Objkey, ReplaceStr);
+                  if [ParentPage = "PostingControl"] {
+                     navigate "page/PostingControl/List?$filter=Company eq $[Company]";
+                  }
+                  else {
+                     navigate "page/PostingControlDetails/List?$filter=Company eq $[Company] and PostingType eq $[PostingType] and CodePart eq $[CodePart] and PcValidFrom eq $[PcValidFrom] and ControlType eq $[ControlType]";
+                  }
+               }
+               when CANCEL {
+                  navigate back;
+               }
+
+            }
+         }
+      }
+   }
+}
+
+group PostingCtrlCopyDetailsGroup for CopyDetailsSetupVirtual {
+   label = "";
+
+   lov PostingTypeRef with ReferencePostingCtrlSelector {
+      description = PostingTypeDescription;
+      editable = [false];
+   }
+   field CodeName {
+      editable = [false];
+   }
+   lov ControlTypeRef with ReferenceCtrlTypeAllowedValueSelector {
+      description = ControlTypeDescription;
+      editable = [false];
+   }
+   field PcValidFrom {
+      editable = [false];
+   }
+}
+
+list PostingCtrlDetailsVirtualList for PostingCtrlDetailsVirtual {
+   label = "";
+   orderby = Module, SortOrder, CodePart;
+
+   multiselect = [false];
+   disable = Create, Delete;
+
+   lov PostingTypeRef with ReferencePostingCtrlPostingTypeSelector {
+      search = PostingType, Description;
+      description = PostingTypeRef.Description;
+      editable = [false];
+      size = Large;
+   }
+   field CurrentControlType;
+   field SpecExists;
+   field IncludeInCopy {
+      validate command {
+         execute {
+            if [IncludeInCopy] {
+               set CopyValidFrom = parent.PcValidFrom;
+            }
+            else
+               {
+               set CopyValidFrom = null;
+            }
+         }
+      }
+   }
+   field CopyValidFrom;
+
+   command IncludeAllPostingCommand;
+   command ExcludeAllPostingCommand;
+}
+
+
+command IncludeAllPostingCommand for CopyDetailsSetupVirtual {
+   mode = Global;
+   label = "Include All Posting Types in Copy";
+
+   execute {
+      call UpdateFields(PcValidFrom, "INCLUDE", Objkey);
+   }
+}
+
+command ExcludeAllPostingCommand for CopyDetailsSetupVirtual {
+   mode = Global;
+   label = "Exclude All Posting Types in Copy";
+
+   execute {
+      call UpdateFields(PcValidFrom, "EXCLUDE", Objkey);
+   }
+}
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+entityset CopyDetailsSetupVirtuals for CopyDetailsSetupVirtual;
+
+virtual CopyDetailsSetupVirtual {
+   attribute  Company Text;
+   attribute  PostingType Text;
+   attribute  PostingTypeDescription Text;
+   attribute  CodePart Text;
+   attribute CodeName Text {
+      label = "Code Part";
+      fetch = "Accounting_Code_Parts_API.Get_Name(company,code_part)";
+   }
+   attribute  ControlType Text;
+   attribute  ControlTypeDescription Text {
+      fetch = "Posting_Ctrl_Control_Type_API.Get_Description(control_type,module)";
+   }
+   attribute  PcValidFrom Date {
+      label = "Valid From";
+      editable = [false];
+   }
+   attribute  Module Text;
+   attribute  ParentPage Text;
+
+   reference PostingTypeRef(Company, CodePart, PostingType) to PostingCtrl(Company, CodePart, PostingType) {
+      label = "Posting Type";
+   }
+   reference ControlTypeRef(Company, PostingType, CodePart, ControlType) to CtrlTypeAllowedValue(Company, PostingType, CodePart, ControlType) {
+      label = "Control Type";
+   }
+
+   array PostingCtrlDetailsArray(PostingType, ControlType, Module, CodePart) to PostingCtrlDetailsVirtual(PostingType, ControlType, Module, CodePart);
+}
+
+virtual PostingCtrlDetailsVirtual {
+   attribute Company Text;
+   attribute PostingType Text;
+   attribute  PostingTypeDescription Text;
+   attribute ControlType Text;
+   attribute CurrentControlType Text;
+   attribute CurrentControlTypeDesc Text;
+   attribute Module Text;
+   attribute CodePart Text;
+   attribute SpecExists Boolean("TRUE", "FALSE") {
+      label = "Specification Exists";
+      editable = [false];
+   }
+   attribute IncludeInCopy Boolean("TRUE", "FALSE") {
+      editable = [true];
+      updatable = [true];
+      required = [true];
+   }
+   attribute CopyValidFrom Date;
+   attribute SortOrder Number;
+
+   reference PostingTypeRef(PostingType) to PostingCtrlPostingType(PostingType) {
+      label = "Posting Type";
+   }
+}
+
+action CopyDetailsSetup {
+   initialcheck UserAllowedCompany(Company);
+   parameter Company Text;
+   parameter PostingType Text;
+   parameter CodePart Text;
+   parameter ValidFrom Date;
+   parameter Objkey Text;
+   parameter Replace Text;
+}
+
+--Added User_Finance_API.Exist_Current_User.
+action UpdateFields {
+   initialcheck implementation;
+   ludependencies = PostingCtrlDetailsVirtual;
+
+   parameter Valid_From Date;
+   parameter Direction Text;
+   parameter Objkey Text;
+}
+
+--Added User_Finance_API.Exist_Current_User.
+action RemoveData {
+   initialcheck implementation;
+   parameter Objkey Text;
+   ludependencies = PostingCtrlDetailsVirtual;
+}
+
+function CheckReplace Text {
+   parameter Company Text;
+   parameter PostingType Text;
+   parameter CodePart Text;
+   parameter Objkey Text;
+}

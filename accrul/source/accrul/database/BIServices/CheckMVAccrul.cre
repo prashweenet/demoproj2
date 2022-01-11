@@ -1,0 +1,85 @@
+-----------------------------------------------------------------------------
+--  Module  : ACCRUL
+--
+--  File    : CheckMVAccrul.cre
+--
+--  Purpose : File for create BI Services related CheckMv
+--
+--  Date    Sign    History
+--  ------  ------  -----------------------------------------------------------
+--  151026  Umdolk  Created.
+--  ------  ------  -----------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+-- ***** Currency_Code_Chk_Mv Start *****
+
+DEFINE MV_NAME       = CURRENCY_CODE_CHK_MV
+DEFINE SOURCE_TABLE  = CURRENCY_CODE_TAB
+
+PROMPT Creating view CURRENCY_CODE_CHK_MV
+DECLARE
+ stmt_            VARCHAR2(32000);
+BEGIN
+ Database_SYS.Remove_Materialized_View('&MV_NAME',TRUE);
+ stmt_ :=    
+    'CREATE MATERIALIZED VIEW &MV_NAME
+     BUILD DEFERRED
+     USING NO INDEX
+     REFRESH COMPLETE ON DEMAND
+     EVALUATE USING CURRENT EDITION
+     AS
+     SELECT MAX(ROWVERSION) MAX_ROWVERSION
+     FROM &SOURCE_TABLE';
+
+ EXECUTE IMMEDIATE stmt_;  
+
+ IS_MV_REFRESH_INFO_API.Clear_Refresh_Info('&MV_NAME');
+END;
+/
+
+PROMPT VIEW &MV_NAME created.
+UNDEFINE MV_NAME
+UNDEFINE SOURCE_TABLE
+
+-- ***** Currency_Code_Chk_Mv End *****
+
+----------------------------------------------------------------------------------------
+ 
+-- ***** SOURCE_TAX_ITEM_CMV Start *****
+
+DEFINE MV_NAME       = SOURCE_TAX_ITEM_CMV
+DEFINE SOURCE_TABLE  = SOURCE_TAX_ITEM_TAB
+
+DECLARE
+   stmt_            VARCHAR2(32000);
+BEGIN
+   Database_SYS.Remove_Materialized_View('&MV_NAME',TRUE);
+   stmt_ :=    
+   'CREATE MATERIALIZED VIEW &MV_NAME
+    BUILD DEFERRED
+    USING NO INDEX
+    REFRESH COMPLETE ON DEMAND
+    EVALUATE USING CURRENT EDITION
+    AS
+    SELECT MAX(ROWVERSION) MAX_ROWVERSION
+    FROM &SOURCE_TABLE';
+
+   EXECUTE IMMEDIATE stmt_;  
+
+   IS_MV_REFRESH_INFO_API.Clear_Refresh_Info('&MV_NAME');
+END;  
+/
+
+UNDEFINE MV_NAME
+UNDEFINE SOURCE_TABLE
+
+-- ***** SOURCE_TAX_ITEM_CMV End *****
+
+
+---------------------------------------------------------------------
+
+
+
+
+SET SERVEROUTPUT OFF

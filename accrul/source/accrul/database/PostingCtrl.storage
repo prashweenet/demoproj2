@@ -1,0 +1,27 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingCtrl
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+@Overtake Base
+PRIMARY KEY posting_ctrl_pk IS posting_ctrl_tab (company,
+                                                 posting_type,
+                                                 code_part,
+                                                 pc_valid_from);
+
+INDEX posting_ctrl_ix1 IS posting_ctrl_tab (company, posting_type);
+
+INDEX posting_ctrl_ix2 IS posting_ctrl_tab (company, posting_type, code_part);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

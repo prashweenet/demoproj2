@@ -1,0 +1,54 @@
+projection UserGroupsHandling;
+component ACCRUL;
+layer Core;
+description "User Groups";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset UserGroupFinanceSet for UserGroupFinance {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity UserGroupFinance {
+   supportwarnings = [true];
+
+   attribute UserGroup Text {
+      format = uppercase;
+   }
+   attribute Description Text {
+      label = "User Group Description";
+   }
+   attribute AllowedAccountingPeriod Enumeration(AllowedAccountingPeriods) {
+      label = "Allowed Accounting Periods";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

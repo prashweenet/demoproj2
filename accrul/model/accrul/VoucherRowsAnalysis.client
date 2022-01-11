@@ -1,0 +1,228 @@
+client VoucherRowsAnalysis;
+component ACCRUL;
+layer Core;
+include fragment CodeStringAllBasic;
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+-- gelr:tax_book_and_numbering, begin
+include fragment TaxBookLovSelector;
+-- gelr:tax_book_and_numbering, end
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry VoucherRowsAnalysisNavEntry parent AccrulNavigator.VoucherAnalysisMenu at index 200 {
+      label = "Voucher Rows Analysis";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using VoucherRowSet {
+   label = "Voucher Rows Analysis";
+   initcontext PageInitContext;
+   list VoucherRowList;
+}
+
+initcontext PageInitContext {
+   parameter TaxBookAndNumberingEnabled Boolean;
+   init command {
+      execute {
+         -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set TaxBookAndNumberingEnabled = LocalizationFunctionalityStructure.TaxBookAndNumbering;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+-------------------------------- ASSISTANTS ---------------------------------
+
+--------------------------------- COMMANDS ----------------------------------
+command VoucherDetailsCommand for VoucherRow {
+   label = "Voucher Details";
+   enabled = [true];
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/VoucherDetailsAnalysis/Form?$filter=VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+   }
+}
+
+command ViewMultiCompanyVoucherCommand for VoucherRow {
+   label = "View Multi Company Voucher";
+   enabled = [IsMultiCompanyRow = true and  MultiCompanyId != null and VoucherTypeRef.VoucherType != "R"];
+   variable MultiCompanyInfoStructureVar {
+      type = MultiCompanyInfoStructure;
+   }
+   execute {
+      if [MultiCompanyId != null and VoucherTypeReference != null and MultiCompanyId != Company] {
+         call GetMultiCompanyInfo(Company, AccountingYear, VoucherType, VoucherNo) into MultiCompanyInfoStructureVar;
+         navigate  "page/MultiCompanyVoucherDetailsAnalysis/Form?contexts=Company:$[MultiCompanyId]&$filter=Company eq $[MultiCompanyInfoStructureVar.OriginalCompany] and VoucherType eq $[MultiCompanyInfoStructureVar.OriginalVoucherType] and VoucherNo eq $[MultiCompanyInfoStructureVar.OriginalVoucherNo] and AccountingYear eq $[MultiCompanyInfoStructureVar.OriginalAccYear]";
+      }
+      else {
+         navigate  "page/MultiCompanyVoucherDetailsAnalysis/Form?$filter=Company eq Company and VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+---------------------------------- GROUPS -----------------------------------
+
+----------------------------------- LISTS -----------------------------------
+list VoucherRowList for VoucherRow {
+   orderby = VoucherType, VoucherNo, ReferenceSerie;
+   field VoucherTypeRef {
+      size = Small;
+   }
+   field FunctionGroup {
+      size = Small;
+   }
+   field VoucherNo;
+   field VoucherDate;
+   field AccountingYear {
+      size = Small;
+   }
+   field RowNo;
+   field AccountingPeriod;
+   field YearPeriodKey;
+   field EntryDate;
+   field EnteredByUserGroupRef {
+      size = Small;
+   }
+   field Userid {
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = Person;
+      }
+   }
+   field ApprovedByUserGroupRef {
+      size = Small;
+   }
+   field ApprovedByUserid {
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = Person;
+      }
+   }
+
+   field Correction {
+      size = Small;
+   }
+   field IsMultiCompanyRow {
+      size = Small;
+   }
+   fieldset CodeStringAllBasicLovFieldSet;
+   field CurrencyCode {
+      size = Small;
+   }
+   field CurrencyRate;
+   field ConversionFactor;
+   field DebetAmount;
+   field CreditAmount;
+   field Amount;
+   field CurrencyDebetAmount;
+   field CurrencyCreditAmount;
+   field CurrencyAmount;
+   field ThirdCurrencyDebitAmount;
+   field ThirdCurrencyCreditAmount;
+   field ThirdCurrencyAmount;
+   field ParallelCurrencyRate;
+   field ParallelConversionFactor;
+   field Text {
+      size = Large;
+   }
+   field Quantity;
+   field ProcessCode {
+      size = Small;
+   }
+   @DynamicComponentDependency INVOIC
+   lov DelivTypeIdRef with ReferenceDeliveryTypeSelector {
+      search = DelivTypeId, Description;
+      label = "Delivery Type";
+      description = DelivTypeIdRef.Description;
+   }
+   field OptionalCode {
+      size = Small;
+   }
+   field ProjectActivityId;
+   field PartyTypeId {
+      size = Small;
+   }
+   field PartyName {
+      size = Large;
+   }
+   field TransCode {
+      size = Large;
+   }
+   field UpdateError {
+      size = Large;
+   }
+
+   field Corrected {
+      size = Large;
+   }
+   field ReferenceNumber;
+   field PeriodAllocation {
+      size = Large;
+   }
+   field ReferenceSerie;
+   field AutoTaxVouEntry {
+      size = Small;
+   }
+   field SecondApprovedByUserid;
+   field SecondApprovedByDate;
+   field SecondApprovedByUserGroup;
+
+   -- gelr:tax_book_and_numbering, begin
+   lov TaxBookRef with ReferenceTaxBookLovSelector {
+      description = TaxBookRef.Name;
+      columnexclude = [not initcontext.TaxBookAndNumberingEnabled];
+   }
+   @DynamicComponentDependency TAXLED
+   lov TaxSeriesRef with ReferenceTaxSeriesSelector {
+      description = TaxSeriesRef.Name;
+      columnexclude = [not initcontext.TaxBookAndNumberingEnabled];
+   }
+   field TaxSeriesNo {
+      columnexclude = [not initcontext.TaxBookAndNumberingEnabled];
+   }
+   -- gelr:tax_book_and_numbering, end
+
+   fieldranking Amount;
+
+   commandgroup CommandGroupCmdGroup {
+
+      command VoucherDetailsCommand;
+      command ViewMultiCompanyVoucherCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

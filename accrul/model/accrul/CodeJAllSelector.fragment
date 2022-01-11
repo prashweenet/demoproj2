@@ -1,0 +1,57 @@
+fragment CodeJAllSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view code_j_all";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCodeJAllSelector for CodeJAll {
+   static CodeJ;
+   static Description;
+}
+
+card CodeJAllCard for CodeJAll {
+   label = "";
+   fieldranking CodeJ;
+   field CodeJ;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CodeJAll {
+   from = "code_j_all";
+   lu = CodeJ;
+   keys = Company, CodeJ;
+   ludependencies = CodeJ;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CodeJ Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [false];
+   }
+   attribute ValidUntil Date {
+      lovcolumn = [false];
+   }
+   attribute SortValue Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute BudgetValue Enumeration(BudgetAccountFlag) {
+      label = "Budget/Planning Only";
+      lovcolumn = [true];
+      fetch = "budget_value_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

@@ -1,0 +1,58 @@
+fragment CurrencyType3Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view currency_type3";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCurrencyType3Selector for CurrencyType3 {
+   static CurrencyType;
+   static Description;
+}
+
+card CurrencyType3Card for CurrencyType3 {
+   label = "";
+   fieldranking CurrencyType;
+   field CurrencyType;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+selector ReferenceCurrencyType3CustomSelector for CurrencyType3 {
+   static CurrencyType;
+   static Description;
+   static RefCurrencyCode;
+   static RateTypeCategory;
+}
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CurrencyType3 {
+   from = "currency_type3";
+   lu = CurrencyType;
+   keys = Company, CurrencyType;
+   ludependencies = CurrencyType;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CurrencyType Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute TypeDefault Enumeration(FinanceYesNo) {
+      lovcolumn = [false];
+      fetch = "type_default_db";
+   }
+   attribute RefCurrencyCode Text {
+      lovcolumn = [true];
+   }
+   attribute RateTypeCategory Enumeration(CurrRateTypeCategory) {
+      lovcolumn = [true];
+      fetch = "rate_type_category_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

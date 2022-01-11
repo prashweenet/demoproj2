@@ -1,0 +1,247 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvExeTaskMeasurement
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201109  siselk  LMM2020R1-1389, Check_Insert___ added
+--  200904  KAWJLK  LMM2020R1-1033, Added unit test for Get_Task_Measurement_Count.
+--  200821  TAJALK  LMM2020R1-472 - Added test for Pre_Sync_Action
+--  200731  majslk  Added Get_Measurment_Status.
+--  200729  majslk  Removed Get_Task_Step_Set, Added Get_Task_Step_Ord_Set and Get_Measurement_Quantity.
+--  200709  majslk  Created.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Get_Task_Step_Ord_Set should concat the specified step order set to a given task id" FOR
+   FUNCTION Get_Task_Step_Ord_Set(
+      task_id_        IN     NUMBER,
+      measurement_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_step_tab
+   VALUES
+      | step_ord | task_step_id | task_id |
+      | 2        | 1            | 1       |
+      | 1        | 2            | 2       |
+      | 1        | 3            | 1       |
+   END VALUES;
+
+   @MockTable av_task_step_measurement
+   VALUES
+      | task_step_id | measurement_id |
+      | 1            | 1              |
+      | 2            | 2              |
+      | 3            | 1              |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | task_id_ | measurement_id_ |
+      | '1;2'     |  1       |  1              |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Task_Step_Ord_Set(task_id_, measurement_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Measurement_Quantity should return measurement concatinate with eng code" FOR
+   FUNCTION Get_Measurement_Quantity(
+      measurement_id_      NUMBER) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_measurement
+   VALUES
+      | measurement_qty | measurement_type_code | measurement_id |
+      | 10              | 'HEXG'                | 1              |
+      | 30              | 'EGT'                 | 2              |
+      | 100             | 'ENG2'                | 3              |
+      | 50              | 'EGT'                 | 4              |
+   END VALUES;
+
+   @MockTable av_measurement_type
+   VALUES
+      | measurement_type_code | engineering_unit_code |
+      | 'HEXG'                | 'QT'                  |
+      | 'EGT'                 | 'F'                   |
+      | 'ENG2'                | 'F'                   |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | measurement_id_ |
+      | '10 QT'   |  1              |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Measurement_Quantity(measurement_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Measurment_Status should return status as pending of signed depending measured user" FOR
+   FUNCTION Get_Measurment_Status (
+      measurement_id_ IN     NUMBER ) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_measurement
+   VALUES
+      | measured_user | measurement_id |
+      | 'IFSAPP'      | 1              |
+      | ''            | 2              |
+      | 'IFSAPP'      | 3              |
+      | NULL          | 4              |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | measurement_id_ |
+      | 'Signed'  | 3               |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Measurment_Status(measurement_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_tab
+   VALUES
+      | task_id | mx_unique_key |
+      | 1       | 'MXKEY1'      |
+   END VALUES;
+IS
+   --Insert your test variables here
+   output1_    VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'EXE_TASK_UNIQUE_KEY'||chr(31)||'MXKEY1'||chr(30)||'WITH_TASK_KEY'|
+      | 'MEASURED_USER'||chr(31)||'USER1'||chr(30)|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_TASK_KEY'||'TASK_ID'||chr(31)||'1'||chr(30);
+
+      --Insert your assertions here
+
+      IF attr_ LIKE '%WITH_TASK_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Task_Measurement_Count should return task_id count when task_id is given" FOR
+   FUNCTION Get_Task_Measurement_Count(
+      task_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_measurement_tab
+   VALUES
+      | task_id |
+      | 1       |
+      | 1       |
+      | 1       |
+      | 1       |
+      | 1       |
+      | 2       |
+      | 2       |
+      | 2       |
+
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | task_id_ |
+      | 5         |  1       |
+      | 3         |  2       |
+      | 0         |  5       |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Task_Measurement_Count(task_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Check_Insert___ should genarate next sequence value when measurement_id is NULL" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_exe_task_measurement_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   test_rec1_  av_exe_task_measurement_tab%ROWTYPE;
+   test_rec2_  av_exe_task_measurement_tab%ROWTYPE;
+   output_  Indicator_Rec;
+
+BEGIN
+   test_rec1_.measurement_id := NULL;
+   test_rec1_.task_id := 1000;
+   test_rec1_.measurement_type_code := 'test type';
+   test_rec1_.measurement_order := 2;
+   test_rec1_.measurement_qty := 4;
+
+   test_rec2_.measurement_id := 5000;
+
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.measurement_id IS NULL THEN
+         newrec_.measurement_id := av_exe_task_measurement_seq.NEXTVAL;
+         ASSERT newrec_.measurement_id IS NOT NULL MESSAGE 'Returned '||newrec_.measurement_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+

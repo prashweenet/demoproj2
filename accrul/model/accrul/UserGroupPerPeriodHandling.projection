@@ -1,0 +1,176 @@
+projection UserGroupPerPeriodHandling;
+component ACCRUL;
+layer Core;
+description "User Group Per Period Handling";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountingPeriodSet for AccountingPeriod {
+   context Company(Company);
+}
+entityset AccountingPeriodMultiCompanieSet for MultiCompanyAccountingPeriod;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity UserGroupPeriod {
+   where = "company IN (SELECT company from user_finance_auth_pub)";
+
+   attribute AccountingYear Number {
+      maxlength = 4;
+   }
+   attribute UserGroup Text {
+      format = uppercase;
+   }
+   attribute Ledger Enumeration(Ledger.GILedger) {
+      label = "Ledger Type";
+      fetch = "Ledger_API.Get_Ledger_DB(ledger_id)";
+      required = [true];
+      editable = [ETag = null];
+   }
+   attribute LedgerId Text {
+      format = uppercase;
+   }
+   attribute LedgerInfoPeriodStatus Text {
+      label = "Ledger Period Status";
+      fetch = "Acc_Period_Ledger_Info_API.Get_Period_Status(company, accounting_year, accounting_period, ledger_id)";
+   }
+   attribute PeriodStatus Enumeration(AccYearPerStatus) {
+      label = "User Group Period Status";
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference UserGroupRef(Company, UserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "User Group";
+   }
+   @DynamicComponentDependency INTLED
+   reference LedgerIdRef(Company, LedgerId) to InternalLedgerCurrent(Company, LedgerId) {
+      label = "Ledger ID";
+   }
+
+   action ChangePeriod {
+      parameter ChangeAction Enumeration(AccYearPerStatus);
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+query MultiCompanyAccountingPeriod {
+   from = "acc_period_for_user_group_mc";
+   lu = AccountingPeriod;
+   keys = AccountingYear, AccountingPeriod;
+
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute AccountingPeriod Number {
+      label = "Period";
+   }
+   attribute Description Text;
+
+   array MultiCompanyDetailUserGroups(AccountingYear, AccountingPeriod) to UserGroupPeriod(AccountingYear, AccountingPeriod);
+}
+
+
+query AccountingPeriod {
+   from = "acc_period_for_user_group";
+   lu = AccountingPeriod;
+   keys = AccountingYear, AccountingPeriod, Company;
+
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute AccountingPeriod Number {
+      label = "Period";
+   }
+   //<ussolk- Added AccountingYearStr and AccountingPeriodStr to handle page parameters in Month End Process Lobby Navigations >
+   attribute AccountingYearStr Text {
+      fetch = "to_char(accounting_year)";
+   }
+   attribute AccountingPeriodStr Text {
+      fetch = "DECODE(SIGN(accounting_period- 10),-1,concat('0', to_char(accounting_period)),accounting_period)";
+   }
+   attribute Company Text;
+   attribute Description Text;
+
+   array DetailUserGroups(AccountingYear, AccountingPeriod, Company) to UserGroupPeriod(AccountingYear, AccountingPeriod, Company);
+}
+
+
+@DynamicComponentDependency INTLED
+query InternalLedgerCurrent {
+   from = "internal_ledger_current";
+   lu = InternalLedger;
+   keys = Company, LedgerId;
+
+   attribute Company Text;
+   attribute LedgerId Text;
+   attribute Description Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function RetrieveLedgerData Structure(LedgerDataStructure) {
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter AccountingPeriod Number;
+   parameter LedgerId Text;
+}
+
+
+@DynamicComponentDependency INTLED
+function IsIlExist Boolean {
+   parameter Company Text;
+   parameter LedgerId Text;
+}
+
+
+function GetPageSearchContextDefaults Structure(PageSearchContextStructure) {
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter AccountingPeriod Number;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+structure LedgerDataStructure {
+   attribute LedgerDescription Text;
+   attribute LedgerInfoPeriodStatus Text;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+structure PageSearchContextStructure {
+   attribute Company Text {
+      required = [false];
+   }
+   attribute LedgerId Text {
+      required = [false];
+   }
+   attribute Ledger Text {
+      required = [false];
+   }
+   attribute LedgerDescription Text {
+      required = [false];
+   }
+   attribute PeriodStatus Text {
+      required = [false];
+   }
+}
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+
+
+
+
+

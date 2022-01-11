@@ -1,0 +1,185 @@
+-----------------------------------------------------------------------------
+--  Module : ACCRUL
+--
+--  Purpose: File for upgrade from Accrul 8.11.0 to 9.0.0
+--
+--  File   : 910.UPG
+--
+--  IFS/Design Template Version 2.3
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  131004  Mohrlk  TIBE-4193, Created.
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+DEFINE MODULE = 'ACCRUL'
+
+------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
+
+-- Instructions for upg files:
+
+-- If possible, everything regarding one table should be placed in one section.
+-- If this is not possible, a proper comment about the reason should be added.
+
+-- Each section should be started with a "-" line and a empty line.
+-- The section should then start with a line like: "-- ***** Example_Tab Start *****"
+-- and end with a line like:                       "-- ***** Example_Tab End *****"
+-- The "start tag" (in this case "Example_Tab"), should be placed in "List of upgrade sections".
+-- Don't forget UPPER/lower case !
+
+-- Every part inside the section should start with a "PROMPT" line.
+
+-- If the Pl block has DML instructions (INSERT,UPDATE,DELETE etc) there should always be a "COMMIT;" line after the block.
+-- If the Pl block not has DML instructions, there should not be a "COMMIT;" line after the block.
+
+-- Remember ordinary coding standard rules !
+
+-- Don't drop any column in an upgrade file !
+
+-- Don't forget performance when updating large tabled !
+
+-- No unnecessary blank lines or comments !
+
+-- If possible, use pure SQL update
+-- If possible, try to put several updates together in one statement.
+
+------------------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------------------
+-- ***** CURRENCY_RATE_MV- Start *****
+
+DEFINE MV               = CURRENCY_RATE_MV
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','910.upg','Timestamp_1');
+PROMPT Create Materialized view &MV
+DECLARE
+   sub_section_     NUMBER:=1001;
+   string_          VARCHAR2(4000);
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+   'CREATE MATERIALIZED VIEW &MV
+    TABLESPACE &IFSAPP_DATA
+    BUILD DEFERRED
+    USING NO INDEX
+    REFRESH COMPLETE ON DEMAND
+    EVALUATE USING CURRENT EDITION
+    AS
+    SELECT
+     cr.company_key                                            company_key,
+     cr.valid_from_key                                         valid_from_key,
+     cr.currency_rate_type_key                                 currency_rate_type_key,
+     cr.currency_code_key                                      currency_code_key,
+     cr.currency_rate                                          currency_rate,
+     cr.valid_from                                             valid_from,
+     cr.direct_currency_rate                                   direct_currency_rate,
+     cr.direct_currency_rate_round                             direct_currency_rate_round,
+     cr.is_max_valid_from                                      is_max_valid_from,
+     cr.valid_until                                            valid_until,
+     cr.dim_company_id                                         dim_company_id,
+     cr.dim_currency_code_id                                   dim_currency_code_id,
+     cr.dim_currency_rate_type_id                              dim_currency_rate_type_id,
+     cr.currency_code                                          currency_code,
+     cr.currency_type                                          currency_type
+   FROM currency_rate_mv_hlp cr ';
+
+   EXECUTE IMMEDIATE stmt_;
+
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'VALID_FROM_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'CURRENCY_RATE_TYPE_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'CURRENCY_CODE_KEY');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX1';
+   Database_SYS.Set_Table_Column (columns_ , 'DIM_COMPANY_ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',
+                               NULL,
+                               TRUE,
+                               TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX2';
+   Database_SYS.Set_Table_Column (columns_ , 'DIM_COMPANY_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'DIM_CURRENCY_CODE_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'DIM_CURRENCY_RATE_TYPE_ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',
+                               NULL,
+                               TRUE,
+                               TRUE);
+END;
+/
+
+
+UNDEFINE MV
+-- ***** CURRENCY_RATE_MV- End *****
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','910.upg','Timestamp_2');
+PROMPT Remove Existing Functional Parameters so that translation TABLES are updated WHEN they are inserted
+
+BEGIN
+   DELETE FROM xlr_functional_parameter_tab WHERE function_id IN ('GET_YEAR_PERIOD_INCR',
+                                                                  'GET_CURR_ACC_YEAR',
+                                                                  'GET_CURR_ACC_PERIOD',
+                                                                  'GET_ACC_YEAR',
+                                                                  'GET_ACC_PERIOD',
+                                                                  'GET_CURR_ACC_YEAR_PERIOD',
+                                                                  'GET_ACC_YEAR_PERIOD');
+   DELETE FROM xlr_functional_param_arg_tab WHERE function_id IN ('GET_YEAR_PERIOD_INCR',
+                                                                  'GET_CURR_ACC_YEAR',
+                                                                  'GET_CURR_ACC_PERIOD',
+                                                                  'GET_ACC_YEAR',
+                                                                  'GET_ACC_PERIOD',
+                                                                  'GET_CURR_ACC_YEAR_PERIOD',
+                                                                  'GET_ACC_YEAR_PERIOD');
+   COMMIT;
+END;
+/
+
+UNDEFINE MODULE
+---------------------------------------------------------------------------------------------
+
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','910.upg','Timestamp_3');
+PROMPT Upgrade statements in file Accrul 910.upg end here
+-- Nothing is allowed to be placed below here
+---------------------------------------------------------------------------------------------
+exec Database_SYS.Log_Detail_Time_Stamp('ACCRUL','910.upg','Done');
+
+
+
+
+
+
+

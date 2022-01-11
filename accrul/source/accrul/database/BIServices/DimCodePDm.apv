@@ -1,0 +1,59 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  CodeP
+--  Component:  ACCRUL
+--  LU:         DimCodeP
+--
+--  File     :  DimCodePDm.api
+--  Purpose  :  Create DATA MART dimension view DIM_CODE_P_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_CODE_P
+DEFINE VIEW       = DIM_CODE_P_DM
+DEFINE MV         = CODE_P_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimCodeP
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.id                                               id,
+       a.company                                          company,
+       a.code                                             code,
+       SUBSTR(NVL( (SELECT description
+      FROM CODE_P_TRANSLATION_MV b
+      WHERE b.company  = a.company
+      AND   b.translation_key = a.code
+      AND   b.lu              = 'CodeP'
+      AND   b.language_code   =
+      (SELECT language
+      FROM FND_SESSION)), a.description),1,100)           description
+FROM &MV a
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Code P^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Code P^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Code P Description^';
+   
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

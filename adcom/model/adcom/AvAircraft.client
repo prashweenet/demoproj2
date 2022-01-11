@@ -1,0 +1,151 @@
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201013  majslk  LMM2020R1-1285, Improvements in Aircraft page
+--  200819  SWiclk  LMM2020R1-702, Removed ApplicablityCode, CarrierCode, AssmCode, OperatorDescription
+--  200702  TAJALK  LMM2020R1-270, Bug fixes
+--  200626  SatGlk  LMM2020R1-187, Changed the order of the fields, enabled the look up function, added DummyAircraft to concat AircraftDesc and RegCode.
+--  200625  KAWJLK  LMM2020R1-186, Arranging the order of attributes
+--  200623  dildlk  LMM2020R1-80, UI Changes.
+--  200622  dildlk  LMM2020R1-71, Created.
+-----------------------------------------------------------------------------
+client AvAircraft;
+component ADCOM;
+layer Core;
+projection AvAircraftHandling;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+
+   entry AircraftsNavEntry parent AdcomNavigator.BasicData at index 300 {
+      label = "Aircraft";
+      page AircraftDetails home Aircraft;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page AircraftDetails using AircraftSet {
+   label = "Aircraft";
+   list AircraftList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector CountryCodeSelector for IsoCountry {
+   label = "${CountryCode}";
+   static CountryCode;
+}
+selector RegulatoryBodyRef for AvRegulatoryBody {
+   label = "${RegulatoryBodyCode}";
+   static RegulatoryBodyCode;
+}
+selector AircraftTypeSelector for AvAircraftType {
+   label = "${AircraftTypeCode} - ${AircraftTypeName}";
+   static AircraftTypeCode;
+   static AircraftTypeName;
+}
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AircraftList for Aircraft {
+   field DummyAircraft {
+      label = "Aircraft";
+   }
+   field AircraftDesc {
+      label = "Aircraft Description";
+   }
+   lov AircraftTypeRef with ReferenceAvAircraftTypeSelector {
+      label = "Aircraft Type";
+      hidekey = [true];
+      description = AircraftTypeRef.AircraftTypeName;
+   }
+   field Barcode;
+   field Manufacturer;
+   field PartNumber {
+      label = "OEM Part Number";
+   }
+   field SerialNumber {
+      label = "OEM Serial No";
+   }
+   field RegCode {
+      label = "Registration Code";
+   }
+   field FinNoCode {
+      label = "FIN Number";
+   }
+   field LineNoOem {
+      label = "OEM Line No";
+   }
+   field VarNoOem {
+      label = "OEM Variable No ";
+   }
+   lov RegulatoryBodyRef with AvRegulatoryBodySelector {
+      label = "Regulatory Body";
+   }
+   lov CountryCodeRef with CountryCodeSelector {
+      label = "Country";
+   }
+   field CapabilityCode {
+      label = "Capability";
+   }
+   field Condition;
+   field ReceivedDate;
+   field ManufacturedDate;
+   field AuthorityCode {
+      label = "Authority";
+   }
+   field OwnerCode {
+      label = "Owner";
+   }
+
+   field ReleaseRemarks;
+   field ReleaseNumber;
+   field ReleaseDate;
+
+   field OperatorCode;
+
+   field IpcEffectivityCode {
+      label = "IPC Effectivity Code";
+   }
+
+   field AirworthCode {
+      label = "Airworthiness Code";
+   }
+   field AltId {
+      label = "ALT ID";
+   }
+   field InventoryId {
+      label = "Inventory ID";
+   }
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

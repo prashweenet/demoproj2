@@ -1,0 +1,20 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: FinDrillDownTemp
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+INDEX fin_drill_down_temp_ix1 IS fin_drill_down_temp_tab (guid, summary);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

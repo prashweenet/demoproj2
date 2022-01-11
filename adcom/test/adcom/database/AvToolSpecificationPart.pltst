@@ -1,0 +1,55 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvToolSpecificationPart
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201105  majslk  LMM2020R1-1380 - Created, Added test for Check_Insert__
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Check_Insert___ should genarate next sequence value when part_group_part_id is NULL" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_tool_specification_part_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   test_rec1_  av_tool_specification_part_tab%ROWTYPE;
+   test_rec2_  av_tool_specification_part_tab%ROWTYPE;
+   output_  Indicator_Rec;
+BEGIN
+   test_rec1_.part_group_part_id := NULL;
+   test_rec1_.is_standard := 'true';
+   test_rec1_.part_number_id := 1001;
+   test_rec1_.tool_specification_code := 'S001';
+   test_rec1_.mx_unique_key := NULL;
+
+   test_rec2_.part_group_part_id := 5000;
+
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.part_group_part_id IS NULL THEN
+         newrec_.part_group_part_id := TOOL_SPEC_PART_ID_SEQ.NEXTVAL;
+         ASSERT newrec_.part_group_part_id IS NOT NULL MESSAGE 'Returned '||newrec_.part_group_part_id;
+      END IF;
+   END LOOP;
+END UNITTEST;

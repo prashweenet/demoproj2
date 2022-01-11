@@ -1,0 +1,180 @@
+client CostRevElements;
+component ACCRUL;
+layer Core;
+projection CostRevElementsHanding;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CostRevenueElementMenu parent AccrulNavigator.CostRevenueElementSetupMenu at index 100 {
+      label = "Cost/Revenue Elements";
+      page CostRevenueElement home ProjectCostElement;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page CostRevenueElement using ProjectCostElementSet {
+   label = "Cost/Revenue Elements";
+   list ProjectCostElementList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ToggleDefaultNoBaseValueCmd for ProjectCostElement {
+   label = "Toggle Default No Base Value";
+
+   execute {
+      if [Objstate = "Blocked"] {
+         alert("It is not allowed to set a Project Cost/Revenue Element both to Default No Base Value and Blocked for Use.");
+         exit;
+      }
+      if [ElementType = "Revenue"] {
+         alert("The element set as Default No Base Value must be of the element type Cost.");
+         exit;
+      }
+
+      call GetResult() into ResultRec;
+
+      if [ResultRec.Result = "0"] {
+         confirm("By selecting the Default No Base Value Checkbox, any new postings without a value for ${ResultRec.BaseCodePart} will have the Cost Element set to ${ProjectCostElement}. To ensure the correct project follow-up, ensure Posting Control is set up for Code Part ${ResultRec.BaseCodePart} before changing the Default No Base Value.") {
+            when OK {
+               call DoSetDefaultNoBase();
+            }
+         }
+      }
+      else {
+         if [ResultRec.Result = "1" and DefaultNoBase = false] {
+            call GetDefaultNoBase() into DefaultNoBaseCostElementStr;
+            confirm("The Default No Base Value is currently set to Cost Element ${DefaultNoBaseCostElementStr}. By clicking OK, the Default No Base Value will be changed to Cost Element ${ProjectCostElement}.") {
+               when OK {
+                  call DoSetDefaultNoBase();
+               }
+            }
+         }
+      }
+      if [DefaultNoBase = true] {
+         confirm("The Default No Base Value checkbox will be unselected. Any postings without a value for ${ResultRec.BaseCodePart} may create erroneous transactions or incorrect project follow-up.") {
+            when OK {
+               call  DoResetDefaultNoBase();
+            }
+         }
+      }
+   }
+}
+
+command TranslationCmd {
+   label = "Translation";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'ProjectCostElement' and AttributeKey eq $[ProjectCostElement]";
+   }
+}
+
+command SetDefaultLevelCmd for ProjectCostElement {
+   label = "Set Default";
+   enabled = [DefaultCostElement != true];
+
+   execute {
+      call DoSetDefaultCostElement();
+   }
+}
+
+command ReSetDefaultLevelCmd for ProjectCostElement {
+   label = "Reset Default";
+   enabled = [DefaultCostElement = true];
+
+   execute {
+      call DoResetDefaultCostElement();
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list ProjectCostElementList for ProjectCostElement {
+   label = "Cost/Revenue Element";
+
+   field ProjectCostElement;
+   field Description;
+   field ElementType {
+      size = Small;
+      editable = [isNew];
+   }
+   field DefaultCostElement {
+      size = Small;
+   }
+   field DefaultNoBase {
+      editable = [false];
+      size = Small;
+   }
+   badge Objstate {
+      size = Small;
+      label = "Validity";
+      style = TextOnly;
+
+      emphasis StateActive = [Objstate = "Active"];
+      emphasis StateHidden = [Objstate = "Hidden"];
+      emphasis StateBlocked = [Objstate = "Blocked"];
+   }
+
+   command SetDefaultLevelCmd;
+   command ReSetDefaultLevelCmd;
+   commandgroup {
+      command ToggleDefaultNoBaseValueCmd;
+      command TranslationCmd;
+   }
+   commandgroup DataValidity {
+      label = "Validity";
+
+      command SetActive {
+         label = "Active";
+         mode = SelectedRecords;
+      }
+      command SetHidden {
+         label = "Hide";
+         mode = SelectedRecords;
+      }
+      command SetBlocked {
+         label = "Block";
+         mode = SelectedRecords;
+      }
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

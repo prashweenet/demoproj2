@@ -1,0 +1,100 @@
+client ControlTypesPerPostingTypeAnalysis;
+component ACCRUL;
+layer Core;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ControlTypesPerPostingTypeAnalysisNavEntry parent AccrulNavigator.PostingRulesMenu at index 400 {
+      label = "Control Types per PostingType Analysis";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using PostingCtrlAllowedCombSet {
+   label = "Control Types per Posting Type Analysis";
+   list PostingCtrlAllowedCombList using GetPostingCtrlAllowedComb(context.Company);
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ReferencePostingCtrlControlTypeSelector for PostingCtrlControlType {
+   label = "";
+
+   static ControlType;
+   static Module;
+   static Description;
+   static AllowedForComb;
+   static CtrlTypeCategory;
+
+   fieldorder = ControlType;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list PostingCtrlAllowedCombList for PostingCtrlAllowedComb {
+   orderby = PostModule, SortOrder, ControlType, CodePart;
+   field PostModule {
+      size = Small;
+   }
+   lov PostingTypeRef with ReferencePostingCtrlPostingTypeSelector {
+      search = PostingType, Description;
+      size = Large;
+      description = PostingTypeRef.Description;
+   }
+   field LedgFlag {
+      size = Small;
+   }
+   lov ControlTypeRef with ReferencePostingCtrlControlTypeSelector {
+      search = ControlType, Description;
+      size = Large;
+      description = ControlTypeRef.Description;
+   }
+   field CtrlTypeCategory;
+   field CodePart {
+      size = Small;
+   }
+   field ModuleRef {
+      size = Small;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

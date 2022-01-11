@@ -1,0 +1,30 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PeriodAllocationRule
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+
+
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+
+
+SEQUENCE PERIOD_ALLOCATION_SEQ IS INCREMENT BY 1 START WITH 1  ORDER;
+
+
+SEQUENCE PERIOD_ALLOC_LINE_SEQ IS INCREMENT BY 1 START WITH 1  ORDER;

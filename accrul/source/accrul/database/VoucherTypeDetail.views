@@ -1,0 +1,182 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherTypeDetail
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  151118  Bhhilk  STRFI-39, Modified StoreOriginalYesNo, AutomaticAllotment enumerations to FinanceYesNo.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Vt_Automatic_Allot_Db IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(20)'
+   Prompt     = 'Automatic Allot';
+
+COLUMN Vt_Description IS
+   Flags      = 'AMIUL'
+   Datatype   = 'STRING(100)'
+   Prompt     = 'Description';
+
+COLUMN Use_Manual IS
+   Flags      = 'AMIU-'
+   Datatype   = 'STRING(5)'
+   Prompt     = 'Use Manual';
+
+COLUMN Simulation_Voucher IS
+   Flags      = 'AMIUL'
+   Datatype   = 'STRING(5)'
+   Prompt     = 'Simulation Voucher';
+
+COLUMN Vt_Single_Function_Group IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING'
+   Prompt     = 'Vt single function group';
+
+COLUMN Balance IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING'
+   Prompt     = 'Balance';
+
+COLUMN Ledger_Id IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING'
+   Prompt     = 'Ledger id';
+
+COLUMN Ledger IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING'
+   Prompt     = 'Ledger';
+
+COLUMN Description IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING'
+   Prompt     = 'Description';
+
+COLUMN User_Group IS
+   Flags      = 'P----'
+   Datatype   = 'STRING(20)'
+   Prompt     = 'User Group';
+
+COLUMN Userid IS
+   Flags      = 'P----'
+   Datatype   = 'STRING(30)'
+   Prompt     = 'User Id';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_Detail_Query IS
+   Prompt = 'Voucher Type Detail Query'
+   Function_Group.Flags = 'KMI-L'
+   Function_Group.Datatype = 'STRING'
+   Automatic_Vou_Balance.Datatype = 'STRING'
+   Store_Original_Db.Datatype = 'STRING(20)'
+   Row_Group_Validation.Flags = 'A----'
+   Reference_Mandatory.Flags = 'A----'
+   Voucher_Type_Ref.Datatype = 'STRING'
+   Voucher_Type_Ref.Flags = 'A----'
+   Use_Approval_Workflow.Datatype='STRING'
+   Use_Approval_Workflow.Flags = 'A----'
+SELECT a.company                        company,
+       a.voucher_type                   voucher_type,
+       a.function_group                 function_group,
+       b.automatic_allot                vt_automatic_allot_db,
+       Voucher_Type_API.Get_Description(b.company,b.voucher_type) vt_description,
+       b.use_manual                     use_manual,
+       b.simulation_voucher             simulation_voucher,
+       a.automatic_vou_balance          automatic_vou_balance,
+       b.single_function_group          vt_single_function_group,
+       a.store_original                 store_original_db,
+       b.automatic_allot                automatic_allot_db,
+       b.balance                        balance,
+       b.ledger_id                      ledger_id,
+       Ledger_API.Get_Ledger(b.ledger_Id)  ledger,
+       a.row_group_validation           row_group_validation,
+       a.reference_mandatory            reference_mandatory,
+       a.voucher_type                   voucher_type_ref,
+       b.separate_user_approval         separate_user_approval_db,
+       b.use_approval_workflow          use_approval_workflow,
+       a.rowid                          objid,
+       ltrim(lpad(to_char(a.rowversion,'YYYYMMDDHH24MISS'),2000))                   objversion,
+       a.rowkey                          objkey
+FROM   voucher_type_detail_tab a, voucher_type_tab b
+WHERE  a.company      = b.company
+AND    a.voucher_type = b.voucher_type;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_Detail_Lov IS
+   Prompt = 'Voucher Type Detail Query'
+   Function_Group.Flags = 'KMI-L'
+   Function_Group.Datatype = 'STRING'
+SELECT a.company                        company,
+       a.voucher_type                   voucher_type,
+       a.function_group                 function_group,       
+       NVL(RTRIM(RPAD(BASIC_DATA_TRANSLATION_API.Get_Basic_Data_Translation('ACCRUL','FunctionGroup',a.function_group),100)),description)          description,
+       a.rowid                         objid,
+       ltrim(lpad(to_char(a.rowversion,'YYYYMMDDHH24MISS'),2000))                   objversion,
+       a.rowkey                          objkey
+FROM   voucher_type_detail_tab a, function_group_tab b
+WHERE  a.function_group = b.function_group;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_Det_All_Led IS
+   Prompt = 'Voucher Type Detail All Ledger'
+   Voucher_Type.Ref = 'VoucherType(company)'
+   Function_Group.Flags = 'KMI-L'
+   Function_Group.Datatype = 'STRING'
+   Automatic_Vou_Balance.Datatype = 'STRING'
+   Store_Original_Db.Datatype = 'STRING(20)'
+   Automatic_Allot_Db.Datatype = 'STRING(20)'
+SELECT a.company                      company,
+       a.voucher_type                   voucher_type,
+       a.function_group                 function_group,
+       a.automatic_vou_balance          automatic_vou_balance,
+       Finance_Yes_No_API.Decode(a.store_original) store_original,
+       a.store_original                 store_original_db,
+       Finance_Yes_No_API.Decode(a.automatic_allot) automatic_allot,
+       a.automatic_allot                automatic_allot_db,
+       a.single_function_group          single_function_group,
+       b.ledger_id                     ledger_id,
+       a.rowkey                        objkey
+FROM   voucher_type_detail_tab a, voucher_type_tab b
+WHERE  a.company = b.company
+AND    a.voucher_type = b.voucher_type
+AND    b.ledger_id NOT IN ('*','00');
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Year_End_Voucher_Type_Lov IS
+   Prompt = 'Year End Voucher Type'
+   Function_Group.Flags = 'PMI--'
+   Function_Group.Datatype = 'STRING(30)'
+   Voucher_Type.Flags = 'KMI-L'
+   Voucher_Type.Ref = 'VoucherType(company)'
+   Vt_Description.Flags = 'A---L'
+   Vt_Description.Datatype = 'STRING'
+   Ledger_Id.Flags ='A----'
+SELECT DISTINCT a.company               company,
+       a.function_group                 function_group,
+       a.user_group                     user_group,
+       userid                           userid,
+       ledger_id                        ledger_id,
+       a.voucher_type                   voucher_type,
+       allowed_accounting_period        allowed_accounting_period,
+       rtrim(rpad(Text_Field_Translation_API.Get_Text( a.company,'VOUCHERTYPE',a.voucher_type), 35))  vt_description
+FROM   voucher_type_user_group_tab a, user_group_finance_tab b,user_group_member_finance d,voucher_type_tab e
+WHERE  a.company=b.company
+AND    b.company=d.company
+AND    b.allowed_accounting_period='2'
+AND    a.user_group=b.user_group
+AND    b.user_group=d.user_group
+AND    a.company  = e.company
+AND    a.voucher_type = e.voucher_type;
+

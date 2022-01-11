@@ -1,0 +1,72 @@
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200623  dildlk  LMM2020R1-80, UI Changes.
+--  200622  dildlk  LMM2020R1-71, Created.
+-----------------------------------------------------------------------------
+client RegulatoryBody;
+component ADCOM;
+layer Core;
+projection RegulatoryBodyHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry RegulatoryBodyEntry parent AdcomNavigator.AircraftBasicData at index 700 {
+      label = "Regulatory Bodies";
+      page RegulatoryBodyDetails home AvRegulatoryBody;
+   }
+}
+-------------------------------- MAIN PAGES ---------------------------------
+page RegulatoryBodyDetails using RegulatoryBodySet {
+   label = "Regulatory Bodies";
+   list RegulatoryBodyList;
+}
+
+----------------------------------- LISTS -----------------------------------
+list RegulatoryBodyList for AvRegulatoryBody {
+   field RegulatoryBodyCode;
+   field RegulatoryBodyDesc {
+      label = "Regulatory Body Description";
+
+   }
+}
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

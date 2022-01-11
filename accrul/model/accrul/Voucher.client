@@ -1,0 +1,598 @@
+client Voucher;
+component ACCRUL;
+layer Core;
+projection VoucherHandling;
+
+
+include fragment ApproverDetailGroupLovSelector;
+include fragment ApproverDetailApproverLovSelector;
+include fragment AccountingYearPeriodSelector;
+include fragment AccountingYearSelector;
+include fragment VoucherTypeUserGroup3Selector;
+include fragment UserGroupMemberFinance4Selector;
+@DynamicComponentDependency PROJ
+include fragment ProjectActivityPostableSelector;
+include fragment CurrencyType3Selector;
+include fragment CurrencyRate2Selector;
+include fragment TaxCodeRestrictedSelector;
+include fragment AccountLovSelector;
+include fragment PsCodeAccountingCodePartASelector;
+include fragment Voucher;
+include fragment VoucherClientCommon;
+include fragment FinNotesDialog;
+include fragment CodeStringAllBasic;
+include fragment InstantUpdateAssistant;
+@DynamicComponentDependency FIXASS
+include fragment AddInvestmentInfoAssistant;
+include fragment AddPseudoCodeAssistant;
+include fragment PeriodAllocationAssistant;
+include fragment InterimVoucherDialog;
+include fragment NewVoucherTemplateDialog;
+@DynamicComponentDependency INTLED
+include fragment InternalManualPostingAssistant;
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+-- gelr:saft_poland, begin
+@DynamicComponentDependency INVOIC
+include fragment VouchersInvoiceLovSelector;
+-- gelr:saft_poland, end
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry VoucherNavEntry parent AccrulNavigator.ManualVoucherMenu at index 100 {
+      label = "Voucher";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using VoucherSet {
+   label = "Voucher";
+   stateindicator VoucherStatusIndicator;
+   selector VoucherRecordSelector;
+   initcontext PageInitContext;
+   group VoucherEntryGroup;
+   tabs {
+      tab {
+         visible = [not(AmountMethod = null)];
+
+         label = "Voucher Postings";
+         group VoucherPostingSummaryGroup;
+         list VoucherPostingList(VoucherPostingArray) bind VoucherRecordSelector {
+            copyoncruddefault(AccountingPeriod, UseCorrectionRows, parent.computed.RowGroupIdValue) to(AccountingPeriod, Correction, RowGroupId);
+         }
+      }
+      tab {
+         label = "View Voucher Rows";
+         group VoucherPostingSummaryGroup;
+         list VoucherRowList(VoucherRowArray);
+      }
+      tab {
+         label = "General";
+         arrange {
+            group EnteredByGroup;
+            group AdditionalInfomationGroup;
+         }
+         arrange {
+            group FirstApproverGroup;
+            group SecondApproverGroup;
+         }
+         group VoucherReferenceGroup;
+      }
+      tab {
+         label = "Voucher Approval";
+         visible = [UseApporvalWorkflow = "TRUE" and IgnoreApproveWorkflow != "TRUE"];
+         group VoucherApprovalGroup;
+         list VoucherApproversList(VoucherApproversArray);
+      }
+   }
+
+   command CreateNewVoucherCommand;
+
+   command CopyVoucherinHoldTableCommand;
+   command InterimVoucherCommand;
+   command CreateVoucherTemplateCommand;
+   @DynamicComponentDependency GENLED
+   command InstantUpdateGeneralLedgerCommand;
+   @DynamicComponentDependency FIXASS
+   command ItemAddInvestmentCommand;
+   commandgroup VoucherStatusCommand {
+      command ReadyToUpdate {
+         label = "Set Approved";
+      }
+      command ReadyApprove {
+         label = "Set Awaiting Approval";
+      }
+      command DelayUpdate {
+         label = "Set Not Approved";
+      }
+   }
+   command NotesCommand;
+}
+
+initcontext PageInitContext {
+   parameter SaftPolandEnabled Boolean;
+   init command {
+      execute {
+         -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set SaftPolandEnabled = LocalizationFunctionalityStructure.SaftPoland;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+--------------------------------- COMMANDS ----------------------------------
+@Override
+command ValidateVoucherDateEntry for VoucherEntry {
+
+}
+
+@Override
+command ValidateUserGroup for VoucherEntry {
+   enabled = [false];
+
+
+}
+@Override
+command ValidateVoucherType for VoucherEntry {
+}
+
+
+
+command VoucherPostingAfterCommand for VoucherPosting {
+   execute {
+      call AutomaticVoucherBalance(parent.Company, parent.VoucherType, parent.FunctionGroup) into AutomaticVoucherBalanceVar;
+
+      if [AutomaticVoucherBalanceVar = "N" and parent.VoucherStatus = "Approved" and(parent.computed.CurrencyBalance != 0 or  parent.computed.BalanceInParallelCurrency != 0)] {
+         warning("Currency balance is not in balance.");
+      }
+   }
+}
+
+@Override
+command ReadyToUpdate for VoucherEntry {
+   enabled = [Objstate in("Waiting", "Error", "AwaitingApproval", "PartiallyApproved")];
+   variable DummyVar {
+      type = Text;
+   }
+
+   variable InterimVoucherDialogStructVar {
+      type = Structure(InterimVoucherDialogStructure);
+   }
+
+
+
+   execute {
+      call ReadyToUpdate();
+      refresh;
+      if [SimulationVoucher = "TRUE" and not InterimVoucher] {
+         call IsAllowInterimVoucher(Company, VoucherType, VoucherNo, AccountingYear, AccountingPeriod, UserGroup) into DummyVar {
+            when SUCCESS {
+               call FetchInterimVouDefs(Company, AccountingYear, VoucherType, VoucherNo, MultiCompany) into InterimVoucherDialogStructVar;
+               dialog InterimVoucherDialog(InterimVoucherDialogStructVar) {
+                  when OK {
+                     exit OK;
+                  }
+               }
+            }
+            when FAIL {
+               error("${error.Message}");
+            }
+         }
+      }
+   }
+}
+
+@Override
+command DelayUpdate for VoucherEntry {
+   enabled = [Objstate in("Confirmed", "Error", "AwaitingApproval", "PartiallyApproved")];
+   execute {
+      call DelayUpdate();
+      refresh;
+      if [(VoucherStatus = "Approved")or(VoucherStatus = "AwaitingApproval")] {
+         set PackageNameStr = "VOUCHER_NOTE_API";
+         set CallingProjectionNameStr = "VoucherHandling";
+         assistant NotesAssistant(PackageNameStr, CallingProjectionNameStr, keyref, luname, "") into(NoteIdNum) {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+@Override
+command ReadyApprove for VoucherEntry {
+   enabled = [Objstate in("Confirmed", "Waiting", "Error", "PartiallyApproved")];
+   execute {
+      call ReadyApprove();
+      refresh;
+   }
+}
+
+command CreateNewVoucherCommand for VoucherEntry {
+   label = "New Voucher ";
+   mode = Global;
+   enabled = [true];
+
+   execute {
+      navigate "assistant/VoucherEntryAssistant/Assistant?$action=InitVoucherAssistant{InitOpennedFrom:'NEW_VOUCHER',InitCompany:$[context.Company],InitAccountingYear:$[AccountingYear],InitVoucherType:$[VoucherType],InitVoucherNo:$[VoucherNo],InitPostingMethod:null}";
+   }
+}
+command NotesCommand for VoucherEntry {
+   label = "Notes";
+   enabled = [true];
+   variable NoteIdNum {
+      type = Number;
+   }
+   execute {
+      set PackageNameStr = "VOUCHER_NOTE_API";
+      set CallingProjectionNameStr = "VoucherHandling";
+      assistant NotesAssistant(PackageNameStr, CallingProjectionNameStr, keyref, luname, "") into(NoteIdNum) {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+command CopyVoucherinHoldTableCommand for VoucherEntry {
+   label = "Copy Voucher in Hold Table";
+   enabled = [FunctionGroup = "M" or FunctionGroup = "K" or FunctionGroup = "Q"];
+   variable PostingMethodVar {
+      type = Enumeration(CorrectionType);
+   }
+   variable CheckCopyVoucherVar;
+   variable AccountingYearPeriod;
+   execute {
+      set AccountingYearPeriod = "${AccountingYear} - ${AccountingPeriod}";
+      call CheckCopyVoucher(Company, VoucherType, AccountingYear, VoucherNo) into CheckCopyVoucherVar;
+      if [(CheckCopyVoucherVar = "PERIOD_ALLOCATION")] {
+         info("Period Allocation information will not be copied to the destination voucher.");
+      }
+      dialog CopyHoldTableVoucherDialog(Company, AccountingYear, AccountingPeriod, VoucherType, VoucherNo, AccountingYearPeriod, Correction) into(PostingMethodVar) {
+         when OK {
+            navigate "assistant/VoucherEntryAssistant/Assistant?$action=InitVoucherAssistant{InitOpennedFrom:'COPY_VOUCHER',InitCompany:$[Company],InitAccountingYear:$[AccountingYear],InitVoucherType:$[VoucherType],InitVoucherNo:$[VoucherNo],InitPostingMethod:$[PostingMethodVar]}";
+            exit;
+         }
+      }
+   }
+}
+
+
+//command InterimVoucherCommand for VoucherEntry {
+//   label = "Interim Voucher";
+//   enabled = [VoucherStatus = "Approved" and not InterimVoucher and RevenueCostClearVoucher = "FALSE" and IsCancellation = "FALSE" and FunctionGroup != "Z" and DisableInterim = "FALSE"];
+//
+//   variable DialogDefaultParams Structure(InterimVouDialogParamStrucute);
+//   execute {
+//      call ValidateInterim(Company, UserGroup) {
+//         when SUCCESS {
+//            call FetchInterimVouDefs(Company, UserGroup, AccountingYear, AccountingPeriod, SimulationVoucher) into DialogDefaultParams;
+//            dialog InterimVoucherDialog(Company, AccountingYear, VoucherType, VoucherNo, DialogDefaultParams.VoucherDate, AccountingYear, AccountingPeriod, DialogDefaultParams.UserId, DialogDefaultParams.UserGroup, DialogDefaultParams.AccountingYearPeriod, SimulationVoucher, DialogDefaultParams.DefaultVoucherType, false) {
+//               when OK {
+//                  exit OK;
+//               }
+//            }
+//         }
+//         when FAIL {
+//            error("${error.Message}");
+//         }
+//      }
+//   }
+//}
+
+command CreateVoucherTemplateCommand for VoucherEntry {
+   label = "New Voucher Template";
+   enabled = [IsCancellation != "TRUE" and(Objstate = "Confirmed" or Objstate = "Waiting" or Objstate = "AwaitingApproval")];
+
+   variable DefaultData Structure(DefaultData);
+
+   execute {
+      call FetchDefaultData() into DefaultData;
+
+      dialog CreateVoucherTemplateDialog(Company, DefaultData.ValidFrom, DefaultData.ValidUntil, AccountingYear, VoucherType, VoucherNo, true, "FALSE") {
+         when OK {
+            success("Voucher template successfully created.");
+            exit;
+         }
+      }
+   }
+}
+
+@DynamicComponentDependency GENLED
+command InstantUpdateGeneralLedgerCommand for VoucherEntry {
+   label = "Instant Update General Ledger";
+   enabled = [MultiCompanyMode = false and(VoucherStatus = "Cancelled" or VoucherStatus = "Approved")];
+
+   variable SelectionStr {
+      type = Text;
+   }
+   execute {
+      call VouchrApproval(Company, AccountingYear, VoucherType, VoucherNo);
+      set SelectionStr = "ACCOUNTING_YEAR=${AccountingYear}^COMPANY=${Company}^VOUCHER_NO=${VoucherNo}^VOUCHER_TYPE=${VoucherType}^";
+      assistant InstantUpdateAssistant(SelectionStr) {
+         when OK {
+            exit OK;
+         }
+      }
+   }
+}
+
+@DynamicComponentDependency FIXASS
+command ItemAddInvestmentCommand {
+   label = "Add Investment Information";
+   enabled = [ExsistAddInvestment = "TRUE"];
+   mode = SingleRecord;
+
+   execute {
+      assistant AddInvestmentInfoAssistant("VOUCHER", keyref, "TRUE") {
+         when OK {
+            exit OK;
+         }
+      }
+   }
+}
+
+command PeriodAllocationCommand for VoucherRow {
+   label = "Period Allocation";
+
+   enabled = [(parent.RevenueCostClearVoucher = "FALSE" or parent.RevenueCostClearVoucher = null) and FunctionGroup != "Z" and parent.SimulationVoucher = "FALSE"];
+
+   variable UserGroup;
+   variable AllocVouType;
+   variable EnableEdit;
+   variable ControlParams {
+      type = Structure(PeriodAllocControlStructure);
+   }
+
+   execute {
+      call CheckPeriodAllocAvail(Company, Account, parent.IsCancellation, PeriodAllocation, parent.SimulationVoucher, FunctionGroup, RevenueCostClearVoucher, CurrencyAmount, Amount) {
+         when SUCCESS {
+            call CheckEditEnable(Company, VoucherType, AccountingYear, VoucherNo, RowNo, parent.IsCancellation, FunctionGroup) into ControlParams;
+            assistant PeriodAllocAssistant(Company, VoucherType, AccountingYear, VoucherNo, RowNo, parent.IsCancellation, FunctionGroup, ControlParams.EnableEdit, ControlParams.PeriodAllocExists, Account, PeriodAllocation, parent.SimulationVoucher, RevenueCostClearVoucher, CurrencyAmount, Amount) into(UserGroup, AllocVouType) {
+               when OK {
+                  call UpdateAllocationInfo(Company, VoucherType, VoucherNo, RowNo, AccountingYear, UserGroup, AllocVouType);
+                  exit OK;
+               }
+            }
+         }
+         when FAIL {
+            error("${error.Message}");
+         }
+      }
+   }
+}
+
+command AddPseudoCodeCommand for VoucherRow {
+   label = "Add Pseudo Code";
+   execute {
+      assistant AddPseudoCodeAssistant(Company, Account, CodeB, CodeC, CodeD, CodeE, CodeF, CodeG, CodeH, CodeI, CodeJ, ProcessCode, Quantity, ProjectId, ProjectActivityId) {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+command ItemApproveCommand for VoucherCandidateApprover {
+   label = "Approve";
+   enabled = [AuthorizationStatus = null and UserHasApprovalRights = "TRUE" and(not parent.VoucherStatus in("Confirmed", "Error"))];
+
+   variable NewVoucherStatus;
+   variable InterimVoucherDialogStructVar {
+      type = Structure(InterimVoucherDialogStructure);
+   }
+
+   execute {
+      call ApproveVoucher(Company, AccountingYear, VoucherType, VoucherNo, VoucherApproverRowId, parent.UserGroup) into NewVoucherStatus;
+
+      if [parent.SimulationVoucher = "TRUE" and(parent.InterimVoucher = false) and NewVoucherStatus = "Confirmed"] {
+         call ValidateInterim(Company, parent.UserGroup) {
+            when SUCCESS {
+               call FetchInterimVouDefs(parent.Company, parent.AccountingYear, parent.VoucherType, parent.VoucherNo, parent.MultiCompany) into InterimVoucherDialogStructVar;
+               dialog InterimVoucherDialog(InterimVoucherDialogStructVar) {
+                  when OK {
+                     exit OK;
+                  }
+               }
+            }
+            when FAIL {
+               error("${error.Message}");
+            }
+         }
+      }
+   }
+}
+
+command ItemCancelApproveCommand for VoucherCandidateApprover {
+   label = "Cancel Approval";
+   enabled = [AuthorizationStatus = "Approved" and UserHasApprovalRights = "TRUE" and parent.VoucherStatus != "Confirmed"];
+
+   execute {
+      call RemoveApprove(Company, AccountingYear, VoucherType, VoucherNo, VoucherApproverRowId);
+      refresh;
+   }
+}
+
+command SaveConfirmCommand for VoucherCandidateApprover {
+   variable RowCountVar Number;
+
+   bulkexecute {
+      if [parent.TwoApproverRequiredDb = true] {
+         set RowCountVar = component.VoucherApproversList.RowCount;
+         set AuthCountVar = "#{RowCountVar - DeleteCount}";
+
+         if [AuthCountVar != 0 and AuthCountVar < 2] {
+            confirm("There should be at least two authorizers for voucher approval. Do you want to continue?") {
+               when CANCEL {
+                  exit CANCEL;
+               }
+            }
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+group VoucherApprovalGroup for VoucherEntry {
+   label = "Approval Parameters";
+   field SimulationVoucher {
+      visible = [false];
+   }
+   field TwoApproverRequiredDb {
+      editable = [(VoucherStatus = "Waiting" or VoucherStatus = "Cancelled" or VoucherStatus = "AwaitingApproval") and ApprovalRuleId = null];
+      validate command {
+         execute {
+            set SequentialApprovalDb = false;
+         }
+      }
+   }
+   field SequentialApprovalDb {
+      editable = [(VoucherStatus = "Waiting" or VoucherStatus = "Cancelled" or VoucherStatus = "AwaitingApproval") and  TwoApproverRequiredDb = true and ApprovalRuleId = null];
+   }
+}
+
+group CopyHoldTableVoucherGroup for CopyHoldTableVoucherStructure {
+   label = "Copy Voucher Information";
+   field AccountingYearPeriod;
+   field VoucherType;
+   field VoucherNo;
+}
+
+group PostingMethodGroup for CopyHoldTableVoucherStructure {
+   label = "Reversal Posting Information";
+   field PostingMethod {
+      editable = [not(Correction)];
+   }
+}
+
+----------------------------------- LISTS -----------------------------------
+@Override
+list VoucherPostingList for VoucherPosting {
+   crudactions {
+      after command VoucherPostingAfterCommand;
+
+      new {
+         enabled = [parent.AmountMethod != null and(parent.MultiCompanyId = null and parent.VoucherNoReference = null and parent.Company != null and parent.VoucherStatus != "Cancelled" and parent.AuthorizeLevel != "ApproveOnly")];
+      }
+      edit {
+         enabled = [parent.AmountMethod != null and(parent.MultiCompanyId = null and parent.VoucherNoReference = null and parent.Company != null and parent.VoucherStatus != "Cancelled" and parent.AuthorizeLevel != "ApproveOnly")];
+      }
+      delete {
+         enabled = [parent.AmountMethod != null and(parent.MultiCompanyId = null and parent.VoucherNoReference = null and parent.Company != null and parent.VoucherStatus != "Cancelled" and parent.AuthorizeLevel != "ApproveOnly")];
+      }
+      duplicate {
+         enabled = [false];
+      }
+   }
+
+   field ReferenceNumber {
+      validate command {
+         execute {
+            if [initcontext.SaftPolandEnabled] {
+               @DynamicComponentDependency INVOIC
+               set ReferenceSerie = ReferenceNumberRef.ReferenceSerie;
+            }
+         }
+      }
+      lovswitch {
+         when [initcontext.SaftPolandEnabled] {
+            @DynamicComponentDependency INVOIC
+            lov ReferenceNumberRef with ReferenceReferenceNumberLovSelector;
+         }
+
+      }
+   }
+}
+
+
+list VoucherApproversList for VoucherCandidateApprover {
+   label = "Approval Information";
+   orderby = Sequence asc;
+   crudactions {
+      before command SaveConfirmCommand;
+   }
+   field Sequence {
+      size = Small;
+      columnexclude = [parent.SequentialApprovalDb != true];
+      columnvisible = [parent.SequentialApprovalDb = true];
+   }
+   lov ApproverIdRef with ReferenceApproverDetailApproverLovSelector {
+      search = ApproverId, ApproverName;
+      size = Large;
+      editable = [ApproverGroupId = null];
+      description = ApproverIdRef.ApproverName;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   lov ApproverGroupIdRef with ReferenceApproverDetailGroupLovSelector {
+      search = ApproverGroupId, ApproverGroupDesc;
+      size = Large;
+      editable = [ApproverId = null];
+      description = ApproverGroupIdRef.ApproverGroupDesc;
+   }
+   field AllowedAmount;
+   field ErrorText {
+      multiline = true;
+   }
+   badge AuthorizationStatus {
+      size = Small;
+      style = TextOnly;
+      emphasis Progress11 = [AuthorizationStatus = "Approved"];
+   }
+   field ApprovedBy {
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field Timestamp;
+
+   commandgroup VoucherApproversCmdGroup {
+      command ItemApproveCommand;
+      command ItemCancelApproveCommand;
+   }
+}
+
+----------------------------------- CARDS -----------------------------------
+
+---------------------------------- DIALOGS ----------------------------------
+
+dialog CopyHoldTableVoucherDialog for CopyHoldTableVoucherStructure {
+   label = "Copy Voucher in Hold Table";
+
+   input(Company, AccountingYear, AccountingPeriod, VoucherType, VoucherNo, AccountingYearPeriod, Correction);
+   output(PostingMethod);
+
+   group CopyHoldTableVoucherGroup;
+   group PostingMethodGroup;
+
+   command Ok;
+   command Cancel;
+}
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+
+----------------------------------- TREES -----------------------------------
+
+---------------------------------- PLUGINS ----------------------------------
+
+------------------------------- IMAGE VIEWERS -------------------------------

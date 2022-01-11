@@ -1,0 +1,55 @@
+fragment CbsTemplateActiveSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view cbs_template_active";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCbsTemplateActiveSelector for CbsTemplateActive {
+   static CostStructureId;
+   static Description;
+}
+
+card CbsTemplateActiveCard for CbsTemplateActive {
+   label = "";
+   fieldranking CostStructureId;
+   field CostStructureId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CbsTemplateActive {
+   from = "cbs_template_active";
+   keys = Company, CostStructureId;
+   ludependencies = CostStructure;
+   lu = CostStructure;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CostStructureId Text {
+      label = "Cost Structure ID";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      label = "Structure Description";
+      lovcolumn = [true];
+   }
+   attribute CopiedFrom Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute SingleProject Text {
+      lovcolumn = [true];
+   }
+   attribute Objstate Enumeration(CostStructureState) {
+      label = "State";
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

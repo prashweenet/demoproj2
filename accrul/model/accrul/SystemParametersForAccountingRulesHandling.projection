@@ -1,0 +1,46 @@
+projection SystemParametersForAccountingRulesHandling;
+component ACCRUL;
+layer Core;
+description "System Parameters for AccountingRules";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccrulAttributes for AccrulAttribute;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccrulAttribute {
+   crud = Read, Update;
+
+   attribute AttributeName Text {
+      label = "Parameter ID";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

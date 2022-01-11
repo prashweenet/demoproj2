@@ -1,0 +1,58 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingCodePartValue
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+@Overtake Base
+PRIMARY KEY accounting_code_part_value_pk IS accounting_code_part_value_tab (company, code_part, code_part_value);
+
+UNIQUE CONSTRAINT accounting_code_part_value_uc1 IS accounting_code_part_value_tab (company, code_part_value, rowtype);
+
+INDEX accounting_code_part_value_ix1 IS accounting_code_part_value_tab (company, code_part, sort_value);
+
+
+UNIQUE INDEX accounting_code_part_value_ux1 IS accounting_code_part_value_tab (code_part, code_part_value, company, valid_from, valid_until);
+
+
+   DECLARE
+   columns_        Database_SYS.ColumnTabType;
+   table_name_     VARCHAR2(30) := 'ACCOUNTING_CODE_PART_VALUE_TAB';
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'CLOSED_ACC_PERIOD', 'NUMBER');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_B', 'VARCHAR2(20)');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_C', 'VARCHAR2(20)');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_D', 'VARCHAR2(20)');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_E', 'VARCHAR2(20)');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_F', 'VARCHAR2(20)');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_G', 'VARCHAR2(20)');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_H', 'VARCHAR2(20)');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_I', 'VARCHAR2(20)');
+   Database_SYS.Set_Table_Column(columns_, 'CODE_J', 'VARCHAR2(20)'); 
+   Database_SYS.Set_Table_Column(columns_, 'CONV_FACTOR', 'NUMBER(11,5)');
+   Database_SYS.Set_Table_Column(columns_, 'CURR_RATE', 'NUMBER(11,5)'); 
+   Database_SYS.Set_Table_Column(columns_, 'GRANT_ALLOWANCE', 'NUMBER(5,2)');
+   Database_SYS.Set_Table_Column(columns_, 'ORDER_NUMBER', 'VARCHAR2(10)');
+   Database_SYS.Set_Table_Column(columns_, 'PARTY', 'VARCHAR2(100)');
+   Database_SYS.Set_Table_Column(columns_, 'UNIT_PRICE', 'NUMBER(15,2)');
+   Database_SYS.Set_Table_Column(columns_, 'USER_GROUP', 'VARCHAR2(30)');
+   Database_SYS.Set_Table_Column(columns_, 'VOUCHER_DATE', 'DATE');
+   Database_SYS.Set_Table_Column(columns_, 'VOUCHER_TYPE', 'VARCHAR2(3)');
+   Database_SYS.Alter_Table(table_name_,columns_,TRUE);
+END;
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------

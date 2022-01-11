@@ -1,0 +1,174 @@
+-----------------------------------------------------------------------------
+--  Module : ACCRUL
+--  
+--  File   : AuditSource_ACCRUL.ins
+--
+--  IFS/Design Template Version 2.3
+--
+--  Date       Sign      History
+--  ------     ----      -----------------------------------------------------------
+------------------------------------------------------------------------------------
+SET SERVEROUT ON
+
+-------------------------------------DEFINE AUDIT SOURCES-------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+-- This section defines Audit Sources for the Component
+-------------------------------------------------------------------------------------------------------------
+-- Definition of arguments for the Audit Source:
+-- No1:  Audit Source.
+-- No2:  Description. The description of the Audit Source
+-- No3:  Source Type. The type of the tax audit source (VIEW or REPORT)
+-- No4:  Report Id. Only for REPORT source type
+-- No5:  System Defined. 
+--
+-- Definition of arguments for the Audit Source Column:
+-- No1:  Audit Source.
+-- No2:  Source Column. 
+-- No3:  Datatype of the column (1 = VARCHAR2, 2 = NUNBER, 3 = Date)
+-- No4:  Precision. No of decimals (only for source columns of datatype NUMBER, else NULL)
+-- No5:  Selection Date. Control if the source column is used as selection criteria when fetched the data from view.
+-- No6:  Selection Date Title. Selection Date Tile, only needed if the Selection Date is TRUE.
+--
+-------------------------------------------------------------------------------------------------------------
+--
+DECLARE
+   PROCEDURE Insert_Audit_Source (
+      audit_source_     IN VARCHAR2,
+      description_      IN VARCHAR2,
+      source_type_      IN VARCHAR2,
+      report_id_        IN VARCHAR2,
+      system_defined_   IN VARCHAR2 )
+   IS
+      newrec_      Audit_Source_TAB%ROWTYPE;
+   BEGIN
+      Audit_Util_API.Remove_Audit_Source(audit_source_);      
+      newrec_.audit_source    := audit_source_;
+      newrec_.description     := description_;
+      newrec_.source_type     := source_type_;
+      newrec_.report_id       := report_id_;
+      newrec_.system_defined  := system_defined_;
+      newrec_.rowversion      := SYSDATE;
+      Audit_Source_API.Insert_Lu_Data_Rec(newrec_);
+   END Insert_Audit_Source;
+
+   PROCEDURE Insert_Source_Column (
+      audit_source_        IN VARCHAR2,
+      column_              IN VARCHAR2,
+      datatype_            IN VARCHAR2,
+      precision_           IN NUMBER,
+      selection_date_      IN VARCHAR2,
+      date_title_          IN VARCHAR2 DEFAULT NULL )
+   IS
+      newrec_      Audit_Source_Column_Tab%ROWTYPE;
+   BEGIN
+      newrec_.audit_source          := audit_source_;
+      newrec_.source_column         := column_;
+      newrec_.datatype              := datatype_;
+      newrec_.precision             := precision_;
+      newrec_.selection_date        := selection_date_;
+      newrec_.selection_date_title  := date_title_;
+      newrec_.rowversion            := SYSDATE;
+      Audit_Source_Column_API.Insert_Lu_Data_Rec(newrec_);
+   END Insert_Source_Column;
+
+BEGIN
+   Insert_Audit_Source('ACCOUNT_AV',   'Account',  'VIEW', NULL, 'TRUE');
+   Insert_Source_Column('ACCOUNT_AV',  'COMPANY',                 '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNT_AV',  'ACCOUNT',                 '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNT_AV',  'DESCRIPTION',             '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNT_AV',  'VALID_FROM',              '3', NULL, 'TRUE', 'Valid From');
+   Insert_Source_Column('ACCOUNT_AV',  'VALID_UNTIL',             '3', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNT_AV',  'ACCNT_GROUP',             '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNT_AV',  'ACCNT_TYPE',              '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNT_AV',  'LOGICAL_ACCOUNT_TYPE',    '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNT_AV',  'LEDG_FLAG',               '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNT_AV',  'CURR_BALANCE',            '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNT_AV',  'TAX_FLAG',                '1', NULL, 'FALSE');
+   --
+   Insert_Audit_Source('ACCOUNTING_CODE_PARTS_AV', 'Accounting Code Parts', 'VIEW', NULL, 'TRUE');
+   Insert_Source_Column('ACCOUNTING_CODE_PARTS_AV',         'COMPANY',     '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_CODE_PARTS_AV',         'CODE_PART',   '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_CODE_PARTS_AV',         'CODE_NAME',   '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_CODE_PARTS_AV',         'DESCRIPTION', '1', NULL, 'FALSE');
+   --
+   Insert_Audit_Source('ACCOUNTING_CODE_PART_VALUE_AV', 'Accounting Code Part Value',  'VIEW', NULL, 'TRUE');
+   Insert_Source_Column('ACCOUNTING_CODE_PART_VALUE_AV',    'COMPANY',           '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_CODE_PART_VALUE_AV',    'CODE_PART',         '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_CODE_PART_VALUE_AV',    'CODE_PART_VALUE',   '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_CODE_PART_VALUE_AV',    'DESCRIPTION',       '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_CODE_PART_VALUE_AV',    'VALID_FROM',        '3', NULL, 'TRUE', 'Valid From');
+   Insert_Source_Column('ACCOUNTING_CODE_PART_VALUE_AV',    'VALID_UNTIL',       '3', NULL, 'FALSE');
+   --
+   Insert_Audit_Source('ACCOUNT_GROUP_AV', 'Account Group', 'VIEW',  NULL, 'TRUE');
+   Insert_Source_Column('ACCOUNT_GROUP_AV',    'COMPANY',            '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNT_GROUP_AV',    'ACCNT_GROUP',        '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNT_GROUP_AV',    'DESCRIPTION',        '1', NULL, 'FALSE');
+   --
+   Insert_Audit_Source('ACCOUNTING_ATTRIBUTE_ALL_AV', 'Accounting Attribute',   'VIEW', NULL, 'TRUE');
+   Insert_Source_Column('ACCOUNTING_ATTRIBUTE_ALL_AV',    'COMPANY',                '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_ATTRIBUTE_ALL_AV',    'ATTRIBUTE',              '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_ATTRIBUTE_ALL_AV',    'ATTRIBUTE_DESC',         '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_ATTRIBUTE_ALL_AV',    'CODE_PART',              '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_ATTRIBUTE_ALL_AV',    'CODE_NAME',              '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_ATTRIBUTE_ALL_AV',    'CODE_PART_VALUE',        '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_ATTRIBUTE_ALL_AV',    'ATTRIBUTE_VALUE',        '1', NULL, 'FALSE');
+   Insert_Source_Column('ACCOUNTING_ATTRIBUTE_ALL_AV',    'ATTRIBUTE_VALUE_DESC',   '1', NULL, 'FALSE');
+   --
+   Insert_Audit_Source('POSTING_CTRL_AV', 'Posting Control', 'VIEW', NULL, 'TRUE');
+   Insert_Source_Column('POSTING_CTRL_AV',      'COMPANY',              '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_AV',      'PC_VALID_FROM',        '3', NULL, 'TRUE', 'Valid From');
+   Insert_Source_Column('POSTING_CTRL_AV',      'POSTING_TYPE',         '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_AV',      'POSTING_TYPE_DESC',    '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_AV',      'CODE_PART',            '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_AV',      'CODE_NAME',            '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_AV',      'CONTROL_TYPE',         '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_AV',      'CONTROL_TYPE_DESC',    '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_AV',      'OVERRIDE',             '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_AV',      'DEFAULT_VALUE',        '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_AV',      'DEFAULT_VALUE_NO_CT',  '1', NULL, 'FALSE');
+   --
+   Insert_Audit_Source('POSTING_CTRL_COMB_DETAIL_AV',   'Posting Control Combination Detail',  'VIEW', NULL, 'TRUE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'COMPANY',              '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'VALID_FROM',           '3', NULL, 'TRUE', 'Valid From');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'POSTING_TYPE',         '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'POSTING_TYPE_DESC',    '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'COMB_CONTROL_TYPE',    '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'CONTROL_TYPE1',        '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'CONTROL_TYPE1_DESC',   '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'CONTROL_TYPE1_VALUE',  '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'CONTROL_TYPE2',        '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'CONTROL_TYPE2_DESC',   '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'CONTROL_TYPE2_VALUE',  '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'CODE_PART',            '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'CODE_PART_NAME',       '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_COMB_DETAIL_AV',  'CODE_PART_VALUE',      '1', NULL, 'FALSE');
+   --
+   Insert_Audit_Source('POSTING_CTRL_DETAIL_AV',     'Posting Control Detail',  'VIEW', NULL, 'TRUE');
+   Insert_Source_Column('POSTING_CTRL_DETAIL_AV',  'COMPANY',                 '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_DETAIL_AV',  'VALID_FROM',              '3', NULL, 'TRUE', 'Valid From');
+   Insert_Source_Column('POSTING_CTRL_DETAIL_AV',  'POSTING_TYPE',            '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_DETAIL_AV',  'POSTING_TYPE_DESC',       '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_DETAIL_AV',  'CONTROL_TYPE',            '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_DETAIL_AV',  'CONTROL_TYPE_DESC',       '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_DETAIL_AV',  'CONTROL_TYPE_VALUE',      '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_DETAIL_AV',  'CODE_PART',               '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_DETAIL_AV',  'CODE_NAME',               '1', NULL, 'FALSE');
+   Insert_Source_Column('POSTING_CTRL_DETAIL_AV',  'CODE_PART_VALUE',         '1', NULL, 'FALSE');
+   --
+   Insert_Audit_Source('TAX_LIABILITY_DATE_CTRL_AV',     'Liability Date Control',  'VIEW', NULL, 'TRUE');
+   Insert_Source_Column('TAX_LIABILITY_DATE_CTRL_AV',    'COMPANY',                 '1', NULL, 'FALSE');
+   Insert_Source_Column('TAX_LIABILITY_DATE_CTRL_AV',    'SUPPLIER_LIABILITY_DATE', '1', NULL, 'FALSE');
+   Insert_Source_Column('TAX_LIABILITY_DATE_CTRL_AV',    'CUSTOMER_LIABILITY_DATE', '1', NULL, 'FALSE');
+   Insert_Source_Column('TAX_LIABILITY_DATE_CTRL_AV',    'PAYMENTS_LIABILITY_DATE', '1', NULL, 'FALSE');
+   --
+   Insert_Audit_Source('TAX_LIABLTY_DATE_EXCEPTION_AV',     'Liability Date Exception',  'VIEW', NULL, 'TRUE');
+   Insert_Source_Column('TAX_LIABLTY_DATE_EXCEPTION_AV',    'COMPANY',                 '1', NULL, 'FALSE');
+   Insert_Source_Column('TAX_LIABLTY_DATE_EXCEPTION_AV',    'FEE_CODE',                '1', NULL, 'FALSE');
+   Insert_Source_Column('TAX_LIABLTY_DATE_EXCEPTION_AV',    'CUSTOMER_LIABILITY_DATE', '1', NULL, 'FALSE');
+   Insert_Source_Column('TAX_LIABLTY_DATE_EXCEPTION_AV',    'CUSTOMER_CREDIT_LIABILITY_DATE', '1', NULL, 'FALSE');
+   Insert_Source_Column('TAX_LIABLTY_DATE_EXCEPTION_AV',    'SUPPLIER_LIABILITY_DATE', '1', NULL, 'FALSE');
+END;
+/
+COMMIT;
+

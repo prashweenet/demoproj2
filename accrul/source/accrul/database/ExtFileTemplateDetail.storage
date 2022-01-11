@@ -1,0 +1,27 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtFileTemplateDetail
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+
+
+UNIQUE INDEX ext_file_template_detail_ix1 IS ext_file_template_detail_tab (file_template_id, record_type_id, column_id);
+
+
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------

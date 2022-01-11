@@ -1,0 +1,80 @@
+projection UsersPerCompanyHandling;
+component ACCRUL;
+layer Core;
+description "Users Per Company";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CompanyFinanceSet for CompanyFinance;
+
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CompanyFinance {
+   crud = Read;
+
+   attribute Description Text {
+      required = [true];
+      label = "Company Name";
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+
+   array UserFinanceArray(Company) to UserFinance(Company);
+}
+
+@Override
+entity UserFinance {
+   crud = Read, Create, Delete;
+
+   attribute Userid Text {
+      label = "User ID";
+      format = uppercase;
+   }
+   attribute DefaultCompany Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   reference UseridRef(Userid) to FndUser(Identity) {
+      label = "User";
+   }
+
+   action DoSetDefault {
+      ludependencies = UserFinance;
+   }
+}
+
+@Override
+entity FndUser {
+   attribute Identity Text {
+      label = "ID";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

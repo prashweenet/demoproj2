@@ -1,0 +1,60 @@
+fragment CostStructureActiveSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view cost_structure_active";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCostStructureActiveSelector for CostStructureActive {
+   static CostStructureId;
+   static Description;
+}
+
+card CostStructureActiveCard for CostStructureActive {
+   label = "";
+   fieldranking CostStructureId;
+   field CostStructureId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CostStructureActive {
+   from = "cost_structure_active";
+   keys = Company, CostStructureId;
+   ludependencies = CostStructure;
+   lu = CostStructure;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CostStructureId Text {
+      label = "Cost Structure ID";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      label = "Structure Description";
+      lovcolumn = [true];
+   }
+   attribute CopiedFrom Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute SingleProject Text {
+      lovcolumn = [true];
+   }
+   attribute Objstate Enumeration(CostStructureState) {
+      label = "State";
+      lovcolumn = [true];
+   }
+   // Is temporary due to being referenced from other locations.
+   // Will be removed once references to State have been replaced and reference Objstate!
+   attribute State Text {
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

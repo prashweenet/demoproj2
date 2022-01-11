@@ -1,0 +1,135 @@
+projection NotUpdatedVoucherAnalysis;
+component ACCRUL;
+layer Core;
+description "Not updated voucher analysis used in Lobby";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccPeriodCloseUtilSet for AccPeriodCloseUtil {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query AccPeriodCloseUtil {
+   from = "voucher_lobby";
+   keys = Company, VoucherType, VoucherNo, AccountingYear {
+      where = "COMPANY = :Company and VOUCHER_TYPE = :VoucherType and VOUCHER_NO = :VoucherNo and ACCOUNTING_YEAR = :AccountingYear";
+   }
+   attribute Company Text {
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute VoucherStatus Text {
+      label = "Status";
+      maxlength = 100;
+   }
+   attribute LedgerId Text {
+      label = "Ledger ID";
+      maxlength = 100;
+   }
+   attribute VoucherType Text {
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute FunctionGroup Text {
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute VoucherNo Number;
+   attribute VoucherDate Date;
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute AccountingPeriod Number {
+      label = "Period";
+      editable = [false];
+   }
+   attribute DateReg Date {
+      label = "Entry Date";
+      editable = [false];
+   }
+   attribute EnteredByUserGroup Text {
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute Userid Text {
+      label = "Entered By User";
+      maxlength = 100;
+   }
+   attribute ApprovedByUserid Text {
+      label = "Approved By User";
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute ApprovalDate Date;
+   attribute ApprovedByUserGroup Text {
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute SecondApproverId Text {
+      label = "Second Approved By User";
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute SecondApprovalDate Date;
+   attribute SecondApproverUserGroup Text {
+      label = "Second Approved by User Group";
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute VoucherText2 Text {
+      label = "Voucher Text";
+   }
+   attribute UpdateError Text;
+
+   attribute NoteExist Boolean("TRUE", "FALSE") {
+      label = "Notes";
+   }
+   attribute InterimVoucher Boolean("Y", "N");
+   attribute IsMultiCompanyVoucher Boolean("TRUE", "FALSE") {
+      label = "Multi Company Voucher";
+   }
+   attribute MultiCompanyId Text {
+      label = "Multi Company ID";
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute VoucherTypeReference Text {
+      label = "Voucher Type Ref";
+      maxlength = 100;
+      format = uppercase;
+   }
+   attribute VoucherNoReference Number {
+      label = "Voucher No Ref";
+   }
+   attribute AccountingYearReference Number {
+      label = "Accounting Year Ref";
+   }
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

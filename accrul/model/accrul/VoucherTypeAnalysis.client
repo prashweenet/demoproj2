@@ -1,0 +1,109 @@
+client VoucherTypeAnalysis;
+component ACCRUL;
+layer Core;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry VoucherTypeAnalysisNavEntry parent AccrulNavigator.UserRelatedDataMenu at index 700 {
+      label = "Voucher Types Analysis";
+      page List;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using VoucherTypeDetailQuerys {
+   label = "Voucher Types Analysis";
+
+   list VoucherTypeDetailQueryList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command VoucherTypeCommand for VoucherTypeDetailQuery {
+
+   label = "Voucher Type";
+
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/VoucherType/Form?$contexts=Company:$[Company]&$filter=VoucherType eq $[VoucherType]";
+   }
+
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list VoucherTypeDetailQueryList for VoucherTypeDetailQuery {
+   orderby = VoucherType;
+
+   lov VoucherTypeRef with ReferenceVoucherTypeSelector {
+      search = VoucherType, Description;
+      size = Large;
+      description = VoucherTypeRef.Description;
+   }
+   lov FunctionGroupRef with ReferenceFunctionGroupSelector {
+      search = FunctionGroup, Description;
+      size = Large;
+      description = FunctionGroupRef.Description;
+   }
+   field Ledger;
+   field LedgerId {
+      size = Small;
+   }
+   field Balance;
+   field UseManual;
+   field AutomaticAllotDb;
+   field VtSingleFunctionGroup;
+   field SimulationVoucher;
+   field SeparateUserApprovalDb;
+   field UseApprovalWorkflow;
+   field AutomaticVouBalance;
+   field StoreOriginalDb;
+   field RowGroupValidation;
+   field ReferenceMandatory;
+   field JournalID {
+      size = Small;
+   }
+   command VoucherTypeCommand;
+
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

@@ -1,0 +1,905 @@
+fragment AvalaraTaxUtil;
+component ACCRUL;
+layer Core;
+description "Structure and Entities with relations (schema) for Avalara integration messages";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+@Override
+@DynamicComponentDependency ORDER
+entity InvoiceHead using CustomerOrderInvHead {
+
+   from = "Customer_Order_Inv_Head";
+   luname = "CustomerOrderInvHead";
+
+   keys = Company, InvoiceId;
+   use attributes = Identity, DeliveryIdentity, SeriesId, InvoiceNo, DeliveryAddressId, InvoiceDate, SeriesReference, NumberReference,
+   OrderDate, InvoiceType, CreatorsReference, RmaNo, ShipmentId;
+
+   attribute Company Text {
+      maxlength = 20;
+   }
+   attribute InvoiceId Number;
+
+   attribute Identity Text;
+   attribute DeliveryIdentity Text;
+   attribute SeriesId Text;
+   attribute InvoiceNo Text;
+   attribute DeliveryAddressId Text;
+   attribute InvoiceDate Date;
+   attribute SeriesReference Text;
+   attribute NumberReference Text;
+   attribute OrderDate Date;
+   attribute InvoiceType Text;
+   attribute CreatorsReference Text;
+   attribute RmaNo Text;
+   attribute ShipmentId Text;
+
+   array Items(Company, InvoiceId) to InvoiceLineItem(Company, InvoiceId);
+}
+
+@Override
+@DynamicComponentDependency ORDER
+entity InvoiceLineItem using CustomerOrderInvItem {
+
+   use attributes = NetDomAmount, OrderNo, LineNo, ReleaseNo, LineItemNo, Pos, Contract, CatalogNo, InvoicedQty, ChargeSeqNo, RmaNo, RmaLineNo, RmaChargeNo, PrelUpdateAllowed, Identity;
+   from = "Customer_Order_Inv_Item";
+
+   keys = Company, InvoiceId, ItemId;
+
+   attribute Company Text {
+      maxlength = 20;
+   }
+   attribute InvoiceId Number;
+   attribute ItemId Number;
+
+   attribute NetDomAmount Number;
+   attribute OrderNo Text;
+   attribute LineNo Text;
+   attribute ReleaseNo Text;
+   attribute LineItemNo Number;
+   attribute Pos Text;
+   attribute Contract Text;
+   attribute CatalogNo Text;
+   attribute InvoicedQty Number;
+   attribute ChargeSeqNo Number;
+   attribute RmaNo Number;
+   attribute RmaLineNo Number;
+   attribute RmaChargeNo Number;
+   attribute PrelUpdateAllowed Text;
+   attribute Identity Text;
+}
+
+// Creating several fake queries to be able to create a structure with generated code that support to convert the structure PL/SQL record
+// into an XML clob. Once there are code generation support (in DsvStudio) that can convert PL/SQL record (that is based on a structure model)
+// the commented structures should be used instead of the fake queries that is used together with the structure "InvoiceAvalaraTaxInfoRequestStruct".
+query InvoiceAvalaraTaxInfoRequestQry {
+   from = "(select 'Dummy' User_Id from dual)";
+
+   keys = UserId;
+
+   attribute UserId Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+   attribute Password Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+
+   array GetTaxRequests(UserId) to GetTaxRequestQry(CompanyCode);
+}
+
+query GetTaxRequestQry {
+   from = "(select 'Dummy' Company_Code from dual)";
+   keys = CompanyCode;
+
+   attribute CompanyCode Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute DocType Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute DocCode Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+   attribute DocDate Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute CustomerCode Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+   attribute Discount Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute ExemptionNo Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute OriginCode Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute DestinationCode Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute DetailLevel Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute ReferenceCode Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+   attribute HashCode Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute LocationCode Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute Commit Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute BatchCode Text {
+      maxlength = 20;
+      fetch = "'Dummy'";
+   }
+   attribute CurrencyCode Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute ServiceMode Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute PaymentDate Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute ExchangeRate Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute ExchangeRateEffDate Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute PosLaneCode Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute BusinessIdentificationNo Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+
+   array LineItems(CompanyCode) to LineItemQry(No);
+   array Addresses(CompanyCode) to BaseAddressQry(AddressCode);
+   array TaxOverrides(CompanyCode) to TaxOverrideQry(TaxOverrideType);
+}
+
+query LineItemQry {
+   from = "(select 'Dummy' No from dual)";
+   keys = No;
+
+   attribute No Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute OriginCode Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute DestinationCode Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute ItemCode Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute Qty Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute Amount Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute TaxCode Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute Discounted Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute RevAct Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute Ref1 Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+   attribute Ref2 Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+   attribute ExemptionNo Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+   attribute CustomerUsageType Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute TaxIncluded Text {
+      maxlength = 20;
+      fetch = "'Dummy'";
+   }
+   attribute BusinessIdentifier Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+   attribute Description Text {
+      maxlength = 200;
+      fetch = "'Dummy'";
+   }
+}
+
+query BaseAddressQry {
+   from = "(select 'Dummy' Address_Code from dual)";
+
+   keys = AddressCode;
+
+   attribute AddressCode Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute Line1 Text {
+      maxlength = 200;
+      fetch = "'Dummy'";
+   }
+   attribute Line2 Text {
+      maxlength = 200;
+      fetch = "'Dummy'";
+   }
+   attribute Line3 Text {
+      maxlength = 200;
+      fetch = "'Dummy'";
+   }
+   attribute City Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute Region Text {
+      maxlength = 35;
+      fetch = "'Dummy'";
+   }
+   attribute PostalCode Text {
+      maxlength = 35;
+      fetch = "'Dummy'";
+   }
+   attribute Country Text {
+      maxlength = 35;
+      fetch = "'Dummy'";
+   }
+   attribute TaxRegionId Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute TaxIncluded Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute Latitude Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+   attribute Longitude Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+}
+
+query TaxOverrideQry {
+   from = "(select 'Dummy' Tax_Override_Type from dual)";
+
+   keys = TaxOverrideType;
+
+   attribute TaxOverrideType Text {
+      maxlength = 20;
+      fetch = "'Dummy'";
+   }
+   attribute TaxAmount Text {
+      maxlength = 50;
+      fetch = "'Dummy'";
+   }
+   attribute TaxDate Text {
+      maxlength = 10;
+      fetch = "'Dummy'";
+   }
+   attribute Reason Text {
+      maxlength = 100;
+      fetch = "'Dummy'";
+   }
+}
+
+
+//structure InvoiceAvalaraTaxInfoRequest using InvoiceAvalaraTaxInfoRequestQry {
+//   nestedwithcrud = Read;
+//   implementation = "Utility";
+//}
+
+structure InvoiceAvalaraTaxInfoRequestStruct using InvoiceAvalaraTaxInfoRequestQry {
+   nestedwithcrud = Read;
+   implementation = "Utility";
+}
+
+
+structure InvoiceAvalaraTaxInfoRequest {
+   implementation = "Utility";
+   attribute UserId Text {
+      maxlength = 100;
+   }
+   attribute Password Text {
+      maxlength = 100;
+   }
+   attribute GetTaxRequests List < Structure(GetTaxRequest) >;
+}
+
+structure GetTaxRequest {
+   implementation = "Utility";
+   attribute CompanyCode Text {
+      maxlength = 50;
+   }
+   attribute DocType Text {
+      maxlength = 50;
+   }
+   attribute DocCode Text {
+      maxlength = 100;
+   }
+   attribute DocDate Text {
+      maxlength = 10;
+   }
+   attribute CustomerCode Text {
+      maxlength = 100;
+   }
+   attribute Discount Text {
+      maxlength = 50;
+   }
+   attribute ExemptionNo Text {
+      maxlength = 50;
+   }
+   attribute OriginCode Text {
+      maxlength = 50;
+   }
+   attribute DestinationCode Text {
+      maxlength = 50;
+   }
+   attribute DetailLevel Text {
+      maxlength = 10;
+   }
+   attribute ReferenceCode Text {
+      maxlength = 100;
+   }
+   attribute HashCode Text {
+      maxlength = 50;
+   }
+   attribute LocationCode Text {
+      maxlength = 10;
+   }
+   attribute Commit Text {
+      maxlength = 10;
+   }
+   attribute BatchCode Text {
+      maxlength = 20;
+   }
+   attribute CurrencyCode Text {
+      maxlength = 10;
+   }
+   attribute ServiceMode Text {
+      maxlength = 10;
+   }
+   attribute PaymentDate Text {
+      maxlength = 10;
+   }
+   attribute ExchangeRate Text {
+      maxlength = 10;
+   }
+   attribute ExchangeRateEffDate Text {
+      maxlength = 10;
+   }
+   attribute PosLaneCode Text {
+      maxlength = 10;
+   }
+   attribute BusinessIdentificationNo Text {
+      maxlength = 10;
+   }
+
+   attribute LineItems List < Structure(LineItem) >;
+   attribute Addresses List < Structure(BaseAddress) >;
+   attribute TaxOverrides List < Structure(TaxOverride) >;
+}
+
+structure InvoiceTaxInfoRequest {
+   implementation = "Utility";
+   attribute CompanyId Text {
+      maxlength = 20;
+   }
+   attribute InvoiceId Number;
+   attribute UserId Text {
+      maxlength = 100;
+   }
+   attribute Password Text {
+      maxlength = 100;
+   }
+   attribute DocCode Text {
+      maxlength = 100;
+   }
+   attribute InvoiceDate Text {
+      maxlength = 100;
+   }
+}
+
+structure BaseAddress {
+   implementation = "Utility";
+
+   attribute AddressCode Text {
+      maxlength = 50;
+   }
+   attribute Line1 Text {
+      maxlength = 200;
+   }
+   attribute Line2 Text {
+      maxlength = 200;
+   }
+   attribute Line3 Text {
+      maxlength = 200;
+   }
+   attribute City Text {
+      maxlength = 50;
+   }
+   attribute Region Text {
+      maxlength = 35;
+   }
+   attribute PostalCode Text {
+      maxlength = 35;
+   }
+   attribute Country Text {
+      maxlength = 35;
+   }
+   attribute TaxRegionId Text {
+      maxlength = 50;
+   }
+   attribute TaxIncluded Text {
+      maxlength = 10;
+   }
+   attribute Latitude Text {
+      maxlength = 100;
+   }
+   attribute Longitude Text {
+      maxlength = 100;
+   }
+}
+
+structure LineItem {
+   implementation = "Utility";
+
+   attribute No Text {
+      maxlength = 10;
+   }
+   attribute OriginCode Text {
+      maxlength = 10;
+   }
+   attribute DestinationCode Text {
+      maxlength = 10;
+   }
+   attribute ItemCode Text {
+      maxlength = 50;
+   }
+   attribute Qty Text {
+      maxlength = 50;
+   }
+   attribute Amount Text {
+      maxlength = 50;
+   }
+   attribute TaxCode Text {
+      maxlength = 50;
+   }
+   attribute Discounted Text {
+      maxlength = 50;
+   }
+   attribute RevAct Text {
+      maxlength = 10;
+   }
+   attribute Ref1 Text {
+      maxlength = 100;
+   }
+   attribute Ref2 Text {
+      maxlength = 100;
+   }
+   attribute ExemptionNo Text {
+      maxlength = 100;
+   }
+   attribute CustomerUsageType Text {
+      maxlength = 50;
+   }
+   attribute TaxIncluded Text {
+      maxlength = 20;
+   }
+   attribute BusinessIdentifier Text {
+      maxlength = 100;
+   }
+   attribute Description Text {
+      maxlength = 200;
+   }
+}
+
+structure TaxOverride {
+   implementation = "Utility";
+
+   attribute TaxOverrideType Text {
+      maxlength = 20;
+   }
+   attribute TaxAmount Text {
+      maxlength = 50;
+   }
+   attribute TaxDate Text {
+      maxlength = 10;
+   }
+   attribute Reason Text {
+      maxlength = 100;
+   }
+}
+
+structure InvoiceRequest {
+   implementation = "Utility";
+
+   attribute Company Text {
+      maxlength = 50;
+   }
+   attribute DocType Text {
+      maxlength = 50;
+   }
+   attribute DocCode Text {
+      maxlength = 100;
+   }
+   attribute DocDate Text {
+      maxlength = 10;
+   }
+   attribute CustomerCode Text {
+      maxlength = 100;
+   }
+   attribute Discount Text {
+      maxlength = 50;
+   }
+   attribute ExemptionNo Text {
+      maxlength = 50;
+   }
+   attribute OriginCode Text {
+      maxlength = 50;
+   }
+   attribute DestinationCode Text {
+      maxlength = 50;
+   }
+   attribute DetailLevel Text {
+      maxlength = 10;
+   }
+   attribute ReferenceCode Text {
+      maxlength = 100;
+   }
+   attribute HashCode Text {
+      maxlength = 50;
+   }
+   attribute LocationCode Text {
+      maxlength = 10;
+   }
+   attribute Commit Text {
+      maxlength = 10;
+   }
+   attribute BatchCode Text {
+      maxlength = 20;
+   }
+   attribute CurrencyCode Text {
+      maxlength = 10;
+   }
+   attribute ServiceMode Text {
+      maxlength = 10;
+   }
+   attribute PaymentDate Text {
+      maxlength = 10;
+   }
+   attribute ExchangeRate Text {
+      maxlength = 10;
+   }
+   attribute ExchangeRateEffDate Text {
+      maxlength = 10;
+   }
+   attribute PosLaneCode Text {
+      maxlength = 10;
+   }
+   attribute BusinessIdentificationNo Text {
+      maxlength = 10;
+   }
+
+   attribute LineItems List < Structure(LineItem) >;
+   attribute Addresses List < Structure(BaseAddress) >;
+   attribute TaxOverrides List < Structure(TaxOverride) >;
+}
+
+structure OrderRequest {
+   implementation = "Utility";
+
+   attribute Company Text {
+      maxlength = 50;
+   }
+   attribute DocType Text {
+      maxlength = 50;
+   }
+   attribute DocCode Text {
+      maxlength = 100;
+   }
+   attribute DocDate Text {
+      maxlength = 10;
+   }
+   attribute CustomerCode Text {
+      maxlength = 100;
+   }
+   attribute Discount Text {
+      maxlength = 50;
+   }
+   attribute ExemptionNo Text {
+      maxlength = 50;
+   }
+   attribute OriginCode Text {
+      maxlength = 50;
+   }
+   attribute DestinationCode Text {
+      maxlength = 50;
+   }
+   attribute DetailLevel Text {
+      maxlength = 10;
+   }
+   attribute ReferenceCode Text {
+      maxlength = 100;
+   }
+   attribute HashCode Text {
+      maxlength = 50;
+   }
+   attribute LocationCode Text {
+      maxlength = 10;
+   }
+   attribute Commit Text {
+      maxlength = 10;
+   }
+   attribute BatchCode Text {
+      maxlength = 20;
+   }
+   attribute CurrencyCode Text {
+      maxlength = 10;
+   }
+   attribute ServiceMode Text {
+      maxlength = 10;
+   }
+   attribute PaymentDate Text {
+      maxlength = 10;
+   }
+   attribute ExchangeRate Text {
+      maxlength = 10;
+   }
+   attribute ExchangeRateEffDate Text {
+      maxlength = 10;
+   }
+   attribute PosLaneCode Text {
+      maxlength = 10;
+   }
+   attribute BusinessIdentificationNo Text {
+      maxlength = 10;
+   }
+
+   attribute LineItems List < Structure(LineItem) >;
+   attribute Addresses List < Structure(BaseAddress) >;
+   attribute TaxOverrides List < Structure(TaxOverride) >;
+}
+
+
+structure Login {
+   implementation = "Utility";
+
+   attribute UserName Text {
+      maxlength = 100;
+   }
+   attribute Password Text {
+      maxlength = 100;
+   }
+}
+
+structure OrderTaxInfoRequest {
+   implementation = "Utility";
+
+   attribute LoginInfo Structure(Login);
+   attribute OrderRequests Structure(OrderRequest);
+}
+
+structure Address {
+   implementation = "Utility";
+
+   attribute AddressCode Text {
+      maxlength = 50;
+   }
+   attribute Line1 Text {
+      maxlength = 200;
+   }
+   attribute Line2 Text {
+      maxlength = 200;
+   }
+   attribute Line3 Text {
+      maxlength = 200;
+   }
+   attribute City Text {
+      maxlength = 50;
+   }
+   attribute Region Text {
+      maxlength = 35;
+   }
+   attribute PostalCode Text {
+      maxlength = 35;
+   }
+   attribute Country Text {
+      maxlength = 35;
+   }
+   attribute TaxRegionId Text {
+      maxlength = 50;
+   }
+   attribute Latitude Text {
+      maxlength = 100;
+   }
+   attribute Longitude Text {
+      maxlength = 100;
+   }
+}
+
+structure ValidateRequest {
+   implementation = "Utility";
+
+   attribute Addresses List < Structure(Address) >;
+}
+
+structure Validate {
+   implementation = "Utility";
+
+   attribute LoginInfo Structure(Login);
+   attribute ValidateRequest Structure(Address);
+}
+
+structure Message {
+   implementation = "Utility";
+
+   attribute Summary Text {
+      maxlength = 1000;
+   }
+   attribute Details Text {
+      maxlength = 2000;
+   }
+   attribute HelpLink Text {
+      maxlength = 200;
+   }
+   attribute RefersTo Text {
+      maxlength = 200;
+   }
+   attribute Severity Text {
+      maxlength = 50;
+   }
+   attribute Source Text {
+      maxlength = 200;
+   }
+}
+
+structure ValidAddress {
+   implementation = "Utility";
+
+   attribute AddressCode Text {
+      maxlength = 50;
+   }
+   attribute Line1 Text {
+      maxlength = 200;
+   }
+   attribute Line2 Text {
+      maxlength = 200;
+   }
+   attribute Line3 Text {
+      maxlength = 200;
+   }
+   attribute City Text {
+      maxlength = 50;
+   }
+   attribute Region Text {
+      maxlength = 35;
+   }
+   attribute PostalCode Text {
+      maxlength = 35;
+   }
+   attribute Country Text {
+      maxlength = 35;
+   }
+   attribute TaxRegionId Text {
+      maxlength = 50;
+   }
+   attribute TaxIncluded Text {
+      maxlength = 10;
+   }
+   attribute Latitude Text {
+      maxlength = 100;
+   }
+   attribute Longitude Text {
+      maxlength = 100;
+   }
+   attribute Line4 Text {
+      maxlength = 200;
+   }
+   attribute FipsCode Text {
+      maxlength = 100;
+   }
+   attribute CarrierRoute Text {
+      maxlength = 100;
+   }
+   attribute PostNet Text {
+      maxlength = 100;
+   }
+   attribute AddressType Text {
+      maxlength = 100;
+   }
+   attribute ValidateStatus Text {
+      maxlength = 100;
+   }
+   attribute GeocodeType Text {
+      maxlength = 100;
+   }
+}
+
+
+structure ValidateResult {
+   implementation = "Utility";
+
+   attribute TransactionId Text {
+      maxlength = 100;
+   }
+   attribute ResultCode Text {
+      maxlength = 100;
+   }
+   attribute Taxable Text {
+      maxlength = 100;
+   }
+   attribute Messages List < Structure(Message) >;
+   attribute Addresses List < Structure(Address) >;
+   attribute ValidAddresses List < Structure(ValidAddress) >;
+}
+
+structure ValidateResponse {
+   implementation = "Utility";
+
+   attribute ValidateResults List < Structure(ValidateResult) >;
+}
+
+@DynamicComponentDependency ORDER
+structure InvoiceHeadStructure using InvoiceHead {
+   nestedwithcrud = Read;
+   implementation = "Utility";
+}

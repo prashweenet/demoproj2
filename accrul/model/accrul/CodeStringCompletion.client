@@ -1,0 +1,131 @@
+client CodeStringCompletion;
+component ACCRUL;
+layer Core;
+projection CodeStringCompletionHandling;
+include fragment CodePartValAndProcessCodeSelector;
+include fragment AccountingCodePartValueLovSelector;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CodeStringCompletionNavEntry parent AccrulNavigator.CodeStringMenu at index 800 {
+      label = "Code String Completion";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AccountingCodePartValueSet {
+   label = "Code String Completion";
+   selector AccountingCodePartValSelector;
+   group CodeStringCompletionGroup bind AccountingCodePartValSelector;
+   list AccountingCodestrComplList(AccountingCodestrComplArray) bind AccountingCodePartValSelector;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command CreateCommand for AccountingCodestrCompl {
+   label = "Create Code String Completion Details";
+   mode = Global;
+   enabled = [CodeStringCompletionExists = "FALSE"];
+   execute {
+      call CreateCodeStrCompDet(Company, CodePart, CodePartValue);
+   }
+}
+
+
+command DeleteCommand for AccountingCodestrCompl {
+   label = "Delete Code String Completion Details";
+   mode = Global;
+   enabled = [CodeStringCompletionExists = "TRUE"];
+   execute {
+      confirm("Confirm that you wish to delete code string completion details.") {
+         when OK {
+            call DeleteCodeStrCompDet(Company, CodePart, CodePartValue);
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AccountingCodePartValSelector for AccountingCodePartValue {
+   label = "${CodePartValue} - ${CodePartValueRef.Description} - ${CodePartName}";
+   lov CodePartValueRef with ReferenceAccountingCodePartValueLovSelector {
+      search = CodePartValue, Description;
+      description = CodePartValueRef.Description;
+      size = Large;
+   }
+   static CodePartName;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group CodeStringCompletionGroup for AccountingCodePartValue {
+   label = "";
+   lov CodePartValueRef with ReferenceAccountingCodePartValueLovSelector {
+      search = CodePartValue, Description;
+      description = CodePartValueRef.Description;
+      size = Large;
+   }
+   field CodePartName {
+      size = Small;
+   }
+   field CodeStringCompletionExists {
+      visible = [false];
+      searchable = false;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountingCodestrComplList for AccountingCodestrCompl {
+   label = "Code String Completion Details ";
+   editmode = SingleRowEdit;
+   orderby = CodefillCodePart;
+
+   field CodeFillName;
+   lov CodefillValueRef with ReferenceCodePartValAndProcessCodeSelector {
+      label = "Code Part Value";
+      search = CodePartValue, Description;
+      editable = [(CodePart != CodefillCodePart and CodefillCodePartBlocked != "S") or CodefillValue != null];
+      description = CodefillValueRef.Description;
+      size = Large;
+   }
+
+   command CreateCommand;
+   command DeleteCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

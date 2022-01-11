@@ -1,0 +1,117 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtFileTemplate
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  180605  Dkanlk  Bug 142140, Removed condition for 'file_type' from where clause.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+-- Note: Where clause was added to support solution sets. Inactive component data should not be shown.
+VIEW Ext_File_Template_Lov IS
+   Prompt = 'Ext File'
+   File_Type.Flags = 'AMI--'
+   File_Type.Datatype = 'STRING(20)'
+   Description.Flags = 'AMI-L'
+SELECT file_template_id             file_template_id,
+       file_type                    file_type,
+       nvl(rtrim(rpad(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileTemplate', file_template_id ),100)),description)
+                                    description,
+       --separated                    separated,
+       Ext_File_Format_API.Decode(file_format) file_format,
+       file_format                             file_format_db,
+       rowid                       objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                  objversion,
+       rowkey                      objkey
+FROM   ext_file_template_tab T
+WHERE  valid_definition  = 'TRUE'
+AND    active_definition = 'TRUE'
+AND EXISTS
+   (SELECT 1
+    FROM   Ext_File_Template_Dir_Tab D
+    WHERE  D.file_template_id = T.file_template_id)
+AND EXISTS (SELECT 1
+            FROM Ext_File_Type_Tab f
+            WHERE t.file_type = f.file_type
+            AND EXISTS(SELECT 1 
+                        FROM module_tab m 
+                        WHERE f.component = m.module 
+                        AND m.active = 'TRUE'));
+
+-- Note: Where clause was added to support solution sets. Inactive component data should not be shown.
+VIEW Ext_File_Template_Lov2 IS
+   Prompt = 'Ext File'
+   File_Type.Flags = 'PMI--'
+   File_Type.Datatype = 'STRING(20)'
+   Description.Flags = 'AMI-L'
+   File_Template_Idx.Flags = 'A---L'
+   File_Template_Idx.Datatype = 'STRING(30)'
+   File_Template_Idx.Prompt = 'File Template ID'
+   File_Typex.Flags = 'A---L'
+   File_Typex.Datatype = 'STRING(20)'
+   File_Typex.Prompt = 'File Type ID'
+   System_Definedx.Flags = 'A---L'
+   System_Definedx.Datatype = 'STRING(5)'
+   System_Definedx.Prompt = 'System Defined'
+SELECT t.file_type                    file_type,
+       t.file_template_id             file_template_id,
+       nvl(rtrim(rpad(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileTemplate', t.file_template_id ),100)),description)
+                                      description,
+       t.separated                    separated,
+       Ext_File_Format_API.Decode(t.file_format) file_format,
+       file_format                    file_format_db,
+       t.file_template_id             file_template_idx,
+       t.file_type                    file_typex, 
+       t.system_defined               system_definedx,
+       rowid                         objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                        objkey
+FROM   ext_file_template_tab     t
+WHERE  valid_definition  = 'TRUE'
+AND    active_definition = 'TRUE'
+AND EXISTS
+   (SELECT 1
+    FROM   Ext_File_Template_Dir_Tab D
+    WHERE  D.file_template_id = T.file_template_id)
+AND EXISTS (SELECT 1
+              FROM ext_file_type_tab f
+              WHERE f.file_type = t.file_type
+              AND EXISTS(SELECT 1 
+                          FROM module_tab m 
+                          WHERE f.component = m.module 
+                          AND m.active = 'TRUE'));
+
+-- Note: Where clause was added to support solution sets. Inactive component data should not be shown.
+VIEW Ext_File_Template_Lov_Cupay IS
+   Prompt = 'Ext File Customer Payment'
+   Description.Flags = 'AMI-L'
+   File_Type.Flags = 'AMI-L'
+   File_Type.Datatype = 'STRING(20)'
+SELECT t.file_template_id             file_template_id,
+       nvl(rtrim(rpad(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'ExtFileTemplate', t.file_template_id ),100)),description)
+                                      description,
+       t.file_type                    file_type,
+       rowid                         objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                        objkey
+FROM   ext_file_template_tab     t
+WHERE  valid_definition  = 'TRUE'
+AND    active_definition = 'TRUE'
+AND EXISTS (SELECT 1
+            FROM ext_file_type_tab f
+            WHERE f.file_type = t.file_type
+            AND EXISTS(SELECT 1 
+                        FROM module_tab m 
+                        WHERE f.component = m.module 
+                        AND m.active = 'TRUE'));

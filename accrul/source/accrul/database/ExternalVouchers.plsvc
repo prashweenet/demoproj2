@@ -1,0 +1,324 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalVouchers
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+FUNCTION Validate_Transaction_Date___(
+   company_          IN VARCHAR2,
+   user_group_       IN VARCHAR2,
+   load_id_          IN VARCHAR2,
+   transaction_date_ IN DATE) RETURN Trans_Date_Validate_Structure_Rec
+IS
+   rec_     Trans_Date_Validate_Structure_Rec;
+BEGIN
+   rec_.accounting_period  := Accounting_Period_API.Get_Accounting_Period_Ext(company_,user_group_,transaction_date_);
+   rec_.voucher_date       := Ext_Transactions_API.Get_Voucher_Date(company_,load_id_,transaction_date_);
+   RETURN rec_;
+END Validate_Transaction_Date___;
+
+
+FUNCTION Fetch_Voucher_Date___(
+   company_          IN VARCHAR2,
+   load_id_          IN VARCHAR2,
+   transaction_date_ IN DATE) RETURN DATE
+IS
+BEGIN
+   RETURN Ext_Transactions_API.Get_Voucher_Date(company_,load_id_,transaction_date_);
+END Fetch_Voucher_Date___;
+
+FUNCTION Check_Tax_Code___ (
+   company_         IN VARCHAR2,
+   account_         IN VARCHAR2,
+   optional_code_   IN VARCHAR2) RETURN VARCHAR2
+IS
+   tax_percentage_      NUMBER;
+   tax_direction_       VARCHAR2(20);
+   tax_type_            VARCHAR2(20);
+BEGIN
+	Tax_Handling_Accrul_Util_API.Fetch_Validate_Tax_Code_On_Acc(tax_percentage_,
+                                                             tax_direction_,
+                                                             tax_type_,
+                                                             company_, 
+                                                             account_, 
+                                                             optional_code_);
+   RETURN Tax_Direction_API.Encode(tax_direction_);                                                            
+END Check_Tax_Code___;
+
+FUNCTION Validate_Currency_Code___ (
+	company_             IN VARCHAR2,
+   load_id_             IN VARCHAR2,
+	currency_code_       IN VARCHAR2,
+	transaction_date_    IN DATE,
+	currency_rate_type_  IN VARCHAR2) RETURN BOOLEAN
+IS   
+   voucher_date_              DATE;  
+   tmp_conversion_factor_     NUMBER; 
+   tmp_currency_rate_         NUMBER;
+   currency_inverted_         VARCHAR2(5);  
+   company_rec_               Company_Finance_API.Public_Rec;  
+   temp_currency_rate_type_   Voucher_Row_Tab.currency_type%TYPE;
+BEGIN
+   company_rec_ := Company_Finance_API.Get(company_);
+   temp_currency_rate_type_ := currency_rate_type_;
+   Validate_Values___( transaction_date_, currency_code_);
+   voucher_date_ := Ext_Transactions_API.Get_Voucher_Date(company_, load_id_, transaction_date_);
+   IF (currency_rate_type_ IS NULL ) THEN
+      temp_currency_rate_type_ := Currency_Type_API.Get_Default_Type(company_);
+   END IF;
+   Currency_Rate_API.Fetch_Currency_Rate_Base( tmp_conversion_factor_, tmp_currency_rate_, currency_inverted_,  company_, currency_code_, company_rec_.currency_code, temp_currency_rate_type_, voucher_date_, 'DUMMY' );
+   
+   RETURN TRUE;     
+END Validate_Currency_Code___;
+
+
+FUNCTION Validate_Currency_Amount___ (
+   company_                   IN VARCHAR2,
+   load_id_                   IN VARCHAR2,
+	transaction_date_          IN DATE,
+	currency_code_             IN VARCHAR2,
+	correction_                IN BOOLEAN,
+	amount_                    IN NUMBER,
+	currency_amount_           IN NUMBER,
+	third_currency_amount_     IN NUMBER,
+	currency_rate_type_        IN VARCHAR2,
+	parallel_curr_rate_type_   IN VARCHAR2,
+	is_credit_                 IN BOOLEAN) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_                Currency_Amount_Structure_Rec;
+  
+   no_of_decimals_in_rate_    NUMBER;
+   tmp_conversion_factor_     NUMBER;
+ 
+   tmp_currency_rate_         NUMBER;
+   currency_inverted_         VARCHAR2(5);
+   curr_rate_rounded_         NUMBER;
+   company_rec_               Company_Finance_API.Public_Rec;
+   voucher_date_              DATE;
+   temp_currency_rate_type_   Voucher_Row_Tab.currency_rate_type%TYPE;
+BEGIN
+   temp_currency_rate_type_ := currency_rate_type_;
+   IF (currency_rate_type_ IS NULL ) THEN
+      temp_currency_rate_type_ := Currency_Type_API.Get_Default_Type(company_);
+   END IF;
+   
+   Validate_Values___( transaction_date_, currency_code_);
+   company_rec_ := Company_Finance_API.Get(company_);
+   return_rec_.currency_amount := ROUND(currency_amount_,Currency_Code_API.Get_Currency_Rounding(company_, currency_code_));
+   return_rec_.amount := amount_;
+   return_rec_.third_currency_amount := third_currency_amount_;
+   voucher_date_ := Ext_Transactions_API.Get_Voucher_Date(company_, load_id_, transaction_date_);
+   IF (NOT correction_) THEN
+      IF (return_rec_.currency_amount < 0 AND NOT is_credit_) THEN
+         return_rec_.currency_amount := -1* return_rec_.currency_amount;
+      ELSIF (return_rec_.currency_amount > 0 AND is_credit_) THEN
+         return_rec_.currency_amount := -1* return_rec_.currency_amount;
+      END IF;
+   ELSE
+       IF (return_rec_.currency_amount > 0 AND NOT is_credit_) THEN
+         return_rec_.currency_amount := -1* return_rec_.currency_amount;
+      ELSIF (return_rec_.currency_amount < 0 AND is_credit_) THEN
+         return_rec_.currency_amount := -1* return_rec_.currency_amount;
+      END IF;      
+   END IF;
+   IF (return_rec_.currency_amount IS NULL ) THEN
+      return_rec_.amount := NULL;
+   END IF;
+   
+   Currency_Rate_API.Fetch_Currency_Rate_Base( tmp_conversion_factor_, tmp_currency_rate_, currency_inverted_,  company_, currency_code_, company_rec_.currency_code, temp_currency_rate_type_, voucher_date_, 'DUMMY' );
+   Currency_Code_API.Get_No_Of_Decimals_In_Rate_(no_of_decimals_in_rate_, -- OUT i_nFinRound
+                                                 company_,
+                                                 currency_code_);
+                                                
+   curr_rate_rounded_ := ROUND(tmp_currency_rate_, no_of_decimals_in_rate_);   
+         
+   return_rec_.amount := Currency_Amount_API.Calculate_Accounting_Amount(return_rec_.currency_amount, curr_rate_rounded_, tmp_conversion_factor_, currency_inverted_, Currency_Code_API.Get_Currency_Rounding(company_, currency_code_));
+   return_rec_ := Set_Third_Currency_Amounts____(voucher_date_, company_, currency_code_, return_rec_, company_rec_, parallel_curr_rate_type_);
+   return_rec_ := Adjust_Currency_Values___(company_, return_rec_, correction_, is_credit_);
+   RETURN return_rec_;   
+END Validate_Currency_Amount___;
+
+
+FUNCTION Adjust_Currency_Values___ (
+   company_           IN VARCHAR2,
+   currency_rec_      IN Currency_Amount_Structure_Rec,
+   correction_flag_   IN BOOLEAN,
+   is_credit_         IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_       Currency_Amount_Structure_Rec;
+   company_rec_      company_finance_API.Public_Rec;
+BEGIN
+   return_rec_ := currency_rec_;
+   company_rec_ := Company_Finance_API.Get(company_);
+	IF ((return_rec_.amount > 0 AND correction_flag_ ) OR (return_rec_.amount < 0 AND NOT (correction_flag_ ))) THEN
+      return_rec_.credit_amount := -return_rec_.amount;              
+      return_rec_.debet_amount := NULL;              
+   ELSE 
+      IF (is_credit_  AND return_rec_.amount IS NOT NULL AND return_rec_.amount = 0) THEN
+         return_rec_.credit_amount := return_rec_.amount;
+         return_rec_.debet_amount := NULL;
+      ELSE 
+         return_rec_.debet_amount := return_rec_.amount;
+         return_rec_.credit_amount := NULL;
+      END IF;
+   END IF;
+     
+   IF ((return_rec_.currency_amount > 0 AND correction_flag_ ) OR (return_rec_.currency_amount < 0 AND NOT (correction_flag_ ))) THEN     
+      return_rec_.currency_credit_amount := -return_rec_.currency_amount;               
+      return_rec_.currency_debet_amount := NULL;               
+   ELSE
+      IF (is_credit_  AND return_rec_.currency_amount IS NOT NULL AND return_rec_.currency_amount = 0) THEN
+         return_rec_.currency_credit_amount := return_rec_.currency_amount;
+         return_rec_.currency_debet_amount := NULL;
+      ELSE
+         return_rec_.currency_debet_amount := return_rec_.currency_amount;
+         return_rec_.currency_credit_amount := NULL;
+      END IF;
+   END IF;
+   IF (company_rec_.parallel_acc_currency IS NOT NULL ) THEN
+      IF ((return_rec_.third_currency_amount > 0 AND correction_flag_) OR (return_rec_.third_currency_amount < 0 AND NOT (correction_flag_))) THEN
+         return_rec_.third_currency_credit_amount := -return_rec_.third_currency_amount;              
+         return_rec_.third_currency_debit_amount := NULL;              
+      ELSE 
+         IF (is_credit_  AND return_rec_.third_currency_amount IS NOT NULL AND return_rec_.third_currency_amount = 0) THEN
+            return_rec_.third_currency_credit_amount := return_rec_.third_currency_amount;
+            return_rec_.third_currency_debit_amount := NULL;
+         ELSE
+            return_rec_.third_currency_debit_amount := return_rec_.third_currency_amount;
+            return_rec_.third_currency_credit_amount := NULL;
+         END IF;
+      END IF;
+   ELSE
+      return_rec_.third_currency_amount         := NULL;              
+      return_rec_.third_currency_credit_amount  := NULL;    
+      return_rec_.third_currency_debit_amount   := NULL;    
+   END IF;
+	RETURN return_rec_;
+END Adjust_Currency_Values___;
+
+FUNCTION Validate_Amount___ (
+   company_                   IN VARCHAR2,
+   load_id_                   IN VARCHAR2,
+	transaction_date_          IN DATE,
+	currency_code_             IN VARCHAR2,
+	correction_                IN BOOLEAN,
+	amount_                    IN NUMBER,
+	currency_amount_           IN NUMBER,
+	third_currency_amount_     IN NUMBER,
+	parallel_curr_rate_type_   IN VARCHAR2,
+	is_credit_                 IN BOOLEAN) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_    Currency_Amount_Structure_Rec;
+   company_rec_   Company_Finance_API.Public_Rec;
+   voucher_date_  DATE;
+BEGIN
+   Validate_Values___( transaction_date_, currency_code_);
+   company_rec_ := Company_Finance_API.Get(company_);
+   return_rec_.currency_amount := currency_amount_;
+ 
+   return_rec_.amount := ROUND(amount_,Currency_Code_API.Get_Currency_Rounding(company_, company_rec_.currency_code));
+ 
+   return_rec_.third_currency_amount := third_currency_amount_;
+   voucher_date_ := Ext_Transactions_API.Get_Voucher_Date(company_, load_id_, transaction_date_);
+   IF ( NOT (correction_)) THEN
+      IF (return_rec_.amount < 0 AND NOT is_credit_) THEN
+         return_rec_.amount := -1* return_rec_.amount;
+      ELSIF (return_rec_.amount > 0 AND is_credit_) THEN
+         return_rec_.amount := -1* return_rec_.amount;
+      END IF; 
+   ELSE
+       IF (return_rec_.amount > 0 AND NOT is_credit_) THEN
+         return_rec_.amount := -1* return_rec_.amount;
+      ELSIF (return_rec_.amount < 0 AND is_credit_) THEN
+         return_rec_.amount := -1* return_rec_.amount;
+      END IF;   
+   END IF;  
+   
+   IF (currency_code_ = company_rec_.currency_code) THEN
+      return_rec_.currency_amount := return_rec_.amount;
+   ELSIF (currency_code_ != company_rec_.currency_code AND return_rec_.amount IS NOT NULL ) THEN 
+      IF (return_rec_.amount < 0 ) THEN
+         IF (return_rec_.currency_amount > 0 ) THEN
+            return_rec_.currency_amount := -1 * return_rec_.currency_amount;
+         END IF;
+      ELSIF (return_rec_.amount > 0) THEN
+         IF (return_rec_.currency_amount < 0) THEN
+            return_rec_.currency_amount := -1 * return_rec_.currency_amount;
+         END IF;
+      END IF;   
+   END IF;
+   return_rec_ := Set_Third_Currency_Amounts____(voucher_date_, company_, currency_code_, return_rec_, company_rec_, parallel_curr_rate_type_);
+   return_rec_ := Adjust_Currency_Values___(company_, return_rec_, correction_, is_credit_);
+  
+   RETURN return_rec_;
+END Validate_Amount___;
+
+FUNCTION Set_Third_Currency_Amounts____ (
+	voucher_date_                 IN DATE,
+	company_                      IN VARCHAR2,	
+	currency_code_                IN VARCHAR2,	
+	rec_                          IN Currency_Amount_Structure_Rec,
+   company_rec_                  IN Company_Finance_API.Public_Rec,
+	parallel_currency_rate_type_  IN VARCHAR2 ) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_ Currency_Amount_Structure_Rec;     
+BEGIN
+   return_rec_ := rec_;  
+ 
+   IF (company_rec_.parallel_acc_currency IS NULL )  THEN
+      return_rec_.third_currency_amount := NULL;
+   ELSE
+      IF (company_rec_.parallel_acc_currency = currency_code_ AND company_rec_.parallel_base = 'TRANSACTION_CURRENCY') THEN
+         return_rec_.third_currency_amount := return_rec_.currency_amount;
+      ELSIF (company_rec_.parallel_acc_currency = company_rec_.currency_code AND company_rec_.parallel_base = 'ACCOUNTING_CURRENCY') THEN
+         return_rec_.third_currency_amount := return_rec_.amount;
+      ELSE
+         return_rec_.third_currency_amount := Currency_Amount_API.Calc_Parallel_Curr_Amt_Round(company_, voucher_date_, return_rec_.amount, return_rec_.currency_amount, company_rec_.currency_code, currency_code_, parallel_currency_rate_type_, company_rec_.parallel_acc_currency, company_rec_.parallel_base);
+      END IF;
+   END IF;  
+   
+   RETURN return_rec_;
+END Set_Third_Currency_Amounts____;
+
+PROCEDURE Validate_Values___ (
+	transaction_date_ IN DATE,	
+	currency_code_ IN VARCHAR2 )
+IS
+BEGIN
+   IF (transaction_date_ IS NULL ) THEN
+      Error_SYS.Record_General(lu_name_, 'NOTRANSDATE: Transaction Date is empty.');
+   ELSIF (currency_code_ IS NULL ) THEN
+      Error_SYS.Record_General(lu_name_, 'NOCURRCODE: No Currency Code selected.');
+   END IF;      
+END Validate_Values___;
+
+FUNCTION Validate_Project_Origin___(
+   company_    IN VARCHAR2,
+   project_id_ IN VARCHAR2 )  RETURN Project_Origin_Structure_Rec
+IS
+   project_origin_rec_   Project_Origin_Structure_Rec;
+   project_origin_       VARCHAR2(30);
+BEGIN
+   $IF (Component_Genled_SYS.INSTALLED) $THEN
+      project_origin_:= Accounting_Project_API.Get_Project_Origin_Db(company_, project_id_);
+   $ELSE
+      project_origin_ := NULL;
+   $END
+   IF (project_origin_ = 'JOB') THEN
+      project_origin_rec_.valid_origin := 'FALSE';
+      project_origin_rec_.activity_id  := 0;
+   ELSIF (project_origin_ = 'FINPROJECT') THEN
+      project_origin_rec_.valid_origin := 'FALSE';
+      project_origin_rec_.activity_id  :=  NULL;
+   ELSE
+      project_origin_rec_.valid_origin := 'TRUE';
+   END IF;
+   RETURN project_origin_rec_;
+END Validate_Project_Origin___;
+

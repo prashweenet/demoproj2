@@ -1,0 +1,10 @@
+projection AccrulNavigator;
+component ACCRUL;
+layer Core;
+description "Accrul Navigator";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+
+------------------------------ ENTITY DETAILS -------------------------------

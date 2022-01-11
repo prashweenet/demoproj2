@@ -1,0 +1,212 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingCodePartValue
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140120  Janblk  PBFI-4419, Added new view ACCOUNTING_CODE_PART_VALUE_LOV to make backward compatible.
+--  200904  Jadulk  FISPRING20-6695, Removed CONACC related obsolete component logic.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Accnt_Group IS
+   Flags      = 'PMI-L'
+   Datatype   = 'STRING(3)/UPPERCASE'
+   Prompt     = 'Account Group';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@Override 
+VIEW Accounting_Code_Part_Value IS
+WHERE NVL(bud_account,'N') = 'N';
+
+VIEW Accounting_Codepart_Val_Finrep IS
+   Prompt = 'Accounting code part value'
+   Sort = 'SORT_VALUE'
+   Accnt_Type.Flags = 'PMI-L'
+   Accnt_Type.Datatype = 'STRING(20)/UPPERCASE'
+   Accnt_Type.Prompt = 'Account Type'
+SELECT company                      company,
+       code_part                      code_part,
+       accnt_group                    accnt_group,
+       accnt_type                     accnt_type,
+       code_part_value                code_part_value,
+       sort_value                     sort_value,
+       Budget_Account_Flag_API.Decode(bud_account) budget_value,
+       bud_account                    budget_value_db,
+       rowkey                        objkey
+FROM   accounting_code_part_value_tab;
+
+@SecurityCheck Company.UserAuthorized(company)
+VIEW Budget_Acc_Code_Part_Value IS
+   Prompt = 'Accounting code part value'
+   Sort = 'SORT_VALUE'
+   Accounting_Text_Id.Datatype = 'NUMBER'
+SELECT company                      company,
+       code_part                      code_part,
+       code_part_value                code_part_value,
+       nvl(ACCOUNTING_CODE_PART_VALUE_API.Get_Desc_For_Code_Part(company,code_part,code_part_value), description)
+                                      description,
+       accnt_type                   accnt_type,
+       valid_from                   valid_from,
+       valid_until                    valid_until,
+       accounting_text_id             accounting_text_id,
+       rtrim(rpad(text,2000))         text,
+       sort_value                     sort_value,
+       rowid                       objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                    objversion,
+       rowkey                        objkey
+FROM   accounting_code_part_value_tab ;
+
+
+@SecurityCheck Company.UserAuthorized(company)
+VIEW Secondary_Acc_Code_Part_Value IS
+   Prompt = 'Accounting code part value'
+   Sort = 'SORT_VALUE'
+   Code_Part.Flags = 'PMI--'
+SELECT company                      company,
+       code_part                      code_part,
+       code_part_value                code_part_value,
+       nvl(ACCOUNTING_CODE_PART_VALUE_API.Get_Desc_For_Code_Part(company,code_part,code_part_value), description)
+                                      description,
+       sort_value                     sort_value,
+       rowkey                        objkey
+FROM   accounting_code_part_value_tab 
+WHERE  NVL(bud_account,'N') = 'N'
+AND    code_part = 'A'  ;
+
+VIEW Accounting_Code_Part_Value_Av IS
+   Prompt = 'Accounting code part value Tax Audit'
+   Company.Flags = 'P----'
+   Code_Part.Flags = 'P----'
+   Code_Part_Value.Flags = 'K----'
+   Description.Flags = 'A----'
+   Valid_From.Flags = 'A----'
+   Valid_Until.Flags = 'A----'
+SELECT company                         company,
+       code_part                       code_part,
+       code_part_value                 code_part_value,
+       description                     description,
+       valid_from                      valid_from,
+       valid_until                     valid_until
+FROM   accounting_code_part_value
+WHERE  code_part != 'A';
+
+@SecurityCheck Company.UserAuthorized(accounting_code_part_value_tab.company)
+VIEW Accounting_Code_Part_Value_Lov IS
+   Prompt = 'Accounting Code Part Value'
+   Company.Flags = 'PMI--'
+   Code_Part.Flags = 'PMI-L'
+   Code_Part.Prompt = 'Code Part'
+   Code_Part_Value.Flags = 'KMI-L'
+   Code_Part_Value.Prompt = 'Code Part Value'
+   Description.Flags = 'AMIUL'
+   Accnt_Type.Flags = 'A----'
+   Valid_From.Flags = 'AMIU-'
+   Valid_From.Prompt = 'Valid From'
+   Valid_Until.Flags = 'AMIU-'
+   Valid_Until.Prompt = 'Valid Until'
+   Accounting_Text_Id.Flags = 'A-IU-'
+   Accounting_Text_Id.Prompt ='Accounting Text Id'
+   Text.Flags = 'A-IU-'
+   Sort_Value.Flags = 'A-I--'
+   Sort_Value.Prompt = 'Sort Value'
+SELECT
+       company                        company,
+       code_part                      code_part,
+       code_part_value                code_part_value,
+       nvl(Accounting_Code_Part_Value_API.Get_Desc_For_Code_Part(company,code_part,code_part_value), description) description,
+       accnt_type                     accnt_type,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       accounting_text_id             accounting_text_id,
+       rtrim(rpad(text,2000))         text,
+       sort_value                     sort_value,
+       rowkey                         objkey,
+       rowtype                        objtype,
+       to_char(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   accounting_code_part_value_tab
+WHERE  NVL(bud_account,'N') = 'N';
+
+@SecurityCheck Company.UserAuthorized(company)
+VIEW Code_Parts_Det IS
+   Prompt     = 'Code part Det'
+   SELECT
+       company                        company,
+       code_part                      code_part,
+       code_part_value                code_part_value,
+       nvl(Accounting_Code_Part_Value_API.Get_Desc_For_Code_Part(company,code_part,code_part_value), description) description,
+       accnt_type                     accnt_type,
+       valid_from                     valid_from,
+       valid_until                    valid_until,
+       accounting_text_id             accounting_text_id,
+       rtrim(rpad(text,2000))         text,
+       sort_value                     sort_value
+   FROM accounting_code_part_value_tab;
+
+VIEW Code_Part_Val_And_Process_Code IS
+   Prompt = 'Accounting Code Part And Process Code'
+SELECT
+       company                        company,
+       code_part                      code_part,
+       code_part_value                code_part_value,
+       nvl(Accounting_Code_Part_Value_API.Get_Desc_For_Code_Part(company,code_part,code_part_value), description) description,
+       rowkey                         objkey,
+       to_char(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   accounting_code_part_value_tab
+WHERE  NVL(bud_account,'N') = 'N'
+AND    EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE accounting_code_part_value_tab.company = company)
+UNION ALL
+SELECT
+       company                        company,
+       'P'                            code_part,
+       process_code                   code_part_value,
+       substr(nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'AccountProcessCode',
+          process_code), description), 1, 100) description,
+       rowkey                         objkey,
+       to_char(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   accounting_process_code_tab;
+
+VIEW Include_Exclude_Values IS
+   Prompt = 'CODE_PART'
+   Sort = 'SORT_VALUE'
+   Company.Datatype = 'STRING(20)'
+   Term_Name.Flags      = 'PMI--'
+   Term_Name.Datatype   = 'STRING(10)'
+   Term_Name.Prompt     = 'Codepart Name'
+   Term_Value.Flags      = 'KMI-L'
+   Term_Value.Datatype   = 'STRING(10)'
+   Term_Value.Prompt     = 'Codepart Value'
+   Description.Flags      = 'A---L'
+   Description.Datatype   = 'STRING(200)'
+   Alphasort.Flags      = 'A----'
+   Alphasort.Datatype   = 'STRING(10)'
+   Data_Base_Term.Flags      = 'AMI--'
+   Data_Base_Term.Datatype   = 'STRING(1)'
+   Data_Base_Term.Prompt     = 'Codepart'
+   Sort_Value.Flags      = 'A-I--'
+   Sort_Value.Datatype   = 'STRING(20)/UPPERCASE'
+SELECT val.company                     company,
+       code.code_name                  term_name, 
+       val.code_part_value             term_value,
+       val.description                 description,
+       val.description                 alphasort,
+       val.code_part                   data_base_term,
+       val.sort_value                  sort_value,
+       val.objkey                      objkey
+FROM   accounting_code_part_value val, accounting_code_parts code
+WHERE  val.company         = code.company
+  AND  val.code_part       = code.code_part
+  AND  code.code_part_used = Finance_Yes_No_API.Decode( 'Y' );  

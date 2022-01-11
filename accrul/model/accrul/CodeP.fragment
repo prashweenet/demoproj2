@@ -1,0 +1,40 @@
+fragment CodeP;
+component ACCRUL;
+layer Core;
+description "Contains Common Client Code and Projection Logic for Code P";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand for CodeP {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'CodeP' and AttributeKey eq $[CodeP]";
+   }
+}
+----------------------------------- LISTS -----------------------------------
+list AdditionalCodeP for CodeP {
+   field CodeP {
+      size = Small;
+   }
+   field Description;
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid Period";
+   }
+   command TranslationCommand;
+}
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+@Override
+entity CodeP {
+   attribute CodeP Text {
+      label = "${context.Company.CodePName}";
+   }
+   attribute Description Text {
+      label = "Description";
+   }
+}

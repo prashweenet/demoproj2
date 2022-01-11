@@ -1,0 +1,326 @@
+client VoucherDetailsAnalysis;
+component ACCRUL;
+layer Core;
+
+include fragment CodeStringAllBasic;
+include fragment FinNotesDialog;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry FrmQueryVoucherDetailNavEntry  parent AccrulNavigator.VoucherAnalysisMenu at index 300 {
+      label = "Voucher Details Analysis";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using VoucherSet {
+   label = "Voucher Details Analysis";
+   stateindicator VoucherStatusIndicator;
+   selector VoucherNewSelector;
+   group FrmQueryVoucherDetailGroup;
+   group VoucherReferenceGroup;
+   arrange {
+      group VoucherEntryByUserGroup;
+      group VoucherApprovalByUserGroup;
+   }
+
+   list VoucherDetailList(DetailVoucherDetail);
+
+   commandgroup CommandGroup {
+
+      command NotesCommand;
+      command ViewMultiCompanyVoucherCommand;
+   }
+}
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command NotesCommand for Voucher {
+   label = "Notes";
+   enabled = [Company != null and VoucherNo > 1];
+   variable NoteIdNum {
+      type = Number;
+   }
+   execute {
+      set PackageNameStr = "VOUCHER_NOTE_API";
+      set CallingProjectionNameStr = "VoucherDetailsAnalysis";
+      assistant NotesAssistant(PackageNameStr, CallingProjectionNameStr, keyref, luname, "") into(NoteIdNum) {
+         when OK {
+            exit;
+         }
+      }
+   }
+}
+
+command ViewMultiCompanyVoucherCommand for Voucher {
+   label = "View Multi Company Voucher";
+   enabled = [MultiCompanyVoucher = true and  MultiCompanyId != null and VoucherTypeRef.VoucherType != "R"];
+   variable MultiCompanyInfoStructureVar {
+      type = MultiCompanyInfoStructure;
+   }
+
+   execute {
+      if [MultiCompanyId != null and VoucherTypeReference != null] {
+         call GetMultiCompanyInfo(Company, AccountingYear, VoucherType, VoucherNo) into MultiCompanyInfoStructureVar;
+         navigate  "page/MultiCompanyVoucherDetailsAnalysis/Form?$contexts=Company:$[MultiCompanyInfoStructureVar.OriginalCompany]&$filter=VoucherType eq $[MultiCompanyInfoStructureVar.OriginalVoucherType] and VoucherNo eq $[MultiCompanyInfoStructureVar.OriginalVoucherNo] and AccountingYear eq $[MultiCompanyInfoStructureVar.OriginalAccYear]";
+      }
+      else {
+         navigate  "page/MultiCompanyVoucherDetailsAnalysis/Form?$contexts=Company:$[Company]&$filter=VoucherType eq $[VoucherType] and VoucherNo eq $[VoucherNo] and AccountingYear eq $[AccountingYear]";
+      }
+   }
+}
+
+
+----------------------------- VISUAL COMPONENTS -----------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector VoucherNewSelector for Voucher {
+   label = "${VoucherType} - ${VoucherNo}";
+   static VoucherType;
+   static VoucherNo;
+   static AccountingYear;
+   badge VoucherStatus {
+      style = TextOnly;
+      showlabel = false;
+      emphasis Progress11 = [Objstate = "Confirmed"];
+	   emphasis Progress2 = [Objstate = "Waiting"];
+      emphasis StateError = [Objstate = "Error"];
+      emphasis StateCancelled = [Objstate = "Cancelled"];
+      emphasis Progress5 = [Objstate = "AwaitingApproval"];
+      emphasis Progress9 = [Objstate = "PartiallyApproved"];
+   }
+}
+
+---------------------------------- GROUPS -----------------------------------
+group FrmQueryVoucherDetailGroup for Voucher {
+   label = "";
+
+   field VoucherTypeRef {
+      size = Small;
+   }
+   field VoucherNo {
+      size = Small;
+   }
+   field FunctionGroup {
+      size = Small;
+   }
+   field VoucherDate {
+      size = Small;
+   }
+   field AccountingYear {
+      size = Small;
+   }
+   field AccountingPeriod {
+      size = Small;
+   }
+   field MultiCompanyVoucher {
+      size = Small;
+   }
+   field Notes {
+      size = Small;
+   }
+   field VoucherText2 {
+      size = Large;
+   }
+   field UpdateError {
+      size = Large;
+   }
+}
+
+group VoucherEntryByUserGroup for Voucher {
+   label = "Entry Information";
+
+   field Userid {
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field DateReg;
+   field EnteredByUserGroupRef {
+      format = uppercase;
+      filterlabel = "Entered by User Group";
+   }
+}
+
+group VoucherReferenceGroup for Voucher {
+   label = "Reference Voucher Information";
+
+   field RefCompany;
+   field VoucherTypeReference {
+      size = Small;
+      filterlabel = "Reference Voucher Type";
+   }
+   field VoucherNoReference {
+      filterlabel = "Reference Voucher Number";
+   }
+   field AccountingYearReference {
+      size = Small;
+      filterlabel = "Reference Voucher Year";
+   }
+}
+group VoucherApprovalByUserGroup for Voucher {
+   label = "Approval Information";
+
+   field ApprovedByUserid {
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field ApprovalDate {
+      filterlabel = "First Approval Date";
+   }
+   field ApprovedByUserGroup {
+      format = uppercase;
+      filterlabel = "First Approved by User Group";
+   }
+   field SecondApproverId {
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field SecondApprovalDate {
+      filterlabel = "Second Approval Date";
+   }
+   field SecondApproverUserGroup {
+      format = uppercase;
+      filterlabel = "Second Approved by User Group";
+
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list VoucherDetailList for VoucherRow {
+   label = "Voucher Rows";
+
+   orderby = RowNo;
+   field RowNo {
+      size = Small;
+   }
+   field TransCode {
+      format = uppercase;
+   }
+   fieldset CodeStringAllBasicLovFieldSet;
+   field MultiCompanyVoucher {
+      size = Small;
+   }
+   field Correction {
+      size = Small;
+   }
+   field CurrencyCode {
+      size = Small;
+   }
+   field CurrencyRate;
+   field ConversionFactor;
+   field DebetAmount;
+   field CreditAmount;
+   field Amount;
+   field CurrencyDebetAmount;
+   field CurrencyCreditAmount;
+   field CurrencyAmount;
+   field ThirdCurrencyDebitAmount;
+   field ThirdCurrencyCreditAmount;
+   field AmountinEU;
+   field ParallelCurrencyRate;
+   field ParallelConversionFactor;
+   field Text {
+      size = Large;
+   }
+   field Quantity;
+   field ProcessCodeRef {
+      size = Small;
+   }
+   @DynamicComponentDependency INVOIC
+   lov DelivTypeIdRef with ReferenceDeliveryTypeSelector {
+      search = DelivTypeId, Description;
+      description = DelivTypeIdRef.Description;
+   }
+   field OptionalCode {
+      size = Small;
+   }
+   field ProjectActivityId;
+   field PartyTypeId {
+      size = Small;
+   }
+   field PartyName;
+   field UpdateError {
+      size = Large;
+   }
+   field Corrected {
+      size = Small;
+   }
+   field PeriodAllocation {
+      size = Small;
+   }
+   field ReferenceSerie;
+   field ReferenceNumber;
+   field AutoTaxVouEntry {
+      size = Small;
+   }
+   field RowGroupId;
+
+   fieldranking Amount;
+
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+stateindicator VoucherStatusIndicator for Voucher {
+
+   state "Approved" {
+      completed = 100%;
+      emphasis Progress11 = [Objstate = "Confirmed"];
+   }
+   state "Not Approved" {
+      completed = 25%;
+      emphasis Progress2 = [Objstate = "Waiting"];
+   }
+   state "Error" {
+      completed = 100%;
+      emphasis StateError = [Objstate = "Error"];
+   }
+   state "Cancelled" {
+      completed = 100%;
+      emphasis StateCancelled = [Objstate = "Cancelled"];
+   }
+   state "Awaiting Approval" {
+      completed = 50%;
+      emphasis Progress5 = [Objstate = "AwaitingApproval"];
+   }
+   state "Partially Approved" {
+      completed = 75%;
+      emphasis Progress9 = [Objstate = "PartiallyApproved"];
+   }
+}
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

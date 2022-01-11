@@ -1,0 +1,67 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  CostStrucLevel
+--  Component:  ACCRUL
+--  LU:         DimCostStrucLevel
+--
+--  File     :  DimCostStrucLevelOl.api
+--  Purpose  :  Create ON LINE dimension view DIM_COST_STRUC_LEVEL_OL
+--  Note     :  NOTE that NULL identity handling is not required for OL views
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_COST_STRUC_LEVEL
+DEFINE VIEW       = DIM_COST_STRUC_LEVEL_OL
+DEFINE TAB        = COST_STRUCTURE_LEVEL_TAB
+DEFINE TAB2       = COST_STRUCTURE_TAB
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimCostStrucLevel
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.company||'^'||a.cost_structure_id||'^'||a.level_id id,
+      a.company                                             company,
+      a.cost_structure_id                                   cost_structure_id,
+      a.level_id                                            code,
+      a.level_id                                            level_id,
+      a.description                                         level_id_description,
+      a.level_above                                         parent_level_id
+FROM &TAB a,
+   &TAB2 b
+WHERE a.company           = b.company
+   AND    a.cost_structure_id = b.cost_structure_id
+   AND    b.rowstate          = 'Active'
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Cost Structure Levels^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..COST_STRUCTURE_ID
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Structure ID^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Level ID^';
+COMMENT ON COLUMN &VIEW..LEVEL_ID
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(200)^PROMPT=Level ID^';
+COMMENT ON COLUMN &VIEW..LEVEL_ID_DESCRIPTION
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(200)^PROMPT=Level Description^';
+COMMENT ON COLUMN &VIEW..PARENT_LEVEL_ID
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(20)^PROMPT=Parent Level ID^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE TAB
+UNDEFINE TAB2 
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

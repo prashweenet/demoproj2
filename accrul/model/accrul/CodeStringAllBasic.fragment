@@ -1,0 +1,452 @@
+fragment CodeStringAllBasic;
+component ACCRUL;
+layer Core;
+description "Fragment with a fieldset, CodeStringAllBasicLovFieldSet, for Account and Codepart B-J using the ReferenceSelector of the entities Account and CodeB-J";
+// The page using this fieldset must be Company Context dependent
+// The reference in the projection must be named AccountRef and CodeB-JRef (e.g. CodeBRef) and the attributes needs to be called Account and CodeB-J.
+// The fragment has basic support for codepart handling which means that it will display the correct label and if the code part is visible or not
+// For other support, typically codestring completion etc. use the fragment with the word "Extended" in it.
+// If there is a need for specific Validate Command handling then override the command
+// namned ValidateCodeStringAllBasicAccountRef and ValidateCodeStringAllBasicCode<CODEPART>Ref e.g. ValidateCodeStringAllBasicCodeBRef
+// Fieldset CodeStringAllBasicFreeLovFieldSet has support for freeinput condition which means that it will be possible to enter free text.
+
+// Fieldsets CodeStringAllBasicLovNoSearchFieldSet and CodeStringAllBasicSearchOnlyFieldSet to be used together with pages with group and sum where
+//           currently the referenced values (description in this case) is not yet supported when using OData aggregate.
+// Fieldset CodeStringAllBasicLovNoSearchFieldSet displays the code parts (if used in company) in the list with ID and Description but is not searchable.
+// Fieldset CodeStringAllBasicSearchOnlyFieldSet does not display the code part in the lists but is searchable but only ID is searchable.
+// Fieldset CodeStringAllBasicVisibleFreeLovFieldSet Allways displays the code parts in the list with ID and Description and support for freeinput.
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+--------------------------------- SELECTOR ----------------------------------
+@Override
+selector ReferenceAccountSelector for Account {
+   static AccntGroup {
+      columnvisible = [false];
+      visible = [false];
+   }
+   static AccntType {
+      columnvisible = [false];
+      visible = [false];
+   }
+}
+--------------------------------- LOV LISTS ---------------------------------
+
+
+-------------------------------- FIELD SETS ---------------------------------
+fieldset CodeStringAllBasicLovNoDescFieldSet {
+   lov AccountRef with ReferenceAccountSelector {
+      label = "${context.Company.CodeAName}";
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAllBasicAccountRef;
+   }
+   lov CodeBRef with ReferenceCodeBSelector {
+      label = "${context.Company.CodeBName}";
+      columnvisible = [context.Company.CodeBUsed = "Y"];
+      visible = [context.Company.CodeBUsed = "Y"];
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAllBasicCodeBRef;
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      label = "${context.Company.CodeCName}";
+      columnvisible = [context.Company.CodeCUsed = "Y"];
+      visible = [context.Company.CodeCUsed = "Y"];
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAllBasicCodeCRef;
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      label = "${context.Company.CodeDName}";
+      columnvisible = [context.Company.CodeDUsed = "Y"];
+      visible = [context.Company.CodeDUsed = "Y"];
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAllBasicCodeDRef;
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      label = "${context.Company.CodeEName}";
+      columnvisible = [context.Company.CodeEUsed = "Y"];
+      visible = [context.Company.CodeEUsed = "Y"];
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAllBasicCodeERef;
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      label = "${context.Company.CodeFName}";
+      columnvisible = [context.Company.CodeFUsed = "Y"];
+      visible = [context.Company.CodeFUsed = "Y"];
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAllBasicCodeFRef;
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      label = "${context.Company.CodeGName}";
+      columnvisible = [context.Company.CodeGUsed = "Y"];
+      visible = [context.Company.CodeGUsed = "Y"];
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAllBasicCodeGRef;
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      label = "${context.Company.CodeHName}";
+      columnvisible = [context.Company.CodeHUsed = "Y"];
+      visible = [context.Company.CodeHUsed = "Y"];
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAllBasicCodeHRef;
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      label = "${context.Company.CodeIName}";
+      columnvisible = [context.Company.CodeIUsed = "Y"];
+      visible = [context.Company.CodeIUsed = "Y"];
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAllBasicCodeIRef;
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      label = "${context.Company.CodeJName}";
+      columnvisible = [context.Company.CodeJUsed = "Y"];
+      visible = [context.Company.CodeJUsed = "Y"];
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringAllBasicCodeJRef;
+   }
+}
+
+fieldset CodeStringAllBasicLovFieldSet clone CodeStringAllBasicLovNoDescFieldSet {
+   lov AccountRef with ReferenceAccountSelector {
+      description = AccountRef.Description;
+      search = Account, Description;
+   }
+   lov CodeBRef with ReferenceCodeBSelector {
+      description = CodeBRef.Description;
+      search = CodeB, Description;
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      description = CodeCRef.Description;
+      search = CodeC, Description;
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      description = CodeDRef.Description;
+      search = CodeD, Description;
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      description = CodeERef.Description;
+      search = CodeE, Description;
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      description = CodeFRef.Description;
+      search = CodeF, Description;
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      description = CodeGRef.Description;
+      search = CodeG, Description;
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      description = CodeHRef.Description;
+      search = CodeH, Description;
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      description = CodeIRef.Description;
+      search = CodeI, Description;
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      description = CodeJRef.Description;
+      search = CodeJ, Description;
+   }
+}
+
+
+fieldset CodeStringAllBasicFreeLovFieldSet clone CodeStringAllBasicLovFieldSet {
+   lov AccountRef with ReferenceAccountSelector {
+      freeinput = [true];
+   }
+   lov CodeBRef with ReferenceCodeBSelector {
+      freeinput = [true];
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      freeinput = [true];
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      freeinput = [true];
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      freeinput = [true];
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      freeinput = [true];
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      freeinput = [true];
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      freeinput = [true];
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      freeinput = [true];
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      freeinput = [true];
+   }
+}
+
+fieldset CodeStringAllBasicVisibleFreeLovFieldSet clone CodeStringAllBasicFreeLovFieldSet {
+   lov CodeBRef with ReferenceCodeBSelector {
+      visible = [true];
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      visible = [true];
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      visible = [true];
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      visible = [true];
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      visible = [true];
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      visible = [true];
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      visible = [true];
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      visible = [true];
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      visible = [true];
+   }
+}
+
+fieldset CodeStringAllBasicLovNoSearchFieldSet clone CodeStringAllBasicLovNoDescFieldSet {
+   lov AccountRef with ReferenceAccountSelector {
+      description = AccountRef.Description;
+      searchable = false;
+   }
+   lov CodeBRef with ReferenceCodeBSelector {
+      description = CodeBRef.Description;
+      searchable = false;
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      description = CodeCRef.Description;
+      searchable = false;
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      description = CodeDRef.Description;
+      searchable = false;
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      description = CodeERef.Description;
+      searchable = false;
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      description = CodeFRef.Description;
+      searchable = false;
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      description = CodeGRef.Description;
+      searchable = false;
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      description = CodeHRef.Description;
+      searchable = false;
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      description = CodeIRef.Description;
+      searchable = false;
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      description = CodeJRef.Description;
+      searchable = false;
+   }
+}
+
+
+fieldset CodeStringAllBasicSearchOnlyFieldSet {
+   field AccountRef {
+      label = "${context.Company.CodeAName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAllBasicAccountRef;
+   }
+   field CodeBRef {
+      label = "${context.Company.CodeBName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAllBasicCodeBRef;
+   }
+   field CodeCRef {
+      label = "${context.Company.CodeCName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAllBasicCodeCRef;
+   }
+   field CodeDRef {
+      label = "${context.Company.CodeDName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAllBasicCodeDRef;
+   }
+   field CodeERef {
+      label = "${context.Company.CodeEName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAllBasicCodeERef;
+   }
+   field CodeFRef {
+      label = "${context.Company.CodeFName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAllBasicCodeFRef;
+   }
+   field CodeGRef {
+      label = "${context.Company.CodeGName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAllBasicCodeGRef;
+   }
+   field CodeHRef {
+      label = "${context.Company.CodeHName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAllBasicCodeHRef;
+   }
+   field CodeIRef {
+      label = "${context.Company.CodeIName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAllBasicCodeIRef;
+   }
+   field CodeJRef {
+      label = "${context.Company.CodeJName}";
+      maxlength = 10;
+      format = uppercase;
+      columnexclude = [true];
+      searchable = true;
+      validate command ValidateCodeStringAllBasicCodeJRef;
+   }
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+command ValidateCodeStringAllBasicAccountRef {
+   variable Dummy;
+}
+command ValidateCodeStringAllBasicCodeBRef {
+   variable Dummy;
+}
+command ValidateCodeStringAllBasicCodeCRef {
+   variable Dummy;
+}
+command ValidateCodeStringAllBasicCodeDRef {
+   variable Dummy;
+}
+command ValidateCodeStringAllBasicCodeERef {
+   variable Dummy;
+}
+command ValidateCodeStringAllBasicCodeFRef {
+   variable Dummy;
+}
+command ValidateCodeStringAllBasicCodeGRef {
+   variable Dummy;
+}
+command ValidateCodeStringAllBasicCodeHRef {
+   variable Dummy;
+}
+command ValidateCodeStringAllBasicCodeIRef {
+   variable Dummy;
+}
+command ValidateCodeStringAllBasicCodeJRef {
+   variable Dummy;
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+@Override
+entity Account {
+   attribute Account Text {
+      label = "${context.Company.CodeAName}";
+   }
+   attribute AccntGroup Text {
+      lovcolumn = [true];
+   }
+   attribute AccntType Text {
+      lovcolumn = [true];
+   }
+}
+@Override
+entity CodeB {
+   attribute CodeB Text {
+      label = "${context.Company.CodeBName}";
+   }
+}
+@Override
+entity CodeC {
+   attribute CodeC Text {
+      label = "${context.Company.CodeCName}";
+   }
+}
+@Override
+entity CodeD {
+   attribute CodeD Text {
+      label = "${context.Company.CodeDName}";
+   }
+}
+@Override
+entity CodeE {
+   attribute CodeE Text {
+      label = "${context.Company.CodeEName}";
+   }
+}
+@Override
+entity CodeF {
+   attribute CodeF Text {
+      label = "${context.Company.CodeFName}";
+   }
+}
+@Override
+entity CodeG {
+   attribute CodeG Text {
+      label = "${context.Company.CodeGName}";
+   }
+}
+@Override
+entity CodeH {
+   attribute CodeH Text {
+      label = "${context.Company.CodeHName}";
+   }
+}
+@Override
+entity CodeI {
+   attribute CodeI Text {
+      label = "${context.Company.CodeIName}";
+   }
+}
+@Override
+entity CodeJ {
+   attribute CodeJ Text {
+      label = "${context.Company.CodeJName}";
+   }
+}

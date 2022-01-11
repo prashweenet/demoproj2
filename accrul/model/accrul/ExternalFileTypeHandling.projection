@@ -1,0 +1,187 @@
+projection ExternalFileTypeHandling;
+component ACCRUL;
+layer Core;
+description "External File Type Handling";
+category Users;
+
+include fragment ExtFileModuleNameSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExternalFileTypeSet for ExtFileType;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileType {
+   crud = Read, Update, Delete;
+
+   attribute FileType Text;
+   attribute Description Text {
+      required = [true];
+   }
+   attribute SystemDefined Boolean("TRUE", "FALSE") {
+      editable = [false];
+      updatable = [false];
+   }
+   attribute Component Text {
+      format = uppercase;
+   }
+   attribute InputPackage Text {
+      editable = [false];
+   }
+   attribute ViewName Text {
+      editable = [false];
+   }
+
+   reference ComponentRef(Component) to ExtFileModuleName(Component) {
+      label = "Component";
+   }
+
+   array ExternalFileTypeRecordArray(FileType) to ExtFileTypeRec(FileType);
+}
+
+
+@Override
+entity ExtFileTypeRec {
+   supportwarnings = [true];
+
+   attribute RecordTypeId Text {
+      format = uppercase;
+   }
+   attribute RecordSetId Text {
+      label = "Record Set Identity";
+      format = uppercase;
+   }
+   attribute ParentRecordType Text {
+      format = uppercase;
+   }
+   attribute FirstInRecordSet Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute LastInRecordSet Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute MandatoryRecord Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute ViewName Text {
+      editable = [true];
+   }
+   attribute InputPackage Text {
+      editable = [true];
+   }
+   attribute OrderByFirstInRecordSet Text {
+      fetch = "DECODE(first_in_record_set, 'TRUE', 0, 1)";
+   }
+   attribute OrderByLastInRecordSet Text {
+      fetch = "DECODE(last_in_record_set, 'TRUE', 1, 0)";
+   }
+   attribute ColumnsExist Text {
+      fetch = "Ext_File_Type_Rec_Column_API.Check_Column_Exist(file_type, record_type_id)";
+   }
+
+   reference FileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query ExtFileModuleNameQuery {
+   from = "ext_file_module_name";
+   lu = ExtFileType;
+   keys = Component;
+
+   attribute Component Text;
+   attribute Name Text;
+   attribute Version Text;
+}
+
+
+query ExtFileViewNameQuery {
+   from = "ext_file_view_name";
+   lu = ExtFileType;
+   keys = ViewName;
+
+   attribute ViewName Text;
+   attribute Component Text;
+   attribute ViewType Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+action CreateDetailsFromViewDef {
+   initialcheck none;
+   ludependencies = ExtFileTypeRec;
+   supportwarnings = [true];
+
+   parameter FileType Text;
+   parameter ViewName Text;
+   parameter InputPackage Text {
+      required = [false];
+   }
+   parameter RecordTypeId Text;
+   parameter Component Text;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function IsViewAvailable Boolean {
+   parameter ViewName Text;
+}
+
+
+function IsPackageAvailable Boolean {
+   parameter PackageName Text;
+}
+
+
+function GetInputPackage Text {
+   parameter ViewName Text {
+      required = [false];
+   }
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure CreateDetailsFromViewDefinitionStructure {
+   attribute Component Text;
+   attribute ViewName Text;
+   attribute InputPackage Text;
+   attribute FileType Text {
+      editable = [false];
+   }
+   attribute FileTypeDescription Text {
+      label = "Description";
+      editable = [false];
+   }
+   attribute RecordTypeId Text {
+      label = "Record Type ID";
+      editable = [false];
+   }
+   attribute RecordTypeDescription Text {
+      label = "Description";
+      editable = [false];
+   }
+
+   reference ComponentRef(Component) to ExtFileModuleNameQuery(Component) {
+      label = "Component";
+   }
+   reference ViewNameRef(Component, ViewName) to ExtFileViewNameQuery(Component, ViewName) {
+      label = "View Name";
+   }
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

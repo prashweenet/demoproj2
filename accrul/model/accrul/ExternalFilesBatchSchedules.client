@@ -1,0 +1,111 @@
+client ExternalFilesBatchSchedules;
+component ACCRUL;
+layer Core;
+projection ExternalFilesBatchSchedulesHandling;
+
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ExternalFilesBatchSchedulesNavEntry parent AccrulNavigator.MonitorExternalFilesMenu at index 500 {
+      label = "External Files Batch Schedules";
+      page List home ExtFileBatchParam;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using ExtFileBatchJobsSet {
+   label = "External Files Batch Schedules";
+   startupmode = search;
+   list ExtFileBatchJobsList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command DeleteCommand for ExtFileBatchJobs {
+   label = "Delete";
+   mode = SelectedRecords;
+
+   execute {
+      confirm("Do you really want to remove the Batch Schedule?") {
+         when OK {
+            call DoRemoveBatchSchedule();
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileBatchJobsList for ExtFileBatchJobs {
+   field ScheduleId;
+   field FileType {
+      size = Small;
+   }
+   field FileTemplate {
+      size = Small;
+   }
+   field ExecutionPlan {
+      size = Large;
+   }
+   field StartDate;
+   field StopDate;
+   field Username {
+      size = Small;
+   }
+   field ModifiedDate;
+   field NextExecutionDate;
+   field Status {
+      size = Large;
+   }
+   field Executions;
+   field ScheduleMethodId;
+   field Value;
+   field ScheduleName {
+      size = Large;
+   }
+   field ParamString {
+      size = Large;
+   }
+
+   command DeleteCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

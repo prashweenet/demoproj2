@@ -1,0 +1,162 @@
+projection ExternalFileTypesHandling;
+component ACCRUL;
+layer Core;
+description "External File Types";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtFileTypeSet for ExtFileType;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileType {
+   crud = Read, Delete;
+
+   attribute SystemDefined Boolean("TRUE", "FALSE");
+   attribute UsableFileTemplate Number {
+      fetch = "Ext_File_Template_API.Count_Usable_File_Template(file_type)";
+   }
+
+   reference ExtFileTypeRef(FileType) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query ExtFileModuleNameQuery {
+   from = "ext_file_module_name";
+   lu = ExtFileType;
+   keys = Component;
+
+   attribute Component Text;
+   attribute Name Text;
+   attribute Version Text;
+}
+
+query ExtFileViewNameQuery {
+   from = "ext_file_view_name";
+   lu = ExtFileType;
+   keys = ViewName;
+
+   attribute ViewName Text;
+   attribute Component Text;
+   attribute ViewType Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+action DoCopyFileTypeFromType Text {
+   initialcheck none;
+   ludependencies = ExtFileType;
+
+   parameter FileTypeTo Text;
+   parameter FileTypeDescriptionTo Text;
+   parameter FileTypeFrom Text;
+}
+
+action DoCreateFileTypeTemplate Text {
+   initialcheck none;
+   ludependencies = ExtFileType;
+
+   parameter ViewName Text;
+   parameter InputPackage Text {
+      required = [false];
+   }
+   parameter Component Text;
+   parameter FileType Text;
+   parameter FileTypeDescription Text;
+   parameter FileTemplate Text {
+      required = [false];
+   }
+   parameter FileTemplateDescription Text {
+      required = [false];
+   }
+   parameter CreateInputDefinition Boolean;
+   parameter CreateOutputDefinition Boolean;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetInputPackage Text {
+   parameter ViewName Text {
+      required = [false];
+   }
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure CopyFileTypeStructure {
+   attribute FileTypeFrom Text {
+      label = "File Type";
+   }
+   attribute FileTypeDescriptionFrom Text {
+      label = "Description";
+   }
+   attribute FileTypeTo Text {
+      label = "File Type";
+   }
+   attribute FileTypeDescriptionTo Text {
+      label = "Description";
+   }
+   attribute NewKeyRef Text;
+
+   reference FileTypeFromRef(FileTypeFrom) to ExtFileType(FileType) {
+      label = "File Type";
+   }
+}
+
+structure CreateFileTypeTemplateStructure {
+   attribute Component Text;
+   attribute ViewName Text;
+   attribute InputPackage Text {
+      editable = [false];
+   }
+   attribute FileType Text {
+      maxlength = 30;
+   }
+   attribute FileTypeDescription Text {
+      label = "Description";
+      maxlength = 100;
+   }
+   attribute CreateFileTemplate Boolean {
+      required = [true];
+   }
+   attribute FileTemplate Text {
+      maxlength = 30;
+   }
+   attribute FileTemplateDescription Text {
+      label = "Description";
+      maxlength = 100;
+   }
+   attribute CreateInputDefinition Boolean {
+      required = [true];
+   }
+   attribute CreateOutputDefinition Boolean {
+      required = [true];
+   }
+   attribute NewKeyRef Text;
+
+   reference ComponentRef(Component) to ExtFileModuleNameQuery(Component) {
+      label = "Component";
+   }
+   reference ViewNameRef(Component, ViewName) to ExtFileViewNameQuery(Component, ViewName) {
+      label = "View Name";
+   }
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

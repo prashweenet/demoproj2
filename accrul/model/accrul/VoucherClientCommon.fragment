@@ -1,0 +1,318 @@
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201113  chwtlk  FISPRING20-8214, Modified InterimVoucherCommand section.
+-----------------------------------------------------------------------------
+fragment VoucherClientCommon;
+component ACCRUL;
+layer Core;
+description "This fragment contains common features for all vouchers. ( including automatic voucher and manual voucher)
+            e.g Voucher Row Information, Approval Information and voucher status indicators";
+include fragment CodeStringAllBasic;
+--include fragment PsCodeAccountingCodePartASelector;
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+stateindicator VoucherStatusIndicator for VoucherEntry {
+   //! TODO: For each state: Verify, adjust or remove the attributes 'completed' and 'emphasis'.
+   state "Approved" {
+      completed = 100%;
+      emphasis Progress11 = [Objstate = "Confirmed"];
+   }
+   state "Not Approved" {
+      completed = 25%;
+      emphasis Progress2 = [Objstate = "Waiting"];
+   }
+   state "Error" {
+      completed = 100%;
+      emphasis StateError = [Objstate = "Error"];
+   }
+   state "Cancelled" {
+      completed = 100%;
+      emphasis StateCancelled = [Objstate = "Cancelled"];
+   }
+   state "Awaiting Approval" {
+      completed = 50%;
+      emphasis Progress5 = [Objstate = "AwaitingApproval"];
+   }
+   state "Partially Approved" {
+      completed = 75%;
+      emphasis Progress9 = [Objstate = "PartiallyApproved"];
+   }
+}
+
+selector VoucherRecordSelector for VoucherEntry {
+   label = "${VoucherType} - ${VoucherNo}";
+   static VoucherType;
+   static VoucherNo;
+   static AccountingYear;
+   badge VoucherStatus {
+      style = TextOnly;
+      showlabel = false;
+      emphasis Progress11 = [Objstate = "Confirmed"];
+      emphasis Progress2 = [Objstate = "Waiting"];
+      emphasis StateError = [Objstate = "Error"];
+      emphasis StateCancelled = [Objstate = "Cancelled"];
+      emphasis Progress5 = [Objstate = "AwaitingApproval"];
+      emphasis Progress9 = [Objstate = "PartiallyApproved"];
+   }
+
+}
+
+
+list VoucherRowList for VoucherRow {
+   label = "Voucher Rows";
+
+   lov CompanyFinanceRef with CompanyFinanceSelector {
+      search = Company, Description;
+      columnexclude = [not(parent.MultiCompanyMode)];
+      columnvisible = [parent.MultiCompanyMode];
+      description = CompanyFinanceRef.Description;
+   }
+
+   field VoucherType {
+      columnexclude = [not parent.MultiCompanyMode];
+      columnvisible = [parent.MultiCompanyMode];
+      size = Small;
+   }
+   field AccountingYear {
+      columnexclude = [not parent.MultiCompanyMode];
+      columnvisible = [parent.MultiCompanyMode];
+      size = Small;
+   }
+   field VoucherNo {
+      columnexclude = [not parent.MultiCompanyMode];
+      columnvisible = [parent.MultiCompanyMode];
+   }
+   field RowGroupId {
+      size = Small;
+      columnvisible = [parent.RowGroupValidation = "Y"];
+      editable = [parent.RowGroupValidation = "Y"];
+      columnexclude = [not(parent.RowGroupValidation = "Y")];
+   }
+   fieldset CodeStringAllBasicLovFieldSet;
+   field ProcessCodeRef {
+      size = Small;
+   }
+   @DynamicComponentDependency INVOIC
+   lov DelivTypeIdRef with ReferenceDeliveryTypeSelector {
+      search = DelivTypeId, Description;
+      size = Large;
+      description = DelivTypeIdRef.Description;
+   }
+   field OptionalCode {
+      size = Small;
+   }
+   field CurrencyCodeRef {
+      size = Small;
+   }
+   field Correction {
+      size = Small;
+   }
+   field CurrencyDebetAmount;
+   field CurrencyCreditAmount;
+   field CurrencyAmount;
+   field CurrencyRate {
+      size = Small;
+   }
+   field ConversionFactor {
+      size = Small;
+   }
+   field CompanyFinanceRef.CurrencyCode {
+      size = Small;
+      label = "Accounting Currency";
+   }
+   field DebetAmount;
+   field CreditAmount;
+   field Amount {
+      searchable = false;
+   }
+   field ParallelCurrencyRate {
+      size = Small;
+   }
+   field ParallelConversionFactor {
+      size = Small;
+   }
+   field ParallelCurrency {
+      size = Small;
+   }
+   field ThirdCurrencyDebitAmount;
+   field ThirdCurrencyCreditAmount;
+   field ThirdCurrencyAmount {
+      searchable = false;
+   }
+   field Quantity;
+   field PeriodAllocation {
+      size = Small;
+   }
+   field Text {
+      multiline = true;
+   }
+   @DynamicComponentDependency PROJ
+   field ProjectActivityIdRef;
+   field TransCode {
+      size = Small;
+   }
+   field UpdateError {
+      multiline = true;
+   }
+   field AddInternal {
+      size = Small;
+   }
+   field ReferenceSerie;
+   field ReferenceNumber {
+      size = Small;
+   }
+   field AutoTaxVouEntry {
+      size = Small;
+      label = "Automaic Tax Transaction";
+   }
+
+   fieldranking OptionalCode, CurrencyCodeRef, CurrencyAmount, Amount;
+   commandgroup VoucherOperationCmdGroup {
+      label = "Voucher Operations";
+      command PeriodAllocationCommand;
+      @DynamicComponentDependency INTLED
+      command InternalManualPostingsCommand;
+      command AddPseudoCodeCommand;
+   }
+}
+
+group VoucherRowSummaryGroup for VoucherEntry {
+   label = "Voucher Summary";
+   computedfield RowCurrencyBalance {
+      label = "Currency Balance";
+      value = "#{AmountMethod == 'NetAmountEntry' ? VoucherRowArray.sum((IsStatAccount == 'TRUE' ? 0 : CurrencyDebetAmount)- (IsStatAccount == 'TRUE' ? 0 : CurrencyCreditAmount)+(IsStatAccount == 'TRUE' ? 0 : CurrencyTaxAmount)) : VoucherRowArray.sum((IsStatAccount == 'TRUE' ? 0 : CurrencyDebetAmount)-(IsStatAccount == 'TRUE' ? 0 : CurrencyCreditAmount))}";
+      type = Number;
+      format = ifscurrency;
+   }
+   computedfield RowBalanceInAccountingCurrency {
+      label = "Balance in Accounting Currency";
+      value = "#{AmountMethod == 'NetAmountEntry' ? VoucherRowArray.sum((IsStatAccount == 'TRUE' ? 0 : DebetAmount)- (IsStatAccount == 'TRUE' ? 0 : CreditAmount)+(IsStatAccount == 'TRUE' ? 0 : TaxAmount)) : VoucherRowArray.sum((IsStatAccount == 'TRUE' ? 0 : DebetAmount)-(IsStatAccount == 'TRUE' ? 0 : CreditAmount))}";
+      type = Number;
+      format = ifscurrency;
+   }
+   computedfield RowBalanceInParallelCurrency {
+      label = "Balance in Parallel Currency";
+      value = "#{AmountMethod == 'NetAmountEntry' ? VoucherRowArray.sum((IsStatAccount == 'TRUE' ? 0 : ThirdCurrencyDebitAmount)- (IsStatAccount == 'TRUE' ? 0 : ThirdCurrencyCreditAmount)+(IsStatAccount == 'TRUE' ? 0 : ParallelCurrTaxAmount)) : VoucherRowArray.sum((IsStatAccount == 'TRUE' ? 0 : ThirdCurrencyDebitAmount)-(IsStatAccount == 'TRUE' ? 0 : ThirdCurrencyCreditAmount))}";
+      type = Number;
+      format = ifscurrency;
+   }
+}
+
+group EnteredByGroup for VoucherEntry {
+   label = "Entry Information";
+   field Userid {
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field DateReg {
+      size = Small;
+   }
+   field EnteredByUserGroup;
+}
+
+group FirstApproverGroup for VoucherEntry {
+   label = "First Approver";
+   field ApprovedByUserid {
+      label = "Approved By User";
+      filterlabel = "First Approved By User";
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field ApprovalDate {
+      label = "Approval Date";
+      filterlabel = "First Approval Date";
+      size = Small;
+   }
+   field ApprovedByUserGroup {
+      label = "Approved By User Group";
+      filterlabel = "First Approved By User Group";
+   }
+}
+
+group SecondApproverGroup for VoucherEntry {
+   label = "Second Approver";
+   field SecondApproverId {
+      label = "Approved By User";
+      filterlabel = "Second Approved By User";
+      size = Small;
+      contactwidget {
+         enabled = [true];
+         source = User;
+      }
+   }
+   field SecondApprovalDate {
+      label = "Approval Date";
+      filterlabel = "Second Approval Date";
+      size = Small;
+   }
+   field SecondApproverUserGroup {
+      label = "Approved By User Group";
+      filterlabel = "Second Approved By User Group";
+   }
+}
+
+group VoucherReferenceGroup for VoucherEntry {
+
+   label = "Voucher Reference";
+   field ReferenceCompany {
+      searchable = false;
+   }
+   field AccountingYearReference {
+      size = Small;
+      searchable = false;
+   }
+   field VoucherTypeReference {
+      size = Small;
+      searchable = false;
+   }
+   field VoucherNoReference {
+      searchable = false;
+   }
+
+}
+
+group AdditionalInfomationGroup for VoucherEntry {
+   label = "Additional Infomation";
+   field UpdateError;
+   field InterimVoucher;
+
+}
+
+command InterimVoucherCommand for VoucherEntry {
+   label = "Interim Voucher";
+
+   enabled = [VoucherStatus = "Approved" and not InterimVoucher and(RevenueCostClearVoucher = "FALSE" or RevenueCostClearVoucher = null) and IsCancellation = "FALSE" and FunctionGroup != "Z" and DisableInterim = "FALSE"];
+
+   variable InterimVoucherDialogStructVar {
+      type = Structure(InterimVoucherDialogStructure);
+   }
+   variable DummyVar {
+      type = Text;
+   }
+   execute {
+
+      call ValidateInterim(Company, UserGroup) into DummyVar {
+         when SUCCESS {
+
+
+            call FetchInterimVouDefs(Company, AccountingYear, VoucherType, VoucherNo, MultiCompanyMode) into InterimVoucherDialogStructVar;
+            dialog InterimVoucherDialog(InterimVoucherDialogStructVar) {
+               when OK {
+                  exit OK;
+               }
+            }
+         }
+         when FAIL {
+            error("${error.Message}");
+         }
+      }
+   }
+}
+--------------------------- PROJECTION FRAGMENTS ----------------------------

@@ -1,0 +1,624 @@
+fragment TaxLinesCommonAssistant;
+component ACCRUL;
+layer Core;
+description "This is used as a base fragment which handles tax lines, connected to different sources";
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+-------------------------------- ASSISTANTS ---------------------------------
+assistant TaxLinesCommonAssistant using SourceLines {
+   label = "${DisplayTitle}";
+   savemode = OnLostFocus;
+
+   input(KeyRef, PackageName, ReadOnly, CalcBase, DisplayTitle, SourceObjkey, SetDefaultCommandVisible);
+   steps {
+      step {
+         group TaxItemsSummaryGroup(TaxItemSummarySet);
+         list TaxItemList(TaxItems);
+      }
+      final step {
+
+      }
+      cancelled step {
+
+      }
+   }
+   finish command {
+      variable RtnInfoAfterSaveStrucVar Structure(RtnInfoAfterSaveStructure);
+      execute {
+         if [(component.TaxLinesCommonAssistant.IsActiveStepModified = true) or(SetDefaultExecuted)] {
+            call SaveToSrcTaxItemTable() into RtnInfoAfterSaveStrucVar;
+            if [RtnInfoAfterSaveStrucVar.TaxLimitApplied = "TRUE"] {
+               info("The taxes that are less than or equal the defined Tax Amount Limits have been set to zero.");
+            }
+         }
+         exit OK;
+      }
+   }
+   cancel command {
+      execute {
+         --navigate back;
+         exit CANCEL;
+      }
+   }
+   restart command {
+      visible = [false];
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group SourceLineGroup for SourceLineVirtual {
+   field Company;
+   field SourceRefTypeDb;
+   field SourceRef1;
+   field SourceRef2;
+   field SourceRef3;
+   field SourceRef4;
+   field SourceRef5;
+   field PackageName;
+}
+
+group TaxItemsSummaryGroup for TaxItemsSummaryVirtual {
+   label = "";
+
+   field GrossCurrAmount {
+      label = "${parent.GroupGrossCurrAmountLabel}";
+   }
+   field NetCurrAmount {
+      label = "${parent.GroupNetCurrAmountLabel}";
+   }
+   field VatCurrAmount {
+      label = "${parent.GroupVatCurrAmountLabel}";
+   }
+   field NonDedCurrAmount {
+      label = "${parent.GroupNonDedCurrAmtLabel}";
+      visible = [parent.SumNonDedCurrAmtVisible];
+   }
+   field TotalTaxCurrAmount {
+      label = "${parent.GroupTotalTaxCurrAmtLbl}";
+      visible = [parent.SumTotTaxCurrAmtVisible];
+   }
+   field CostCurrAmount {
+      label = "${parent.GroupCostCurrAmountLabel}";
+      visible = [false];
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list TaxItemList for SourceTaxItemVirtual {
+   label = "${parent.TaxLinesLabel}";
+   orderby = TaxItemId asc;
+   editmode = SingleCellEdit;
+   crudactions {
+      new {
+         enabled = [(not parent.ReadOnly) and(parent.TaxCalcStructureId = null)];
+      }
+      edit {
+         enabled = [not parent.ReadOnly];
+      }
+      delete {
+         enabled = [(not parent.ReadOnly) and(parent.TaxCalcStructureId = null)];
+      }
+   }
+
+   field TaxBaseCurrAmount {
+      label = "${parent.ListTaxBaseCurrAmtLabel}";
+      preserveprecision = [true];
+      columnexclude = [not parent.TaxBaseCurrAmountVisible];
+      editable = [TaxBaseCurrAmountEditable and(not isNew)];
+      validate command {
+         execute {
+            call PrepValidTaxBaseCurrAmt(Objkey);
+         }
+      }
+   }
+   lov TaxCodeRef with ReferenceStatutoryFeeSelector using SetTaxCodeLov(Company, parent.Taxable, parent.LiabilityType, parent.TaxCalcStructureId, parent.PartyTypeDb, parent.TransactionDate, parent.PackageName, parent.SourceRef4) {
+      size = Small;
+      validate command {
+         variable TaxInfoRecStructureVar Structure(TaxInfoStructure);
+         variable RowCountVar  Number;
+         execute {
+            call CalcForTaxCodeValidate(ParentObjkey, TaxCode) into TaxInfoRecStructureVar;
+            set TaxPercentage = TaxInfoRecStructureVar.TaxPercentage;
+            set DeductiblePercentage = TaxInfoRecStructureVar.DeductiblePercentage;
+            set TaxType = TaxInfoRecStructureVar.TaxType;
+            set TaxCurrAmount = TaxInfoRecStructureVar.TaxCurrAmount;
+            set TaxDomAmount = TaxInfoRecStructureVar.TaxDomAmount;
+            set TaxParallelAmount = TaxInfoRecStructureVar.TaxParallelAmount;
+            set TaxBaseCurrAmount = TaxInfoRecStructureVar.TaxBaseCurrAmount;
+            set TaxBaseDomAmount = TaxInfoRecStructureVar.TaxBaseDomAmount;
+            set TaxBaseParallelAmount = TaxInfoRecStructureVar.TaxBaseParallelAmount;
+            set NonDedTaxCurrAmount = TaxInfoRecStructureVar.NonDedTaxCurrAmount;
+            set NonDedTaxDomAmount = TaxInfoRecStructureVar.NonDedTaxDomAmount;
+            set NonDedTaxParallelAmount = TaxInfoRecStructureVar.NonDedTaxParallelAmount;
+            set TotalTaxCurrAmount = TaxInfoRecStructureVar.TotalTaxCurrAmount;
+            set TotalTaxDomAmount = TaxInfoRecStructureVar.TotalTaxDomAmount;
+            set TotalTaxParallelAmount = TaxInfoRecStructureVar.TotalTaxParallelAmount;
+            set RowCountVar = component.TaxItemList.RowCount;
+            if [parent.CalcBase = "GROSS_BASE" and RowCountVar > 1] {
+               info("Tax amounts will be recalculated after saving.");
+            }
+         }
+      }
+   }
+   field TaxType {
+      size = Small;
+   }
+   field TaxPercentage {
+      label = "${parent.ListTaxPercentageLabel}";
+      editable = [TaxPercentageEditable and(not isNew)];
+      validate command {
+         execute {
+            if [parent.CalcBase = "NET_BASE"] {
+               call PrepValidTaxPercentage(Objkey);
+            }
+         }
+      }
+   }
+   field DeductiblePercentage {
+      label = "${parent.ListDedPercentageLabel}";
+      columnexclude = [not parent.DeductiblePercentageVisible];
+      editable = [false];
+   }
+   field TaxCurrAmount {
+      label = "${parent.ListTaxAmountLabel}";
+      preserveprecision = [true];
+      editable = [TaxCurrAmountEditable and(not isNew)];
+      validate command {
+         execute {
+            call PrepareValidTaxCurrAmt(Objkey);
+         }
+      }
+   }
+   field TaxDomAmount {
+      label = "${parent.ListTaxDomAmountLabel}";
+      preserveprecision = [true];
+      columnexclude = [not parent.TaxDomAmountVisible];
+   }
+   field TaxParallelAmount {
+      label = "${parent.ListTaxParallelAmtLabel}";
+      preserveprecision = [true];
+      columnexclude = [not parent.TaxParallelAmountVisible];
+   }
+   field TaxBaseDomAmount {
+      label = "${parent.ListTaxBaseDomAmountLabel}";
+      preserveprecision = [true];
+      columnexclude = [not parent.TaxBaseDomAmountVisible];
+   }
+   field TaxBaseParallelAmount {
+      label = "${parent.ListTaxBaseParaAmtLabel}";
+      preserveprecision = [true];
+      columnexclude = [not parent.TaxBaseParallelAmtVisible];
+   }
+   field NonDedTaxCurrAmount {
+      label = "${parent.ListNonDedTaxAmtLabel}";
+      preserveprecision = [true];
+      columnexclude = [not parent.NonDedTaxCurrAmtVisible];
+      editable = [NonDedTaxCurrAmtEditable and(not isNew)];
+      validate command {
+         execute {
+            call PrepValidNonDedTaxcurrAmt(Objkey);
+         }
+      }
+   }
+   field NonDedTaxDomAmount {
+      label = "${parent.ListNonDedTaxDomAmtLbl}";
+      preserveprecision = [true];
+      columnexclude = [not parent.NonDedTaxDomAmountVisible];
+   }
+   field NonDedTaxParallelAmount {
+      label = "${parent.ListNonDedTaxParaAmtLbl}";
+      preserveprecision = [true];
+      columnexclude = [not parent.NonDedTaxParalAmtVisible];
+   }
+   field TotalTaxCurrAmount {
+      label = "${parent.ListTotalTaxCurrAmtLabel}";
+      preserveprecision = [true];
+      columnexclude = [not parent.TotalTaxCurrAmountVisible];
+      editable = [TotalTaxCurrAmountEditable and(not isNew)];
+      validate command {
+         execute {
+            call PrepValidTotalTaxCurrAmt(Objkey);
+         }
+      }
+   }
+   field TotalTaxDomAmount {
+      label = "${parent.ListTotalTaxDomAmtLabel}";
+      preserveprecision = [true];
+      columnexclude = [not parent.TotalTaxDomAmountVisible];
+   }
+   field TotalTaxParallelAmount {
+      label = "${parent.ListTotalTaxParaAmountLabel}";
+      preserveprecision = [true];
+      columnexclude = [not parent.TotalTaxParallelAmtVisible];
+   }
+   field Transferred {
+      editable = [false];
+      columnexclude = [not parent.TransferredVisible];
+   }
+   command TaxLinesSetDefaultCommand;
+
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+command TaxLinesSetDefaultCommand for SourceLineVirtual {
+   label = "Set Default";
+   enabled = [(not ReadOnly) and(SetDefaultCommandVisible)];
+   mode = Global;
+   execute {
+      confirm("Do you want to reset the tax line(s) to the default?") {
+         when CANCEL {
+            exit;
+         }
+         when OK {
+            call SetToDefault();
+         }
+      }
+   }
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+entityset SourceLines for SourceLineVirtual {
+   where = "User_Finance_API.Is_Allowed(company) = 'TRUE'";
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+function CalcForTaxCodeValidate Structure(TaxInfoStructure) {
+   parameter ParentKey Text;
+   parameter CurrentTaxCode  Text;
+}
+
+function SetTaxCodeLov List < Entity(StatutoryFee) > {
+   parameter Company Text;
+   parameter Taxable Text;
+   parameter LiabilityType Text;
+   parameter TaxCalcStructureId Text;
+   parameter PartyType Text;
+   parameter TransactionDate Date;
+   parameter PackageName Text;
+   parameter SourceRef4 Text;
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+--Added User_Finance_API.Exist_Current_User(remrec_.company) in plsvc.
+action PrepValidTaxPercentage {
+   initialcheck implementation;
+   parameter Objkey Text;
+}
+
+--Added User_Finance_API.Exist_Current_User(remrec_.company) in plsvc.
+action PrepareValidTaxCurrAmt {
+   initialcheck implementation;
+   parameter Objkey Text;
+}
+
+--Added User_Finance_API.Exist_Current_User(remrec_.company) in plsvc.
+action PrepValidNonDedTaxcurrAmt {
+   initialcheck implementation;
+   parameter Objkey Text;
+}
+
+--Added User_Finance_API.Exist_Current_User(remrec_.company) in plsvc.
+action PrepValidTotalTaxCurrAmt {
+   initialcheck implementation;
+   parameter Objkey Text;
+}
+
+--Added User_Finance_API.Exist_Current_User(remrec_.company) in plsvc.
+action PrepValidTaxBaseCurrAmt {
+   initialcheck implementation;
+   parameter Objkey Text;
+}
+
+action AdditionalValidations {
+   initialcheck none;
+   parameter Init Boolean;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+structure TaxInfoStructure {
+   attribute TaxPercentage Number;
+   attribute DeductiblePercentage Number;
+   attribute TaxType Enumeration(FeeType);
+   -- revisit could be removed
+   attribute TaxReceivedDb Text;
+   -- revisit could be removed
+   attribute TaxReceived Text;
+   -- revisit could be removed
+   attribute TaxDisbursedDb Text;
+   -- revisit could be removed
+   attribute TaxDisbursed Text;
+   attribute Description Text;
+   -- revisit could be removed
+   attribute ValidFrom Date;
+   -- revisit could be removed
+   attribute ValidTo Date;
+   attribute TaxCurrAmount Number;
+   attribute TaxDomAmount Number;
+   attribute TaxParallelAmount Number;
+   attribute TaxBaseCurrAmount Number;
+   attribute TaxBaseDomAmount Number;
+   attribute TaxBaseParallelAmount Number;
+   attribute NonDedTaxCurrAmount Number;
+   attribute NonDedTaxDomAmount Number;
+   attribute NonDedTaxParallelAmount Number;
+   attribute TotalTaxCurrAmount Number;
+   attribute TotalTaxDomAmount Number;
+   attribute TotalTaxParallelAmount Number;
+   -- revisit could be removed
+   attribute SummaryNetCurrAmount Number;
+   -- revisit could be removed
+   attribute SummaryTaxCurrAmount Number;
+   -- revisit could be removed
+   attribute SummaryNonDedCurrAmount Number;
+   -- revisit could be removed
+   attribute SummaryTotalTaxCurrAmount Number;
+   -- revisit could be removed
+   attribute SummaryCostCurrAmount Number;
+}
+
+
+structure RtnInfoAfterSaveStructure {
+   attribute TaxLimitApplied Text;
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+virtual SourceLineVirtual {
+   attribute Company Text;
+   attribute KeyRef Text;
+   attribute SourceRefTypeDb Text;
+   attribute SourceRef1 Text;
+   attribute SourceRef2 Text;
+   attribute SourceRef3 Text;
+   attribute SourceRef4 Text;
+   attribute SourceRef5 Text;
+   attribute SourceObjversion Text;
+   attribute SourceObjkey Text;
+   attribute PackageName Text;
+   attribute DisplayTitle Text;
+   attribute ReadOnly Boolean;
+   attribute CalcBase Text;
+   attribute TransactionDate Date;
+   attribute Identity Text;
+   attribute PartyTypeDb Text;
+   attribute TransactionCurrency Text;
+   attribute DeliveryAddressId Text;
+   attribute AdvanceInvoice Text;
+   attribute TaxValidationType Text;
+   attribute Taxable Text;
+   attribute LiabilityType Text;
+   attribute TaxCalcStructureId Text;
+   attribute TaxClassId Text;
+   attribute TxCalcStrIdForTaxCodChg Text;
+   attribute DeductibleFactor Number;
+   attribute TaxRoundingMethod Text;
+   attribute CurrencyRounding Number;
+   attribute CurrRate Number;
+   attribute TaxCurrRate Number;
+   attribute ParallelCurrRate Number;
+   attribute DivFactor Number;
+   attribute ParallelDivFactor Number;
+   attribute GrossCurrAmount Number {
+      format = ifscurrency;
+   }
+   attribute NetCurrAmount Number {
+      format = ifscurrency;
+   }
+   attribute TaxCurrAmount Number {
+      format = ifscurrency;
+   }
+   attribute NonDedTaxCurrAmount Number {
+      format = ifscurrency;
+   }
+   attribute TotalTaxCurrAmount Number {
+      format = ifscurrency;
+   }
+   attribute SetDefaultCommandVisible Boolean;
+   attribute TaxDomAmountVisible Boolean;
+   attribute TaxParallelAmountVisible Boolean;
+   attribute TaxBaseCurrAmountVisible Boolean;
+   attribute TaxBaseDomAmountVisible Boolean;
+   attribute TaxBaseParallelAmtVisible Boolean;
+   attribute NonDedTaxCurrAmtVisible Boolean;
+   attribute NonDedTaxDomAmountVisible Boolean;
+   attribute NonDedTaxParalAmtVisible Boolean;
+   attribute TotalTaxCurrAmountVisible Boolean;
+   attribute TotalTaxDomAmountVisible Boolean;
+   attribute TotalTaxParallelAmtVisible Boolean;
+   attribute DeductiblePercentageVisible Boolean;
+   attribute TransferredVisible Boolean;
+   attribute SumNonDedCurrAmtVisible Boolean;
+   attribute SumTotTaxCurrAmtVisible Boolean;
+   attribute TaxLinesLabel Text;
+   attribute ListTaxPercentageLabel Text;
+   attribute ListDedPercentageLabel Text;
+   attribute ListTaxAmountLabel Text;
+   attribute ListTaxDomAmountLabel Text;
+   attribute ListTaxParallelAmtLabel Text;
+   attribute ListTaxBaseCurrAmtLabel Text;
+   attribute ListTaxBaseDomAmountLabel Text;
+   attribute ListTaxBaseParaAmtLabel Text;
+   attribute ListNonDedTaxAmtLabel Text;
+   attribute ListNonDedTaxDomAmtLbl Text;
+   attribute ListNonDedTaxParaAmtLbl Text;
+   attribute ListTotalTaxCurrAmtLabel Text;
+   attribute ListTotalTaxDomAmtLabel Text;
+   attribute ListTotalTaxParaAmountLabel Text;
+   attribute GroupGrossCurrAmountLabel Text;
+   attribute GroupNetCurrAmountLabel Text;
+   attribute GroupVatCurrAmountLabel Text;
+   attribute GroupNonDedCurrAmtLabel Text;
+   attribute GroupTotalTaxCurrAmtLbl Text;
+   attribute GroupCostCurrAmountLabel Text;
+   attribute SetDefaultExecuted Boolean;
+
+   array TaxItems(Company, SourceRef1, SourceRef2, SourceRef3, SourceRef4, SourceRef5) to SourceTaxItemVirtual(Company, SourceRef1, SourceRef2, SourceRef3, SourceRef4, SourceRef5);
+   array TaxItemSummarySet() to TaxItemsSummaryVirtual();
+
+   action SaveToSrcTaxItemTable Structure(RtnInfoAfterSaveStructure);
+
+   action SetToDefault {
+      ludependencies = SourceTaxItemVirtual;
+   }
+}
+
+
+virtual SourceTaxItemVirtual {
+   ludependencies = SourceTaxItemVirtual;
+   validate action AdditionalValidations;
+
+   attribute Company Text {
+      editable = [false];
+   }
+   attribute TransactionCompany Text;
+   attribute SourceRefTypeDb Text {
+      editable = [false];
+   }
+   attribute SourceRef1 Text {
+      editable = [false];
+   }
+   attribute SourceRef2 Text {
+      editable = [false];
+   }
+   attribute SourceRef3 Text {
+      editable = [false];
+   }
+   attribute SourceRef4 Text {
+      editable = [false];
+   }
+   attribute SourceRef5 Text {
+      editable = [false];
+   }
+   attribute TaxItemId Text {
+      editable = [false];
+      fetch = "decode(tax_item_id, -1,rownum, tax_item_id)";
+   }
+   attribute TaxCode Text {
+      format = uppercase;
+      required = [true];
+   }
+   attribute TaxType Enumeration(FeeType) {
+      editable = [false];
+   }
+   attribute TaxPercentage Number;
+   attribute TaxPercentageChanged Text;
+   attribute DeductiblePercentage Number {
+      fetch = "Statutory_Fee_API.Get_Deductible(company, tax_code)";
+   }
+   attribute TaxCalcStructureId Text;
+   attribute TaxCalcStructureItemId Text;
+   attribute TaxCurrAmount Number {
+      format = ifscurrency;
+   }
+   attribute TaxCurrAmountChanged Text;
+   attribute TaxDomAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute TaxParallelAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute TaxBaseCurrAmount Number {
+      format = ifscurrency;
+   }
+   attribute TaxBaseCurrAmountModified Number {
+      format = ifscurrency;
+   }
+   attribute TaxBaseCurrAmountChanged Text;
+   attribute TaxBaseDomAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute TaxBaseParallelAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute NonDedTaxCurrAmount Number {
+      format = ifscurrency;
+   }
+   attribute NonDedTaxCurrAmtChanged Text;
+   attribute NonDedTaxDomAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute NonDedTaxParallelAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute TotalTaxCurrAmount Number {
+      fetch = "(tax_curr_amount + non_ded_tax_curr_amount)";
+      format = ifscurrency;
+   }
+   attribute TotalTaxCurrAmountChanged Text;
+   attribute TotalTaxDomAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute TotalTaxParallelAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute TaxPercentageEditable Boolean {
+      default = "false";
+   }
+   attribute TaxCurrAmountEditable Boolean {
+      default = "false";
+   }
+   attribute TaxBaseCurrAmountEditable Boolean {
+      default = "false";
+   }
+   attribute NonDedTaxCurrAmtEditable Boolean {
+      default = "false";
+   }
+   attribute TotalTaxCurrAmountEditable Boolean {
+      default = "false";
+   }
+   attribute Transferred Boolean {
+      default = "false";
+   }
+
+   reference TaxCodeRef(TransactionCompany, TaxCode) to StatutoryFee(Company, FeeCode) {
+      label = "Tax Code";
+   }
+}
+
+
+virtual TaxItemsSummaryVirtual {
+   ludependencies = SourceTaxItemVirtual;
+   attribute GrossCurrAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute NetCurrAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute VatCurrAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute NonDedCurrAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute TotalTaxCurrAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+   attribute CostCurrAmount Number {
+      format = ifscurrency;
+      editable = [false];
+   }
+}
+
+

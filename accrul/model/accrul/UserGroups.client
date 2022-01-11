@@ -1,0 +1,86 @@
+client UserGroups;
+component ACCRUL;
+layer Core;
+projection UserGroupsHandling;
+
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry UsersGroupsNavEntry parent AccrulNavigator.UserRelatedDataMenu at index 200 {
+      label = "User Groups";
+      page List home UserGroupFinance;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using UserGroupFinanceSet {
+   label = "User Groups";
+   list UserGroupFinanceList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command UsersperUserGroupCommand {
+   label = "Users per User Group";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/UsersPerUserGroup/Form?$contexts=Company:$[Company]&$filter=UserGroup eq $[UserGroup]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list UserGroupFinanceList for UserGroupFinance {
+   orderby = UserGroup;
+
+   field UserGroup {
+      size = Small;
+   }
+   field Description;
+   field AllowedAccountingPeriod {
+      size = Large;
+   }
+
+   command UsersperUserGroupCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

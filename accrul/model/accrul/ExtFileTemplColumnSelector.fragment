@@ -1,0 +1,49 @@
+fragment ExtFileTemplColumnSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ext_file_templ_column";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceExtFileTemplColumnSelector for ExtFileTemplColumn {
+   static ColumnId;
+   static Description;
+}
+
+card ExtFileTemplColumnCard for ExtFileTemplColumn {
+   label = "";
+   fieldranking ColumnId;
+   field ColumnId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query ExtFileTemplColumn {
+   from = "ext_file_templ_column";
+   lu = ExtFileTemplateDetail;
+   keys = FileTemplateId, RecordTypeId, DataType, ColumnId;
+   ludependencies = ExtFileTemplateDetail;
+   attribute FileTemplateId Text {
+      label = "File Template ID";
+      lovcolumn = [false];
+   }
+   attribute RecordTypeId Text {
+      label = "Record Type ID";
+      lovcolumn = [false];
+   }
+   attribute DataType Text {
+      lovcolumn = [false];
+   }
+   attribute ColumnId Text {
+      label = "Column ID";
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

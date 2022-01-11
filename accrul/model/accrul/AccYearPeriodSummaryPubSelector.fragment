@@ -1,0 +1,42 @@
+fragment AccYearPeriodSummaryPubSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view acc_year_period_summary_pub";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccYearPeriodSummaryPubSelector for AccYearPeriodSummaryPub {
+   static YearPeriod;
+   static Description;
+}
+
+card AccYearPeriodSummaryPubCard for AccYearPeriodSummaryPub {
+   label = "";
+   fieldranking YearPeriod;
+   field YearPeriod;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccYearPeriodSummaryPub {
+   from = "acc_year_period_summary_pub";
+   lu = AccountingPeriod;
+   keys = Company, YearPeriod;
+   ludependencies = AccountingPeriod;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute YearPeriod Text {
+      label = "Period";
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

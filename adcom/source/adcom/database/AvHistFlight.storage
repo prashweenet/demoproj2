@@ -1,0 +1,23 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistFlight
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+UNIQUE CONSTRAINT av_hist_flight_uc1 IS av_hist_flight_tab (flight_leg_alt_id);
+INDEX av_hist_flight_ix1 IS av_hist_flight_tab (aircraft_id);
+-------------------- OTHER DEFINITIONS --------------------------------------
+
+SEQUENCE av_hist_flight_seq IS MAXVALUE 999999999999999 INCREMENT BY 1 START WITH 1 NOCACHE;
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

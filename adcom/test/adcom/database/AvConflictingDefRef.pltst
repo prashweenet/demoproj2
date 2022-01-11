@@ -1,0 +1,55 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvConflictingDefRef
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200928  Satglk  LMM2020R1-821 - Added test for Pre_Sync_Action
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_deferral_reference_tab
+   VALUES
+      | deferral_reference_id | mx_unique_key  |
+      | 1002                  | 'MXDEFREFKEY1' |
+      | 1005                  | 'MXDEFREFKEY5' |
+   END VALUES;
+IS
+   --Insert your test variables here
+   output1_    VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+   expected2_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'DEFERRAL_REF_UNIQUE_KEY'||chr(31)||'MXDEFREFKEY1'||chr(30)||'WITH_DEFERRAL_REF_KEY'|
+      | 'CONFLICTING_DEFER_REF_UNIQUE_KEY'||chr(31)||'MXDEFREFKEY5'||chr(30)||'WITH_CONF_DEFERRAL_REF_KEY'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+      --Insert your assertions here
+      expected1_ := 'WITH_DEFERRAL_REF_KEY'||'DEFERRAL_REF_ID'||chr(31)||'1002'||chr(30);
+      expected2_ := 'WITH_CONF_DEFERRAL_REF_KEY'||'CONFLICTING_DEFER_REF_ID'||chr(31)||'1005'||chr(30);
+
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_DEFERRAL_REF_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_CONF_DEFERRAL_REF_KEY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;

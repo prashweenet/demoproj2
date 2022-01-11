@@ -1,0 +1,36 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     AccLibCurrencyAmount
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+
+
+-- Round_Acc_Currency_Amount___
+--   function to round an amount to the number of decimals of the accounting currency of the company
+FUNCTION Round_Acc_Currency_Amount___(
+   company_ IN VARCHAR2,
+   amount_  IN NUMBER ) RETURN NUMBER
+IS
+BEGIN   
+   RETURN Round_Currency_Amount___(company_, Company_Finance_API.Get_Currency_Code(company_), amount_);   
+END Round_Acc_Currency_Amount___;
+
+-- Round_Currency_Amount___
+--   function to round an amount to the number of decimals for the given currency code in the company
+FUNCTION Round_Currency_Amount___(
+   company_       IN VARCHAR2,
+   currency_code_ IN VARCHAR2,
+   amount_        IN NUMBER ) RETURN NUMBER
+IS
+BEGIN   
+   RETURN Currency_Amount_API.Get_Rounded_Amount(company_, currency_code_, amount_);   
+END Round_Currency_Amount___;

@@ -1,0 +1,42 @@
+fragment AccountingYearSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view accounting_year";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceAccountingYearSelector for AccountingYear {
+   orderby = AccountingYear;
+   static AccountingYear;
+}
+
+@Override
+list AccountingYearLovList for AccountingYear {
+   orderby = AccountingYear;
+}
+
+card AccountingYearCard for AccountingYear {
+   label = "";
+   fieldranking AccountingYear;
+   field AccountingYear;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query AccountingYear {
+   from = "accounting_year";
+   lu = AccountingPeriod;
+   keys = Company, AccountingYear;
+   ludependencies = AccountingPeriod;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute AccountingYear Number {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

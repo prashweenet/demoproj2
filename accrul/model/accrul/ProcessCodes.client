@@ -1,0 +1,86 @@
+client ProcessCodes;
+component ACCRUL;
+layer Core;
+projection  ProcessCodesHandling;
+
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ProcessCodesNavEntry parent  AccrulNavigator.CodeStringMenu at index 700 {
+      label = "Process Codes";
+      page List home AccountProcessCode;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using  AccountProcessCodeSet {
+   label = "Process Codes";
+   list AccountProcessCodeList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'AccountProcessCode' and AttributeKey eq $[ProcessCode]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountProcessCodeList for AccountProcessCode {
+   field ProcessCode {
+      size = Small;
+   }
+   field Description;
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid";
+   }
+
+   command TranslationCommand;
+
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

@@ -1,0 +1,84 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExternalFileTypesHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Do_Copy_File_Type_From_Type___ (
+   file_type_to_             IN VARCHAR2,
+   file_type_description_to_ IN VARCHAR2,
+   file_type_from_           IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   
+BEGIN
+   External_File_Utility_API.Copy_File_Type_From_Type(file_type_to_,
+                                                      file_type_description_to_,
+                                                      file_type_from_ );
+   RETURN file_type_to_;                                                  
+END Do_Copy_File_Type_From_Type___;
+
+FUNCTION Do_Create_File_Type_Template___ (
+   view_name_                 IN VARCHAR2,
+   input_package_             IN VARCHAR2,
+   component_                 IN VARCHAR2,
+   file_type_                 IN VARCHAR2,
+   file_type_description_     IN VARCHAR2,
+   file_template_             IN VARCHAR2,
+   file_template_description_ IN VARCHAR2,
+   create_input_definition_   IN BOOLEAN,
+   create_output_definition_  IN BOOLEAN ) RETURN VARCHAR2
+IS
+   str_create_input_definition_  VARCHAR2(5);
+   str_create_output_definition_ VARCHAR2(5);
+BEGIN
+   Module_API.Check_Active(component_);
+   IF NOT (Dictionary_SYS.View_Is_Active(view_name_)) THEN
+      Error_SYS.Record_General(lu_name_, 'INVALIDVIEW: Not a valid view');
+   END IF;
+   IF (input_package_ IS NOT NULL) THEN
+      IF NOT (Database_SYS.Package_Active(input_package_)) THEN
+         Error_SYS.Record_General(lu_name_, 'INVALIDPACKAGE: Not a valid input package');
+      END IF;
+   END IF;
+   IF (create_input_definition_) THEN
+      str_create_input_definition_ := '1';
+   ELSE
+      str_create_input_definition_ := '0';
+   END IF;
+   IF (create_output_definition_) THEN
+      str_create_output_definition_ := '1';
+   ELSE
+      str_create_output_definition_ := '0';
+   END IF;
+   External_File_Utility_API.Copy_File_Type_From_View(view_name_,
+                                                      input_package_,
+                                                      component_,
+                                                      file_type_,
+                                                      file_type_description_,
+                                                      file_template_,
+                                                      file_template_description_,
+                                                      str_create_input_definition_,
+                                                      str_create_output_definition_ );
+   RETURN file_type_; 
+END Do_Create_File_Type_Template___;
+
+FUNCTION Get_Input_Package___(
+   view_name_ IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   input_package_       VARCHAR2(200);
+BEGIN
+   IF (Dictionary_SYS.View_Is_Active(view_name_)) THEN
+      input_package_ :=  External_File_Utility_API.Get_Input_Package(view_name_);
+      IF (Database_SYS.Package_Active(input_package_)) THEN
+         RETURN input_package_;
+      END IF;
+   END IF;
+   RETURN NULL;
+END Get_Input_Package___;

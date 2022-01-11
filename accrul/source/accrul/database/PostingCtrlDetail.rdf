@@ -1,0 +1,945 @@
+----------------------------------------------------------------------------- 
+--
+--  Logical unit: POSTING_CTRL_DETAIL_RDF
+--
+--  File:         POSTDET.RDF
+--
+--  Date    Sign   History
+--  ------  ----   ----------------------------------------------------------
+--  960507  Many   Created as Template for Info Services 1.2
+--  960102  MiJo   Moved create table to a script for create report tables.
+--  000906  Camk   Company Logotype added
+--  001003  Assalk Bug # 16139, Changes in ORDER BY clauses,BREAK_KEY. 
+--  001006  Prtilk BUG # 15677  Checked General_SYS.Init_Method
+--  010528  ArjaLk Bug # 19204  Used control type's Module, to get description of control type
+--  020626  Assalk Bug # 30519, Added the letter format to the report.
+--  021203  Thatlk Bug # 90696, When the option "Any Value" is selected it will not be appended to the 
+--                 previous value .
+--  030225  Mgutse Bug 94305. New key in LU IncomeType. 
+--  030305  Mgutse Bug 94305. New key in LU Type1099. 
+--  030723  Tiuklk Added LOVs for "Module From/Until" and "Posting Type From/Until" and changed value taken "Code Part"
+--                 also added code to refresh the view.
+--  050309  Gawilk FIJP370. Modified for JP report.
+--  05050   Reanpl FIAD376 Column valid_until not used anymore. 
+--  051212  Chlilk FIJP370. Added layout for JP report.
+--  060613  Rufelk FIPL614A - Report Designer Conversion.
+--  080318  Nsillk Bug 72069, Corrected.Added assert_safe in places where it was missing.
+--  090605  THPELK Bug 82609 - Added missing UNDEFINE statements for REP3TAB.
+--  091209  Jaralk Bug 87592 - Increased the size of variable spec_control_type_desc_.
+--  100113  AJPELK EAST-2092 commented out XSL layout(s)
+--  111012  Kagalk SFI-56, Modified to display control type value descriptions.
+--  120706  Waudlk Bug 103864, Increased the size of control_type_value_ variable.
+--  120921  Clstlk Bug 105022 Modified view comments to remove default company from info service reports.
+--  141205  Kagalk PRFI-3934, Merged Bug 119966, Modified to display combination control type details.
+--  160215  Clstlk STRFI-1179 Merged Bug 127145,Corrected.
+-----------------------------------------------------------------------------
+
+define MODULE             = ACCRUL
+define LU                 = PostingCtrlDetailRep
+define PKG                = POSTING_CTRL_DETAIL_RPI
+
+define TABLE              = POSTING_CTRL_RPT
+define REP2TAB            = POSTING_CTRL_DETAIL_RPT
+define REP3TAB            = POSTING_CTRL_DETAIL_SPEC_RPT
+
+define VIEW               = POSTING_CTRL_DETAIL_REP
+define METHOD             = Posting_Control
+
+-- set feedback off
+-- set verify off
+
+-----------------------------------------------------------------------------
+-- TABLES: POSTING_CTRL_RPT
+-----------------------------------------------------------------------------
+
+PROMPT Creating reports for logical unit &LU
+
+COMMENT ON TABLE &TABLE IS
+'CHILDREN=&REP2TAB^';
+
+COMMENT ON TABLE &REP2TAB IS
+'CHILDREN=&REP3TAB^';
+-----------------------------------------------------------------------------
+-- PACKAGE SPECIFICATION:    POSTING_CTRL_DEAIL_RPI
+-----------------------------------------------------------------------------
+
+PROMPT Creating &PKG specification
+
+CREATE OR REPLACE PACKAGE &PKG AS
+
+module_ CONSTANT VARCHAR2(6) := '&MODULE';
+lu_name_ CONSTANT VARCHAR2(25) := '&LU';
+
+PROCEDURE &METHOD (
+   report_attr_    IN VARCHAR2,
+   parameter_attr_ IN VARCHAR2 );
+
+PROCEDURE Init;
+ 
+END &PKG;
+/
+SHOW ERROR
+
+-----------------------------------------------------------------------------
+-- VIEWS    POSTING_CTRL_DETAIL_REP
+-----------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------
+-- Report:     Report Control
+-- Type:       PLSQL1.2
+-- Objects:    TABLE  = POSTING_CTRL_RPT, POSTING_CTRL_DETAIL_RPT
+--             VIEW   = POSTING_CTRL_DETAIL_REP
+--             METHOD = Posting_Control
+-----------------------------------------------------------------------------
+PROMPT Creating report view &VIEW
+
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT RT1.RESULT_KEY                          RESULT_KEY,
+       RT1.COMPANY                             COMPANY,
+       RT1.MODULE                              MODULE,
+       RT1.MODULE                              MODULE_TO,
+       RT1.POSTING_TYPE                        POSTING_TYPE,
+       RT1.POSTING_TYPE                        POSTING_TYPE_TO,
+       RT2.CONTROL_TYPE_VALUE                  CONTROL_TYPE_VALUE,
+       RT2.CONTROL_TYPE_VALUE2                 CONTROL_TYPE_VALUE2,
+       RT1.CODE_PART                           CODE_PART,
+       RT1.CONTROL_TYPE                        CONTROL_TYPE,
+       RT2.CODE_PART_VALUE                     CODE_PART_VALUE,
+       RT1.DEFAULT_VALUE                       DEFAULT_VALUE,
+       RT1.OVERRIDE                            OVERRIDE,
+       RT2.VALID_FROM                          VALID_FROM_DETAIL,
+       to_date(NULL)                           VALID_UNTIL,
+       RT1.DESCRIPTION                         DESCRIPTION,
+       RT1.POSTING_TYPE || '^' || RT1.CODE_PART || '^' || TO_CHAR(RT1.VALID_FROM, 'YYYYMMDD')   
+                                               BREAK_KEY,                      
+       RT2.CODE_PART_VALUE_DESC                CODE_PART_VALUE_DESC,
+       RT1.CONTROL_NAME                        CONTROL_NAME,
+       RT1.POSTING_TYPE_DESC                   POSTING_TYPE_DESC,
+       RT1.DEFAULT_VAL_DESC                    DEFAULT_VAL_DESC, 
+       RT1.CODE_PART_DESC                      CODE_PART_DESC,
+       RT2.CONTROL_TYPE_VALUE_DESC             CONTROL_TYPE_VALUE_DESC,
+       RT2.CONTROL_TYPE_VALUE_DESC2            CONTROL_TYPE_VALUE_DESC2,
+       RT1.DEFAULT_NO_VALUE                    DEFAULT_NO_VALUE, --
+       RT1.DEFAULT_NO_VALUE_DESC               DEFAULT_NO_VALUE_DESC,       
+       RT1.VALID_FROM                          VALID_FROM,
+       RT2.SPEC_CONTROL_TYPE                   SPEC_CONTROL_TYPE,
+       RT2.SPEC_CONTROL_TYPE_DESC              SPEC_CONTROL_TYPE_DESC,
+       RT3.CONTROL_TYPE_VALUE                  SPEC_CONTROL_TYPE_VALUE,       
+       RT3.CONTROL_TYPE_VALUE_DESC             SPEC_CONTROL_TYPE_VALUE_DESC,
+       RT3.CONTROL_TYPE_VALUE2                 SPEC_CONTROL_TYPE_VALUE2,
+       RT3.CONTROL_TYPE_VALUE_DESC2            SPEC_CONTROL_TYPE_VALUE_DESC2,       
+       RT3.CODE_PART_VALUE                     SPEC_CODE_PART_VALUE,
+       RT3.CODE_PART_VALUE_DESC                SPEC_CODE_PART_VALUE_DESC,            
+       RT2.CONTROL_TYPE_VALUE || '^' || RT2.CONTROL_TYPE_VALUE2 || '^' || TO_CHAR(RT2.VALID_FROM, 'YYYYMMDD')   
+                                               BREAK_KEY_DETAIL,
+       RT2.SPEC_CONTROL_TYPE|| '^' ||RT3.CONTROL_TYPE_VALUE   SPEC_ORDER
+FROM  POSTING_CTRL_RPV RT1, 
+      POSTING_CTRL_DETAIL_RPV RT2,
+      POSTING_CTRL_DETAIL_SPEC_RPV RT3
+WHERE RT1.RESULT_KEY = RT2.RESULT_KEY (+)
+  AND RT1.ROW_NO = RT2.PARENT_ROW_NO (+)
+  AND RT2.RESULT_KEY = RT3.RESULT_KEY (+)
+  AND RT2.PARENT_ROW_NO = RT3.HEAD_ROW_NO (+)
+  AND RT2.ROW_NO = RT3.DETAIL_ROW_NO (+)
+WITH  read only;
+
+COMMENT ON TABLE &VIEW IS
+   'MODULE=&MODULE^LU=&LU^PROMPT=Posting Ctrl Detail^ORDERBY(MODULE,BREAK_KEY,BREAK_KEY_DETAIL,SPEC_ORDER)^TABLE=&TABLE^';
+
+COMMENT ON COLUMN &VIEW..result_key IS
+   'FLAGS=M----^';
+COMMENT ON COLUMN &VIEW..company IS
+   'FLAGS=A----^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^TITLE=Company^REF=Company_Finance^QUERY=Company:^QFLAGS=MSC-L^ITEM_NAME=iCompany0^';
+COMMENT ON COLUMN &VIEW..module IS
+   'FLAGS=A----^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Module From^TITLE=Module^QUERY=Module From:^QFLAGS=ACS-L^QVALUE=A^ITEM_NAME=iModule1^REF=MODULE^';
+COMMENT ON COLUMN &VIEW..module_to IS
+   'FLAGS=A----^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Module Until^TITLE=Module Until:^QUERY=Module Until:^QFLAGS=ACS-L^QVALUE=ZZZZZZZZZZ^ITEM_NAME=iModuleTo2^REF=MODULE^';
+COMMENT ON COLUMN &VIEW..posting_type IS
+   'FLAGS=A----^DATATYPE=STRING(10)/UPPERCASE^PROMPT=Posting Type From^TITLE=Posting Type^QUERY=Posting Type From:^QFLAGS=ACS-L^QVALUE=A^ITEM_NAME=iPostingType3^REF=POSTING_CTRL_POSTING_TYPE^';
+COMMENT ON COLUMN &VIEW..posting_type_to IS
+   'FLAGS=A----^DATATYPE=STRING(10)/UPPERCASE^PROMPT=Posting Type To^TITLE=Posting Type Until:^QUERY=Posting Type Until:^QFLAGS=ACS-L^QVALUE=ZZZZZZZZZZ^ITEM_NAME=iPostingTypeTo4^REF=POSTING_CTRL_POSTING_TYPE^';
+COMMENT ON COLUMN &VIEW..control_type_value IS
+   'FLAGS=A----^DATATYPE=STRING(100)^TITLE=Control Type Value^ITEM_NAME=iControlTypeValue5^';
+COMMENT ON COLUMN &VIEW..control_type_value2
+   IS 'FLAGS=A----^DATATYPE=STRING(100)^TITLE=Control Type Value2^';             
+COMMENT ON COLUMN &VIEW..code_part IS
+   'FLAGS=A----^DATATYPE=STRING(1)^TITLE=Code Part^ITEM_NAME=iCodePart6^';
+COMMENT ON COLUMN &VIEW..control_type IS
+   'FLAGS=A----^DATATYPE=STRING(10)^TITLE=Control Type^ITEM_NAME=iControlType7^';
+COMMENT ON COLUMN &VIEW..code_part_value IS
+   'FLAGS=A----^DATATYPE=STRING(10)^TITLE=Code Part Value^ITEM_NAME=iCodePartValue8^';
+COMMENT ON COLUMN &VIEW..default_value IS
+   'FLAGS=A----^DATATYPE=STRING(10)^TITLE=Default 1^ITEM_NAME=iDefaultValue9^';
+COMMENT ON COLUMN &VIEW..override IS
+   'FLAGS=A----^DATATYPE=STRING(10)^TITLE=Override^ITEM_NAME=iOverride10^';
+COMMENT ON COLUMN &VIEW..valid_from_detail IS
+   'FLAGS=A----^DATATYPE=DATE\DATE^TITLE=Valid From^ITEM_NAME=iValidFromDetail11^';
+COMMENT ON COLUMN &VIEW..valid_until IS
+   'FLAGS=A----^DATATYPE=DATE\DATE^TITLE=Valid Until^ITEM_NAME=iValidUntil12^';
+COMMENT ON COLUMN &VIEW..description IS
+   'FLAGS=A----^DATATYPE=STRING(35)^TITLE=Description^ITEM_NAME=iDescription13^';
+COMMENT ON COLUMN &VIEW..break_key IS
+   'FLAGS=A----^DATATYPE=STRING(30)^TITLE=Break Key^ITEM_NAME=iBreakKey14^';
+COMMENT ON COLUMN &VIEW..code_part_value_desc IS
+   'FLAGS=A----^DATATYPE=STRING(100)^TITLE=Code Part Value Desc^ITEM_NAME=iCodePartValueDesc15^';
+COMMENT ON COLUMN &VIEW..control_name IS
+   'FLAGS=A----^DATATYPE=STRING(200)^TITLE=Control Type Desc^ITEM_NAME=iControlName16^';
+COMMENT ON COLUMN &VIEW..posting_type_desc IS
+   'FLAGS=A----^DATATYPE=STRING(100)^TITLE=Posting Type Desc^ITEM_NAME=iPostTypeDesc17^';
+COMMENT ON COLUMN &VIEW..default_val_desc IS
+   'FLAGS=A----^DATATYPE=STRING(100)^TITLE=Default 1 Desc^ITEM_NAME=iDefaultValDesc18^';
+COMMENT ON COLUMN &VIEW..code_part_desc IS
+   'FLAGS=A----^DATATYPE=STRING(100)^TITLE=Code Part Desc^ITEM_NAME=iCodePartDesc19^';
+COMMENT ON COLUMN &VIEW..control_type_value_desc IS
+   'FLAGS=A----^DATATYPE=STRING(4000)^TITLE=Control Type Value Desc^ITEM_NAME=iControlTypeValueDesc20^';
+COMMENT ON COLUMN &VIEW..control_type_value_desc2
+   IS 'FLAGS=A----^DATATYPE=STRING(4000)^TITLE=Control Type Value Desc2^';
+COMMENT ON COLUMN &VIEW..default_no_value IS
+   'FLAGS=A----^DATATYPE=STRING(30)^TITLE=Default 2^ITEM_NAME=iDefaultNoVal21^';   
+COMMENT ON COLUMN &VIEW..default_no_value_desc IS
+   'FLAGS=A----^DATATYPE=STRING(100)^TITLE=Default 2 Desc^ITEM_NAME=iDefaultNoValDesc22^';      
+COMMENT ON COLUMN &VIEW..valid_from IS
+   'FLAGS=A----^DATATYPE=DATE^TITLE=Valid From^ITEM_NAME=iValidFrom23^';         
+COMMENT ON COLUMN &VIEW..spec_control_type  IS
+   'FLAGS=A----^DATATYPE=STRING(10)^TITLE=Control Type^ITEM_NAME=iSpecControlType24^';            
+COMMENT ON COLUMN &VIEW..spec_control_type_desc  IS
+   'FLAGS=A----^DATATYPE=STRING(200)^TITLE=Control Type Desc^ITEM_NAME=iSpecControlTypeDesc25^';               
+COMMENT ON COLUMN &VIEW..spec_control_type_value  IS
+   'FLAGS=A----^DATATYPE=STRING(100)^TITLE=Control Type Value^ITEM_NAME=iSpecControlTypeValue26^';            
+COMMENT ON COLUMN &VIEW..spec_control_type_value_desc  IS
+   'FLAGS=A----^DATATYPE=STRING(4000)^TITLE=Control Type Value Desc^ITEM_NAME=iSpecControlTypeValueDesc27^';               
+COMMENT ON COLUMN &VIEW..spec_control_type_value2
+   IS 'FLAGS=A----^DATATYPE=STRING(100)^TITLE=Spec Control Type Value2^';
+COMMENT ON COLUMN &VIEW..spec_control_type_value_desc2
+   IS 'FLAGS=A----^DATATYPE=STRING(4000)^TITLE=Spec Control Type Value Desc2^';
+COMMENT ON COLUMN &VIEW..spec_code_part_value IS
+   'FLAGS=A----^DATATYPE=STRING(10)^TITLE=Code Part Value^ITEM_NAME=iCodePartValue28^';               
+COMMENT ON COLUMN &VIEW..spec_code_part_value_desc IS
+   'FLAGS=A----^DATATYPE=STRING(100)^TITLE=Code Part Value Desc^ITEM_NAME=iCodePartValueDesc29^';  
+COMMENT ON COLUMN &VIEW..break_key_detail IS
+   'FLAGS=A----^DATATYPE=STRING(40)^TITLE=Break Key^ITEM_NAME=iBreakKeyDetail30^';   
+COMMENT ON COLUMN &VIEW..spec_order IS
+   'FLAGS=A----^DATATYPE=STRING(40)^TITLE=Spec Order^ITEM_NAME=iSpecOrder31^';   
+
+BEGIN
+   Report_SYS.Define_Report_('&VIEW','&MODULE','&LU','Posting Control Report','&TABLE','&PKG..&METHOD',0,NULL,NULL,NULL,'PLSQL1.2','TRUE','Financials','Posting Control');
+   
+   Report_SYS.Refresh_('&VIEW');
+END;  
+/
+------------------------------------------------------------------------------
+-- PACKAGE IMPLEMENTATION     POSTING_CTRL_DETAIL_RPI
+------------------------------------------------------------------------------
+
+PROMPT Creating &PKG implementation
+
+CREATE OR REPLACE PACKAGE BODY &PKG AS
+
+PROCEDURE &METHOD (
+   report_attr_    IN VARCHAR2,
+   parameter_attr_ IN VARCHAR2 )
+IS
+   result_key_               NUMBER;
+   row_no_                   NUMBER;
+   row_no1_                  NUMBER;
+   row_no2_                  NUMBER;   
+   from_module_              VARCHAR2(20);
+   until_module_             VARCHAR2(20);
+   from_posting_type_        VARCHAR2(10);
+   until_posting_type_       VARCHAR2(10);
+   given_company_            VARCHAR2(20);
+   code_part_value_desc_     VARCHAR2(100);
+   control_name_             VARCHAR2(200);
+   posting_type_desc_        VARCHAR2(100);
+   control_type_desc_        VARCHAR2(100);
+   default_val_desc_         VARCHAR2(100);
+   code_part_desc_           VARCHAR2(100);
+   control_type_value_       Posting_Ctrl_Detail_Tab.control_type_value%TYPE;
+   control_type_value_desc_  VARCHAR2(4000);
+   control_type_value2_      Posting_Ctrl_Detail_Tab.control_type_value%TYPE;
+   control_type_value_desc2_ VARCHAR2(4000);   
+   stmt_                     VARCHAR2(1000);
+   logotype_                 VARCHAR2(100);
+   company_name_             VARCHAR2(100);
+   default_value_no_ct_desc_ VARCHAR2(100);
+   spec_control_type_desc_   VARCHAR2(200);
+   pc_ctrl_type_rec_         Posting_Ctrl_Control_Type_TAB%ROWTYPE;
+   
+   do_xml_                   BOOLEAN       := Report_SYS.Should_Generate_Xml('&VIEW');
+   do_rs_                    BOOLEAN       := Report_SYS.Should_Generate_Result_Set('&VIEW');
+   xml_                      CLOB;
+   package_name_             VARCHAR2(100) := 'POSTING_CTRL_DETAIL_REP';
+
+   prev_module_              VARCHAR2(20);
+   prev_break_key_           VARCHAR2(50);
+   prev_break_key_detail_    VARCHAR2(150);
+   has_rows_                 BOOLEAN       := FALSE;
+   prev_spec_order_          VARCHAR2(150);
+         
+   CURSOR get_records IS
+      SELECT c.description,
+             a.module,
+             b.module control_mo,    
+             b.posting_type,
+             b.code_part,
+             b.control_type,
+             b.default_value,
+             b.override,
+             b.default_value_no_ct,
+             b.pc_valid_from
+      FROM   Posting_Ctrl_Posting_Type_Tab a, Posting_Ctrl_Tab b, Company_Finance c
+      WHERE  b.company      = c.company
+      AND    b.posting_type = a.posting_type
+      AND    b.posting_type BETWEEN from_posting_type_ AND until_posting_type_
+      AND    a.module BETWEEN from_module_ AND until_module_
+      AND    b.company      = given_company_;
+
+   CURSOR get_records1 (p_company_        VARCHAR2,
+                        p_pc_valid_from_  DATE,
+                        p_posting_type_   VARCHAR2,
+                        p_code_part_      VARCHAR2) IS
+      SELECT control_type_value,
+             code_part_value,
+             valid_from,
+             module,
+             spec_control_type,
+             spec_module,
+             spec_ctrl_type_category
+      FROM   Posting_Ctrl_Detail_Tab
+      WHERE  company      = p_company_
+      AND    pc_valid_from = p_pc_valid_from_
+      AND    posting_type = p_posting_type_
+      AND    code_part    = p_code_part_;             
+      
+   CURSOR get_records2 (p_company_            VARCHAR2,
+                        p_pc_valid_from_      DATE,
+                        p_posting_type_       VARCHAR2,
+                        p_code_part_          VARCHAR2,
+                        p_control_type_value_ VARCHAR2,
+                        p_valid_from_         VARCHAR2) IS
+      SELECT spec_control_type_value, 
+             spec_control_type,
+             code_part_value,
+             spec_module 
+      FROM   Posting_Ctrl_Detail_Spec_Tab
+      WHERE  company      = p_company_
+      AND    pc_valid_from = p_pc_valid_from_
+      AND    posting_type = p_posting_type_
+      AND    code_part    = p_code_part_
+      AND    control_type_value = p_control_type_value_
+      AND    valid_from = p_valid_from_
+      ORDER BY spec_control_type_value;    
+   
+   CURSOR get_records3 (p_company_                VARCHAR2,
+                        p_pc_valid_from_          DATE,
+                        p_posting_type_           VARCHAR2,
+                        p_code_part_              VARCHAR2,
+                        p_control_type_value_     VARCHAR2,
+                        p_valid_from_             VARCHAR2,
+                        p_spec_comb_control_type_ VARCHAR2) IS
+      SELECT spec_control_type1,
+             spec_control_type2,
+             spec_control_type1_value,
+             spec_control_type2_value,
+             spec_module1,
+             spec_module2,             
+             code_part_value,
+             valid_from 
+      FROM   Posting_Ctrl_Comb_Det_Spec_Tab 
+      WHERE  company                = p_company_
+      AND    posting_type           = p_posting_type_
+      AND    pc_valid_from          = p_pc_valid_from_ 
+      AND    control_type_value     = p_control_type_value_
+      AND    code_part              = p_code_part_
+      AND    spec_comb_control_type = p_spec_comb_control_type_;
+
+   CURSOR get_records4 (p_company_        VARCHAR2,
+                        p_pc_valid_from_  DATE,
+                        p_posting_type_   VARCHAR2,
+                        p_code_part_      VARCHAR2,
+                        p_control_type_   VARCHAR2 ) IS
+      SELECT control_type1,
+             control_type2,
+             control_type1_value,
+             control_type2_value,
+             code_part_value,
+             comb_module,
+             module1,
+             module2,
+             valid_from 
+      FROM   Posting_Ctrl_Comb_Detail_tab 
+      WHERE  company =  p_company_
+      AND    posting_type      = p_posting_type_
+      AND    pc_valid_from     = p_pc_valid_from_
+      AND    comb_control_type = p_control_type_
+      AND    code_part         = p_code_part_;   
+   
+   CURSOR get_report_data IS
+     SELECT * 
+     FROM   POSTING_CTRL_DETAIL_REP
+     WHERE  result_key   = result_key_
+     AND    posting_type BETWEEN from_posting_type_ AND until_posting_type_
+     AND    module       BETWEEN from_module_       AND until_module_
+     AND    company      = given_company_
+     ORDER BY module, break_key, break_key_detail, spec_order;
+
+BEGIN
+   General_SYS.Init_Method(lu_name_, '&PKG', '&METHOD');   
+   result_key_         := Client_SYS.Get_Item_Value_To_Number('RESULT_KEY', report_attr_, lu_name_);
+   from_module_        := Client_SYS.Get_Item_Value('MODULE',          parameter_attr_);
+   until_module_       := Client_SYS.Get_Item_Value('MODULE_TO',       parameter_attr_);
+   from_posting_type_  := Client_SYS.Get_Item_Value('POSTING_TYPE',    parameter_attr_);
+   until_posting_type_ := Client_SYS.Get_Item_Value('POSTING_TYPE_TO', parameter_attr_);
+   given_company_      := Client_SYS.Get_Item_Value('COMPANY',         parameter_attr_);
+
+   Company_Finance_API.Exist(given_company_);
+   company_name_       := Company_API.Get_Name(given_company_);
+
+   row_no_  := 1;
+   row_no1_ := 1;
+   row_no2_ := 1;   
+   
+   FOR the_record IN get_records LOOP
+      control_name_             := SUBSTR(Posting_Ctrl_Control_Type_API.Get_Description(the_record.control_type, the_record.control_mo),1,200); 
+      IF control_name_ IS NULL THEN
+         control_name_          := SUBSTR(Comb_Control_Type_API.Get_Comb_Control_Type_Desc(given_company_, the_record.posting_type, the_record.control_type),1,200);
+      END IF;
+      posting_type_desc_        := SUBSTR(Posting_ctrl_posting_type_API.Get_description(the_record.posting_type),1,100);   
+      default_val_desc_         := SUBSTR(Accounting_code_part_value_API.Get_Description( given_company_,
+                                                                                   the_record.code_part,
+                                                                                   the_record.default_value),1,100);
+      code_part_desc_           := SUBSTR(Accounting_code_parts_API.Get_Name(given_company_,the_record.code_part),1,100);
+      default_value_no_ct_desc_ := SUBSTR(Accounting_code_part_value_API.Get_Description( given_company_,
+                                                                                   the_record.code_part,
+                                                                                   the_record.default_value_no_ct),1,100);      
+      
+     -- all the posting_type_desc, default_val_desc and code_part_desc are included to the POSTING_CTRL_RPT tab
+     
+      INSERT INTO &TABLE(
+         result_key,
+         row_no,
+         company,
+         module,
+         posting_type,
+         code_part,
+         control_type,
+         control_name,
+         default_value,--
+         override,
+         description,
+         posting_type_desc,
+         control_type_desc,
+         default_val_desc,
+         code_part_desc,
+         default_no_value,
+         default_no_value_desc,       
+         valid_from)
+      VALUES
+         (result_key_,
+         row_no_,
+         given_company_,
+         the_record.module,
+         the_record.posting_type,
+         the_record.code_part,
+         the_record.control_type,
+         control_name_,
+         the_record.default_value,
+         the_record.override,
+         the_record.description,
+         posting_type_desc_,
+         control_type_desc_,
+         default_val_desc_,
+         code_part_desc_,
+         the_record.default_value_no_ct,
+         default_value_no_ct_desc_,
+         the_record.pc_valid_from);
+         
+      FOR the_record1 IN get_records1( given_company_,
+                                       the_record.pc_valid_from,
+                                       the_record.posting_type,
+                                       the_record.code_part ) LOOP
+         IF (the_record.control_type = 'IC7') THEN
+            -- Control type IC7, Fetch Income_Type_Id  
+            control_type_value_ := Income_Type_API.Get_Income_Type_Id(the_record1.control_type_value);
+
+         ELSIF (the_record.control_type = 'IC8') THEN
+            -- Control type IC8, Fetch Irs1099_Type_Id  
+            stmt_ := 'BEGIN :control_type_value_ := Type1099_API.Get_Irs1099_Type_Id(:internal_control_type_value); END;';
+            -- ifs_assert_safe nsillk 20080317
+            EXECUTE IMMEDIATE stmt_ using IN OUT control_type_value_, the_record1.control_type_value;
+         ELSE
+            control_type_value_ := the_record1.control_type_value;
+         END IF;
+         code_part_value_desc_ := Accounting_Code_Part_Value_API.Get_Description( 
+                                                     given_company_,
+                                                     the_record.code_part,
+                                                     the_record1.code_part_value ); 
+
+         Posting_Ctrl_Control_Type_API.Get_Control_Type_Attri_(pc_ctrl_type_rec_.description,
+                                                               pc_ctrl_type_rec_.ctrl_type_category,
+                                                               pc_ctrl_type_rec_.view_name,
+                                                               pc_ctrl_type_rec_.pkg_name,
+                                                               the_record.control_type,
+                                                               the_record.control_mo,
+                                                               given_company_);
+         control_type_value_desc_ := NULL;
+         -- Due to that some control types has no package specified or has some value like '**NoPkg' the following check is needed
+         IF (Database_SYS.Package_Exist(pc_ctrl_type_rec_.pkg_name)) THEN
+            control_type_value_desc_ := SUBSTR(Posting_Ctrl_Control_Type_API.Get_Control_Type_Desc_( given_company_,
+                                                                                                     the_record.control_type,
+                                                                                                     control_type_value_,  
+                                                                                                     pc_ctrl_type_rec_.view_name,
+                                                                                                     pc_ctrl_type_rec_.pkg_name,
+                                                                                                     the_record.control_mo),1,4000);
+         END IF;
+
+         spec_control_type_desc_ := SUBSTR(Posting_Ctrl_Control_Type_API.Get_Description(the_record1.spec_control_type, the_record1.spec_module),1,200);                                                                 
+         IF (spec_control_type_desc_ IS NULL) THEN
+            spec_control_type_desc_ := SUBSTR(Comb_Control_Type_API.Get_Comb_Control_Type_Desc(given_company_, the_record.posting_type, the_record1.spec_control_type),1,200);
+         END IF;
+                                                                                                                                  
+         INSERT INTO &REP2TAB(
+            result_key,
+            row_no,
+            parent_row_no,
+            control_type_value,
+            code_part_value,
+            code_part_value_desc,
+            valid_from,
+            control_type_value_desc,
+            spec_control_type,
+            spec_control_type_desc )
+         VALUES
+            (result_key_,
+            row_no1_,
+            row_no_,
+            control_type_value_,
+            NVL(the_record1.code_part_value, '-'),
+            code_part_value_desc_,
+            the_record1.valid_from,
+            control_type_value_desc_,
+            the_record1.spec_control_type,
+            spec_control_type_desc_) ;
+
+         FOR the_record2 IN get_records2( given_company_,
+                                          the_record.pc_valid_from,
+                                          the_record.posting_type,
+                                          the_record.code_part,
+                                          control_type_value_,
+                                          the_record1.valid_from) LOOP            
+
+            IF (the_record2.spec_control_type = 'IC7') THEN
+               -- Control type IC7, Fetch Income_Type_Id  
+               control_type_value_ := Income_Type_API.Get_Income_Type_Id(the_record2.spec_control_type_value);
+   
+            ELSIF (the_record2.spec_control_type = 'IC8') THEN
+               -- Control type IC8, Fetch Irs1099_Type_Id  
+               stmt_ := 'BEGIN :control_type_value_ := Type1099_API.Get_Irs1099_Type_Id(:internal_control_type_value); END;';
+               -- ifs_assert_safe nsillk 20080317
+               EXECUTE IMMEDIATE stmt_ using IN OUT control_type_value_, the_record2.spec_control_type_value;
+            ELSE
+               control_type_value_ := the_record2.spec_control_type_value;
+            END IF;
+            
+            code_part_value_desc_ := Accounting_Code_Part_Value_API.Get_Description( 
+                                                        given_company_,
+                                                        the_record.code_part,
+                                                        the_record2.code_part_value ); 
+
+            Posting_Ctrl_Control_Type_API.Get_Control_Type_Attri_(pc_ctrl_type_rec_.description,
+                                                                  pc_ctrl_type_rec_.ctrl_type_category,
+                                                                  pc_ctrl_type_rec_.view_name,
+                                                                  pc_ctrl_type_rec_.pkg_name,
+                                                                  the_record2.spec_control_type,
+                                                                  the_record2.spec_module,
+                                                                  given_company_);
+            control_type_value_desc_ := NULL;
+         -- Due to that some control types has no package specified or has some value like '**NoPkg' the following check is needed
+            IF (Database_SYS.Package_Exist(pc_ctrl_type_rec_.pkg_name)) THEN
+               control_type_value_desc_ := SUBSTR(Posting_Ctrl_Control_Type_API.Get_Control_Type_Desc_( given_company_,
+                                                                                                        the_record2.spec_control_type,
+                                                                                                        control_type_value_,  
+                                                                                                        pc_ctrl_type_rec_.view_name,
+                                                                                                        pc_ctrl_type_rec_.pkg_name,
+                                                                                                        the_record2.spec_module),1,4000);  
+            END IF;
+
+            INSERT INTO &REP3TAB(
+               result_key,
+               row_no,
+               head_row_no,
+               detail_row_no,
+               control_type_value,
+               control_type_value_desc ,
+               code_part_value,
+               code_part_value_desc )
+            VALUES (
+               result_key_,
+               row_no2_,
+               row_no_,
+               row_no1_,
+               control_type_value_,
+               control_type_value_desc_,
+               the_record2.code_part_value,
+               code_part_value_desc_);
+            row_no2_ := row_no2_ + 1;         
+         END LOOP;   
+                                          
+         IF (the_record1.spec_ctrl_type_category = 'COMBINATION') THEN
+            FOR the_record3 IN get_records3( given_company_,
+                                             the_record.pc_valid_from,
+                                             the_record.posting_type,
+                                             the_record.code_part,
+                                             control_type_value_,
+                                             the_record1.valid_from,
+                                             the_record1.spec_control_type) LOOP
+
+               IF (the_record3.spec_control_type1 = 'IC7') THEN                  
+                  control_type_value_ := Income_Type_API.Get_Income_Type_Id(the_record3.spec_control_type1_value);
+               ELSIF (the_record3.spec_control_type1 = 'IC8') THEN                  
+                  $IF Component_Invoic_SYS.INSTALLED $THEN
+                     control_type_value_ := Type1099_API.Get_Irs1099_Type_Id(the_record3.spec_control_type1_value);
+                  $ELSE
+                     NULL;                     
+                  $END             
+               ELSE
+                  control_type_value_ := the_record3.spec_control_type1_value;
+               END IF;
+
+               IF (the_record3.spec_control_type2 = 'IC7') THEN                  
+                  control_type_value2_ := Income_Type_API.Get_Income_Type_Id(the_record3.spec_control_type2_value);
+               ELSIF (the_record3.spec_control_type2 = 'IC8') THEN
+                  $IF Component_Invoic_SYS.INSTALLED $THEN
+                     control_type_value2_ := Type1099_API.Get_Irs1099_Type_Id(the_record3.spec_control_type2_value);
+                  $ELSE
+                     NULL;                                          
+                  $END             
+               ELSE
+                  control_type_value2_ := the_record3.spec_control_type2_value;
+               END IF;
+
+               code_part_value_desc_ := Accounting_Code_Part_Value_API.Get_Description( given_company_,
+                                                                                        the_record.code_part,
+                                                                                        the_record3.code_part_value ); 
+               Posting_Ctrl_Control_Type_API.Get_Control_Type_Attri_(pc_ctrl_type_rec_.description,
+                                                                     pc_ctrl_type_rec_.ctrl_type_category,
+                                                                     pc_ctrl_type_rec_.view_name,
+                                                                     pc_ctrl_type_rec_.pkg_name,
+                                                                     the_record3.spec_control_type1,
+                                                                     the_record3.spec_module1,
+                                                                     given_company_);      
+               control_type_value_desc_ := NULL;               
+               IF (Database_SYS.Package_Exist(pc_ctrl_type_rec_.pkg_name)) THEN
+                  control_type_value_desc_ := SUBSTR(Posting_Ctrl_Control_Type_API.Get_Control_Type_Desc_( given_company_,
+                                                                                                           the_record3.spec_control_type1,
+                                                                                                           control_type_value_,  
+                                                                                                           pc_ctrl_type_rec_.view_name,
+                                                                                                           pc_ctrl_type_rec_.pkg_name,
+                                                                                                           the_record3.spec_module1),1,4000);
+               END IF;
+               
+               Posting_Ctrl_Control_Type_API.Get_Control_Type_Attri_(pc_ctrl_type_rec_.description,
+                                                                     pc_ctrl_type_rec_.ctrl_type_category,
+                                                                     pc_ctrl_type_rec_.view_name,
+                                                                     pc_ctrl_type_rec_.pkg_name,
+                                                                     the_record3.spec_control_type2,
+                                                                     the_record3.spec_module2,
+                                                                     given_company_);   
+               control_type_value_desc2_ := NULL;               
+               IF (Database_SYS.Package_Exist(pc_ctrl_type_rec_.pkg_name)) THEN
+                  control_type_value_desc2_ := SUBSTR(Posting_Ctrl_Control_Type_API.Get_Control_Type_Desc_( given_company_,
+                                                                                                            the_record3.spec_control_type2,
+                                                                                                            control_type_value2_,  
+                                                                                                            pc_ctrl_type_rec_.view_name,
+                                                                                                            pc_ctrl_type_rec_.pkg_name,
+                                                                                                            the_record3.spec_module2),1,4000);
+               END IF;
+
+               INSERT INTO &REP3TAB(
+                  result_key,
+                  row_no,
+                  head_row_no,
+                  detail_row_no,
+                  control_type_value,
+                  control_type_value2,
+                  control_type_value_desc ,
+                  control_type_value_desc2 ,
+                  code_part_value,
+                  code_part_value_desc )
+               VALUES (
+                  result_key_,
+                  row_no2_,
+                  row_no_,
+                  row_no1_,
+                  control_type_value_,
+                  control_type_value2_, 
+                  control_type_value_desc_,
+                  control_type_value_desc2_,
+                  the_record3.code_part_value,
+                  code_part_value_desc_);
+               row_no2_ := row_no2_ + 1; 
+            END LOOP;
+         END IF;                                                                                                
+         row_no1_ := row_no1_ + 1;
+      END LOOP;
+                                       
+      FOR the_record4 IN get_records4( given_company_,
+                                       the_record.pc_valid_from,
+                                       the_record.posting_type,
+                                       the_record.code_part,
+                                       the_record.control_type ) LOOP
+
+         IF (the_record4.control_type1 = 'IC7') THEN            
+            control_type_value_ := Income_Type_API.Get_Income_Type_Id(the_record4.control_type1_value);
+         ELSIF (the_record4.control_type1 = 'IC8') THEN
+            $IF Component_Invoic_SYS.INSTALLED $THEN
+               control_type_value_ := Type1099_API.Get_Irs1099_Type_Id(the_record4.control_type1_value);
+            $ELSE
+               NULL;                                    
+            $END                                  
+         ELSE
+            control_type_value_ := the_record4.control_type1_value;
+         END IF;
+
+         IF (the_record4.control_type2 = 'IC7') THEN
+            control_type_value2_ := Income_Type_API.Get_Income_Type_Id(the_record4.control_type2_value);
+         ELSIF (the_record4.control_type2 = 'IC8') THEN
+            $IF Component_Invoic_SYS.INSTALLED $THEN
+               control_type_value2_ := Type1099_API.Get_Irs1099_Type_Id(the_record4.control_type2_value);
+            $ELSE
+               NULL;                                    
+            $END                                              
+         ELSE
+            control_type_value2_ := the_record4.control_type2_value;
+         END IF;
+
+         code_part_value_desc_ := Accounting_Code_Part_Value_API.Get_Description( 
+                                                     given_company_,
+                                                     the_record.code_part,
+                                                     the_record4.code_part_value ); 
+         Posting_Ctrl_Control_Type_API.Get_Control_Type_Attri_(pc_ctrl_type_rec_.description,
+                                                               pc_ctrl_type_rec_.ctrl_type_category,
+                                                               pc_ctrl_type_rec_.view_name,
+                                                               pc_ctrl_type_rec_.pkg_name,
+                                                               the_record4.control_type1,
+                                                               the_record4.module1,
+                                                               given_company_);      
+         control_type_value_desc_ := NULL;         
+         IF (Database_SYS.Package_Exist(pc_ctrl_type_rec_.pkg_name)) THEN
+            control_type_value_desc_ := SUBSTR(Posting_Ctrl_Control_Type_API.Get_Control_Type_Desc_( given_company_,
+                                                                                                     the_record4.control_type1,
+                                                                                                     control_type_value_,   
+                                                                                                     pc_ctrl_type_rec_.view_name,
+                                                                                                     pc_ctrl_type_rec_.pkg_name,
+                                                                                                     the_record4.module1),1,4000);
+         END IF;
+         
+         Posting_Ctrl_Control_Type_API.Get_Control_Type_Attri_(pc_ctrl_type_rec_.description,
+                                                               pc_ctrl_type_rec_.ctrl_type_category,
+                                                               pc_ctrl_type_rec_.view_name,
+                                                               pc_ctrl_type_rec_.pkg_name,
+                                                               the_record4.control_type2,
+                                                               the_record4.module2,
+                                                               given_company_);   
+         control_type_value_desc2_ := NULL;         
+         IF (Database_SYS.Package_Exist(pc_ctrl_type_rec_.pkg_name)) THEN
+            control_type_value_desc2_ := SUBSTR(Posting_Ctrl_Control_Type_API.Get_Control_Type_Desc_(given_company_,
+                                                                                                     the_record4.control_type2,
+                                                                                                     control_type_value2_,  
+                                                                                                     pc_ctrl_type_rec_.view_name,
+                                                                                                     pc_ctrl_type_rec_.pkg_name,
+                                                                                                     the_record4.module2),1,4000);
+         END IF;
+         
+         INSERT INTO &REP2TAB(
+            result_key,
+            row_no,
+            parent_row_no,
+            control_type_value,
+            control_type_value2,
+            code_part_value,
+            code_part_value_desc,
+            valid_from,
+            control_type_value_desc,
+            control_type_value_desc2 )
+         VALUES
+            (result_key_,
+            row_no1_,
+            row_no_,
+            control_type_value_,
+            control_type_value2_, 
+            NVL(the_record4.code_part_value, '-'),
+            code_part_value_desc_,
+            the_record4.valid_from,
+            control_type_value_desc_,
+            control_type_value_desc2_ );
+         row_no1_ := row_no1_ + 1;                           
+      END LOOP;                                        
+      row_no_ := row_no_ + 1;
+   END LOOP;
+
+   IF (do_xml_) THEN
+      Xml_Record_Writer_SYS.Create_Report_Header(xml_,'&VIEW',package_name_);
+
+      Xml_Record_Writer_SYS.Add_Element(xml_,'COMPANY', given_company_);
+      Xml_Record_Writer_SYS.Add_Element(xml_,'DESCRIPTION', company_name_);
+
+      Xml_Record_Writer_SYS.Start_Element(xml_, 'MODULES');
+
+      FOR rec_ IN get_report_data LOOP
+         has_rows_ := TRUE;
+         
+         IF (prev_module_ <> rec_.module) OR (prev_module_ IS NULL)  THEN
+            IF (prev_module_ IS NOT NULL) THEN
+               Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAIL_SPECS');
+               Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAIL');
+               Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAILS');
+               Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL');
+               Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROLS');
+               Xml_Record_Writer_SYS.End_Element(xml_, 'MODULE');
+               
+               prev_module_           := NULL;
+               prev_break_key_        := NULL;
+               prev_break_key_detail_ := NULL;
+               prev_spec_order_       := NULL;
+            END IF;
+
+            Xml_Record_Writer_SYS.Start_Element(xml_, 'MODULE');
+            Xml_Record_Writer_SYS.Add_Element(xml_,'MODULE', rec_.module);
+            Xml_Record_Writer_SYS.Start_Element(xml_, 'POSTING_CONTROLS');
+         END IF;
+
+         IF (prev_break_key_ <> rec_.break_key) OR (prev_break_key_ IS NULL) THEN
+            IF (prev_break_key_ IS NOT NULL) THEN
+               Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAIL_SPECS');
+               Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAIL');
+               Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAILS');
+               Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL');
+
+               prev_break_key_        := NULL;
+               prev_break_key_detail_ := NULL;
+               prev_spec_order_       := NULL;
+            END IF;
+
+            Xml_Record_Writer_SYS.Start_Element(xml_, 'POSTING_CONTROL');
+
+            Xml_Record_Writer_SYS.Add_Element(xml_,'POSTING_TYPE', rec_.posting_type);
+            Xml_Record_Writer_SYS.Add_Element(xml_,'POSTING_TYPE_DESC', rec_.posting_type_desc);
+            Xml_Record_Writer_SYS.Add_Element(xml_,'CODE_PART', rec_.code_part);
+            Xml_Record_Writer_SYS.Add_Element(xml_,'CODE_PART_DESC', rec_.code_part_desc);
+            Xml_Record_Writer_SYS.Add_Element(xml_,'CONTROL_TYPE', rec_.control_type);
+            Xml_Record_Writer_SYS.Add_Element(xml_,'CONTROL_NAME', rec_.control_name);
+            Xml_Record_Writer_SYS.Add_Element(xml_,'DEFAULT_VALUE', rec_.default_value);
+            Xml_Record_Writer_SYS.Add_Element(xml_,'DEFAULT_VAL_DESC', rec_.default_val_desc);
+            Xml_Record_Writer_SYS.Add_Element(xml_,'DEFAULT_NO_VALUE', rec_.default_no_value);
+            Xml_Record_Writer_SYS.Add_Element(xml_,'DEFAULT_NO_VALUE_DESC', rec_.default_no_value_desc);
+            Xml_Record_Writer_SYS.Add_Element(xml_,'VALID_FROM', rec_.valid_from);
+            Xml_Record_Writer_SYS.Add_Element(xml_,'OVERRIDE', rec_.override);
+
+            Xml_Record_Writer_SYS.Start_Element(xml_, 'POSTING_CONTROL_DETAILS');
+         END IF;
+
+            IF (prev_break_key_detail_ <> rec_.break_key_detail) OR (prev_break_key_detail_ IS NULL) THEN
+               IF (prev_break_key_detail_ IS NOT NULL) THEN
+                  Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAIL_SPECS');
+                  Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAIL');
+
+                  prev_break_key_detail_ := NULL;
+               END IF;
+
+               Xml_Record_Writer_SYS.Start_Element(xml_, 'POSTING_CONTROL_DETAIL');
+
+               Xml_Record_Writer_SYS.Add_Element(xml_,'CONTROL_TYPE_VALUE', rec_.control_type_value);
+               Xml_Record_Writer_SYS.Add_Element(xml_,'CONTROL_TYPE_VALUE_DESC', rec_.control_type_value_desc);
+               Xml_Record_Writer_SYS.Add_Element(xml_,'CONTROL_TYPE_VALUE2', rec_.control_type_value2);
+               Xml_Record_Writer_SYS.Add_Element(xml_,'CONTROL_TYPE_VALUE_DESC2', rec_.control_type_value_desc2);               
+               Xml_Record_Writer_SYS.Add_Element(xml_,'CODE_PART_VALUE', rec_.code_part_value);
+               Xml_Record_Writer_SYS.Add_Element(xml_,'CODE_PART_VALUE_DESC', rec_.code_part_value_desc);
+               Xml_Record_Writer_SYS.Add_Element(xml_,'SPEC_CONTROL_TYPE', rec_.spec_control_type);
+               Xml_Record_Writer_SYS.Add_Element(xml_,'SPEC_CONTROL_TYPE_DESC', rec_.spec_control_type_desc);
+               Xml_Record_Writer_SYS.Add_Element(xml_,'VALID_FROM_DETAIL', rec_.valid_from_detail);
+
+               Xml_Record_Writer_SYS.Start_Element(xml_, 'POSTING_CONTROL_DETAIL_SPECS');
+            END IF;
+
+            IF (prev_spec_order_ <> rec_.spec_order) OR (prev_spec_order_ IS NULL) THEN
+               Xml_Record_Writer_SYS.Start_Element(xml_, 'POSTING_CONTROL_DETAIL_SPEC');
+               Xml_Record_Writer_SYS.Add_Element(xml_,'SPEC_CONTROL_TYPE_VALUE', rec_.spec_control_type_value);
+               Xml_Record_Writer_SYS.Add_Element(xml_,'SPEC_CONTROL_TYPE_VALUE_DESC', rec_.spec_control_type_value_desc);
+               Xml_Record_Writer_SYS.Add_Element(xml_,'SPEC_CONTROL_TYPE_VALUE2', rec_.spec_control_type_value2);
+               Xml_Record_Writer_SYS.Add_Element(xml_,'SPEC_CONTROL_TYPE_VALUE_DESC2', rec_.spec_control_type_value_desc2);               
+               Xml_Record_Writer_SYS.Add_Element(xml_,'SPEC_CODE_PART_VALUE', rec_.spec_code_part_value);
+               Xml_Record_Writer_SYS.Add_Element(xml_,'SPEC_CODE_PART_VALUE_DESC', rec_.spec_code_part_value_desc);
+               Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAIL_SPEC');
+            END IF;
+        
+            prev_module_           :=  rec_.module;
+            prev_break_key_        :=  rec_.break_key;
+            prev_break_key_detail_ :=  rec_.break_key_detail;
+            prev_spec_order_       :=  rec_.spec_order;
+      END LOOP;
+
+      IF (has_rows_) THEN
+         Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAIL_SPECS');
+         Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAIL'); 
+         Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL_DETAILS'); 
+         Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROL');
+         Xml_Record_Writer_SYS.End_Element(xml_, 'POSTING_CONTROLS');
+         Xml_Record_Writer_SYS.End_Element(xml_, 'MODULE');
+         
+         prev_module_           := NULL;
+         prev_break_key_        := NULL;
+         prev_break_key_detail_ := NULL;
+         prev_spec_order_       := NULL;
+      END IF;
+
+      Xml_Record_Writer_SYS.End_Element(xml_, 'MODULES');
+      Xml_Record_Writer_SYS.End_Element(xml_, '&VIEW');
+      
+      Report_SYS.Finish_Xml_Report('&VIEW', result_key_, xml_);
+   END IF;
+   
+   logotype_     := Company_API.Get_Logotype(given_company_);
+   company_name_ := Company_API.Get_Name(given_company_);
+   IF (logotype_ IS NOT NULL ) THEN
+      Archive_Variable_API.Set_Object( result_key_, 
+                                       'rhSysLogo', 
+                                       logotype_ );
+      Archive_Variable_API.Set_Variable( result_key_, 
+                                         'companyName', 
+                                         company_name_ );
+   END IF; 
+
+END &METHOD;
+
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+PROCEDURE Init
+IS
+BEGIN
+   NULL;
+END Init;
+ 
+
+END &PKG;
+/
+SHOW ERROR
+
+----------------------------------------------------------
+-- <UNDEFINE_SECTION>
+----------------------------------------------------------
+-- This section is reserved for undefine statements
+-- nothing should be manually written below because
+-- that would be overwritten everytime the IFS / Undefine
+-- tool is run.  
+-- Also do NOT make any changes to the above tag because
+-- this will result in duplicated code
+----------------------------------------------------------
+UNDEFINE MODULE
+UNDEFINE LU
+UNDEFINE PKG
+UNDEFINE TABLE
+UNDEFINE REP2TAB  
+UNDEFINE REP3TAB
+UNDEFINE VIEW
+UNDEFINE METHOD

@@ -1,0 +1,27 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccountingPeriod
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+
+
+INDEX accounting_period_ix1 IS accounting_period_tab (company , date_until, date_from);
+
+
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------

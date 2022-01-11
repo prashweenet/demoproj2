@@ -1,0 +1,354 @@
+projection NewVoucherTypeAssistantHandling;
+component ACCRUL;
+layer Core;
+description "New Voucher Type Assistant";
+category Users;
+
+@DynamicComponentDependency INTLED
+include fragment InternalLedgerCurrentSelector;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherTypeVirtualSet for VoucherTypeVirtual {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity VoucherType {
+   --attribute AutomaticAllot Boolean("Y", "N");
+   attribute UseManual Boolean("TRUE", "FALSE");
+   attribute SimulationVoucher Boolean("TRUE", "FALSE");
+   attribute Balance Boolean("TRUE", "FALSE");
+   attribute SingleFunctionGroup Boolean("Y", "N");
+   attribute UseApprovalWorkflow Boolean("TRUE", "FALSE");
+   attribute SeparateUserApproval Boolean("TRUE", "FALSE");
+}
+
+
+@Override
+entity VoucherTypeDetail {
+   attribute AutomaticVouBalance Boolean("Y", "N");
+   attribute StoreOriginal Boolean("Y", "N");
+   attribute AutomaticAllot Boolean("Y", "N");
+   attribute SingleFunctionGroup Boolean("Y", "N");
+   attribute RowGroupValidation Boolean("Y", "N");
+   attribute ReferenceMandatory Boolean("Y", "N");
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+enumeration SingleOrAll {
+   value = "SingleFunctionGroup" {
+      label = "Single Function Group";
+   }
+   value = "All"
+      {
+      label = "All";
+   }
+}
+
+
+---------------------------------- QUERIES ----------------------------------
+query VoucherTypeQuery {
+   from = "voucher_type";
+   lu = VoucherType;
+   attribute Company Text {
+      lovcolumn = [false];
+   }
+   attribute VoucherType Text;
+   attribute Description Text;
+   attribute SeparateUserApproval Enumeration(FndBoolean);
+}
+
+---------------------------------- ACTIONS ----------------------------------
+--Row level security is handles in entity level.
+action CreateVouType Text {
+   initialcheck implementation;
+   parameter Objkey Text;
+}
+
+--Added User_Finance_API.Exist_Current_User in plsvc.
+action UpdateAutomaticAllotment {
+   initialcheck implementation;
+   ludependencies = VoucherTypeVirtual;
+
+   parameter Objkey Text;
+   parameter RequiredValue Boolean;
+}
+
+--Added User_Finance_API.Exist_Current_User in plsvc.
+action UpdateSingleFunctionGroup {
+   initialcheck implementation;
+   ludependencies = VoucherTypeVirtual;
+
+   parameter Objkey Text;
+   parameter RequiredValue Boolean;
+}
+
+--Added User_Finance_API.Exist_Current_User in plsvc.
+action ResetRowGroupValidation {
+   initialcheck implementation;
+   ludependencies = VoucherTypeDetailVirtual;
+
+   parameter Objkey Text;
+}
+
+--Added User_Finance_API.Exist_Current_User in plsvc.
+action CheckVoucherApprovalWorkflow {
+   initialcheck implementation;
+   ludependencies = VoucherTypeVirtual;
+
+   parameter Objkey Text;
+}
+
+--Added User_Finance_API.Exist_Current_User in plsvc.
+action VoucherApprovePrivilege {
+   initialcheck implementation;
+   ludependencies = VoucherTypeVirtual;
+
+   parameter Objkey Text;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetInitializedVoucherType Structure(InitialVoucherTypeStructure) {
+   ludependencies = VoucherTypeVirtual;
+
+   parameter Company Text;
+}
+
+
+function IsVoucherTypeExist Boolean {
+   parameter Company Text;
+   parameter VoucherType Text;
+}
+
+
+function GetIntledActive Text {
+}
+
+
+function CheckAutoAllotment Boolean {
+   parameter Objkey Text;
+}
+
+
+function CheckSingleFunctionGroup Boolean {
+   parameter Objkey Text;
+   parameter SingleFunctionGroup Boolean;
+   parameter FunctionGroupCount Number;
+}
+
+
+function RetrieveFunctionGroups List<Entity(FunctionGroup)> {
+   parameter Ledger Enumeration(Ledger.GAIGILedger);
+
+   where = ":Ledger = '01'
+   AND function_group IN ('A', 'K', 'M', 'Q', 'R', 'X', 'Z', 'PPC', 'P' , 'H' , 'YE')
+   OR :Ledger != '01'";
+}
+
+
+function GetUseVouNoPeriod Text {
+   parameter Company Text;
+}
+
+
+function IsApprovalWorkflowAllowed Text {
+   ludependencies = VoucherTypeVirtual;
+
+   parameter Objkey Text;
+}
+
+
+function IsSepUserApporvalAllowed Text {
+   ludependencies = VoucherTypeVirtual;
+
+   parameter Objkey Text;
+}
+
+
+function RetrieveVoucherTypes List<Entity(VoucherType)> {
+   parameter Company Text;
+
+   where = "company = :Company";
+}
+
+function CheckFunctionGroup Text {
+   parameter FunctionGroup Text;
+}
+-------------------------------- STRUCTURES ---------------------------------
+structure InitialVoucherTypeStructure {
+   attribute IntledActive Text;
+   attribute UseVouNoPeriod Text;
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+virtual VoucherTypeVirtual using VoucherType {
+   ludependencies = VoucherTypeDetailVirtual, VoucherNumberSerialVirtual;
+
+   attribute Company Text;
+   attribute VoucherType Text {
+      format = uppercase;
+   }
+   attribute Description Text;
+   attribute Ledger Enumeration(Ledger.GAIGILedger) {
+      label = "Ledger Type";
+      editable = [true];
+      updatable = [true];
+      required = [true];
+   }
+   attribute LedgerId Text {
+      format = uppercase;
+      editable = [ETag != null];
+      updatable = [true];
+   }
+   attribute AutomaticAllot Boolean("Y", "N") {
+      label = "Automatic Allotment";
+   }
+   attribute AutomaticVouBalanceDb Boolean("Y", "N");
+   attribute UseManual Boolean("TRUE", "FALSE") {
+      label = "Use Manual Internal Methods";
+   }
+   attribute SimulationVoucher Boolean("TRUE", "FALSE");
+   attribute Balance Boolean("TRUE", "FALSE") {
+      label = "Balance Mandatory";
+   }
+   attribute SingleFunctionGroup Boolean("Y", "N") {
+      editable = [true];
+      updatable = [true];
+   }
+   attribute UseApprovalWorkflow Boolean("TRUE", "FALSE") {
+      label = "Voucher Approval Workflow";
+   }
+   attribute SeparateUserApproval Boolean("TRUE", "FALSE") {
+      label = "Separate User Approval";
+   }
+   attribute GetVouDetailFromVouType Boolean("TRUE", "FALSE") {
+      label = "Copy Voucher No Series and User Groups";
+      required = [true];
+   }
+   attribute CopyFromVoucherType Text {
+      label = "Voucher Type";
+      format = uppercase;
+      maxlength = 3;
+   }
+   attribute UserGroup Text;
+   attribute IntledActive Text {
+      required = [false];
+   }
+   attribute VoucherApproval Text {
+      required = [false];
+      editable = [true];
+      updatable = [true];
+   }
+   attribute VoucherPrivilege Text {
+      required = [false];
+      editable = [true];
+      updatable = [true];
+   }
+   attribute UseVouNoPeriod Text {
+      required = [false];
+   }
+   attribute AuthorizationLevel Enumeration(AuthorizeLevel) {
+      required = [true];
+   }
+   attribute DefaultType Boolean("Y", "N") {
+      required = [true];
+   }
+   attribute SingleOrAllEnum Enumeration(SingleOrAll);
+   attribute FunctionGroup Text;
+
+   reference FunctionGroupRef(Objkey, FunctionGroup) to VoucherTypeDetailVirtual(ParentObjkey, FunctionGroup);
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference CopyFromVoucherTypeRef(Company, CopyFromVoucherType) to VoucherTypeQuery(Company, VoucherType) {
+      label = "Source Voucher Type";
+   }
+   reference VoucherTypeRef(Company, CopyFromVoucherType) to VoucherType(Company, VoucherType) {
+      label = "Source Voucher Type";
+   }
+
+   @DynamicComponentDependency INTLED
+   reference LedgerIdRef(Company, LedgerId) to InternalLedgerCurrent(Company, LedgerId) {
+      label = "Ledger Id";
+   }
+   reference UserGroupRef(Company, UserGroup) to UserGroupFinance(Company, UserGroup);
+
+
+   array VoucherTypeDetailVirtualArray(Company, VoucherType) to VoucherTypeDetailVirtual(Company, VoucherType);
+   array VoucherNumberSerialVirtualArray(Company, VoucherType) to VoucherNumberSerialVirtual(Company, VoucherType);
+}
+
+virtual VoucherTypeDetailVirtual using VoucherTypeDetail {
+   ludependencies = VoucherTypeDetailVirtual;
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute FunctionGroup Text {
+      format = uppercase;
+   }
+   attribute AutomaticVouBalance Boolean("Y", "N") {
+      label = "Optional Auto Balance";
+   }
+   attribute StoreOriginal Boolean("Y", "N");
+   attribute AutomaticAllot Boolean("Y", "N") {
+      default = "true";
+   }
+   attribute SingleFunctionGroup Boolean("Y", "N");
+   attribute RowGroupValidation Boolean("Y", "N") {
+      required = [true];
+   }
+   attribute ReferenceMandatory Boolean("Y", "N") {
+      required = [true];
+   }
+   attribute SepUserApprovalAllowed Boolean;
+
+   reference FunctionGroupRef(FunctionGroup) to FunctionGroup(FunctionGroup) {
+      label = "Function Group";
+   }
+
+}
+
+virtual VoucherNumberSerialVirtual {
+   ludependencies = VoucherTypeVirtual, VoucherTypeDetailVirtual;
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute Year Number {
+      required = [true];
+   }
+   attribute Period Number;
+   attribute FromNumber Number {
+      required = [true];
+   }
+   attribute UntilNumber Number {
+      required = [true];
+   }
+   attribute NextNumber Number {
+      required = [true];
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference YearRef(Company, Year) to AccountingYear(Company, AccountingYear) {
+      label = "Year";
+   }
+   reference PeriodRef(Company, Year, Period) to AccountingPeriod(Company, AccountingYear, AccountingPeriod) {
+      label = "Period";
+   }
+
+}
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+

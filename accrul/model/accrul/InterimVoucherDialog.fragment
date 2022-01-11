@@ -1,0 +1,171 @@
+fragment InterimVoucherDialog;
+component ACCRUL;
+layer Core;
+description "Interim voucher dialog";
+
+include fragment VoucherTypeInterimVoucherSelector;
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+dialog InterimVoucherDialog for InterimVoucherDialogStructure {
+
+   label = "Interim Voucher";
+   input this;
+
+   group InterimVoucherGroup;
+
+   command Ok;
+   command Cancel;
+}
+
+group InterimVoucherGroup for InterimVoucherDialogStructure {
+   label = "";
+
+   lov UserGroupRef with ReferenceUserGroupMemberFinance4Selector using UserGroupFiler {
+      validate command {
+         variable DefaultValues  Structure(InterimVouDialogParamStrucute);
+
+         execute {
+            call ValidateInterimUserGroup(Company, AccountingYear, VoucherType, VoucherNo, UserGroup) into InterimVoucherDialogStructure;
+            set VoucherDate = InterimVoucherDialogStructure.VoucherDate;
+            set AccountingYearPeriod = InterimVoucherDialogStructure.AccountingYearPeriod;
+            set InterimAccountingYear = InterimVoucherDialogStructure.InterimAccountingYear;
+            set InterimAccountingPeriod = InterimVoucherDialogStructure.InterimAccountingPeriod;
+            set InterimVoucherType = InterimVoucherDialogStructure.InterimVoucherType;
+
+
+            if[InterimAccountingYear = 0 and InterimAccountingPeriod = 0 and VoucherDate] {
+               error("There are no open periods exist in Accounting Periods.");
+            }
+            if[InterimAccountingYear != "" and InterimAccountingPeriod != "" and VoucherDate != "" and InterimVoucherType = null] {
+               error("The User Group ${UserGroup} is not associated with any voucher type with function group R for the accounting Period ${AccountingYearPeriod}.");
+            }
+         }
+      }
+   }
+   field  VoucherDate {
+      validate command {
+         variable YearPeriodVals {
+            type = Structure(InterimVouDialogParamStrucute);
+         }
+         execute {
+            call FetchYearPeriod(Company, UserGroup, VoucherDate) into YearPeriodVals;
+            set AccountingYearPeriod = YearPeriodVals.AccountingYearPeriod;
+            set InterimAccountingYear = YearPeriodVals.AccountingYear;
+            set InterimAccountingPeriod = YearPeriodVals.AccountingPeriod;
+         }
+      }
+   }
+   field AccountingYearPeriod;
+   lov InterimVoucherTypeRef with ReferenceVoucherTypeInterimVouSelector using VoucherTypeFilter(AccountingYear, UserGroup, SimulationVoucher);
+}
+
+command Ok for InterimVoucherDialogStructure {
+   enabled = [VoucherDate != null and InterimVoucherType != null and AccountingYearPeriod != null and UserGroup != null];
+   execute {
+
+
+      call CreateInterimVoucher(Company, AccountingYear, VoucherType, VoucherNo, InterimVoucherType, InterimAccountingYear, InterimAccountingPeriod, VoucherDate, UserGroup, MultiCompany);
+      exit OK;
+   }
+
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+
+action CreateInterimVoucher {
+   initialcheck implementation;
+   ludependencies = Voucher, VoucherPosting;
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter VoucherType Text;
+   parameter VoucherNo Number;
+   parameter InterimVoucherType Text;
+   parameter InterimAccountingYear Number;
+   parameter InterimAccountingPeriod Number;
+   parameter InterimVoucherDate Date;
+   parameter InterimUserGroup Text;
+   parameter MultiCompany Boolean;
+}
+
+function ValidateInterim Text {
+   parameter Company Text;
+   parameter UserGroup Text;
+}
+
+function ValidateInterimUserGroup Structure(InterimVoucherDialogStructure) {
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter VoucherType Text;
+   parameter VoucherNo Number;
+   parameter UserGroup Text;
+
+}
+
+function UserGroupFiler List < Entity(UserGroupMemberFinance4) > {
+   where = "allowed_acc_period_db != '2'";
+}
+
+function FetchInterimVouDefs Structure(InterimVoucherDialogStructure) {
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter VoucherType Text;
+   parameter VoucherNo Number;
+   parameter MultiCompany Boolean;
+
+}
+
+function FetchYearPeriod Structure(InterimVouDialogParamStrucute) {
+   parameter Company Text;
+   parameter UserGroup Text;
+   parameter VoucherDate Date;
+}
+
+function VoucherTypeFilter List < Entity(VoucherTypeInterimVou) > {
+   parameter AccountingYear Number;
+   parameter UserGroup Text;
+   parameter SimulationVoucher Text;
+
+   where = "accounting_year = :AccountingYear and function_group = 'R' and user_group = :UserGroup and ledger_id IN('*', '00') and simulation_voucher = :SimulationVoucher";
+}
+
+
+structure InterimVoucherDialogStructure {
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute VoucherNo Number;
+   attribute AccountingYear Number;
+   attribute UserId Text;
+   attribute UserGroup Text;
+   attribute AccountingYearPeriod Text {
+      label = "Accounting Period";
+      editable = [false];
+   }
+   attribute InterimVoucherType Text {
+      format = uppercase;
+   }
+   attribute SimulationVoucher Text;
+
+   attribute InterimAccountingYear Number;
+   attribute InterimAccountingPeriod Number;
+   attribute VoucherDate Date;
+   attribute MultiCompany Boolean;
+
+   reference UserGroupRef(Company, UserId, UserGroup) to UserGroupMemberFinance4(Company, Userid, UserGroup) {
+      label = "User Group";
+   }
+   reference InterimVoucherTypeRef(Company, AccountingYear, UserGroup, LedgerId, InterimVoucherType) to VoucherTypeInterimVou(Company, AccountingYear, UserGroup, LedgerId, VoucherType) {
+      label = "Voucher Type";
+   }
+}
+
+structure InterimVouDialogParamStrucute {
+   attribute VoucherDate Date;
+   attribute UserId Text;
+   attribute AccountingYear Number;
+   attribute AccountingPeriod Number;
+   attribute AccountingYearPeriod Text;
+   attribute DefaultVoucherType Text;
+   attribute ErrorCode Text;
+   attribute UserGroup Text;
+}

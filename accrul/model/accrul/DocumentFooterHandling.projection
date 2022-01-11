@@ -1,0 +1,240 @@
+projection DocumentFooterHandling;
+component ACCRUL;
+layer Core;
+description "Document Footer";
+category Users;
+
+include fragment FooterConnectionMasterLovSelector;
+include fragment FooterWithoutSiteLovSelector;
+@DynamicComponentDependency MPCCOM
+include fragment FooterWithSiteLovSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CompanySet for Company;
+@Override
+entityset Reference_FooterField for FooterField {
+   where = "free_text_db = 'FALSE'";
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity Company {
+   crud = Read;
+
+   reference CompanyRef(Company) to Company(Company) {
+      label = "Company";
+   }
+
+   array FooterFieldArray(Company) to FooterField(Company);
+   array FooterDefinitionArray(Company) to FooterDefinition(Company);
+   array FooterConnectionArray(Company) to FooterConnection(Company);
+}
+
+
+@Override
+entity FooterField {
+   attribute FooterFieldId Text {
+      label = "Field ID";
+   }
+   attribute FooterFieldDesc Text {
+      label = "Header Text";
+      required = [true];
+   }
+   attribute SystemDefined Boolean("TRUE", "FALSE") {
+      required = [true];
+      updatable = [false];
+   }
+}
+
+
+@Override
+entity FooterDefinition {
+   use attributes = FooterDescription, NoOfColumns, Column1Field, Column2Field, Column3Field, Column4Field, Column5Field, Column6Field, Column7Field, Column8Field, Column9Field, Column10Field, FreeText, LastPosition, LastProfile;
+   attribute NoOfColumns Number {
+      label = "No of Columns (max. 8)";
+      editable = [ETag = null];
+   }
+   attribute Column1FieldFooterText Text {
+      fetch = "Footer_Field_API.Get_Footer_Text(company,column1_field)";
+   }
+   attribute Column2FieldFooterText Text {
+      fetch = "Footer_Field_API.Get_Footer_Text(company,column2_field)";
+   }
+   attribute Column3FieldFooterText Text {
+      fetch = "Footer_Field_API.Get_Footer_Text(company,column3_field)";
+   }
+   attribute Column4FieldFooterText Text {
+      fetch = "Footer_Field_API.Get_Footer_Text(company,column4_field)";
+   }
+   attribute Column5FieldFooterText Text {
+      fetch = "Footer_Field_API.Get_Footer_Text(company,column5_field)";
+   }
+   attribute Column6FieldFooterText Text {
+      fetch = "Footer_Field_API.Get_Footer_Text(company,column6_field)";
+   }
+   attribute Column7FieldFooterText Text {
+      fetch = "Footer_Field_API.Get_Footer_Text(company,column7_field)";
+   }
+   attribute Column8FieldFooterText Text {
+      fetch = "Footer_Field_API.Get_Footer_Text(company,column8_field)";
+   }
+   attribute FreeTextFooterText Text {
+      fetch = "Footer_Field_API.Get_Footer_Text(company,free_text)";
+   }
+
+   attribute Column1Width Number {
+      editable = [true];
+      fetch = "Footer_Definition_API.Get_Column_Width(company,footer_id, 1)";
+   }
+   attribute Column2Width Number {
+      editable = [true];
+      fetch = "Footer_Definition_API.Get_Column_Width(company,footer_id, 2)";
+   }
+   attribute Column3Width Number {
+      editable = [true];
+      fetch = "Footer_Definition_API.Get_Column_Width(company,footer_id, 3)";
+   }
+   attribute Column4Width Number {
+      editable = [true];
+      fetch = "Footer_Definition_API.Get_Column_Width(company,footer_id, 4)";
+   }
+   attribute Column5Width Number {
+      editable = [true];
+      fetch = "Footer_Definition_API.Get_Column_Width(company,footer_id, 5)";
+   }
+   attribute Column6Width Number {
+      editable = [true];
+      fetch = "Footer_Definition_API.Get_Column_Width(company,footer_id, 6)";
+   }
+   attribute Column7Width Number {
+      editable = [true];
+      fetch = "Footer_Definition_API.Get_Column_Width(company,footer_id, 7)";
+   }
+   attribute Column8Width Number {
+      editable = [true];
+      fetch = "Footer_Definition_API.Get_Column_Width(company,footer_id, 8)";
+   }
+
+   reference Column1FieldRef(Company, Column1Field) to FooterField(Company, FooterFieldId) {
+      label = "1st Column";
+      multireference = [true];
+   }
+   reference Column2FieldRef(Company, Column2Field) to FooterField(Company, FooterFieldId) {
+      label = "2nd Column";
+      multireference = [true];
+   }
+   reference Column3FieldRef(Company, Column3Field) to FooterField(Company, FooterFieldId) {
+      label = "3rd Column";
+      multireference = [true];
+   }
+   reference Column4FieldRef(Company, Column4Field) to FooterField(Company, FooterFieldId) {
+      label = "4th Column";
+      multireference = [true];
+   }
+   reference Column5FieldRef(Company, Column5Field) to FooterField(Company, FooterFieldId) {
+      label = "5th Column";
+      multireference = [true];
+   }
+   reference Column6FieldRef(Company, Column6Field) to FooterField(Company, FooterFieldId) {
+      label = "6th Column";
+      multireference = [true];
+   }
+   reference Column7FieldRef(Company, Column7Field) to FooterField(Company, FooterFieldId) {
+      label = "7th Column";
+      multireference = [true];
+   }
+   reference Column8FieldRef(Company, Column8Field) to FooterField(Company, FooterFieldId) {
+      label = "8th Column";
+      multireference = [true];
+   }
+   reference FreeTextRef(Company, FreeText) to FooterField(Company, FooterText) {
+      label = "Free Text";
+   }
+}
+
+
+@Override
+entity FooterConnection {
+   attribute FooterId Text {
+      format = uppercase;
+   }
+
+   reference ReportIdRef(ReportId) to FooterConnectionMasterLov(ReportId) {
+      label = "Report ID";
+   }
+   reference ReportDefinitionRef(ReportId) to ReportDefinition(ReportId) {
+      label = "Report Title";
+   }
+   reference FooterConnectionMasterRef(ReportId) to FooterConnectionMaster(ReportId) {
+      label = "Component";
+   }
+   reference FooterIdRef(Company, FooterId) to FooterDefinition(Company, FooterId) {
+      label = "Footer";
+   }
+   reference ContractWithoutSiteRef(Contract) to FooterWithoutSiteLov(Contract);
+   @DynamicComponentDependency MPCCOM
+   reference ContractWithSiteRef(Contract) to FooterWithSiteLov(Contract);
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+@Override
+@DynamicComponentDependency MPCCOM
+query FooterWithSiteLov {
+   keys = Contract;
+}
+
+---------------------------------- ACTIONS ----------------------------------
+action ImportSystemFooterField {
+   initialcheck implementation;
+   parameter Company Text;
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+@DynamicComponentDependency MPCCOM
+function GetFooterCompany List<Entity(FooterWithSiteLov)> {
+   parameter Company Text;
+   where = "company = :Company OR company IS NULL";
+}
+
+
+function FreeTextOnly List<Entity(FooterField)> {
+   where = "free_text_db = 'TRUE'";
+}
+
+function AutoInsertColWidth Structure(AutoCalcColWidthsStructure) {
+   parameter NoOfColumns Number;
+}
+
+function GetFooterFieldLovSupp List<Entity(FooterField)> {
+   parameter Company Text;
+   where = "company = :Company";
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure AutoCalcColWidthsStructure {
+   attribute Column1Width Number;
+   attribute Column2Width Number;
+   attribute Column3Width Number;
+   attribute Column4Width Number;
+   attribute Column5Width Number;
+   attribute Column6Width Number;
+   attribute Column7Width Number;
+   attribute Column8Width Number;
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+

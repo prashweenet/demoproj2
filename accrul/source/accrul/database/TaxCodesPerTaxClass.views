@@ -1,0 +1,34 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TaxCodesPerTaxClass
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+VIEW Tax_Codes_Per_Tax_Class_Pub IS
+   Prompt = 'Tax Codes Per Tax Class'
+   Country_Code_Db.Datatype = 'STRING(20)'
+SELECT company                               company,
+       tax_class_id                          tax_class_id,
+       Iso_Country_API.Decode(country_code)  country_code,
+       country_code                          country_code_db,
+       tax_liability                         tax_liability,
+       valid_from                            valid_from,
+       fee_code                              fee_code,
+       Company_API.Get_Country_Db(company)   company_country_code,
+       rowkey                               objkey
+FROM   tax_codes_per_tax_class_tab;
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

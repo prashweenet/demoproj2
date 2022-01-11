@@ -1,0 +1,68 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TaxBook
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  191030  Kagalk  GESPRING20-1261, gelr:tax_book_and_numbering, Added tax_series_id to Tax_Book_Lov
+--  201124  Kagalk  GESPRING20-5999, Added rowid to Tax_Book_Lov, to enable to display tax book structure info.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Tax_Book_Lov IS
+   Prompt = 'Tax Book'
+   Tax_Book_Id.Datatype = 'STRING(20)'
+   Tax_Book_Id.Prompt = 'Tax Book Reference'
+   Description.Flags = 'A---L'
+   Description.Datatype = 'STRING(200)'
+   Node_Id.Flags = 'A---L'
+   Node_Id.Datatype = 'STRING(20)'
+   Node_Description.Flags = 'A---L'
+   Node_Description.Datatype = 'STRING(200)'
+   Tax_Struct_Id.Flags = 'A---L'
+   Tax_Struct_Id.Datatype = 'STRING(20)/UPPERCASE'
+   Tax_Struct_Id.Prompt = 'Structure Id'
+   Struct_Descr.Flags = 'A---L'
+   Struct_Descr.Datatype = 'STRING(200)'
+   Struct_Descr.Prompt = 'Structure Description'
+SELECT company,
+          tax_book_id tax_book_id,
+          description,
+          NULL node_id,
+          NULL node_description,          
+          NULL tax_struct_id,
+          NULL struct_descr,
+          Decode(tax_direction_sp ,'DISBURSED','CUSTOMER','RECEIVED','SUPPLIER',NULL) party_type_db,
+          tax_series_id,
+          t.rowid    objid
+FROM   tax_book_tab t
+   UNION
+   SELECT i.company company,
+          b.tax_book_id tax_book_id,
+          b.description,
+          i.item_above node_id,
+          ii.description node_description,          
+          i.structure_id tax_struct_id,
+          s.description struct_descr,
+          Decode(tax_direction_sp,'DISBURSED','CUSTOMER','RECEIVED','SUPPLIER',NULL) party_type_db,
+          b.tax_series_id,
+          s.rowid    objid
+   FROM   tax_book_structure_item_tab i, tax_book_tab b, tax_book_structure_tab s, tax_book_structure_item_tab ii
+   WHERE  b.company = i.company
+   AND    b.tax_book_id = i.name_value
+   AND    s.company = i.company
+   AND    s.structure_id = i.structure_id
+   AND    ii.company = i.company
+   AND    ii.name_value = i.item_above
+   AND    ii.structure_id = i.structure_id;

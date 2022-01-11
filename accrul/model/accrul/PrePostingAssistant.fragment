@@ -1,0 +1,519 @@
+fragment PrePostingAssistant;
+component ACCRUL;
+layer Core;
+description "Pre-posting dialog";
+include fragment CodeStringBasic;
+
+@DynamicComponentDependency PROJ
+include fragment ProjectActivitySelector;
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+assistant PrepostingsAssistant using PrePostingsVirtuals {
+   label = "${Title}";
+   savemode = OnLostFocus;
+
+   input(Company,
+   PackageName,
+   Title,
+   IsEditable,
+   Account,
+   CodeB,
+   CodeC,
+   CodeD,
+   CodeE,
+   CodeF,
+   CodeG,
+   CodeH,
+   CodeI,
+   CodeJ,
+   ProjectId,
+   ProjActivitySeqNo,
+   AffectLinePostings);
+   output
+   (Account,
+   CodeB,
+   CodeC,
+   CodeD,
+   CodeE,
+   CodeF,
+   CodeG,
+   CodeH,
+   CodeI,
+   CodeJ,
+   ProjActivitySeqNo,
+   AffectLinePostings);
+
+   init command {
+      variable DialogTitleVar {
+         type = Text;
+      }
+      execute {
+         if [Title = null] {
+            set DialogTitleVar = "Pre-posting" {
+               translatable = true;
+            }
+            set Title = DialogTitleVar;
+         }
+      }
+   }
+
+   steps {
+      step {
+         group PrePostingsGroup;
+      }
+      final step {
+      }
+      cancelled step {
+      }
+   }
+   finish command {
+      enabled = [not component.PrepostingsAssistant.IsActiveStepDirty];
+      execute {
+         exit OK;
+      }
+   }
+   cancel command {
+      execute {
+         exit CANCEL;
+      }
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+command ValidateCodePartGenaral {
+   variable CodePartChangeStructure {
+      type = Structure(PrepostingStructure);
+   }
+   execute {
+      set IsCodePartChanged = true;
+      if [ProjectActivityEnable = true] {
+         if [ProjectCodePart = CodePart] {
+            call CodePartChanged(Company, CodePart, CodePartValue, IsCodePartChanged, ProjectActivityEnable, ProjectId, ProjActivitySeqNo) into CodePartChangeStructure;
+            set ProjectId = CodePartChangeStructure.ProjectId;
+            set ProjActivitySeqNo = CodePartChangeStructure.ProjActivitySeqNo;
+            set ProjectExternallyCreated = CodePartChangeStructure.ProjectExternallyCreated;
+         }
+      }
+   }
+
+}
+
+command ValidateCodeStringBasicExtendedCodeBRef clone ValidateCodePartGenaral {
+   execute {
+      set CodePart = "B";
+      set CodePartValue = CodeB;
+      super;
+
+   }
+}
+
+command ValidateCodeStringBasicExtendedCodeCRef clone ValidateCodePartGenaral {
+   execute {
+      set CodePart = "C";
+      set CodePartValue = CodeC;
+      super;
+   }
+}
+
+command ValidateCodeStringBasicExtendedCodeDRef clone ValidateCodePartGenaral {
+   execute {
+      set CodePart = "D";
+      set CodePartValue = CodeD;
+      super;
+   }
+}
+
+command ValidateCodeStringBasicExtendedCodeERef clone ValidateCodePartGenaral {
+   execute {
+      set CodePart = "E";
+      set CodePartValue = CodeE;
+      super;
+   }
+}
+
+command ValidateCodeStringBasicExtendedCodeFRef  clone ValidateCodePartGenaral {
+   execute {
+      set CodePart = "F";
+      set CodePartValue = CodeF;
+      super;
+   }
+}
+
+command ValidateCodeStringBasicExtendedCodeGRef  clone ValidateCodePartGenaral {
+   execute {
+      set CodePart = "G";
+      set CodePartValue = CodeG;
+      super;
+   }
+}
+
+command ValidateCodeStringBasicExtendedCodeHRef  clone ValidateCodePartGenaral {
+   execute {
+      set CodePart = "H";
+      set CodePartValue = CodeH;
+      super;
+   }
+}
+
+command ValidateCodeStringBasicExtendedCodeIRef  clone ValidateCodePartGenaral {
+   execute {
+      set CodePart = "I";
+      set CodePartValue = CodeI;
+      super;
+   }
+}
+
+command ValidateCodeStringBasicExtendedCodeJRef clone ValidateCodePartGenaral {
+   execute {
+      set CodePart = "J";
+      set CodePartValue = CodeJ;
+      super;
+   }
+}
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+group PrePostingsGroup for PrePostingsVirtual {
+   label = "${Title}";
+
+   lov CompanyRef with ReferenceCompanyFinanceSelector {
+      search = Company, Description;
+      visible = [PackageName = "FA_OBJECT_TRANSFER_API"];
+      editable = [false];
+      description = CompanyRef.Description;
+      size = FullWidth;
+   }
+   field AffectLinePostings {
+      size = FullWidth;
+      visible = [PackageName = "INSTANT_INVOICE_API" or PackageName = "MAN_SUPP_INVOICE_API" or PackageName = "OUTGOING_SUPPLIER_INVOICE_API" or PackageName = "INVOICE_TEMPLATE_API"];
+      editable = [IsEditable = true];
+   }
+   fieldset CodeStringBasicPrePostLovFieldSet;
+}
+
+----------------------------------- LISTS -----------------------------------
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+
+-------------------------------- FIELD SETS ---------------------------------
+@Override
+fieldset CodeStringBasicLovFieldSet {
+   lov CodeBRef with ReferenceCodeBSelector {
+      validate command ValidateCodeStringBasicExtendedCodeBRef;
+      editable = [((IsEditable = true) and PackageName != "SUB_CONTRACT_API") or(PackageName = "SUB_CONTRACT_API" and ProjectCodePart != "B")];
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      validate command ValidateCodeStringBasicExtendedCodeCRef;
+      editable = [((IsEditable = true) and PackageName != "SUB_CONTRACT_API") or(PackageName = "SUB_CONTRACT_API" and ProjectCodePart != "C")];
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      validate command ValidateCodeStringBasicExtendedCodeDRef;
+      editable = [((IsEditable = true) and PackageName != "SUB_CONTRACT_API") or(PackageName = "SUB_CONTRACT_API" and ProjectCodePart != "D")];
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      validate command ValidateCodeStringBasicExtendedCodeERef;
+      editable = [((IsEditable = true) and PackageName != "SUB_CONTRACT_API") or(PackageName = "SUB_CONTRACT_API" and ProjectCodePart != "E")];
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      validate command ValidateCodeStringBasicExtendedCodeFRef;
+      editable = [((IsEditable = true) and PackageName != "SUB_CONTRACT_API") or(PackageName = "SUB_CONTRACT_API" and ProjectCodePart != "F")];
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      validate command ValidateCodeStringBasicExtendedCodeGRef;
+      editable = [((IsEditable = true) and PackageName != "SUB_CONTRACT_API") or(PackageName = "SUB_CONTRACT_API" and ProjectCodePart != "G")];
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      validate command ValidateCodeStringBasicExtendedCodeHRef;
+      editable = [((IsEditable = true) and PackageName != "SUB_CONTRACT_API") or(PackageName = "SUB_CONTRACT_API" and ProjectCodePart != "H")];
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      validate command ValidateCodeStringBasicExtendedCodeIRef;
+      editable = [((IsEditable = true) and PackageName != "SUB_CONTRACT_API") or(PackageName = "SUB_CONTRACT_API" and ProjectCodePart != "I")];
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      validate command ValidateCodeStringBasicExtendedCodeJRef;
+      editable = [((IsEditable = true) and PackageName != "SUB_CONTRACT_API") or(PackageName = "SUB_CONTRACT_API" and ProjectCodePart != "J")];
+   }
+   @DynamicComponentDependency PROJ
+   lov ProjActivitySeqNoRef with ReferenceProjectActivitySelector {
+      search = ActivitySeq, Description;
+      description = ProjActivitySeqNoRef.Description;
+      visible = [(PackageName = null or(PackageName != "FA_OBJECT_TRANSFER_API" and PackageName != "SUB_CONTRACT_API")) and(PackageName != "INTEREST_PROPOSAL_READ_ONLY_API" or(PackageName = "INTEREST_PROPOSAL_READ_ONLY_API" and ProjActivitySeqNo != null))];
+      editable = [IsEditable = true and(ProjectActivityEnable and ProjectExternallyCreated != "N")];
+      size = Large;
+   }
+}
+
+
+fieldset CodeStringBasicPrePostLovFieldSet clone CodeStringBasicLovFieldSet {
+   lov CodeBRef with ReferenceCodeBSelector {
+      label = "${CodeBDesc}";
+      columnvisible = [substring(CodePartUsed, 0, 1) = "Y"];
+      visible = [substring(CodePartUsed, 0, 1) = "Y"];
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      label = "${CodeCDesc}";
+      columnvisible = [substring(CodePartUsed, 1, 1) = "Y"];
+      visible = [substring(CodePartUsed, 1, 1) = "Y"];
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      label = "${CodeDDesc}";
+      columnvisible = [substring(CodePartUsed, 2, 1) = "Y"];
+      visible = [substring(CodePartUsed, 2, 1) = "Y"];
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      label = "${CodeEDesc}";
+      columnvisible = [substring(CodePartUsed, 3, 1) = "Y"];
+      visible = [substring(CodePartUsed, 3, 1) = "Y"];
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      label = "${CodeFDesc}";
+      columnvisible = [substring(CodePartUsed, 4, 1) = "Y"];
+      visible = [substring(CodePartUsed, 4, 1) = "Y"];
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      label = "${CodeGDesc}";
+      columnvisible = [substring(CodePartUsed, 5, 1) = "Y"];
+      visible = [substring(CodePartUsed, 5, 1) = "Y"];
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      label = "${CodeHDesc}";
+      columnvisible = [substring(CodePartUsed, 6, 1) = "Y"];
+      visible = [substring(CodePartUsed, 6, 1) = "Y"];
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      label = "${CodeIDesc}";
+      columnvisible = [substring(CodePartUsed, 7, 1) = "Y"];
+      visible = [substring(CodePartUsed, 7, 1) = "Y"];
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      label = "${CodeJDesc}";
+      columnvisible = [substring(CodePartUsed, 8, 1) = "Y"];
+      visible = [substring(CodePartUsed, 8, 1) = "Y"];
+   }
+
+   @DynamicComponentDependency PROJ
+   lov ProjActivitySeqNoRef with ReferenceProjectActivitySelector {
+      visible = [(PackageName = null or(PackageName != "FA_OBJECT_TRANSFER_API" and PackageName != "SUB_CONTRACT_API")) and(PackageName != "INTEREST_PROPOSAL_READ_ONLY_API" or(PackageName = "INTEREST_PROPOSAL_READ_ONLY_API" and ProjActivitySeqNo != null))];
+   }
+}
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PrePostingsVirtuals for PrePostingsVirtual;
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function CodePartChanged Structure(PrepostingStructure) {
+   parameter Company Text;
+   parameter CodePart Text;
+   parameter CodePartValue Text;
+   parameter IsCodePartChanged Boolean;
+   parameter ProjectActivityEnable Boolean;
+   parameter ProjectId Text;
+   parameter ProjActivitySeqNo Number;
+}
+
+function PreparePrepostingInfo Structure(PrepostingStructure) {
+   parameter Company Text;
+   parameter PackageName Text;
+   parameter IsEditable Boolean;
+   parameter AccountString Text;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+structure PrepostingStructure {
+   attribute Company Text;
+   attribute Account Text;
+   attribute CodeB Text;
+   attribute CodeC Text;
+   attribute CodeD Text;
+   attribute CodeE Text;
+   attribute CodeF Text;
+   attribute CodeG Text;
+   attribute CodeH Text;
+   attribute CodeI Text;
+   attribute CodeJ Text;
+   attribute ProjActivitySeqNo Number;
+   attribute ProjectId Text;
+   attribute ProjectExternallyCreated Text;
+   attribute CodePart Text;
+   attribute CodePartValue Text;
+   attribute IsCodePartChanged Boolean;
+   attribute ProjectActivityEnable Boolean;
+   attribute AccountString Text;
+   attribute PackageName Text;
+   attribute Title Text;
+   attribute IsEditable Boolean;
+   attribute PrePosting Boolean;
+   attribute AffectLinePostings Boolean;
+
+   @DynamicComponentDependency FIXASS
+   reference AccountRef(Company, Account) to AcquisitionAccount(Company, Account) {
+      label = "Account";
+   }
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+   @DynamicComponentDependency PROJ
+   reference ProjActivitySeqNoRef(ProjectId, ProjActivitySeqNo) to ProjectActivity(ProjectId, ActivitySeq) {
+      label = "Project Activity Seq No";
+   }
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+virtual PrePostingsVirtual {
+   attribute Company Text;
+   attribute Account Text {
+      format = uppercase;
+      maxlength = 10;
+   }
+   attribute CodeB Text {
+      format = uppercase;
+      maxlength = 10;
+   }
+   attribute CodeC Text {
+      format = uppercase;
+      maxlength = 10;
+   }
+   attribute CodeD Text {
+      format = uppercase;
+      maxlength = 10;
+   }
+   attribute CodeE Text {
+      format = uppercase;
+      maxlength = 10;
+   }
+   attribute CodeF Text {
+      format = uppercase;
+      maxlength = 10;
+   }
+   attribute CodeG Text {
+      format = uppercase;
+      maxlength = 10;
+   }
+   attribute CodeH Text {
+      format = uppercase;
+      maxlength = 10;
+   }
+   attribute CodeI Text {
+      format = uppercase;
+      maxlength = 10;
+   }
+   attribute CodeJ Text {
+      format = uppercase;
+      maxlength = 10;
+   }
+   attribute ProjActivitySeqNo Number;
+   attribute ProjectId Text;
+   attribute AccountString Text;
+   attribute PackageName Text;
+   attribute Title Text;
+   attribute IsEditable Boolean;
+   attribute PrePosting Boolean;
+   attribute FaCodePart Text;
+   attribute ProjectCodePart Text;
+   attribute ProjectExternallyCreated Text;
+   attribute CodePart Text;
+   attribute CodePartValue Text;
+   attribute IsCodePartChanged Boolean;
+   attribute ProjectActivityEnable Boolean;
+   attribute AffectLinePostings Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute ProjectCodePartValue Text;
+   attribute CodeBDesc  Text;
+   attribute CodeCDesc  Text;
+   attribute CodeDDesc  Text;
+   attribute CodeEDesc  Text;
+   attribute CodeFDesc  Text;
+   attribute CodeGDesc  Text;
+   attribute CodeHDesc  Text;
+   attribute CodeIDesc  Text;
+   attribute CodeJDesc  Text;
+   attribute CodePartUsed  Text;
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   @DynamicComponentDependency FIXASS
+   reference AccountRef(Company, Account) to AcquisitionAccount(Company, Account) {
+      label = "Account";
+   }
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+   @DynamicComponentDependency PROJ
+   reference ProjActivitySeqNoRef(ProjectId, ProjActivitySeqNo) to ProjectActivity(ProjectId, ActivitySeq) {
+      label = "Project Activity Seq No";
+   }
+}
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

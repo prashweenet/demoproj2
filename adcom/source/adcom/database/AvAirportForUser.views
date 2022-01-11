@@ -1,0 +1,24 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvAirportForUser
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210209  madglk  LMM2020R1-1709, Fixed pipeline error.
+--  210205  siselk  LMM2020R1-1536, Created the file and added CURRENT_USER_AIRPORT
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW CURRENT_USER_AIRPORT AS
+SELECT airport_id FROM av_airport_for_user WHERE identity = Fnd_Session_API.Get_Fnd_User();

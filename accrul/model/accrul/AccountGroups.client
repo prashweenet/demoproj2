@@ -1,0 +1,233 @@
+client AccountGroups;
+component ACCRUL;
+layer Core;
+projection AccountGroupsHandling;
+include fragment CopyToCompaniesAssistant;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AccountGroupsNavEntry parent AccrulNavigator.CodeStringMenu at index 500 {
+      label = "Account Groups";
+      page List home AccountGroup;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AccountGroupSet {
+   label = "Account Groups";
+   list AccountGroupList using AccountGroupSet;
+}
+
+page MultiCompanyList using AccountGroupsMultiCompanySet {
+   label = "Account Groups";
+   list AccountGroupOfMultiCompanyList using AccountGroupsMultiCompanySet;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command MultiCompanyCommand for AccountGroup {
+   mode = Global;
+   label = "Multi Company";
+   execute {
+      navigate MultiCompanyList;
+   }
+}
+
+command SingleCompanyCommand for AccountGroup {
+   mode = Global;
+   label = "Multi Company";
+   execute {
+      navigate List;
+   }
+}
+
+command TranslationCommand {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'AccountGroup' and AttributeKey eq $[AccntGroup]";
+   }
+}
+
+command CopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   bulkexecute {
+      call GetSelectedCompany(Selection) into CurrentCompanyVar;
+      if [CurrentCompanyVar = null] {
+         alert("All the selected records must be from the same company");
+      }
+      else {
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "AccountGroup", "MANUAL", Selection, "Account_Group_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "AccountGroup") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "AccountGroup", "AUTOMATIC", SelectionVar, "Account_Group_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+command UpdateAccountsWithDefaultGroupAccountCommand {
+   label = "Update Accounts with Default Group Account";
+   mode = SelectedRecords;
+   enabled = [DefMasterCompanyAccnt != null];
+   variable UpdateAccountsTypeSelectionVar {
+      type = Enumeration(UpdateAccountsAccountTypeEnum);
+   }
+   bulkexecute {
+      dialog UpdateAccountsWithDefaultGroupAccountDlg("AllAccounts") into(UpdateAccountsTypeSelectionVar) {
+         when OK {
+            call DoUpdateAccountsWithDefaultGroupAccount(Selection, UpdateAccountsTypeSelectionVar);
+
+            exit;
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+group UpdateAccountsWithDefaultGroupAccountGroup for UpdateAccountsWithDefaultGroupAccountsStructure {
+   label = "";
+   radiogroup AccountTypeSelection {
+      showlabel = false;
+      size = FullWidth;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountGroupList for AccountGroup {
+   orderby = AccntGroup;
+
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+
+   field AccntGroup {
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+   field DefCurrencyBalance;
+   lov DefMasterCompanyAccntRef with ReferenceAccountSelector {
+      search = Account, Description;
+      size = Large;
+      description = DefMasterCompanyAccntRef.Description;
+      editable = [CompanyRef.MasterCompany != null];
+   }
+
+   commandgroup CommandGroupCmdGroup {
+      command MultiCompanyCommand;
+      command TranslationCommand;
+      command CopyToCompaniesCommand;
+      command UpdateAccountsWithDefaultGroupAccountCommand;
+   }
+
+}
+
+list AccountGroupOfMultiCompanyList for AccountGroup {
+   orderby = AccntGroup;
+   lov CompanyRef with ReferenceCompanyFinanceSelector {
+      search = Company, Description;
+      size = Large;
+      description = CompanyRef.Description;
+   }
+   field AccntGroup {
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+   field DefCurrencyBalance;
+   lov DefMasterCompanyAccntRef with ReferenceAccountSelector {
+      search = Account, Description;
+      size = Large;
+      description = DefMasterCompanyAccntRef.Description;
+      editable = [CompanyRef.MasterCompany != null];
+   }
+
+   commandgroup CommandGroupCmdGroup {
+      command SingleCompanyCommand {
+         icon = "check";
+         emphasis Info = [true];
+      }
+      command TranslationCommand;
+      command CopyToCompaniesCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+dialog UpdateAccountsWithDefaultGroupAccountDlg for UpdateAccountsWithDefaultGroupAccountsStructure {
+   label = "Update Accounts with Default Group Account";
+   input(AccountTypeSelection);
+   output(AccountTypeSelection);
+   group UpdateAccountsWithDefaultGroupAccountGroup;
+   command Ok;
+   command Cancel;
+}
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

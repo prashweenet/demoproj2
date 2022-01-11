@@ -1,0 +1,64 @@
+projection TaxCodesHandling;
+component ACCRUL;
+layer Core;
+description "Tax Codes Handling";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+include fragment AccLibCurrencyAmount;
+include fragment CopyToCompaniesAssistant;
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset TaxCodeSet for StatutoryFee {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity StatutoryFee {
+   supportwarnings = [true];
+
+   attribute FeeType Enumeration(FeeType) {
+      editable = [ETag = null];
+   }
+   attribute ValidUntil Date {
+      required = [true];
+   }
+   attribute VatDisbursed Enumeration(VatMethod.TaxDisbursed);
+   attribute TaxAmtLimit Number {
+      format = ifscurrency;
+   }
+   attribute TaxReportingCategory Enumeration(TaxReportingCategory) {
+      required = [true];
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

@@ -1,0 +1,63 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvAircraftCapability
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210205  waislk  DISO2020R1-564 Modified Pre_Sync_Action UNITTEST
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should ... when ..." FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable aircraft_tab
+   VALUES
+      | aircraft_id | aircraft_type_code | serial_number |
+      | 1           | 'A320'             | 'SN12345'     |
+   END VALUES;
+
+   @MockTable av_aircraft_capability_tab
+   VALUES
+      | aircraft_id | capability_code |
+      | 1           | 'A'             |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_  VARCHAR2(2000);
+   expected1_   VARCHAR2(2000);
+   expected2_   VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      |'AIRCRAFT_UNIQUE_KEY'||chr(31)||'A320:SN12345'||chr(30)||'WITH_AIRCRAFT_ID'|
+      |'CAPABILITY_CODE'||chr(31)||'A'||chr(30)||'WITH_AIRCRAFT_CAPABILITY'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'AIRCRAFT_UNIQUE_KEY'||chr(31)||'A320:SN12345'||chr(30)||'WITH_AIRCRAFT_ID';
+      expected2_ := 'CAPABILITY_CODE'||chr(31)||'A'||chr(30)||'WITH_AIRCRAFT_CAPABILITY';
+
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_AIRCRAFT_ID%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_AIRCRAFT_CAPABILITY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+
+   END LOOP;
+END UNITTEST;
+

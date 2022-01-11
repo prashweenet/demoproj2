@@ -1,0 +1,184 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvPartGroupPart
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201202  aruflk  LMM2020R1-1022, Added unit test for Get_Part_Number_Id().
+--  201106  siselk  LMM2020R1-1383 Unit test for Check_Insert___
+--  200117  madglk  LMM2020R1-155 Added unit testing for Get_Part_Group_Id().
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+
+
+UNITTEST "Get_Part_Group_Id should return the related part group ID." FOR
+   FUNCTION Get_Part_Group_Id(
+      part_no_id_ IN     NUMBER ) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_part_group_part_tab
+   VALUES
+      | part_group_id | part_no_id |
+      | 1             | 1          |
+      | 2             | 2          |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | part_no_id_ |
+      | 1         |  1          |
+      | 2         |  2          |
+      | 0         |  3          |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Part_Group_Id(part_no_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should return correct attr depending on existance of the Part_Group_ID and Part_Number_ID" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_part_group_tab
+   VALUES
+      | part_group_id | mx_unique_key |
+      | 1             | '4650:10000'  |
+   END VALUES;
+
+   @MockTable av_part_number_tab
+   VALUES
+      | part_number_id |  mx_unique_key|
+      | 1              | '4646:20000'  |
+   END VALUES;
+
+   @MockTable av_part_group_part_tab
+   VALUES
+      | part_group_id | mx_unique_key |
+      | 1             | 'MX123'       |
+   END VALUES;
+IS
+   --Insert your test variables here
+   output1_  VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+   expected2_  VARCHAR2(2000);
+   expected3_  VARCHAR2(2000);
+   expected4_  VARCHAR2(2000);
+   expected5_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'PART_GROUP_TAG'||chr(31)||'TAG'||chr(30)||'PART_GROUP_UNIQUE_KEY'||chr(31)||'4650:10000'||chr(30) |
+      | 'PART_NUMBER_TAG'||chr(31)||'TAG'||chr(30)||'PART_NUMBER_UNIQUE_KEY'||chr(31)||'4646:20000'||chr(30) |
+      | 'BOTH_TAG'||chr(31)||'TAG'||chr(30)||'PART_NUMBER_UNIQUE_KEY'||chr(31)||'4646:20000'||chr(30)||'PART_GROUP_UNIQUE_KEY'||chr(31)||'4650:10000'||chr(30) |
+      | 'NO_TAG'||chr(31)||'TAG'||chr(30)||'APPLICABILITY_RANGE'||chr(31)||'Sample note'||chr(30) |
+      | 'IS_STANDARD'||chr(31)||'1'||chr(30)||'IS_APPROVED'||chr(31)||'1'||chr(30) ||'IS_CONDITIONS'||chr(31)||'0'||chr(30) |
+      | 'MX_UNIQUE_KEY'||chr(31)||'MX123'||chr(30)||'PART_GROUP_UNIQUE_KEY'||chr(31)||'4650:10000'||chr(30)|| 'PART_NUMBER_UNIQUE_KEY'||chr(31)||'4646:20000'||chr(30) |
+
+      -- TODO: below commented samples trigger Error_Sys which is intented check but due to error get raised test fails.
+      --| 'PART_GROUP_TAG'||chr(31)||'TAG'||chr(30)||'PART_GROUP_UNIQUE_KEY'||chr(31)||'4650:10001'||chr(30) |
+      --| 'PART_NUMBER_TAG'||chr(31)||'TAG'||chr(30)||'PART_NUMBER_UNIQUE_KEY'||chr(31)||'4646:20001'||chr(30) |
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+      expected1_ := 'PART_GROUP_TAG'||chr(31)||'TAG'||chr(30)||'PART_GROUP_ID'||chr(31)||'1'||chr(30);
+      expected2_ := 'PART_NUMBER_TAG'||chr(31)||'TAG'||chr(30)||'PART_NO_ID'||chr(31)||'1'||chr(30);
+      expected3_ := 'BOTH_TAG'||chr(31)||'TAG'||chr(30)||'PART_GROUP_ID'||chr(31)||'1'||chr(30)||'PART_NO_ID'||chr(31)||'1'||chr(30);
+      expected4_ := 'IS_STANDARD'||chr(31)||'True'||chr(30)||'IS_APPROVED'||chr(31)||'True'||chr(30) ||'IS_CONDITIONS'||chr(31)||'False'||chr(30) ;
+      expected5_ := 'MX_UNIQUE_KEY'||chr(31)||'MX123'||chr(30)||'PART_GROUP_UNIQUE_KEY'||chr(31)||'4650:10000'||chr(30)|| 'PART_NUMBER_UNIQUE_KEY'||chr(31)||'4646:20000'||chr(30) ;
+      --Insert your assertions here
+      IF (output1_ LIKE 'PART_GROUP_TAG%') THEN
+         ASSERT output1_ = expected1_ MESSAGE ' Assert1: Expected '||expected1_  ||' but  was '||output1_;
+      ELSIF (output1_ LIKE 'PART_NUMBER_TAG%') THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Assert2: Expected '||expected2_||' but  was '||output1_;
+      ELSIF (output1_ LIKE 'BOTH_TAG%') THEN
+         ASSERT output1_ = expected3_ MESSAGE 'Assert3: Expected '||expected3_||' but  was '||output1_;
+      ELSIF (output1_ LIKE 'IS_STANDARD%') THEN
+         ASSERT output1_ = expected4_ MESSAGE 'Assert4: Expected '||expected4_||' but  was '||output1_;
+      ELSIF (output1_ LIKE 'MX_UNIQUE_KEY%') THEN
+         ASSERT output1_ = expected5_ MESSAGE 'Assert4: Expected '||expected5_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Assert5: Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Check_Insert___ should genarate next sequence value when part_group_part_id is NULL" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_part_group_part_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   test_rec1_  av_part_group_part_tab%ROWTYPE;
+   test_rec2_  av_part_group_part_tab%ROWTYPE;
+   output_  Indicator_Rec;
+
+BEGIN
+   test_rec1_.part_group_part_id := NULL;
+   test_rec1_.part_group_id := 1000;
+   test_rec1_.part_no_id := 1001;
+   test_rec1_.inter_chg_ord := 2;
+   test_rec1_.applicability_range := 'test';
+
+   test_rec2_.part_group_part_id := 5000;
+
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.part_group_part_id IS NULL THEN
+         newrec_.part_group_part_id := PART_GROUP_PART_ID_SEQ.NEXTVAL;
+         ASSERT newrec_.part_group_part_id IS NOT NULL MESSAGE 'Returned '||newrec_.part_group_part_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Part_Number_Id should return the relevant part number id." FOR
+   FUNCTION Get_Part_Number_Id (
+      pn_mx_unique_key_ IN     VARCHAR2 ) RETURN NUMBER;
+USING
+   @MockTable av_part_number_tab
+   VALUES
+      | part_number_id | mx_unique_key |
+      | 1              | 'key1'        |
+      | 2              | 'key2'        |
+      | 3              | 'key3'        |
+   END VALUES;
+
+IS
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | pn_mx_unique_key_ |
+      | 1         |  'key1'           |
+      | 2         |  'key2'           |
+   LOOP
+      return_ := Get_Part_Number_Id(pn_mx_unique_key_);
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' returned '||return_;
+   END LOOP;
+END UNITTEST;

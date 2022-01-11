@@ -1,0 +1,582 @@
+projection CostRevenueBreakdownStructureHandling;
+component ACCRUL;
+layer Core;
+description "Cost/Revenue Breakdown Structure";
+category Users;
+include fragment ProjectCostElementLovSelector;
+include fragment CostStructureItem2Selector;
+include fragment CostStructureLevelChSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CostStructureSet for CostStructure {
+   context Company(Company);
+}
+entityset CostStructureItemSet for CostStructureItem {
+   context Company(Company);
+}
+entityset ProjectCostElementSet for ProjectCostElement {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CostStructure {
+   attribute CostStructureId Text {
+      label = "Structure ID";
+   }
+   attribute Description Text {
+      label = "Description";
+   }
+   attribute CopiedFrom Text {
+      editable = [false];
+   }
+   attribute Template Boolean("TRUE", "FALSE") {
+      editable = [true];
+      required = [true];
+   }
+   attribute SingleProject Boolean("TRUE", "FALSE") {
+      editable = [true];
+      required = [true];
+   }
+   attribute LevelId Text {
+      label = "Level ID";
+      fetch = "NULL";
+   }
+   attribute LevelDescription Text {
+      fetch = "NULL";
+   }
+   attribute ProjectCostElement Text {
+      fetch = "NULL";
+      label = "Project Cost Element";
+      maxlength = 100;
+      insertable = [true];
+      updatable = [true];
+      lovcolumn = [true];
+      format = uppercase;
+      implementationtype = "VARCHAR2(100)";
+   }
+   attribute DefaultItemType Enumeration(CostStructItemType) {
+      fetch = "Cost_Struct_Item_Type_API.Decode('NODE')";
+      required = [false];
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference StructureIdRef(Company, CostStructureId) to CostStructure(Company, CostStructureId) {
+      label = "Structure ID";
+   }
+   reference CopiedFromRef(Company, CopiedFrom) to CostStructure(Company, CostStructureId) {
+      label = "Copied From";
+   }
+   reference ProjectCostElementRef(Company, ProjectCostElement) to ProjectCostElement(Company, ProjectCostElement) {
+      label = "Cost/Revenue Element";
+   }
+
+   array CostStructureTopNodeArray(Company, CostStructureId) to CostStructureItem(Company, CostStructureId) {
+      where = ":child.ItemAbove IS NULL";
+   }
+}
+
+
+@Override
+entity CostStructureItem {
+   ludependencies = CostStructureItem, ProjectCostElement;
+   supportwarnings = [true];
+   from = "cost_structure_item_disp";
+
+   attribute CostStructureId Text {
+      label = "Structure ID";
+   }
+   attribute LevelId Text {
+      fetch = "Cost_Structure_Level_API.Get_Level_Id(company, cost_structure_id, level_no)";
+      label = "Level ID";
+   }
+   attribute LevelDescription Text {
+      fetch = "Cost_Structure_Level_API.Get_Description(company, cost_structure_id, level_no)";
+      label = "Level Description";
+      maxlength = 200;
+      insertable = [false];
+      updatable = [false];
+      editable = [false];
+      implementationtype = "VARCHAR2(200)";
+   }
+   attribute ProjectCostElement Text {
+      fetch = "NULL";
+      label = "Project Cost Element";
+      maxlength = 100;
+      insertable = [true];
+      updatable = [true];
+      lovcolumn = [true];
+      format = uppercase;
+      implementationtype = "VARCHAR2(100)";
+   }
+   attribute CopiedFrom Text {
+      fetch = "NULL";
+      editable = [false];
+      required = [false];
+   }
+   attribute Objstate Enumeration(ProjectCostElementState) {
+      fetch = "NULL";
+      editable = [false];
+      required = [false];
+   }
+   attribute Template Boolean("TRUE", "FALSE") {
+      fetch = "NULL";
+      editable = [false];
+      required = [false];
+   }
+   attribute SingleProject Boolean("TRUE", "FALSE") {
+      fetch = "NULL";
+      editable = [false];
+      required = [false];
+   }
+   attribute Note Text {
+      fetch = "NULL";
+      editable = [false];
+      required = [false];
+   }
+   attribute SelectedItemType Enumeration(CostStructItemType) {
+      fetch = "Cost_Struct_Item_Type_API.Decode('NODE')";
+   }
+
+   reference StructureIdRef(Company, CostStructureId) to CostStructure(Company, CostStructureId) {
+      label = "Structure ID";
+   }
+   reference CopiedFromRef(Company, CopiedFrom) to CostStructure(Company, CostStructureId) {
+      label = "Copied From";
+   }
+   reference NodeIdRef(Company, CostStructureId, CostStructItemType, NameValue) to CostStructureItem(Company, CostStructureId, CostStructItemType, NameValue) {
+      label = "Structure Node";
+   }
+   reference ProjectCostElementRef(Company, ProjectCostElement) to ProjectCostElement(Company, ProjectCostElement) {
+      label = "Cost/Revenue Element";
+   }
+   reference LevelRef(Company, CostStructureId, LevelId) to CostStructureLevelCh(Company, CostStructureId, LevelId) {
+      label = "Level";
+   }
+
+   array CostStructureItemArray(Company, CostStructureId, NameValue) to CostStructureItem(Company, CostStructureId, ItemAbove) {
+      where = ":child.ItemAbove IS NOT NULL AND :parent.CostStructItemType != 'COST_ELEMENT'";
+   }
+}
+
+
+@Override
+entity ProjectCostElement {
+   ludependencies = CostStructureItem, ProjectCostElement;
+
+   attribute StructId Text {
+      fetch = "NULL";
+   }
+   attribute ItemAbove Text {
+      fetch = "NULL";
+   }
+   attribute StructItemType Enumeration(CostStructItemType) {
+      fetch = "Cost_Struct_Item_Type_API.Decode('NODE')";
+   }
+
+   reference ProjectCostElementRef(Company, ProjectCostElement) to ProjectCostElement(Company, ProjectCostElement) {
+      label = "Cost Element";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+--Row level security added to the entity level
+action CreateNewCostStructure {
+   initialcheck implementation;
+   ludependencies = CostStructure;
+
+   parameter Company Text;
+   parameter CostStructureId Text;
+   parameter Description Text;
+   parameter Template Boolean;
+   parameter SingleProject Boolean;
+   parameter Note Text;
+}
+
+--Row level security added to the entity level
+action CopyStructure {
+   initialcheck implementation;
+   ludependencies = CostStructure;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter NewStructureId Text;
+   parameter NewDescription Text;
+}
+
+--Row level security added to the entity level
+action CreateNewTopNode {
+   initialcheck implementation;
+   ludependencies = CostStructureItem;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter NodeId Text;
+   parameter Description Text;
+   parameter StructureItemType Enumeration(CostStructItemType);
+   parameter LevelNo Number;
+}
+
+--Added the security annotation to the Cost_Structure_Item_API.Move_Branch.
+action ChangeParentNode {
+   initialcheck implementation;
+   ludependencies = CostStructureItem;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter CurrentNode Text;
+   parameter StructureItemType Enumeration(CostStructItemType);
+   parameter CurrentLevelNo Number;
+   parameter NodeAbove Text;
+}
+
+--Row level security added to the entity level
+action CreateNewNode {
+   initialcheck implementation;
+   ludependencies = CostStructure, CostStructureItem;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter NodeId Text;
+   parameter Description Text;
+   parameter ItemAbove Text;
+   parameter LevelNo Number;
+}
+
+--Added the security annotation to the Cost_Structure_Item_API.Delete_Note_.
+action DeleteNode {
+   initialcheck implementation;
+   ludependencies = CostStructureItem;
+   supportwarnings = [true];
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter NodeId Text;
+   parameter StructureItemType Enumeration(CostStructItemType);
+   parameter LevelNo Number;
+}
+
+--Row level security added to the entity level
+action RenameLevel {
+   initialcheck implementation;
+   ludependencies = CostStructure, CostStructureItem;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter OldLevelId Text;
+   parameter LevelId Text;
+   parameter LevelDescription Text;
+}
+
+--Row level security added to the entity level
+action RenameNode {
+   initialcheck implementation;
+   ludependencies = CostStructure, CostStructureItem;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter OldNodeId Text;
+   parameter NodeId Text;
+   parameter Description Text;
+}
+
+--Added the security annotation to the Cost_Structure_Item_API.Change_Level_Id.
+action ChangeLevelId {
+   initialcheck implementation;
+   ludependencies = CostStructure, CostStructureItem;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter NodeId Text;
+   parameter StructureItemType Enumeration(CostStructItemType);
+   parameter LevelId Text;
+}
+
+--Row level security added to the entity level
+action ConnectDisconnectElements {
+   initialcheck implementation;
+   ludependencies = CostStructureItem, ProjectCostElement;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter ItemAbove Text;
+   parameter Selection Text;
+   parameter Action Text;
+   parameter StructureItemType Enumeration(CostStructItemType);
+}
+
+--Row level security added to the entity level
+action ConnectDisconnectAllElements {
+   initialcheck implementation;
+   ludependencies = CostStructureItem, ProjectCostElement;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter ItemAbove Text;
+   parameter Action Text;
+}
+
+--Added the security annotation to the Cost_Structure_Item_API.Move_Branch.
+action MoveItems {
+   initialcheck implementation;
+   ludependencies = CostStructureItem;
+
+   parameter Company Text;
+   parameter StructureId Text;
+   parameter StructureItemType Enumeration(CostStructItemType);
+   parameter CurrentItem Text;
+   parameter ItemAbove Text;
+   parameter DestinationNodeId Text;
+   parameter DestStructItemType Enumeration(CostStructItemType);
+}
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function FetchCostElements List<Entity(ProjectCostElement)> {
+   from = "project_cost_element";
+   basedon ProjectCostElementSet;
+
+   parameter Company Text;
+   parameter ProjectCostElement Text;
+   parameter CostStructureId Text;
+   parameter SourceNode Text;
+   parameter StructItemType Enumeration(CostStructItemType);
+
+   alterattribute StructId {
+      fetch = "decode('TRUE', 'TRUE', :CostStructureId)";
+   }
+   alterattribute ItemAbove {
+      fetch = "decode('TRUE', 'TRUE', :SourceNode)";
+   }
+   alterattribute StructItemType {
+      fetch = "decode('TRUE', 'TRUE', :StructItemType)";
+   }
+
+   where = "company = :Company  AND
+            objstate = 'Active' AND
+            NOT EXISTS (SELECT 1
+                        FROM cost_structure_item a
+                        WHERE a.company = :Company AND
+                              a.name_value = project_cost_element AND
+                              a.cost_structure_id = :CostStructureId AND
+                              a.cost_struct_item_type_db = 'COST_ELEMENT')";
+}
+
+
+function FetchUsedCostElements List<Entity(CostStructureItem)> {
+   basedon CostStructureItemSet;
+
+   parameter Company Text;
+   parameter CostStructureId Text;
+   parameter NameValue Text;
+   parameter StructItemType Enumeration(CostStructItemType);
+
+   alterattribute SelectedItemType {
+      fetch = "decode('TRUE', 'TRUE', :StructItemType)";
+   }
+
+   where = "company = :Company  AND
+            cost_structure_id  = :CostStructureId AND
+            cost_struct_item_type_db = 'COST_ELEMENT' AND
+            item_above = :NameValue";
+}
+
+
+function FetchCostStructureItems List<Entity(CostStructureItem2)> {
+   parameter ItemAbove Text;
+   where = " name_value != :ItemAbove";
+}
+
+
+function FetchCostStructureLevels List<Entity(CostStructureLevelCh)> {
+   parameter Company Text;
+   parameter CostStructureId Text;
+   parameter NodeId Text;
+   parameter StructureItemType Enumeration(CostStructItemType);
+}
+
+
+@DynamicComponentDependency PROJ
+function IsConnected Text {
+   parameter Company Text;
+   parameter StructureId Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure CostBreakdownStructure {
+   attribute Company Text;
+   attribute CostStructureId Text {
+      label = "Structure ID";
+      required = [true];
+      format = uppercase;
+      maxlength = 20;
+   }
+   attribute Description Text {
+      required = [true];
+      maxlength = 200;
+   }
+   attribute Template Boolean("TRUE", "FALSE") {
+      editable = [true];
+      required = [true];
+   }
+   attribute SingleProject Boolean("TRUE", "FALSE") {
+      editable = [true];
+      required = [true];
+   }
+   attribute Note Text {
+      editable = [true];
+      required = [false];
+      maxlength = 2000;
+   }
+}
+
+
+structure CopyStructureToCompanyStructure {
+   attribute Company Text {
+      maxlength = 20;
+      format = uppercase;
+   }
+   attribute CostStructureId Text {
+      label = "Structure ID";
+      maxlength = 20;
+      editable = [false];
+   }
+   attribute NewStructureId Text {
+      label = "Structure ID";
+      maxlength = 20;
+      format = uppercase;
+   }
+   attribute NewDescription Text {
+      label = "Description";
+      maxlength = 200;
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company) {
+      label = "Company";
+   }
+   reference StructureIdRef(Company, CostStructureId) to CostStructure(Company, CostStructureId) {
+      label = "Structure";
+   }
+}
+
+
+structure TopNodeStructure {
+   attribute Company Text;
+   attribute CostStructureId Text;
+   attribute CostStructItemType Enumeration(CostStructItemType);
+   attribute LevelNo Number;
+   attribute NodeId Text {
+      label = "Top Node ID";
+      maxlength = 20;
+      required = [true];
+      format = uppercase;
+   }
+   attribute Description Text {
+      label = "Node Description";
+      maxlength = 200;
+      required = [true];
+   }
+}
+
+
+structure ChangeParentNodeStructure {
+   attribute Company Text;
+   attribute CostStructureId Text;
+   attribute CostStructItemType Enumeration(CostStructItemType);
+   attribute CurrentLevelNo Number;
+   attribute CurrentNode Number;
+   attribute ItemAbove Text;
+   attribute NodeAbove Text {
+      maxlength = 20;
+      required = [true];
+      format = uppercase;
+   }
+   reference NodeAboveRef(Company, CostStructureId, NodeAbove) to CostStructureItem2(Company, CostStructureId, NameValue) {
+      label = "Node Above";
+   }
+}
+
+
+structure NodeStructure {
+   attribute Company Text;
+   attribute CostStructureId Text;
+   attribute NodeId Text {
+      label = "Node ID";
+      required = [true];
+      format = uppercase;
+   }
+   attribute Description Text {
+      required = [true];
+   }
+   attribute ItemAbove Text;
+   attribute LevelNo Number;
+}
+
+
+structure SetLevelStructure {
+   attribute Company Text;
+   attribute CostStructureId Text;
+   attribute OldLevelId Number;
+   attribute LevelNo Number;
+   attribute LevelId Text {
+      label = "Level ID";
+      required = [true];
+      format = uppercase;
+   }
+   attribute Description Text {
+      required = [true];
+   }
+}
+
+
+structure SetNodeStructure {
+   attribute Company Text;
+   attribute CostStructureId Text;
+   attribute CostStructItemType Enumeration(CostStructItemType);
+   attribute OldNodeId Text;
+   attribute NodeId Text {
+      label = "Node ID";
+      required = [true];
+      format = uppercase;
+   }
+   attribute Description Text {
+      required = [true];
+   }
+}
+
+
+structure ChangeNodeLevelStructure {
+   attribute Company Text;
+   attribute CostStructureId Text;
+   attribute OldNodeId Text;
+   attribute NodeId Text {
+      label = "Node ID";
+      required = [true];
+      format = uppercase;
+   }
+   attribute CostStructItemType Enumeration(CostStructItemType);
+   attribute LevelId Text {
+      label = "Level ID";
+      required = [true];
+      format = uppercase;
+   }
+
+   reference LevelRef(Company, CostStructureId, LevelId) to CostStructureLevelCh(Company, CostStructureId, LevelId) {
+      label = "Level";
+   }
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------

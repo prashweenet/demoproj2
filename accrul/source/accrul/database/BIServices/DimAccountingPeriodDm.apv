@@ -1,0 +1,123 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  AccountingPeriod
+--  Component:  ACCRUL
+--  LU:         DimAccountingPeriod
+--
+--  File     :  DimAccountingPeriodDm.apv
+--  Purpose  :  Create DATA MART dimension view DIM_ACCOUNTING_PERIOD_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_ACCOUNTING_PERIOD
+DEFINE VIEW       = DIM_ACCOUNTING_PERIOD_DM
+DEFINE MV         = ACCOUNTING_PERIOD_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimAccountingPeriod
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.id                                                                                                                                                id,
+       a.company                                                                                                                                           company,
+       a.code                                                                                                                                              code,
+       SUBSTR(NVL( (SELECT description
+      FROM ACCOUNTING_PERIOD_TRANSL_MV b
+      WHERE b.company         = a.company
+      AND   b.translation_key = TO_CHAR(a.accounting_year)||'^'|| TO_CHAR(a.accounting_period)
+      AND   b.language_code   =
+      (SELECT language
+      FROM fnd_session
+      )
+      ), description),1,100)                                                                                                                               description,
+       a.start_date                                                                                                                                        start_date,
+       a.end_date                                                                                                                                          end_date,
+       (Acc_Year_Ledger_Info_API.Get_Year_Status_Db(a.company,a.accounting_year,'00'))                                                                     year_status,
+       SUBSTR(Acc_Year_Per_Status_API.Decode((Acc_Year_Ledger_Info_API.Get_Year_Status_Db(a.company,a.accounting_year,'00'))),1,100)                       year_status_desc,
+       Acc_Period_Ledger_Info_API.Get_Period_Status_Db(a.company,a.accounting_year,a.accounting_period,'00')                                               period_status,
+       SUBSTR(Acc_Year_Per_Status_API.Decode(Acc_Period_Ledger_Info_API.Get_Period_Status_Db(a.company,a.accounting_year,a.accounting_period,'00')),1,100) period_status_desc,
+       a.period_type                                                                                                                                       period_type,
+       SUBSTR(Period_Type_API.Decode(a.period_type),1,100)                                                                                                 period_type_desc,
+       a.accounting_year                                                                                                                                   accounting_year,
+       a.accounting_period                                                                                                                                 accounting_period,
+       (Acc_Year_Ledger_Info_API.Get_Opening_Balances_Db(a.company,a.accounting_year,'00'))                                                                opening_balances,
+       SUBSTR(Acc_Year_Op_Bal_API.Decode((Acc_Year_Ledger_Info_API.Get_Opening_Balances_Db(a.company,a.accounting_year,'00'))),1,100)                      opening_balances_desc,
+       Acc_Year_Ledger_Info_API.Get_Closing_Balances_Db(a.company,a.accounting_year,'00')                                                                  closing_balances,
+       SUBSTR(Acc_Year_Cl_Bal_API.Decode(Acc_Year_Ledger_Info_API.Get_Closing_Balances_Db(a.company,a.accounting_year,'00')),1,100)                        closing_balances_desc,
+       a.report_from_date                                                                                                                                  report_from_date,
+       a.report_until_date                                                                                                                                 report_until_date,
+       a.attribute_one                                                                                                                                     attribute_one,
+       a.attribute_two                                                                                                                                     attribute_two,
+       a.attribute_three                                                                                                                                   attribute_three,
+       a.attribute_four                                                                                                                                    attribute_four,
+       a.attribute_five                                                                                                                                    attribute_five
+FROM &MV a
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Accounting Period^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(100)/UPPERCASE^PROMPT=Year Period^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(2000)^PROMPT=Description^';
+   COMMENT ON COLUMN &VIEW..START_DATE
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Start Date^';
+COMMENT ON COLUMN &VIEW..END_DATE
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=End Date^';
+COMMENT ON COLUMN &VIEW..YEAR_STATUS
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=GL Year Status^';
+COMMENT ON COLUMN &VIEW..YEAR_STATUS_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=GL Year Status Description^';
+COMMENT ON COLUMN &VIEW..PERIOD_STATUS
+IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=GL Period Status^';
+COMMENT ON COLUMN &VIEW..PERIOD_STATUS_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=GL Period Status Description^';
+COMMENT ON COLUMN &VIEW..PERIOD_TYPE
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Period Type^';
+COMMENT ON COLUMN &VIEW..PERIOD_TYPE_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Period Type Description^';
+COMMENT ON COLUMN &VIEW..ACCOUNTING_YEAR
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=Year^';
+COMMENT ON COLUMN &VIEW..ACCOUNTING_PERIOD
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=Period^';
+COMMENT ON COLUMN &VIEW..OPENING_BALANCES
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=GL Opening Balance^';
+COMMENT ON COLUMN &VIEW..OPENING_BALANCES_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=GL Opening Balance Description^';
+COMMENT ON COLUMN &VIEW..CLOSING_BALANCES
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=GL Closing Balance^';
+COMMENT ON COLUMN &VIEW..CLOSING_BALANCES_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=GL Closing Balance Description^';
+   COMMENT ON COLUMN &VIEW..REPORT_FROM_DATE
+   IS 'FLAGS=A-IUL^DATATYPE=DATE^PROMPT=Report From Date^';
+COMMENT ON COLUMN &VIEW..REPORT_UNTIL_DATE
+   IS 'FLAGS=A-IUL^DATATYPE=DATE^PROMPT=Report Until Date^';
+COMMENT ON COLUMN &VIEW..ATTRIBUTE_ONE
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Attribute 1^';
+COMMENT ON COLUMN &VIEW..ATTRIBUTE_TWO
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Attribute 2^';
+COMMENT ON COLUMN &VIEW..ATTRIBUTE_THREE
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Attribute 3^';
+COMMENT ON COLUMN &VIEW..ATTRIBUTE_FOUR
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Attribute 4^';
+COMMENT ON COLUMN &VIEW..ATTRIBUTE_FIVE
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=Attribute 5^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

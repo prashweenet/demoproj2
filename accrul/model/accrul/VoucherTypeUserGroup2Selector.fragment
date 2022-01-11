@@ -1,0 +1,61 @@
+fragment VoucherTypeUserGroup2Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view voucher_type_user_group2";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceVoucherTypeUserGroup2Selector for VoucherTypeUserGroup2 {
+   static VoucherType;
+   static VoucherTypeDesc;
+}
+
+card VoucherTypeUserGroup2Card for VoucherTypeUserGroup2 {
+   label = "";
+   fieldranking VoucherType;
+   field VoucherType;
+   field VoucherTypeDesc;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query VoucherTypeUserGroup2 {
+   from = "voucher_type_user_group2";
+   lu = VoucherTypeUserGroup;
+   keys = Company, AccountingYear, UserGroup, VoucherType;
+   ludependencies = VoucherTypeUserGroup;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute AccountingYear Number {
+      lovcolumn = [false];
+   }
+   attribute UserGroup Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute VoucherType Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute DefaultType Enumeration(FinanceYesNo) {
+      lovcolumn = [false];
+      fetch = "default_type_db";
+   }
+   attribute FunctionGroup Text {
+      lovcolumn = [true];
+   }
+   attribute VoucherTypeDesc Text {
+      label = "Voucher Type Description";
+      lovcolumn = [true];
+   }
+   attribute LedgerId Text {
+      label = "Ledger ID";
+      lovcolumn = [false];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

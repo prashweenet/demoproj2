@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENUMERATION xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:enumeration_enumeration">
+   <CODE_GENERATION_PROPERTIES>
+      <CODE_GENERATION_PROPERTIES>
+      </CODE_GENERATION_PROPERTIES>
+   </CODE_GENERATION_PROPERTIES>
+   <NAME>CurrRateTypeCategory</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <VALUES>
+      <VALUE>
+         <NAME>Normal</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>Project</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>ParallelCurrency</NAME>
+      </VALUE>
+      <VALUE>
+         <NAME>TaxReporting</NAME>
+      </VALUE>
+   </VALUES>
+</ENUMERATION>

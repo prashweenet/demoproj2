@@ -1,0 +1,20 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CostStructureItem
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+INDEX cost_structure_item_ix IS cost_structure_item_tab (company, cost_structure_id, name_value, cost_struct_item_type, item_above);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

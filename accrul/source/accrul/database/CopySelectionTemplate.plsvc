@@ -1,0 +1,36 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     CopySelectionTemplate
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+PROCEDURE Copy_Selection_Template___ (
+   company_          IN VARCHAR2,
+   object_group_id_  IN VARCHAR2,
+   from_template_id_ IN VARCHAR2,
+   new_template_id_  IN VARCHAR2,
+   new_description_  IN VARCHAR2,
+   ownership_        IN VARCHAR2 ) 
+IS   
+BEGIN
+   IF(Fin_Sel_Obj_Templ_API.Exists(company_, object_group_id_, new_template_id_)) THEN
+      Error_SYS.Record_General(lu_name_,'TEMPIDEXSISTS: Template ID '':P1'' already exists.', new_template_id_);
+   END IF;
+   IF(new_template_id_ IS NULL) THEN
+      Error_SYS.Record_General(lu_name_,'TEMPIDISNULL: Template ID cannot be null.');
+   END IF;
+   IF(new_description_ IS NULL) THEN
+      Error_SYS.Record_General(lu_name_,'DESCISNULL: Description cannot be null.');
+   END IF;
+   IF(ownership_ IS NULL) THEN
+      Error_SYS.Record_General(lu_name_,'OWNERSHIPISNULL: Ownership cannot be null.');
+   END IF;
+   Fin_Sel_Obj_Templ_API.Copy_Selection_Template(company_, object_group_id_, from_template_id_, new_template_id_, new_description_, Fin_Ownership_API.Decode(ownership_));
+END Copy_Selection_Template___;

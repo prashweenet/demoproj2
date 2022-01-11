@@ -1,0 +1,111 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CompanyFinance
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  150605  Umdolk  Added Master_Company view , this will be referred from GROCON.
+--  201112  Tkavlk  remove Cons_Company, Cons_Code_Part, Cons_Code_Part_Value and Consolidation_File attributes
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Reference_Currency IS
+   Flags      = 'KM---'
+   Datatype   = 'STRING'
+   Prompt     = 'Reference Currency'
+   Ref        = 'IsoCurrency';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+
+@Override
+VIEW Company_Finance IS
+WHERE  EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE company_finance_tab.company = company);
+
+VIEW Company_Finance1 IS
+   Prompt = 'Company finance'
+   Company.Flags = 'PM---'
+   Reference_Currency.Flags = 'KM--L'
+   Description.Flags = 'A----'
+   Description.Datatype = 'STRING'
+   Description.Prompt = 'description'
+SELECT company                        company,
+       DECODE(Currency_Code_API.Get_Emu(company,currency_code),'TRUE','EUR',currency_code)
+                                      reference_currency,
+       Iso_Currency_API.Get_Description(DECODE(Currency_Code_API.Get_Emu(company,currency_code),'TRUE','EUR',currency_code))
+                                      description,
+       rowkey                                                                                                              objkey
+FROM   COMPANY_FINANCE_TAB;
+
+VIEW Company_Finance_Auth IS
+   Prompt = 'Company Finance Authorize'
+   Company.Flags = 'K----'
+   Description.Datatype = 'STRING(100)/UPPERCASE'
+   Currency_Code.Flags = 'A---L'
+   Valid_From.Flags = 'A----'
+SELECT T.company                    company,
+   Company_api.Get_name(T.Company)  description,
+   T.currency_code                  currency_code,
+   T.valid_from                     valid_from,
+   Correction_Type_API.Decode(correction_type)
+                                    correction_type,
+   T.correction_type                correction_type_db,
+   T.rowkey                        objkey
+FROM   COMPANY_FINANCE_TAB T, user_finance_auth_pub U
+WHERE  T.company = U.company;
+
+VIEW Company_Finance_Auth1 IS
+   Prompt = 'Company Finance Authorize1'
+   Company.Flags = 'K----'
+SELECT company         company,
+       objkey          objkey
+FROM   user_finance_auth_pub;
+
+VIEW Company_Finance_Adm IS
+   Prompt = 'Company finance'
+   Parallel_Acc_Currency.Datatype = 'STRING'
+   Def_Amount_Method_Db.Datatype = 'STRING(20)'   
+SELECT T.company                                    company,
+       Company_API.Get_Name(T.company)              description,
+       currency_code                                currency_code,
+       valid_from                                   valid_from,
+       Correction_Type_API.Decode(correction_type)  correction_type,
+       correction_type                              correction_type_db,
+       parallel_acc_currency                        parallel_acc_currency,
+       time_stamp                                   time_stamp,
+       to_char(recalculation_date, 'YYYYMMDD')      recalculation_date,       
+       Def_Amount_Method_API.Decode(def_amount_method) def_amount_method,
+       def_amount_method                            def_amount_method_db,
+       creation_finished                            creation_finished,       
+       use_vou_no_period                                   use_vou_no_period,
+       T.rowid                                            objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                                         objversion,
+       rowkey                                             objkey
+FROM   COMPANY_FINANCE_TAB T
+WHERE  EXISTS (SELECT 1 
+               FROM user_profile_entry U
+               WHERE T.company = U.entry_value
+               AND U.entry_code = 'COMPANY')
+OR     Security_SYS.Has_System_Privilege('ADMINISTRATOR') = 'TRUE';
+
+VIEW MASTER_COMPANY IS
+   Prompt = 'Master Company'
+   Master_Company.DataType = 'STRING(20)'   
+   Master_Company.Flags = 'K----'
+SELECT a.company             master_company, 
+       b.name                description,
+       a.currency_code       currency_code,
+       a.rowkey              objkey
+FROM  COMPANY_FINANCE_TAB a, COMPANY_TAB b
+WHERE a.company = b.company 
+AND   b.master_company = 'TRUE';
+   

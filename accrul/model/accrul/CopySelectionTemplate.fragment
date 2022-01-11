@@ -1,0 +1,79 @@
+fragment CopySelectionTemplate;
+component ACCRUL;
+layer Core;
+description "This dialog is used to copy AP/AR selection templates ...";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+--------------------------------- COMMANDS ----------------------------------
+command CopySelectionTemplateCommand for FinSelObjTempl {
+   label = "Copy Selection Template";
+
+   execute {
+      dialog CopySelectionTemplateDialog(Company, ObjectGroupId, TemplateId, Ownership) {
+         when CANCEL {
+            exit CANCEL;
+         }
+      }
+   }
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group CopySelectionTemplateGroup for CopySelectionTemplateStructure {
+   label = "";
+   field FromTemplateId {
+      size = Small;
+   }
+   field NewTemplateId {
+      size = Small;
+   }
+   field NewDescription {
+      size = Small;
+   }
+   field Ownership {
+      size = Small;
+   }
+}
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+---------------------------------- ACTIONS ----------------------------------
+--Added the security annotation to the Fin_Sel_Obj_Templ_API.Copy_Selection_Template.
+action CopySelectionTemplate {
+   initialcheck implementation;
+   ludependencies = FinSelObjTempl;
+
+   parameter Company Text;
+   parameter ObjectGroupId Text;
+   parameter FromTemplateId Text;
+   parameter NewTemplateId Text;
+   parameter NewDescription Text;
+   parameter Ownership Enumeration(FinOwnership);
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure CopySelectionTemplateStructure {
+   attribute Company Text;
+   attribute ObjectGroupId Text;
+   attribute FromTemplateId Text {
+      label = "From Template ID";
+      maxlength = 20;
+      format = uppercase;
+      editable = [false];
+   }
+   attribute NewTemplateId Text {
+      label = "New Template ID";
+      maxlength = 20;
+      format = uppercase;
+   }
+   attribute NewDescription Text {
+      label = "Description";
+      maxlength = 2000;
+      required = [true];
+   }
+   attribute Ownership Enumeration(FinOwnership) {
+      label = "Ownership";
+      required = [true];
+   }
+}

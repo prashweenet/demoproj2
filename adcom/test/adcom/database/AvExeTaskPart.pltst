@@ -1,0 +1,336 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvExeTaskPart
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-- 210324   didlk  AD1069,Update Unit test for Get_Next_Seq
+-- 201203   madglk  LMM2020R1-1454,Unit test for Get_Next_Seq
+--  201116  siselk  LMM2020R1-1431, Check_Insert___ added
+--  201008  TAJALK  LMM2020R1-1310, Fixed faling test
+--  200917  SEVHLK  LMM2020R1-846, Added tests related to pre_sync_action
+--  200720  KAWJLK  LMM2020R1-354, Created Unit testing for Get_Task_Part_Count, Get_Removal_States and Get_Install_States
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+
+UNITTEST "Get_Task_Part_Count should return count of the task_id in av_exe_task_part_tab according to the given task_id" FOR
+   FUNCTION Get_Task_Part_Count(
+      task_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_part_tab
+   VALUES
+      | task_id |
+      | 1       |
+      | 1       |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | task_id_ |
+      | 2         |  1       |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Task_Part_Count(task_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Removal_States should return Pending or Signed. if removed_user is null return value is Pending and removed_user is not null return value is Signed." FOR
+   FUNCTION Get_Removal_States(
+      task_part_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_part_tab
+   VALUES
+      | removed_user | task_part_id |
+      | 'kawjlk'     | 1            |
+      | ''           | 2            |
+      | 'kapalk'     | 3            |
+      | ''           | 4            |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | task_part_id_ |
+      | 'Signed'  |  1            |
+      | 'Pending' |  2            |
+      | 'Signed'  |  3            |
+      | 'Pending' |  4            |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Removal_States(task_part_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Install_States should return Pending or Signed. if installed_user is null return value is Pending and removed_user is not null return value is Signed." FOR
+   FUNCTION Get_Install_States(
+      task_part_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_part_tab
+   VALUES
+      | installed_user | task_part_id |
+      | 'kawjlk'       | 1            |
+      | ''             | 2            |
+      | 'kapalk'       | 3            |
+      | ''             | 4            |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | task_part_id_ |
+      | 'Signed'  |  1            |
+      | 'Pending' |  2            |
+      | 'Signed'  |  3            |
+      | 'Pending' |  4            |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Install_States(task_part_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_tab
+   VALUES
+      | task_id | mx_unique_key |
+      | 1       | 'MXTASKKEY'   |
+   END VALUES;
+
+   @MockTable av_exe_task_part_request_tab
+   VALUES
+      | task_id | mx_unique_key     | task_part_request_id | part_group_id | part_number_id |
+      | 1       | 'MXPARTREQUESTKEY'| 1                    | 1             | 1              |
+   END VALUES;
+
+   @MockTable av_part_group_tab
+   VALUES
+      | mx_unique_key      | part_group_id |
+      | 'MXPARTGROUPKEY'   | 1             |
+   END VALUES;
+
+   @MockTable av_part_number_tab
+   VALUES
+      | mx_unique_key      | part_number_id |
+      | 'MXPARTNUMBERKEY'  | 1              |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_     VARCHAR2(2000);
+   expected1_   VARCHAR2(2000);
+   expected2_   VARCHAR2(2000);
+   expected3_   VARCHAR2(2000);
+   expected4_   VARCHAR2(2000);
+   expected5_   VARCHAR2(2000);
+   expected6_   VARCHAR2(2000);
+   expected7_   VARCHAR2(2000);
+   expected8_   VARCHAR2(2000);
+   expected9_   VARCHAR2(2000);
+   expected10_  VARCHAR2(2000);
+   expected11_  VARCHAR2(2000);
+   expected12_  VARCHAR2(2000);
+   expected13_  VARCHAR2(2000);
+   expected14_  VARCHAR2(2000);
+
+BEGIN
+   FOR
+      | attr_ |
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY'||chr(30)||'WITH_TASK_KEY'|
+      | 'PART_REQUEST_UNIQUE_KEY'||chr(31)||'MXPARTREQUESTKEY'||chr(30)||'WITH_PART_REQ_KEY'|
+      | 'PART_GROUP_UNIQUE_KEY'||chr(31)||'MXPARTGROUPKEY'||chr(30)||'WITH_PART_GROUP_KEY'|
+      | 'INST_PART_NUMBER_UNIQUE_KEY'||chr(31)||'MXPARTNUMBERKEY'||chr(30)||'WITH_INST_PART_KEY'|
+      | 'RMVD_PART_NUMBER_UNIQUE_KEY'||chr(31)||'MXPARTNUMBERKEY'||chr(30)||'WITH_RMVD_PART_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY'||chr(30)||'PART_REQUEST_UNIQUE_KEY'||chr(31)||'MXPARTREQUESTKEY'||chr(30)||'WITH_TASK_PART_REQ_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY'||chr(30)||'PART_GROUP_UNIQUE_KEY'||chr(31)||'MXPARTGROUPKEY'||chr(30)||'WITH_TASK_PART_GROUP_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY'||chr(30)||'INST_PART_NUMBER_UNIQUE_KEY'||chr(31)||'MXPARTNUMBERKEY'||chr(30)||'WITH_TASK_INST_PART_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY'||chr(30)||'PART_REQUEST_UNIQUE_KEY'||chr(31)||'MXPARTREQUESTKEY'||chr(30)||'PART_GROUP_UNIQUE_KEY'||chr(31)||'MXPARTGROUPKEY'||chr(30)||'WITH_TASK_PART_GROUP_REQ_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY'||chr(30)||'PART_REQUEST_UNIQUE_KEY'||chr(31)||'MXPARTREQUESTKEY'||chr(30)||'INST_PART_NUMBER_UNIQUE_KEY'||chr(31)||'MXPARTNUMBERKEY'||chr(30)||'WITH_TASK_REQ_INST_PART_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY'||chr(30)||'PART_REQUEST_UNIQUE_KEY'||chr(31)||'MXPARTREQUESTKEY'||chr(30)||'PART_GROUP_UNIQUE_KEY'||chr(31)||'MXPARTGROUPKEY'||chr(30)||'INST_PART_NUMBER_UNIQUE_KEY'||chr(31)||'MXPARTNUMBERKEY'||chr(30)||'WITH_ALL_KEYS'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY'||chr(30)||'RMVD_PART_NUMBER_UNIQUE_KEY'||chr(31)||'MXPARTNUMBERKEY'||chr(30)||'WITH_TASK_RMVD_PART_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY'||chr(30)||'PART_REQUEST_UNIQUE_KEY'||chr(31)||'MXPARTREQUESTKEY'||chr(30)||'RMVD_PART_NUMBER_UNIQUE_KEY'||chr(31)||'MXPARTNUMBERKEY'||chr(30)||'WITH_TASK_REQ_RMVD_PART_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'MXTASKKEY'||chr(30)||'PART_REQUEST_UNIQUE_KEY'||chr(31)||'MXPARTREQUESTKEY'||chr(30)||'PART_GROUP_UNIQUE_KEY'||chr(31)||'MXPARTGROUPKEY'||chr(30)||'RMVD_PART_NUMBER_UNIQUE_KEY'||chr(31)||'MXPARTNUMBERKEY'||chr(30)||'WITH_RMVD_ALL_KEYS'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_TASK_KEY'||'TASK_ID'||chr(31)||'1'||chr(30);
+      expected2_ := 'WITH_PART_REQ_KEY'||'PART_REQUEST_ID'||chr(31)||'1'||chr(30);
+      expected3_ := 'WITH_PART_GROUP_KEY'||'PART_GROUP_ID'||chr(31)||'1'||chr(30);
+      expected4_ := 'WITH_INST_PART_KEY'||'INSTALLED_PART_NO_ID'||chr(31)||'1'||chr(30);
+      expected5_ := 'WITH_TASK_PART_REQ_KEY'||'TASK_ID'||chr(31)||'1'||chr(30)||'PART_REQUEST_ID'||chr(31)||'1'||chr(30);
+      expected6_ := 'WITH_TASK_PART_GROUP_KEY'||'TASK_ID'||chr(31)||'1'||chr(30)||'PART_GROUP_ID'||chr(31)||'1'||chr(30);
+      expected7_ := 'WITH_TASK_INST_PART_KEY'||'TASK_ID'||chr(31)||'1'||chr(30)||'INSTALLED_PART_NO_ID'||chr(31)||'1'||chr(30);
+      expected8_ := 'WITH_TASK_PART_GROUP_REQ_KEY'||'TASK_ID'||chr(31)||'1'||chr(30)||'PART_REQUEST_ID'||chr(31)||'1'||chr(30)||'PART_GROUP_ID'||chr(31)||'1'||chr(30);
+      expected9_ := 'WITH_TASK_REQ_INST_PART_KEY'||'TASK_ID'||chr(31)||'1'||chr(30)||'PART_REQUEST_ID'||chr(31)||'1'||chr(30)||'INSTALLED_PART_NO_ID'||chr(31)||'1'||chr(30);
+      expected10_:= 'WITH_ALL_KEYS'||'TASK_ID'||chr(31)||'1'||chr(30)||'PART_REQUEST_ID'||chr(31)||'1'||chr(30)||'PART_GROUP_ID'||chr(31)||'1'||chr(30)||'INSTALLED_PART_NO_ID'||chr(31)||'1'||chr(30);
+      expected11_:= 'WITH_TASK_RMVD_PART_KEY'||'TASK_ID'||chr(31)||'1'||chr(30)||'REMOVED_PART_NO_ID'||chr(31)||'1'||chr(30);
+      expected12_:= 'WITH_TASK_REQ_RMVD_PART_KEY'||'TASK_ID'||chr(31)||'1'||chr(30)||'PART_REQUEST_ID'||chr(31)||'1'||chr(30)||'REMOVED_PART_NO_ID'||chr(31)||'1'||chr(30);
+      expected13_:= 'WITH_RMVD_PART_KEY'||'REMOVED_PART_NO_ID'||chr(31)||'1'||chr(30);
+      expected14_:= 'WITH_RMVD_ALL_KEYS'||'TASK_ID'||chr(31)||'1'||chr(30)||'PART_REQUEST_ID'||chr(31)||'1'||chr(30)||'PART_GROUP_ID'||chr(31)||'1'||chr(30)||'REMOVED_PART_NO_ID'||chr(31)||'1'||chr(30);
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_TASK_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_PART_REQ_KEY%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_PART_GROUP_KEY%' THEN
+         ASSERT output1_ = expected3_ MESSAGE 'Expected '||expected3_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_INST_PART_KEY%' THEN
+         ASSERT output1_ = expected4_ MESSAGE 'Expected '||expected4_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_TASK_PART_REQ_KEY%' THEN
+         ASSERT output1_ = expected5_ MESSAGE 'Expected '||expected5_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_TASK_PART_GROUP_KEY%' THEN
+         ASSERT output1_ = expected6_ MESSAGE 'Expected '||expected6_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_TASK_INST_PART_KEY%' THEN
+         ASSERT output1_ = expected7_ MESSAGE 'Expected '||expected7_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_TASK_PART_GROUP_REQ_KEY%' THEN
+         ASSERT output1_ = expected8_ MESSAGE 'Expected '||expected8_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_TASK_REQ_INST_PART_KEY%' THEN
+         ASSERT output1_ = expected9_ MESSAGE 'Expected '||expected9_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_ALL_KEYS%' THEN
+         ASSERT output1_ = expected10_ MESSAGE 'Expected '||expected10_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_TASK_RMVD_PART_KEY%' THEN
+         ASSERT output1_ = expected11_ MESSAGE 'Expected '||expected11_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_TASK_REQ_RMVD_PART_KEY%' THEN
+         ASSERT output1_ = expected12_ MESSAGE 'Expected '||expected12_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_RMVD_PART_KEY%' THEN
+         ASSERT output1_ = expected13_ MESSAGE 'Expected '||expected13_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_RMVD_ALL_KEYS%' THEN
+         ASSERT output1_ = expected14_ MESSAGE 'Expected '||expected14_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Check_Insert___ should assign generated sequence value for Task Part id when inserting new record" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_exe_task_part_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Exe_Task_Part_API
+   FUNCTION Get_Next_Seq  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN av_exe_task_part_seq.NEXTVAL;
+   END Get_Next_Seq;
+
+   @MockPackage Av_Fault_Part_API
+   FUNCTION Get_Fault_Part(mx_unique_key_ IN     VARCHAR2) RETURN VARCHAR2
+   IS
+   BEGIN
+      RETURN CASE mx_unique_key_
+      WHEN '1456:16203' THEN 1
+      WHEN NULL         THEN NULL
+      WHEN '1456:16208' THEN 2
+   END;
+END Get_Fault_Part;
+
+
+@MockTable av_fault_part_tab
+VALUES
+   | mx_unique_key | fault_part_id |
+   | '1456:16204'  | 1             |
+   | '1456:16203'  | 1             |
+   | NULL          | 2             |
+   | NULL          | 3             |
+END VALUES;
+
+IS
+--Insert your test variables here
+test_rec1_     av_exe_task_part_tab%ROWTYPE;
+test_rec2_     av_exe_task_part_tab%ROWTYPE;
+test_rec3_     av_exe_task_part_tab%ROWTYPE;
+output_        Indicator_Rec;
+fault_part_id_ NUMBER;
+
+BEGIN
+test_rec1_.Task_Part_Id  := NULL;
+test_rec1_.Mx_Unique_Key := '1456:16203';
+
+test_rec2_.Task_Part_Id  := 4456;
+test_rec2_.Mx_Unique_Key := '1456:16209';
+
+test_rec3_.Task_Part_Id  := NULL;
+test_rec3_.Mx_Unique_Key := NULL;
+
+FOR
+   | newrec_    | indrec_ | attr_ |
+   | test_rec1_ | output_ | 'A'   |
+   | test_rec2_ | output_ | 'A'   |
+   | test_rec3_ | output_ | 'A'   |
+LOOP
+   IF newrec_.Task_Part_Id IS NULL THEN
+      fault_part_id_:= Get_Fault_Part(newrec_.Mx_Unique_Key);
+      IF fault_part_id_ IS NULL THEN
+         newrec_.Task_Part_Id := Get_Next_Seq();
+      ELSE
+         newrec_.Task_Part_Id := fault_Part_id_;
+      END IF;
+      ASSERT newrec_.Task_Part_Id IS NOT NULL MESSAGE 'Returned '||newrec_.Task_Part_Id;
+   END IF;
+END LOOP;
+END UNITTEST;
+
+UNITTEST "Get_Next_Seq should return next value of the sequence" FOR
+   FUNCTION Get_Next_Seq RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   return1_   NUMBER;
+   return2_   NUMBER;
+   output_    NUMBER;
+   expected_  NUMBER;
+BEGIN
+   FOR
+      | expected_ |
+      | 1         |
+   LOOP
+      --Insert your test code here
+      return1_ := Get_Next_Seq;
+      return2_ := Get_Next_Seq;
+      output_  := return2_ - return1_;
+      --Insert your assertions here
+      ASSERT output_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||output_;
+   END LOOP;
+END UNITTEST;

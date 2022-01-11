@@ -1,0 +1,32 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvHistUsageData
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200727  chdslk  Created.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+VIEW Av_Hist_Usage_Data_Rec IS
+SELECT DISTINCT
+   a.inventory_id inventory_id,
+   a.usage_record_id usage_record_id,
+   b.capture_date capture_date,
+   b.usage_name usage_name,
+   b.usage_type_code usage_type_code,
+   b.parent_assembly parent_assembly
+FROM av_hist_usage_data_tab a
+LEFT JOIN av_hist_usage_record_tab b
+ON a.usage_record_id = b.usage_record_id;
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

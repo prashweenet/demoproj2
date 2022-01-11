@@ -1,0 +1,57 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: InExtFileTemplateDir
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN File_Template_Idx IS
+   Flags      = 'KMI-L'
+   Datatype   = 'STRING(30)'
+   Prompt     = 'File Template ID';
+
+COLUMN Description IS
+   Flags      = 'AMI-L'
+   Datatype   = 'STRING(200)'
+   Prompt     = 'Description';
+
+COLUMN Separated IS
+   Flags      = 'AMI-L'
+   Datatype   = 'STRING(5)'
+   Prompt     = 'Separated';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+
+
+VIEW In_Ext_File_Template_Dir_Lov IS
+   Prompt = 'Ext File Template Input'
+   File_Type.Flags = 'AMI--'
+   File_Type.Datatype = 'STRING(20)'
+   File_Type.Ref = 'ExtFileType'
+SELECT d.file_template_id             file_template_idx,
+       t.file_type                    file_type,       
+       NVL(RTRIM(RPAD(Basic_Data_Translation_API.Get_Basic_Data_Translation('ACCRUL', 'InExtFileTemplateDir', t.file_template_id ),100)),t.description)       
+                                      description,              
+       t.separated                    separated,
+       d.rowid                        objid,
+       ltrim(lpad(to_char(d.rowversion,'YYYYMMDDHH24MISS'),2000))                   objversion,
+       d.rowkey                      objkey
+FROM   ext_file_template_dir_tab d,
+       ext_file_template_tab     t
+WHERE  d.rowtype like '%InExtFileTemplateDir'
+AND    t.file_template_id = d.file_template_id
+AND    t.valid_definition  = 'TRUE'
+AND    t.active_definition = 'TRUE';
+

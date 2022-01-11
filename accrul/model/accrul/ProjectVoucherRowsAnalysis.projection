@@ -1,0 +1,212 @@
+projection ProjectVoucherRowsAnalysis;
+component ACCRUL;
+layer Core;
+description "Project Voucher Rows Analysis";
+category Users;
+
+include fragment CodeStringAllBasic;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherRowQuerySet for VoucherRowQuery {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+query VoucherRowQuery {
+   from = "accrul_voucher_row_qry";
+   lu = VoucherRow;
+   keys = Company, VoucherType, VoucherNo, AccountingYear, RowNo;
+   where = "voucher_updated_db = 'N'";
+
+   attribute Company Text;
+   attribute VoucherType Text;
+   attribute FunctionGroup Text {
+      format = uppercase;
+   }
+   attribute VoucherNo Number;
+   attribute VoucherDate Date;
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute AccountingPeriod Number {
+      label = "Period";
+   }
+   attribute YearPeriodKey Number;
+   attribute Correction Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute IsMultiCompanyRow Boolean("TRUE", "FALSE") {
+      label = "Multi-Company Voucher";
+      required = [true];
+   }
+   attribute Account Text {
+      label = "@A";
+   }
+   attribute AccountDesc Text {
+      label = "@A Description";
+   }
+   attribute CodeB Text {
+      label = "@B";
+   }
+   attribute CodeBDesc Text {
+      label = "@B Description";
+   }
+   attribute CodeC Text {
+      label = "@C";
+   }
+   attribute CodeCDesc Text {
+      label = "@C Description";
+   }
+   attribute CodeD Text {
+      label = "@D";
+   }
+   attribute CodeDDesc Text {
+      label = "@D Description";
+   }
+   attribute CodeE Text {
+      label = "@E";
+   }
+   attribute CodeEDesc Text {
+      label = "@E Description";
+   }
+   attribute CodeF Text {
+      label = "@F";
+   }
+   attribute CodeFDesc Text {
+      label = "@F Description";
+   }
+   attribute CodeG Text {
+      label = "@G";
+   }
+   attribute CodeGDesc Text {
+      label = "@G Description";
+   }
+   attribute CodeH Text {
+      label = "@H";
+   }
+   attribute CodeHDesc Text {
+      label = "@H Description";
+   }
+   attribute CodeI Text {
+      label = "@I";
+   }
+   attribute CodeIDesc Text {
+      label = "@I Description";
+   }
+   attribute CodeJ Text {
+      label = "@J";
+   }
+   attribute CodeJDesc Text {
+      label = "@J Description";
+   }
+   attribute DebetAmount Number {
+      label = "Debit Amount";
+      format = ifscurrency;
+   }
+   attribute CreditAmount Number {
+      format = ifscurrency;
+   }
+   attribute Amount Number {
+      format = ifscurrency;
+   }
+   attribute CurrencyCode Text {
+      editable = [false];
+   }
+   attribute CurrencyDebetAmount Number {
+      label = "Currency Debit Amount";
+      format = ifscurrency;
+   }
+   attribute CurrencyCreditAmount Number {
+      format = ifscurrency;
+   }
+   attribute CurrencyAmount Number {
+      format = ifscurrency;
+   }
+   attribute CurrencyRate Number;
+   attribute ThirdCurrencyRate Number {
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyDebitAmount Number {
+      label = "Debit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyCreditAmount Number {
+      label = "Credit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyAmount Number {
+      label = "Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute Text Text;
+   attribute Quantity Number;
+   attribute ProcessCode Text;
+   attribute OptionalCode Text {
+      label = "Tax Code";
+   }
+   attribute ProjectActivityId Number {
+      label = "Proj Activity Seq No";
+   }
+   attribute PartyTypeId Text {
+      label = "Identity";
+   }
+   attribute TransCode Text {
+      label = "Transaction Code";
+   }
+   attribute UpdateError Text;
+   attribute TransferId Text;
+   attribute Corrected Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute PeriodAllocation Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute ReferenceSerie Text {
+      label = "Reference Series";
+   }
+   attribute ReferenceNumber Text;
+   attribute MultiCompanyId Text;
+   attribute AutoTaxVouEntry Boolean("TRUE", "FALSE") {
+      label = "Automatic Tax Transaction";
+      required = [true];
+   }
+   attribute RowNo Text;
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+   reference AccountRef(Company, Account) to Account(Company, Account);
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+}
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

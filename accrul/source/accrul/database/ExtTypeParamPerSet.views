@@ -1,0 +1,43 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtTypeParamPerSet
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Ext_Type_Param_Per_Set2 IS
+   Prompt = 'Ext Type Param Per Set'
+   Param_Id.Flags = 'AMI-L'
+   Param_Id.Datatype = 'STRING(50)'
+   Param_Id.Prompt = 'Param ID'
+   Default_Value.Flags = 'AMI-L'
+SELECT ps.file_type                      file_type,
+       ps.param_no                       param_no,
+       ps.set_id                         set_id,
+       pa.param_id                       param_id,
+       ps.default_value                  default_value,
+       ps.mandatory_param                mandatory_param,
+       ps.show_at_load                   show_at_load,
+       ps.inputable_at_load              inputable_at_load,
+       ps.rowid                          objid,
+       LTRIM(LPAD(TO_CHAR(ps.rowversion,'YYYYMMDDHH24MISS'),2000))
+                                         objversion,
+       ps.rowkey                        objkey
+FROM   ext_type_param_per_set_tab ps,
+       ext_file_type_param_tab    pa
+WHERE  ps.file_type = pa.file_type
+AND    ps.param_no  = pa.param_no;
+

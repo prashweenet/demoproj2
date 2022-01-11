@@ -1,0 +1,259 @@
+projection ExternalVouchers;
+component ACCRUL;
+layer Core;
+description "External Voucher Handling";
+category Users;
+
+include fragment UserGroupMemberFinance4Selector;
+include fragment CurrencyRate2Selector;
+include fragment CurrencyType3Selector;
+@DynamicComponentDependency FIXASS
+include fragment TransactionReasonAcquisitionSelector;
+include fragment CodeStringExtended;
+@DynamicComponentDependency PROJ
+include fragment ProjectActivityPostableSelector;
+include fragment CodeStringAccountExtended;
+include fragment TaxCodeRestrictedSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExternalVouchersSet for ExtTransactions {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtTransactions {
+   from = "EXT_TRANSACTIONS_NEW";
+   exec = "EXT_TRANSACTIONS_API";
+
+   attribute RecordNo Number {
+      insertable = [false];
+      editable = [false];
+      required = [false];
+   }
+   attribute Objstate Enumeration(ExtTransactionsState) {
+      label = "Row Status";
+   }
+   attribute UserGroup Text {
+      format = uppercase;
+   }
+   attribute DebetAmount Number {
+      label = "Debit Amount";
+   }
+   attribute Amount Number {
+      editable = [true];
+   }
+   attribute CurrencyDebetAmount Number {
+      label = "Currency Debit Amount";
+   }
+   attribute CurrencyAmount Number {
+      editable = [true];
+   }
+   attribute ThirdCurrencyAmount Number {
+      editable = [true];
+   }
+   attribute Account Text {
+      required = [true];
+   }
+   attribute CodeB Text;
+   attribute CodeC Text;
+   attribute CodeD Text;
+   attribute CodeE Text;
+   attribute CodeF Text;
+   attribute CodeG Text;
+   attribute CodeH Text;
+   attribute CodeI Text;
+   attribute CodeJ Text;
+   attribute Correction Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+   attribute TaxDirection Enumeration(TaxDirection) {
+      fetch = "tax_direction_db";
+   }
+   attribute ProjectId Text {
+      fetch = "Accounting_Codestr_API.Get_Value_For_Code_Part_Func(COMPANY, ACCOUNT, CODE_B, CODE_C, CODE_D, CODE_E, CODE_F, CODE_G, CODE_H, CODE_I, CODE_J, 'PRACC')";
+      required = [false];
+   }
+   attribute PartyTypeId Text {
+      label = "Supplier/Customer";
+   }
+   attribute ReferenceSerie Text {
+      label = "Reference Series";
+   }
+   attribute TransactionReason Text {
+      label = "Acquisition Reason";
+   }
+   attribute ActivityIdEnabled Boolean("TRUE", "FALSE") {
+      fetch = "Ext_Transactions_API.Is_Proj_Activity_Id_Enable(COMPANY, ACCOUNT, CODE_B, CODE_C, CODE_D, CODE_E, CODE_F, CODE_G, CODE_H, CODE_I, CODE_J)";
+   }
+
+   //<ussolk- AccountingPeriodStr, AccountingYearStr, ValidValues are added to handle page parameters in Month End Process Lobby Navigations >
+
+   attribute AccountingYearStr Text {
+      fetch = "Ext_Transactions_API.Fetch_Voucher_Year_Period(company, load_id, transaction_date, 'YEAR')";
+   }
+   attribute AccountingPeriodStr Text {
+      fetch = "Ext_Transactions_API.Fetch_Voucher_Year_Period(company, load_id, transaction_date, 'PERIOD')";
+   }
+   attribute ValidValues Text {
+      fetch = "Ext_Transactions_API.Fetch_Valid_Values(company, load_id, voucher_type)";
+   }
+
+
+   reference AccountRef(Company, Account) to Account(Company, Account);
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+   reference UserGroupRef(Company, UserId, UserGroup) to UserGroupMemberFinance4(Company, Userid, UserGroup) {
+      label = "User Group";
+   }
+   reference CurrencyCodeRef(Company, CurrencyCode) to CurrencyCode(Company, CurrencyCode) {
+      label = "Currency Code";
+   }
+   reference CurrencyRateTypeRef(Company, CurrencyCode, CurrencyRateType) to CurrencyRate2(Company, CurrencyCode, CurrencyType) {
+      label = "Curr Rate Type";
+   }
+   reference ParallelCurrRateTypeRef(Company, ParallelCurrRateType) to CurrencyType3(Company, CurrencyType) {
+      label = "Parallel Currency Rate Type";
+   }
+   @DynamicComponentDependency INVOIC
+   reference DelivTypeIdRef(Company, DelivTypeId) to DeliveryType(Company, DelivTypeId) {
+      label = "Delivery Type";
+   }
+   @DynamicComponentDependency PROJ
+   reference ProjectActivityIdRef(ProjectId, ProjectActivityId) to ProjectActivityPostable(ProjectId, ActivitySeq) {
+      label = "Proj Activity Seq No";
+   }
+   reference OptionalCodeRef(Company, OptionalCode) to TaxCodeRestricted(Company, FeeCode) {
+      label = "Tax Code";
+   }
+   reference ProcessCodeRef(Company, ProcessCode) to AccountProcessCode(Company, ProcessCode) {
+      label = "Process Code";
+   }
+   @DynamicComponentDependency FIXASS
+   reference TransactionReasonRef(Company, TransactionReason) to TransactionReasonAcquisition(Company, TransactionReason) {
+      label = "Acquisition Reason";
+   }
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+function CheckTaxCode Text {
+   parameter Company Text;
+   parameter Account Text;
+   parameter OptionalCode Text;
+}
+
+function FilterUserGroup List<Entity(UserGroupMemberFinance4)> {
+   where = "userid = Fnd_Session_API.Get_Fnd_User";
+}
+
+function TaxCodeLov List<Entity(TaxCodeRestricted)> {
+   parameter Company Text;
+   parameter VoucherDate Date;
+   where = "COMPANY = :Company AND (VALID_FROM <= :VoucherDate AND VALID_UNTIL >= :VoucherDate)";
+}
+
+function FilterCurrRateType List<Entity(CurrencyRate2)> {
+   where = "CURRENCY_CODE IS NOT NULL";
+}
+
+function FilterParallelCurrRateType List<Entity(CurrencyType3)> {
+   where = "RATE_TYPE_CATEGORY_DB = 'PARALLEL_CURRENCY'";
+}
+
+function ValidateTransactionDate Structure(TransDateValidateStructure) {
+   parameter Company Text;
+   parameter UserGroup Text;
+   parameter LoadId Text;
+   parameter TransactionDate Date;
+}
+
+function FetchVoucherDate Date {
+   parameter Company Text;
+   parameter LoadId Text;
+   parameter TransactionDate Date;
+}
+
+function ValidateCurrencyAmount Structure(CurrencyAmountStructure) {
+   parameter Company Text;
+   parameter LoadId Text;
+   parameter TransactionDate Date;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ThirdCurrencyAmount Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrRateType Text;
+   parameter IsCredit Boolean;
+}
+
+function ValidateAmount Structure(CurrencyAmountStructure) {
+   parameter Company Text;
+   parameter LoadId Text;
+   parameter TransactionDate Date;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ThirdCurrencyAmount Number;
+   parameter ParallelCurrRateType Text;
+   parameter IsCredit Boolean;
+}
+
+function ValidateCurrencyCode Boolean {
+   parameter Company Text;
+   parameter LoadId Text;
+   parameter CurrencyCode Text;
+   parameter TransactionDate Date;
+   parameter CurrencyRateType Text;
+}
+
+function ValidateProjectOrigin Structure(ProjectOriginStructure) {
+   parameter Company Text;
+   parameter ProjectId Text;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+
+structure TransDateValidateStructure {
+   attribute AccountingPeriod Number;
+   attribute VoucherDate Date;
+}
+
+structure CurrencyAmountStructure {
+   attribute Amount                          Number;
+   attribute DebetAmount                     Number;
+   attribute CreditAmount                    Number;
+   attribute CurrencyAmount                  Number;
+   attribute CurrencyDebetAmount             Number;
+   attribute CurrencyCreditAmount            Number;
+   attribute ThirdCurrencyAmount          Number;
+   attribute ThirdCurrencyDebitAmount     Number;
+   attribute ThirdCurrencyCreditAmount    Number;
+}
+
+structure ProjectOriginStructure {
+   attribute ValidOrigin Text;
+   attribute ActivityId  Number;
+}
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

@@ -1,0 +1,123 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: ExtFileBatchParam
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Schedule_Id IS
+   Flags      = 'K----'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Job ID';
+
+COLUMN Schedule_Name IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(600)'
+   Prompt     = 'Schedule Name';
+
+COLUMN Execution_Plan IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(765)'
+   Prompt     = 'Execution Plan';
+
+COLUMN Username IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(90)'
+   Prompt     = 'User Name';
+
+COLUMN Start_Date IS
+   Flags      = 'A----'
+   Datatype   = 'DATE/DATETIME'
+   Prompt     = 'Start Date';
+
+COLUMN Stop_Date IS
+   Flags      = 'A----'
+   Datatype   = 'DATE/DATETIME'
+   Prompt     = 'Stop Date';
+
+COLUMN Modified_Date IS
+   Flags      = 'A----'
+   Datatype   = 'DATE/DATETIME'
+   Prompt     = 'Modified Date';
+
+COLUMN Next_Execution_Date IS
+   Flags      = 'A----'
+   Datatype   = 'DATE/DATETIME'
+   Prompt     = 'Next Execution Date';
+
+COLUMN Status IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(200)'
+   Prompt     = 'status';
+
+COLUMN Executions IS
+   Flags      = 'A----'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Executions';
+
+COLUMN Schedule_Method_Id IS
+   Flags      = 'A----'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Schedule Method Id';
+
+COLUMN File_Template IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(30)'
+   Prompt     = 'file template';
+
+COLUMN Value IS
+   Flags      = 'A----'
+   Datatype   = 'NUMBER'
+   Prompt     = 'value';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@Override
+VIEW Ext_File_Batch_Param IS
+WHERE  user_id = (SELECT fnd_user FROM fnd_session)
+OR     Fnd_Session_API.Get_App_Owner = (SELECT fnd_user FROM fnd_session);
+
+VIEW Ext_File_Batch_Jobs IS
+   Prompt = 'Gen led voucher update'
+   File_Type.Flags = 'A----'
+   File_Type.Prompt = 'file type'
+SELECT bsp.schedule_id                    schedule_id,
+       bsp.schedule_name                  schedule_name,
+       bsp.execution_plan                 execution_plan,
+       bsp.username                       username,
+       bsp.start_date                     start_date,
+       bsp.stop_date                      stop_date,
+       bsp.modified_date                  modified_date,
+       bsp.next_execution_date            next_execution_date,
+       bsp.active_db                      status,
+       bsp.executions                     executions,
+       bsp.schedule_method_id             schedule_method_id,
+       exp.file_type                      file_type,
+       exp.file_template_id               file_template,
+       par.value                          value,
+       exp.param_string                   param_string,
+       bsp.objid                          objid,
+       bsp.objversion                     objversion,
+       exp.rowkey                        objkey
+FROM   Batch_Schedule_Pub        bsp, 
+       Batch_Schedule_Method_Pub bsmp, 
+       batch_schedule_par_pub    par,
+       ext_file_batch_param_tab  exp
+WHERE  bsp.schedule_method_id = bsmp.schedule_method_id
+and    par.schedule_id        = bsp.schedule_id
+AND    bsmp.method_name       = 'EXTERNAL_FILE_UTILITY_API.EXECUTE_BATCH_PROCESS2'
+AND    (bsp.username          = (SELECT fnd_user FROM fnd_session)
+   OR   Fnd_Session_API.Get_App_Owner = (SELECT fnd_user FROM fnd_session))
+AND    TO_CHAR(exp.ext_file_batch_param(+)) = par.value;
+

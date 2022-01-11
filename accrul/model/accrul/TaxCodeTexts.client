@@ -1,0 +1,101 @@
+client TaxCodeTexts;
+component ACCRUL;
+layer Core;
+projection TaxCodeTextsHandling;
+
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using TaxCodeTextsSet {
+   label = "Tax Texts per Tax Code";
+   initcontext PageInitContext;
+   list TaxCodeTextsList;
+}
+
+initcontext PageInitContext {
+   parameter ItTaxReportsEnabled Boolean;
+   init command {
+      execute {
+          -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set ItTaxReportsEnabled = LocalizationFunctionalityStructure.ItTaxReports;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'TaxCodeTexts' and AttributeKey eq $[AttributeKey]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list TaxCodeTextsList for TaxCodeTexts {
+   orderby = FeeCode;
+
+   lov FeeCodeRef with ReferenceStatutoryFeeSelector {
+      search = FeeCode, Description;
+      description = FeeCodeRef.Description;
+      format = uppercase;
+   }
+   field TaxCodeText;
+   field ValidFrom;
+   field ValidUntil;
+   -- gelr:it_tax_reports, begin
+   field NatureofOperation {
+      columnexclude = [not initcontext.ItTaxReportsEnabled];
+   }
+   field ExcFromSpesometroDec {
+      columnexclude = [not initcontext.ItTaxReportsEnabled];
+   }
+   -- gelr:it_tax_reports, end
+
+   command TranslationCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

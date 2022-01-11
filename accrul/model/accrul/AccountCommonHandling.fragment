@@ -1,0 +1,272 @@
+fragment AccountCommonHandling;
+component ACCRUL;
+layer Core;
+description "Contains Common Projection Logic for Account and Accounts Pages";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity Account {
+   supportwarnings = [true];
+
+   attribute AccountSearch Text {
+      fetch = "account";
+      format = uppercase;
+   }
+   attribute TaxHandlingValue Enumeration(TaxHandlingValue) {
+      label = "Tax Handling";
+   }
+   attribute TaxCodeMandatory Boolean("TRUE", "FALSE") {
+      label = "Tax Code Mandatory in Voucher Entry";
+   }
+   attribute ValidFrom Date {
+      label = "From";
+   }
+   attribute ValidUntil Date {
+      label = "Until";
+   }
+   attribute ExcludePeriodicalCap Enumeration(ExcludePeriodicalCap) {
+      label = "Periodical Capitalization";
+   }
+   attribute ExcludeProjFollowup Boolean("TRUE", "FALSE") {
+      label = "Exclude from Project Follow-Up";
+      required = [true];
+   }
+   attribute IncludeInRevRec Boolean("TRUE", "FALSE") {
+      label = "Include in Revenue Recognition";
+      required = [true];
+   }
+   attribute LedgFlagDb Boolean("Y", "N") {
+      label = "Ledger Account";
+      required = [true];
+   }
+   attribute LedgFlag Enumeration(AccountingLedgFlag) {
+      required = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   attribute CurrBalanceDb Boolean("Y", "N") {
+      label = "Currency Balance";
+      required = [true];
+   }
+   attribute CurrBalance Enumeration(AccCurrencyBalanceFlag) {
+      required = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   attribute TaxFlagDb Boolean("Y", "N") {
+      label = "Tax Account";
+      required = [true];
+   }
+   attribute TaxFlag Enumeration(TaxAccountFlag) {
+      required = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   attribute BudAccountDb Boolean("Y", "N") {
+      label = "Budget/Planning Only";
+      required = [true];
+   }
+   attribute BudAccount Enumeration(BudgetAccountFlag) {
+      required = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   attribute StatAccountDb Boolean("Y", "N") {
+      label = "Exclude From Voucher Balance";
+      required = [true];
+   }
+   attribute StatAccount Enumeration(ExcludeStatAccount) {
+      required = [false];
+      insertable = [false];
+      updatable = [false];
+   }
+   attribute ExcludeFromCurrTrans Boolean("TRUE", "FALSE") {
+      label = "Exclude From Currency Translation";
+      required = [true];
+   }
+   attribute CodeStringCompletionExists Boolean("TRUE", "FALSE") {
+      fetch = "DECODE((Accounting_Codestr_Compl_API.Connect_To_Account(company,'A',account)),'T','TRUE','FALSE')";
+      editable = [false];
+      required = [true];
+   }
+   attribute AttributeExists Boolean("TRUE", "FALSE") {
+      fetch = "DECODE((Accounting_Attribute_Con_API.Connect_To_Attribute(company,'A',account)),'T','TRUE','FALSE')";
+      editable = [false];
+      required = [true];
+   }
+   attribute ReqCodeB Enumeration(AccountRequest) {
+      label = "${context.Company.CodeBName}";
+   }
+   attribute ReqCodeC Enumeration(AccountRequest) {
+      label = "${context.Company.CodeCName}";
+   }
+   attribute ReqCodeD Enumeration(AccountRequest) {
+      label = "${context.Company.CodeDName}";
+   }
+   attribute ReqCodeE Enumeration(AccountRequest) {
+      label = "${context.Company.CodeEName}";
+   }
+   attribute ReqCodeF Enumeration(AccountRequest) {
+      label = "${context.Company.CodeFName}";
+   }
+   attribute ReqCodeG Enumeration(AccountRequest) {
+      label = "${context.Company.CodeGName}";
+   }
+   attribute ReqCodeH Enumeration(AccountRequest) {
+      label = "${context.Company.CodeHName}";
+   }
+   attribute ReqCodeI Enumeration(AccountRequest) {
+      label = "${context.Company.CodeIName}";
+   }
+   attribute ReqCodeJ Enumeration(AccountRequest) {
+      label = "${context.Company.CodeJName}";
+   }
+   attribute ReqQuantity Enumeration(AccountRequest) {
+      label = "Quantity";
+   }
+   attribute ReqProcessCode Enumeration(AccountRequest) {
+      label = "Process Code";
+   }
+   attribute ReqText Enumeration(AccountRequestText) {
+      label = "Text";
+   }
+   attribute ReqBudgetCodeB Enumeration(AccountRequest) {
+      label = "Budget ${context.Company.CodeBName}";
+   }
+   attribute ReqBudgetCodeC Enumeration(AccountRequest) {
+      label = "Budget ${context.Company.CodeCName}";
+   }
+   attribute ReqBudgetCodeD Enumeration(AccountRequest) {
+      label = "Budget ${context.Company.CodeDName}";
+   }
+   attribute ReqBudgetCodeE Enumeration(AccountRequest) {
+      label = "Budget ${context.Company.CodeEName}";
+   }
+   attribute ReqBudgetCodeF Enumeration(AccountRequest) {
+      label = "Budget ${context.Company.CodeFName}";
+   }
+   attribute ReqBudgetCodeG Enumeration(AccountRequest) {
+      label = "Budget ${context.Company.CodeGName}";
+   }
+   attribute ReqBudgetCodeH Enumeration(AccountRequest) {
+      label = "Budget ${context.Company.CodeHName}";
+   }
+   attribute ReqBudgetCodeI Enumeration(AccountRequest) {
+      label = "Budget ${context.Company.CodeIName}";
+   }
+   attribute ReqBudgetCodeJ Enumeration(AccountRequest) {
+      label = "Budget ${context.Company.CodeJName}";
+   }
+   attribute ReqBudgetQuantity Enumeration(AccountRequest) {
+      label = "Quantity";
+   }
+   attribute KeepRepCurrencyDb Boolean("TRUE", "FALSE") {
+      label = "Keep Reported Currency as Currency Balance";
+      fetch = "NVL(keep_rep_currency_db, 'FALSE')";
+      required = [true];
+   }
+   attribute KeepReportingEntityDb Boolean("TRUE", "FALSE") {
+      label = "Keep Balances Seperated by Reporting Entity";
+      fetch = "NVL(keep_reporting_entity_db, 'FALSE')";
+      required = [true];
+   }
+   attribute ExchangeDifferenceDb Boolean("TRUE", "FALSE") {
+      label = "Calculate Currency Effect";
+      fetch = "NVL(exchange_difference_db, 'FALSE')";
+      editable = [ETag != null];
+      required = [true];
+   }
+   attribute ArchivingTransValue Enumeration(ArchivingTransValue) {
+      label = "Archiving Options";
+   }
+
+   reference CompanyRef(Company) to CompanyFinance(Company);
+   reference AccountGroupRef(Company, AccntGroup) to AccountGroup(Company, AccntGroup) {
+      label = "Account Group";
+   }
+   reference AccSearchRef(Company, AccountSearch) to AccountsConsolidation(Company, Account) {
+      label = "Account";
+   }
+   reference AccntTypeRef(Company, AccntType) to AccountType(Company, AccntType) {
+      label = "Account Type";
+   }
+   reference MasterComCodePartValueRef(MasterCompany, MasterComCodePartValue) to Account(Company, Account) {
+      label = "Group Account";
+   }
+   reference BaseForFollowUpElementRef(Company, CodePart) to AccountingCodeParts(Company, CodePart);
+}
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetGroupAccounts List < Entity(Account) > {
+   parameter Company Text;
+
+   where = "(Company_Finance_API.Get_Master_Company(:Company) IS NOT NULL AND company = Company_Finance_API.Get_Master_Company(:Company))";
+}
+
+function DefaultCodePartDemands Structure(CodePartDemandsStructure) {
+   parameter Company Text;
+   parameter AccountType Text;
+}
+
+function ValidateAccountGroup Structure(AccountingGroupDefaultsStructure) {
+   parameter Company Text;
+   parameter Account Text;
+   parameter AccountGroup Text;
+   parameter ReqCodeB Enumeration(AccountRequest);
+   parameter ReqCodeC Enumeration(AccountRequest);
+   parameter ReqCodeD Enumeration(AccountRequest);
+   parameter ReqCodeE Enumeration(AccountRequest);
+   parameter ReqCodeF Enumeration(AccountRequest);
+   parameter ReqCodeG Enumeration(AccountRequest);
+   parameter ReqCodeH Enumeration(AccountRequest);
+   parameter ReqCodeI Enumeration(AccountRequest);
+   parameter ReqCodeJ Enumeration(AccountRequest);
+   parameter CurrBalance Boolean;
+}
+-------------------------------- STRUCTURES ---------------------------------
+structure CodePartDemandsStructure {
+   attribute ReqCodeBDefault Enumeration(AccountRequest);
+   attribute ReqCodeCDefault Enumeration(AccountRequest);
+   attribute ReqCodeDDefault Enumeration(AccountRequest);
+   attribute ReqCodeEDefault Enumeration(AccountRequest);
+   attribute ReqCodeFDefault Enumeration(AccountRequest);
+   attribute ReqCodeGDefault Enumeration(AccountRequest);
+   attribute ReqCodeHDefault Enumeration(AccountRequest);
+   attribute ReqCodeIDefault Enumeration(AccountRequest);
+   attribute ReqCodeJDefault Enumeration(AccountRequest);
+   attribute ReqQuantityDefault Enumeration(AccountRequest);
+   attribute ProcessCodeDefault Enumeration(AccountRequest);
+   attribute TextDefault Enumeration(AccountRequestText);
+   attribute ReqBudCodeBDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeCDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeDDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeEDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeFDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeGDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeHDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeIDefault Enumeration(AccountRequest);
+   attribute ReqBudCodeJDefault Enumeration(AccountRequest);
+   attribute ReqBudQuantityDefault Enumeration(AccountRequest);
+}
+
+structure AccountingGroupDefaultsStructure {
+   attribute CurrBalance Boolean;
+   attribute MasterComCodePartValue Text;
+   attribute ReqCodeB Enumeration(AccountRequest);
+   attribute ReqCodeC Enumeration(AccountRequest);
+   attribute ReqCodeD Enumeration(AccountRequest);
+   attribute ReqCodeE Enumeration(AccountRequest);
+   attribute ReqCodeF Enumeration(AccountRequest);
+   attribute ReqCodeG Enumeration(AccountRequest);
+   attribute ReqCodeH Enumeration(AccountRequest);
+   attribute ReqCodeI Enumeration(AccountRequest);
+   attribute ReqCodeJ Enumeration(AccountRequest);
+}
+
+

@@ -1,0 +1,34 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AllLedger
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+
+VIEW User_access_ledgers IS  
+Prompt     = 'User access ledgers'
+SELECT company                        company,
+       ledger_id                      ledger_id,
+       description                    description,
+       objkey                         objkey,
+       objversion                     objversion,
+       rowid                          objid
+FROM   all_ledger
+WHERE  ledger_id != '*'
+AND    (ledger_id= '00' OR  ('TRUE'=(SELECT All_Ledger_API.Is_Allowed(company, ledger_id) FROM dual)));
+

@@ -1,0 +1,41 @@
+fragment YearEndToYearLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view year_end_to_year_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceYearEndToYearLovSelector for YearEndToYearLov {
+   static ToAccountingYear;
+}
+
+card YearEndToYearLovCard for YearEndToYearLov {
+   label = "";
+   fieldranking ToAccountingYear;
+   field ToAccountingYear;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query YearEndToYearLov {
+   from = "year_end_to_year_lov";
+   lu = AccountingYear;
+   keys = Company, FromAccountingYear, ToAccountingYear;
+   ludependencies = AccountingYear;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute FromAccountingYear Number {
+      label = "From accounting Year";
+      lovcolumn = [false];
+   }
+   attribute ToAccountingYear Number {
+      label = "Accounting Year";
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

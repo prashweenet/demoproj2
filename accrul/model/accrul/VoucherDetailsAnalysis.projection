@@ -1,0 +1,244 @@
+projection VoucherDetailsAnalysis;
+component ACCRUL;
+layer Core;
+description "view detailed information for the vouchers in the hold table";
+category Users;
+
+include fragment CodeStringAllBasic;
+include fragment FinNotesDialog;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherSet for Voucher {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity Voucher {
+   crud = Read;
+   keys = Company, VoucherType, VoucherNo, AccountingYear;
+   where = "(voucher_updated_db = 'N' AND voucher_no > 0)";
+   ludependencies = FinNotesVirtual;
+
+   attribute Notes Boolean("TRUE", "FALSE") {
+      fetch = "Voucher_Note_API.Check_Note_Exist(COMPANY,ACCOUNTING_YEAR,VOUCHER_TYPE,VOUCHER_NO)";
+      label = "Notes";
+   }
+   attribute AccountingPeriod Number {
+      label = "Period";
+   }
+   attribute VoucherTypeReference Text {
+      label = "Type";
+   }
+   attribute VoucherNoReference Number {
+      label = "Number";
+   }
+   attribute AccountingYearReference Number {
+      label = "Voucher Year";
+   }
+   attribute Userid Text {
+      label = "Entered By";
+      maxlength = 100;
+   }
+   attribute VoucherStatus Text {
+      label = "Voucher Status";
+   }
+   attribute DateReg Date {
+      label = "Entry Date";
+      fetch = "Trunc(date_reg)";
+   }
+   attribute VoucherDate Date {
+      fetch = "Trunc(voucher_date)";
+   }
+   attribute EnteredByUserGroup Text {
+      label = "User Group";
+   }
+   attribute UpdateError Text {
+      maxlength = 100;
+   }
+   attribute MultiCompanyVoucher Boolean("TRUE", "FALSE") {
+      fetch = "VOUCHER_API.Is_Multi_Company_Voucher(COMPANY,VOUCHER_TYPE,ACCOUNTING_YEAR,VOUCHER_NO)";
+      label = "Multi-Company Voucher";
+   }
+   attribute VoucherText2 Text {
+      label = "Voucher Text";
+   }
+   attribute ApprovedByUserid Text {
+      label = "First Approved By";
+   }
+   attribute ApprovalDate Date {
+      label = "Approved Date";
+      fetch = "Trunc(approval_date)";
+   }
+   attribute ApprovedByUserGroup Text {
+      label = "User Group";
+   }
+   attribute  RefCompany Text {
+      label = "Company";
+      fetch = "VOUCHER_API.GET_REFERENCE_COMPANY__(COMPANY,VOUCHER_TYPE,ACCOUNTING_YEAR,VOUCHER_NO)";
+      maxlength = 100;
+   }
+   attribute FunctionGroup Text {
+      maxlength = 20;
+      format = uppercase;
+   }
+   attribute SecondApproverId Text {
+      label = "Second Approved By";
+   }
+   attribute SecondApprovalDate Date {
+      label = "Approved Date";
+      fetch = "Trunc(second_approval_date)";
+   }
+   attribute SecondApproverUserGroup Text {
+      label = "User Group";
+   }
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+   reference EnteredByUserGroupRef(Company, EnteredByUserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "User Group";
+   }
+   array DetailVoucherDetail(Company, VoucherType, VoucherNo, AccountingYear) to VoucherRow(Company, VoucherType, VoucherNo, AccountingYear);
+}
+
+@Override
+entity VoucherRow {
+   crud = Read;
+   keys = Company, AccountingYear, VoucherType, VoucherNo, RowNo;
+
+   attribute AccountDesc Text {
+      label = "@A Description";
+   }
+   attribute MultiCompanyVoucher Boolean("TRUE", "FALSE") {
+      fetch = "VOUCHER_ROW_API.Is_Multi_Company_Voucher_Row(COMPANY,VOUCHER_TYPE,ACCOUNTING_YEAR,VOUCHER_NO,ROW_NO)";
+      label = "Multi-Company Voucher";
+   }
+   attribute Correction Boolean("Y", "N") {
+      fetch = "correction";
+   }
+   attribute DebetAmount Number {
+      label = "Debit Amount";
+      format = ifscurrency;
+   }
+   attribute CreditAmount Number {
+      label = "Credit Amount";
+      format = ifscurrency;
+   }
+   attribute Amount Number {
+      label = "Amount";
+      format = ifscurrency;
+   }
+   attribute CurrencyDebetAmount Number {
+      label = "Currency Debit Amount";
+      format = ifscurrency;
+   }
+   attribute CurrencyCreditAmount Number {
+      label = "Currency Credit Amount";
+      format = ifscurrency;
+   }
+   attribute CurrencyAmount Number {
+      label = "Currency Amount";
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyDebitAmount Number {
+      label = "Debit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyCreditAmount Number {
+      label = "Credit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute AmountinEU Number {
+      fetch = "NVL(THIRD_CURRENCY_DEBIT_AMOUNT,-THIRD_CURRENCY_CREDIT_AMOUNT)";
+      label = "Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute ParallelCurrencyRate Number;
+   attribute ParallelConversionFactor Number {
+      label = "Parallel Currency Conversion Factor";
+   }
+   attribute DelivTypeId Text {
+      label = "Delivery Type";
+   }
+   attribute ProjectActivityId Number {
+      label = "Proj Activity Seq No";
+      editable = [ETag = null];
+   }
+   attribute PartyTypeId Text {
+      label = "Identity";
+   }
+   attribute TransCode Text {
+      label = "Transaction Code";
+   }
+   attribute TransferId Text {
+      maxlength = 20;
+   }
+   attribute UpdateError Text;
+   attribute Corrected Boolean("NO", "YES") {
+      fetch = "CORRECTED";
+   }
+   attribute PeriodAllocation Boolean("Y", "N");
+   attribute AutoTaxVouEntry Boolean("TRUE", "FALSE") {
+      label = "Automatic Tax Transaction";
+   }
+   reference AccountRef(Company, Account) to Account(Company, Account);
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+   reference ProcessCodeRef(Company, ProcessCode) to AccountProcessCode(Company, ProcessCode) {
+      label = "Process Code";
+   }
+   @DynamicComponentDependency INVOIC
+   reference DelivTypeIdRef(Company, DelivTypeId) to DeliveryType(Company, DelivTypeId) {
+      label = "Delivery Type";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetMultiCompanyInfo Structure(MultiCompanyInfoStructure) {
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter VoucherType Text;
+   parameter VoucherNo Number;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure MultiCompanyInfoStructure {
+   attribute OriginalCompany Text;
+   attribute OriginalAccYear Number;
+   attribute OriginalVoucherType Text;
+   attribute OriginalVoucherNo Number;
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+
+
+
+-------------------------------- STRUCTURES ---------------------------------

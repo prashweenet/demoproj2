@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TRANSFORMER xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:ifsworld-com:schemas:transformer_transformer">
+   <NAME>IFSAreaJurisdictionCodeResponseXMLFromVertex</NAME>
+   <COMPONENT>ACCRUL</COMPONENT>
+   <IMPLEMENTATION_TYPE>JAVA</IMPLEMENTATION_TYPE>
+   <DESCRIPTION>IFS Area Jurisdiction Code Response XML From Vertex</DESCRIPTION>
+</TRANSFORMER>

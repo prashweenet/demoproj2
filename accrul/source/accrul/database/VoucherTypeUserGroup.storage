@@ -1,0 +1,25 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherTypeUserGroup
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  141217  DipeLK   PRFI-3818,Dropping obsolete COLUMNS from VOUCHER_TYPE_USER_GROUP_TAB
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+@Overtake Base
+PRIMARY KEY voucher_type_user_group_pk IS voucher_type_user_group_tab (company,
+                                                                       voucher_type,
+                                                                       accounting_year,
+                                                                       user_group,
+                                                                       function_group);
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------

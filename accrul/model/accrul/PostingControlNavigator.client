@@ -1,0 +1,242 @@
+client PostingControlNavigator;
+component ACCRUL;
+layer Core;
+projection PostingControlNavigatorHandling;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry PostingControlNavigatorNavEntry parent AccrulNavigator.PostingRulesMenu at index 100 {
+      label = "Posting Control Navigator";
+      tree Tree;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector PostingModuleSelector for PostingCtrlMasterQuery {
+   orderby = PostModule;
+   label = "${PostModule}";
+
+   field Company {
+      visible = [false];
+   }
+   field PostModule;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+tree Tree using PostingCtrlMasterQuerySet {
+   label = "Posting Control Navigator";
+
+   selector PostingModuleSelector;
+
+   rootnode PostingModuleRootNode {
+      label = "${PostModule}";
+
+      navigate {
+         page PostingControl.PcList {
+            filter(Company, Company);
+            filter(PostModule, PostModule);
+         }
+      }
+
+      iconset {
+         icon "account-type";
+         emphasis Complementary2 = [Company != null];
+      }
+
+      connections {
+         node PostingTypeNode(PostingTypeArray);
+      }
+   }
+
+   node PostingTypeNode for PostingTypeQuery {
+      label = "${PostingType} - ${PostingTypeDesc}";
+
+      navigate {
+         page PostingControl.PcList {
+            filter(Company, Company);
+            filter(PostModule, PostModule);
+            filter(PostingType, PostingType);
+         }
+      }
+
+      iconset {
+         icon "account-type";
+         emphasis Complementary2 = [Company != null];
+      }
+
+      connections {
+         node PostingCodePartNode(PostingCodePartArray);
+      }
+   }
+
+   node PostingCodePartNode for PostingCodePartQuery {
+      label = "${CodeName}";
+
+      navigate {
+         page  PostingControl.PcList {
+            filter(Company, Company);
+            filter(PostModule, PostModule);
+            filter(PostingType, PostingType);
+            filter(CodePart, CodePart);
+         }
+      }
+
+      iconset {
+         icon "diamond-solid";
+         emphasis Complementary2 = [Company != null];
+      }
+
+      connections {
+         node PcValidFromNode(PostingPcValidFromArray);
+      }
+   }
+
+   node PcValidFromNode for PostingPcValidFromQuery {
+      label = "${PcValidFromDate} - ${ControlType}";
+
+      navigate {
+         when [CtrlTypeCategoryDb != "COMBINATION"]  page  PostingControlDetails.PcForm {
+            filter(Company, Company);
+            filter(PostModule, PostModule);
+            filter(PostingType, PostingType);
+            filter(CodePart, CodePart);
+            filter(PcValidFrom, PcValidFrom);
+         }
+
+         when [CtrlTypeCategoryDb = "COMBINATION"]   page PostingControlCombinationDetails.PcForm {
+            filter(Company, Company);
+            filter(PostModule, PostModule);
+            filter(PostingType, PostingType);
+            filter(CodePart, CodePart);
+            filter(PcValidFrom, PcValidFrom);
+         }
+         default page PostingControlDetails.PcForm {
+            filter(Company, Company);
+            filter(PostModule, PostModule);
+            filter(PostingType, PostingType);
+            filter(CodePart, CodePart);
+            filter(PcValidFrom, PcValidFrom);
+         }
+      }
+      iconset {
+         icon "diamonds-solid";
+         emphasis Complementary2 = [Company != null];
+      }
+
+      connections {
+         node ControlTypeValueNode(PostingCntrlTypeValueArray);
+      }
+   }
+
+   node ControlTypeValueNode for PostingCntrlTypeValueQuery {
+      label = "${ControlTypeValue} - ${ControlTypeValueDesc}";
+
+      navigate {
+         when [parent.CtrlTypeCategoryDb != "COMBINATION"]  page  PostingControlDetails.CntrlTypeForm {
+            filter(Company, Company);
+            filter(PostingType, PostingType);
+            filter(CodePart, CodePart);
+            searchcontext(ControlTypeValue, ControlTypeValue);
+         }
+         when [parent.CtrlTypeCategoryDb = "COMBINATION"]   page PostingControlCombinationDetails.CntrlTypeForm {
+            filter(Company, Company);
+            filter(PostingType, PostingType);
+            filter(CodePart, CodePart);
+            searchcontext(ControlTypeValue, ControlTypeValue);
+         }
+         default page PostingControlDetails.CntrlTypeForm {
+            filter(Company, Company);
+            filter(PostingType, PostingType);
+            filter(CodePart, CodePart);
+            searchcontext(ControlTypeValue, ControlTypeValue);
+         }
+      }
+      iconset {
+         icon "diamonds-solid";
+         emphasis Complementary2 = [Company != null];
+      }
+      connections {
+         node ValidFromNode(PostingValidFromArray);
+      }
+
+   }
+
+   node ValidFromNode for PostingValidFromQuery {
+      label = "${PcValidFromDate} - ${ControlType} ";
+
+      navigate {
+         when [SpecCtrlTypeCategoryDb != "COMBINATION"]  page PostingControlDetailsSpec.PcForm {
+            filter(Company, Company);
+            filter(PostingType, PostingType);
+            filter(CodePart, CodePart);
+            filter(PcValidFrom, PcValidFrom);
+            filter(ControlType, ControlType);
+            filter(ControlTypeValue, ControlTypeValue);
+         }
+         when [SpecCtrlTypeCategoryDb = "COMBINATION"] page PostingCtrlCombDetSpec.PcForm {
+            filter(Company, Company);
+            filter(PostingType, PostingType);
+            filter(CodePart, CodePart);
+            filter(PcValidFrom, PcValidFrom);
+            filter(ControlType, ControlType);
+            filter(ControlTypeValue, ControlTypeValue);
+         }
+         default page PostingControlDetailsSpec.Form {
+            filter(Company, Company);
+            filter(PostingType, PostingType);
+            filter(CodePart, CodePart);
+            filter(PcValidFrom, PcValidFrom);
+            filter(ControlType, ControlType);
+            filter(ControlTypeValue, ControlTypeValue);
+         }
+      }
+      iconset {
+         icon "diamond-solid";
+         emphasis Complementary2 = [Company != null];
+      }
+   }
+}
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

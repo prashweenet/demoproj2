@@ -1,0 +1,46 @@
+projection ExternalFileIdentitiesHandling;
+component ACCRUL;
+layer Core;
+description "External File Identities";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtFileIdentitySet for ExtFileIdentity;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtFileIdentity {
+   crud = Read, Delete;
+
+   attribute FileTemplateId Text {
+      label = "File Template";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

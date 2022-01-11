@@ -1,0 +1,58 @@
+fragment CostStructureLevelChSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view cost_structure_level_ch";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceCostStructureLevelChSelector for CostStructureLevelCh {
+   static LevelId;
+   static Description;
+}
+
+card CostStructureLevelChCard for CostStructureLevelCh {
+   label = "";
+   fieldranking LevelId;
+   field LevelId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query CostStructureLevelCh {
+   from = "cost_structure_level_ch";
+   lu = CostStructureLevel;
+   keys = Company, CostStructureId, LevelId;
+   ludependencies = CostStructureLevel;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute CostStructureId Text {
+      label = "Cost Structure ID";
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute LevelNo Number {
+      lovcolumn = [false];
+   }
+   attribute LevelId Text {
+      label = "Level ID";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      label = "Level Description";
+      lovcolumn = [true];
+   }
+   attribute BottomLevel Text {
+      lovcolumn = [false];
+   }
+   attribute LevelAbove Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

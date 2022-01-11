@@ -1,0 +1,27 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: UserGroupMemberFinance
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+
+
+INDEX user_group_member_finance_ix1 IS user_group_member_finance_tab (default_group, userid, user_group, company);
+
+
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------

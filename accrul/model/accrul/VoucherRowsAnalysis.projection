@@ -1,0 +1,219 @@
+projection VoucherRowsAnalysis;
+component ACCRUL;
+layer Core;
+description "Voucher Row Analysis";
+category Users;
+
+include fragment CodeStringAllBasic;
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center,
+-- gelr:tax_book_and_numbering, begin
+include fragment TaxBookLovSelector;
+-- gelr:tax_book_and_numbering, end
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset VoucherRowSet for VoucherRow {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity VoucherRow {
+   crud = Read;
+   from = "voucher_row_qry";
+   where = "Voucher_Updated_DB = 'N' and Voucher_No > 0";
+   attribute FunctionGroup Text {
+      maxlength = 20;
+      format = uppercase;
+   }
+   attribute AccountingYear Number {
+      label = "Year";
+   }
+   attribute AccountingPeriod Number {
+      label = "Period";
+   }
+   attribute VoucherDate Date {
+      fetch = "Trunc(voucher_date)";
+   }
+   attribute EntryDate Date {
+      label = "Entry Date";
+      fetch = "Trunc(entry_date)";
+   }
+
+   attribute EnteredByUserGroup Text {
+      label = "Entered By User Group";
+      maxlength = 30;
+   }
+   attribute Userid Text {
+      label = "Entered By";
+      maxlength = 30;
+   }
+   attribute ApprovedByUserGroup Text {
+      label = "Approved by User Group";
+      maxlength = 30;
+   }
+   attribute ApprovedByUserid Text {
+      label = "Approved by User";
+      maxlength = 30;
+   }
+   attribute SecondApprovedByUserid Text {
+      label = "Second Approved By User";
+      maxlength = 30;
+   }
+   attribute SecondApprovedByDate Date {
+      label = "Second Approved By Date";
+      fetch = "Trunc(second_approved_by_date)";
+   }
+   attribute SecondApprovedByUserGroup Text {
+      label = "Second Approved By User Group";
+      maxlength = 30;
+   }
+   attribute IsMultiCompanyRow Boolean("TRUE", "FALSE") {
+      fetch = "IS_MULTI_COMPANY_ROW";
+      label = "Multi-Company Voucher";
+   }
+   attribute Correction Boolean("TRUE", "FALSE");
+   attribute DebetAmount Number {
+      label = "Debit Amount";
+      format = ifscurrency;
+   }
+   attribute CreditAmount Number {
+      label = "Credit Amount";
+      format = ifscurrency;
+   }
+   attribute Amount Number {
+      label = "Amount";
+      format = ifscurrency;
+   }
+   attribute CurrencyDebetAmount Number {
+      label = "Currency Debit Amount";
+      format = ifscurrency;
+   }
+   attribute CurrencyCreditAmount Number {
+      label = "Currency Credit Amount";
+      format = ifscurrency;
+   }
+   attribute CurrencyAmount Number {
+      label = "Currency Amount";
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyDebitAmount Number {
+      label = "Debit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyCreditAmount Number {
+      label = "Credit Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute ThirdCurrencyAmount Number {
+      label = "Amount in Parallel Currency";
+      format = ifscurrency;
+   }
+   attribute ParallelConversionFactor Number {
+      label = "Parallel Currency Conversion Factor";
+   }
+   attribute ProjectActivityId Number {
+      label = "Proj Activity Seq No";
+   }
+   attribute PartyTypeId Text {
+      label = "Identity";
+   }
+   attribute PartyName Text {
+      maxlength = 100;
+   }
+   attribute TransCode Text {
+      label = "Transaction Code";
+   }
+   attribute TransferId Text {
+      maxlength = 20;
+   }
+   attribute Corrected Text {
+      fetch = "CORRECTED";
+      maxlength = 100;
+   }
+   attribute PeriodAllocation Text {
+      fetch = "PERIOD_ALLOCATION_API.ANY_ALLOCATION(COMPANY, VOUCHER_TYPE, VOUCHER_NO, ROW_NO, ACCOUNTING_YEAR)";
+   }
+   attribute ReferenceSerie Text;
+   attribute MultiCompanyId Text {
+      editable = [false];
+   }
+   attribute AutoTaxVouEntry Boolean("TRUE", "FALSE") {
+      label = "Automatic Tax Transaction";
+      editable = [false];
+   }
+   attribute VoucherTypeReference Text;
+
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+   reference EnteredByUserGroupRef(Company, EnteredByUserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "Entered By User Group";
+   }
+   reference ApprovedByUserGroupRef(Company, ApprovedByUserGroup) to UserGroupFinance(Company, UserGroup) {
+      label = "Approved by User Group";
+   }
+   reference AccountRef(Company, Account) to Account(Company, Account);
+   reference CodeBRef(Company, CodeB) to CodeB(Company, CodeB);
+   reference CodeCRef(Company, CodeC) to CodeC(Company, CodeC);
+   reference CodeDRef(Company, CodeD) to CodeD(Company, CodeD);
+   reference CodeERef(Company, CodeE) to CodeE(Company, CodeE);
+   reference CodeFRef(Company, CodeF) to CodeF(Company, CodeF);
+   reference CodeGRef(Company, CodeG) to CodeG(Company, CodeG);
+   reference CodeHRef(Company, CodeH) to CodeH(Company, CodeH);
+   reference CodeIRef(Company, CodeI) to CodeI(Company, CodeI);
+   reference CodeJRef(Company, CodeJ) to CodeJ(Company, CodeJ);
+   @DynamicComponentDependency INVOIC
+   reference DelivTypeIdRef(Company, DelivTypeId) to DeliveryType(Company, DelivTypeId) {
+      label = "Delivery Type";
+   }
+   -- gelr:tax_book_and_numbering, begin
+   reference TaxBookRef(Company, TaxBookId) to TaxBookLov(Company, TaxBookId) {
+      label = "Tax Book ID";
+   }
+   @DynamicComponentDependency TAXLED
+   reference TaxSeriesRef(Company, TaxSeriesId) to TaxSeries(Company, TaxSeriesId) {
+      label = "Tax Series ID";
+
+   }
+   -- gelr:tax_book_and_numbering, end
+}
+
+@Override
+@DynamicComponentDependency TAXLED
+entity TaxSeries {
+   attribute TaxSeriesId Text {
+      label = "Tax Series ID";
+   }
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetMultiCompanyInfo Structure(MultiCompanyInfoStructure) {
+   parameter Company Text;
+   parameter AccountingYear Number;
+   parameter VoucherType Text;
+   parameter VoucherNo Number;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure MultiCompanyInfoStructure {
+   attribute OriginalCompany Text;
+   attribute OriginalAccYear Number;
+   attribute OriginalVoucherType Text;
+   attribute OriginalVoucherNo Number;
+}
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------
+

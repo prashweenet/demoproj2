@@ -1,0 +1,135 @@
+--  Date        Sign    History
+--  ----------  ------  -----------------------------------------------------
+--  2020-08-14  TAJALK  LMM2020R1-695, Added command for details
+--  2020-08-08  DILDLK  LMM2020R1-516, Modified navigation.
+--  2020-07-02  TAJALK  LMM2020R1-270, Bug fixes
+--  2020-06-25  KAWJLK  LMM2020R1-186, Arranging the order of attributes
+--  23-06-2020  DILDLK  LMM2020R1-80, UI Changes.
+--  16-06-2020  ROSDLK  LMM2020R1-76, Created.
+-----------------------------------------------------------------------------
+
+client AircraftWorkPackage;
+component ADCOM;
+layer Core;
+projection AircraftWorkPackageHandling;
+include fragment AircraftLovSelector;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+entry WorkPackageNavEntry parent AdcomNavigator.AviationMaintenance at index 200 {
+   label = "Work Packages";
+   page WorkPackageDetails home AvAircraftWorkPackage;
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page WorkPackageDetails using WorkPackageSet {
+   label = "Work Packages";
+   list WorkPackageList {
+      details = "page/WorkPackageDetails/WorkPackageDetails?$filter=WoNumber eq $[WoNumber]";
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AircraftDetailSelector for Aircraft {
+   label = "${AircraftId} - ${AircraftDesc}";
+   static AircraftId;
+   static AircraftDesc;
+}
+
+selector MaintenanceLocationSelector for AvMaintenanceLocation {
+   label = "${LocationCode} - ${LocationName}";
+   static LocationCode;
+   static LocationName;
+}
+
+---------------------------------- GROUPS -----------------------------------
+group WorkPackageGroup for AvAircraftWorkPackage {
+   label = "Work Package Details";
+   field WoNumber;
+   field WorkPackageName;
+}
+
+----------------------------------- LISTS -----------------------------------
+list WorkPackageList for AvAircraftWorkPackage {
+   field WoNumber {
+      label = "Work Package No";
+   }
+   field WorkPackageName;
+   lov AircraftRef with ReferenceAircraftLovSelector {
+      label = "Aircraft";
+      description = AircraftRef.Aircraft;
+      hidekey = [true];
+   }
+   lov MaintenanceLocationRef with MaintenanceLocationSelector {
+      label = "Work Location";
+      description = MaintenanceLocationRef.LocationName;
+      hidekey = [true];
+   }
+   badge Objstate {
+      style = TextOnly;
+      label = "Status";
+      emphasis StateCreated = [Objstate = "Active"];
+      emphasis StatePlanned = [Objstate = "Committed"];
+      emphasis StateInProgress = [Objstate = "InWork"];
+      emphasis StateCompleted = [Objstate = "Completed"];
+      emphasis StateClosed = [Objstate = "Canceled"];
+   }
+   field SchedStartDateTime {
+      label = "Scheduled Start";
+   }
+   field SchedEndDateTime {
+      label = "Scheduled End";
+   }
+   field ActualStartDateTime {
+      label = "Actual Start";
+   }
+   field ActualEndDateTime {
+      label = "Actual End";
+   }
+   field IsReleaseToService {
+      label = "Release to Service";
+      size = Small;
+   }
+   field IsHistoric {
+      label = "Historic";
+      size = Small;
+   }
+
+   command CommitWorkPackage;
+   command StartWorkPackage;
+   command UncommitWorkPackage;
+   command CompleteWorkPackage;
+   command CancelWorkPackage;
+
+
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

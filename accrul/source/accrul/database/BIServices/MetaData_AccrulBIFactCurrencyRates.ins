@@ -1,0 +1,904 @@
+-----------------------------------------------------------------------------
+--  Component  : ACCRUL
+--
+--  Filename   : MetaData_AccrulBIFactCurrencyRates.ins
+--
+--  Purpose    : Installs Business Intelligence specific Meta Data for fact 
+--               FACT_CURRENCY_RATES in component ACCRUL. 
+--               The following is installed:
+--               * Fact data
+--               * Data access information
+--               * Parent data for Fact
+--               * Fact Item data
+--               * Dimensions associated with the fact
+--               * Special join information
+--               * Dimension identity item definitions
+--               * Write back info if any
+--               * Dimension items used in zoom in and drill down
+--               * Url entries
+--               * Performance indicator information
+--               * Index names and index columns
+--
+--
+-----------------------------------------------------------------------------
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  110811  Anwese Created
+--  110927  Anwese Updated with new light items
+--  111221  Anwese Modified with new section "dimensions associated with fact &FACT"
+--  150513  Umdolk Reverse Engineering.
+-----------------------------------------------------------------------------
+SET SERVEROUT ON
+
+DEFINE MODULE              = ACCRUL
+DEFINE FACT                = FACT_CURRENCY_RATES
+DEFINE DRILL_DOWN_SOURCE   = ""
+DEFINE VIEW_STD_DM         = FACT_CURRENCY_RATES_DM
+DEFINE VIEW_OPT_DM         = ""
+DEFINE VIEW_ALT_DM         = ""
+DEFINE ALT_API_DM          = ""
+DEFINE VIEW_STD_OL         = FACT_CURRENCY_RATES_OL
+DEFINE VIEW_OPT_OL         = ""
+DEFINE VIEW_ALT_OL         = ""
+DEFINE ALT_API_OL          = ""
+DEFINE LOG_MESSAGE         = "****** &FACT ******"
+DEFINE LOG_SOURCE_ID       = "Fact &FACT"
+
+-----------------------------------------------------------------------------
+
+PROMPT ================================================================
+PROMPT   Start installing Meta Data for &FACT in component &MODULE
+PROMPT ================================================================
+
+BEGIN
+   Xlr_Import_Log_Util_API.Log_Message_Source(dbms_session.unique_session_id,
+                                              '&LOG_MESSAGE',
+                                              Xlr_Import_Log_Util_API.log_type_start,
+                                              '&LOG_SOURCE_ID');
+END;
+/
+
+PROMPT Backup fact &FACT
+DECLARE
+   rec_  XLR_META_UTIL_API.Fact_Public_Rec;
+BEGIN
+   rec_.Fact_Id := '&FACT';
+   XLR_META_UTIL_API.Backup_Fact(rec_);
+END;
+/
+
+PROMPT Installing master data for fact &FACT
+DECLARE
+   rec_  XLR_META_UTIL_API.Fact_Public_Rec;
+BEGIN
+   --
+   rec_.Fact_Id                        := '&FACT';
+   rec_.Description                    := 'Fact Currency Rates';
+   rec_.Installation_Name              := 'Currency Rates';
+   rec_.View_Handling_Type             := Xlr_Meta_Util_API.VIEW_HANDLING_STD_TYPE_;
+   rec_.Write_Back_Supported           := FALSE;
+   rec_.Treat_Null_As_Zero             := TRUE;
+   rec_.Supports_Url_Navigation        := TRUE;
+   rec_.Drill_Down_Source              := '&DRILL_DOWN_SOURCE';
+   rec_.Lov_Distinct_Search            := FALSE;
+   rec_.Lov_Max_Limit                  := 100;
+   rec_.Module                         := '&MODULE';
+   rec_.Enabled_Source_Type            := Xlr_Meta_Util_API.ONLINE_ENABLED_SRC_TYPE_;
+   rec_.Has_Security_Filter            := TRUE;
+   XLR_META_UTIL_API.Install_Fact(rec_);
+END;
+/
+ 
+PROMPT Install data sources for fact &FACT
+DECLARE
+   rec_  XLR_META_UTIL_API.Fact_Source_Public_Rec;
+BEGIN
+   rec_.Fact_Id                        := '&FACT';
+   rec_.Source_Type                    := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Default_Source_Type            := TRUE;
+   rec_.View_Name                      := '&VIEW_STD_OL';
+   rec_.Optional_View_Name             := '&VIEW_OPT_OL';
+   rec_.Alternative_View_Name          := '&VIEW_ALT_OL';
+   rec_.Decide_Alternative_View_Api    := '&ALT_API_OL';
+   rec_.Hint_Definition                := NULL;
+   XLR_META_UTIL_API.Install_Fact_Source(rec_); 
+   rec_.Fact_Id                        := '&FACT';
+   rec_.Source_Type                    := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Default_Source_Type            := FALSE;
+   rec_.View_Name                      := '&VIEW_STD_DM';
+   rec_.Optional_View_Name             := '&VIEW_OPT_DM';
+   rec_.Alternative_View_Name          := '&VIEW_ALT_DM';
+   rec_.Decide_Alternative_View_Api    := '&ALT_API_DM';
+   rec_.Hint_Definition                := NULL;
+   XLR_META_UTIL_API.Install_Fact_Source(rec_);
+END;
+/
+
+PROMPT Installing parent item data for fact &FACT        
+DECLARE      
+   rec_  XLR_META_UTIL_API.Fact_Parent_Public_Rec;
+BEGIN
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Item_No                  := 1;
+   rec_.Parent_Dimension_Item_Id := 'DIM_COMPANY.CODE';
+   rec_.Hierarchical_Order       := 1;
+   XLR_META_UTIL_API.Install_Fact_Parent(rec_);
+
+END;
+/                                                                   
+
+PROMPT Installing item data for fact &FACT  
+-- Regarding display order attributes
+-- Display_Order: 
+--     The order in the navigator as fact details. Light attributes are placed
+--     last and given a higher start order number starting with 101
+-- Wb_Display_Order: 
+--     Attribute order in Write Back controls. Note that this attribute must be
+--     synchronized with WB_DISPLAY_ORDER available for write back dimension items
+--     associated with fact
+-- Zoom_In_Display_Order:
+--     Display order of zoom in attributes in design and when presenting zoom in result 
+--     in new sheet. Must be synchronized with ZOOM_IN_DISPLAY_ORDER available for
+--     dimension items for detail handling associated with fact.
+--     Dim items; start with 1, fact items; start with 101, light attr; start with 201
+-- Drill_Down_Display_Item:
+--     Display order of drill down in attributes in design and when presenting drill down
+--      result in new sheet. Must be synchronized with DRILL_DOWN_DISPLAY_ORDER available for
+--     dimension items for detail handling associated with fact.
+--     Dim items; start with 1, fact items; start with 101, light attr; start with 201
+DECLARE      
+   rec_  XLR_META_UTIL_API.Fact_Item_Public_Rec;
+BEGIN
+   rec_.Fact_Item_Id              := '&FACT..ID';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Unique Row Identifier';
+   rec_.Installation_Name         := 'Unique Row Identifier';
+   rec_.Column_Name               := 'ID';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Display_In_Client         := FALSE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Display_Order             := NULL;
+   rec_.Display_Folder            := NULL;
+   rec_.Zoom_In_Display_Item      := FALSE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Display_Order             := NULL;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := NULL;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+   rec_.Fact_Item_Id              := '&FACT..COMPANY_KEY';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Company, part of PK in original source';
+   rec_.Installation_Name         := 'Company key';
+   rec_.Column_Name               := 'COMPANY_KEY';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := FALSE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := FALSE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 4;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := NULL;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+ 
+   rec_.Fact_Item_Id              := '&FACT..VALID_FROM_KEY';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Valid from id, part of PK in original source';
+   rec_.Installation_Name         := 'Valid from key';
+   rec_.Column_Name               := 'VALID_FROM_KEY';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.DATE_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := FALSE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := FALSE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 5;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := NULL;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+   rec_.Fact_Item_Id              := '&FACT..CURRENCY_RATE_TYPE_KEY';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Currency type id, part of PK in original source';
+   rec_.Installation_Name         := 'Currency rate type key';
+   rec_.Column_Name               := 'CURRENCY_RATE_TYPE_KEY';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := FALSE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := FALSE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 6;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := NULL;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+   rec_.Fact_Item_Id              := '&FACT..CURRENCY_CODE_KEY';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Currency code id, part of PK in original source';
+   rec_.Installation_Name         := 'Currency code key';
+   rec_.Column_Name               := 'CURRENCY_CODE_KEY';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := FALSE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := FALSE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 7;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := NULL;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+   rec_.Fact_Item_Id              := '&FACT..CURRENCY_RATE';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Currency Rate';
+   rec_.Installation_Name         := 'Currency Rate';
+   rec_.Column_Name               := 'CURRENCY_RATE';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.NUMBER_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := TRUE;
+   rec_.Display_In_Client         := TRUE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := TRUE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := TRUE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 1;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := 101;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+   rec_.Fact_Item_Id              := '&FACT..DIRECT_CURRENCY_RATE';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Direct Currency Rate';
+   rec_.Installation_Name         := 'Direct Currency Rate';
+   rec_.Column_Name               := 'DIRECT_CURRENCY_RATE';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.NUMBER_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := TRUE;
+   rec_.Display_In_Client         := TRUE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := TRUE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := TRUE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 2;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := 102;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+   rec_.Fact_Item_Id              := '&FACT..DIRECT_CURRENCY_RATE_ROUND';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Direct Currency Rate Round';
+   rec_.Installation_Name         := 'Direct Currency Rate Round';
+   rec_.Column_Name               := 'DIRECT_CURRENCY_RATE_ROUND';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.NUMBER_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := TRUE;
+   rec_.Display_In_Client         := TRUE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := TRUE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 3;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := 103;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+   rec_.Fact_Item_Id              := '&FACT..VALID_FROM';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Currency Code valid from date';
+   rec_.Installation_Name         := 'Valid From';
+   rec_.Column_Name               := 'VALID_FROM';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.DATE_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := TRUE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := TRUE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 101;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := 201;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+   rec_.Fact_Item_Id              := '&FACT..VALID_UNTIL';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Valid Until date';
+   rec_.Installation_Name         := 'Valid Until';
+   rec_.Column_Name               := 'VALID_UNTIL';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.DATE_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := TRUE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := TRUE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 102;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := 202;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+   rec_.Fact_Item_Id              := '&FACT..IS_MAX_VALID_FROM';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Latest valid from date';
+   rec_.Installation_Name         := 'Show Only Valid Rates';
+   rec_.Column_Name               := 'IS_MAX_VALID_FROM';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := TRUE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := TRUE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 103;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := 203;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+    
+   rec_.Fact_Item_Id              := '&FACT..DIM_COMPANY_ID';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Company dimension reference';
+   rec_.Installation_Name         := 'Dim company';
+   rec_.Column_Name               := 'DIM_COMPANY_ID';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := FALSE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := FALSE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 8;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := NULL;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+   rec_.Fact_Item_Id              := '&FACT..DIM_CURRENCY_CODE_ID';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Currency Code dimension reference';
+   rec_.Installation_Name         := 'Dim currency code';
+   rec_.Column_Name               := 'DIM_CURRENCY_CODE_ID';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := FALSE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := FALSE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 9;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := NULL;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+   
+   rec_.Fact_Item_Id              := '&FACT..DIM_CURRENCY_RATE_TYPE_ID';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Currency Type dimension reference';
+   rec_.Installation_Name         := 'Dim currency rate type';
+   rec_.Column_Name               := 'DIM_CURRENCY_RATE_TYPE_ID';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := FALSE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := FALSE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 10;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := NULL;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+  
+   rec_.Fact_Item_Id              := '&FACT..CURRENCY_CODE';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Currency code value, mainly for OL join';
+   rec_.Installation_Name         := 'Currency code';
+   rec_.Column_Name               := 'CURRENCY_CODE';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := FALSE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := FALSE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 11;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := NULL;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+   rec_.Fact_Item_Id              := '&FACT..CURRENCY_TYPE';
+   rec_.Fact_Id                   := '&FACT';
+   rec_.Description               := 'Currency type value, mainly for OL join';
+   rec_.Installation_Name         := 'Currency type';
+   rec_.Column_Name               := 'CURRENCY_TYPE';
+   rec_.Data_Type                 := Xlr_Meta_Util_API.TEXT_DATA_TYPE_;
+   rec_.Nullable                  := FALSE;
+   rec_.Is_Fact                   := FALSE;
+   rec_.Display_In_Client         := FALSE;
+   rec_.Write_Back_Identity       := NULL;
+   rec_.Write_Back_Type           := Xlr_Meta_Util_API.NO_WB_TYPE_;
+   rec_.Zoom_In_Display_Item      := FALSE;
+   rec_.Drill_Down_Display_Item   := FALSE;
+   rec_.Supports_Zoom_In          := FALSE;
+   rec_.Supports_Drill_Down       := FALSE;
+   rec_.Drill_Down_Key            := FALSE;
+   rec_.Drill_Down_Source_Item_Id := NULL;
+   rec_.Display_Order             := 12;
+   rec_.Wb_Display_Order          := NULL;
+   rec_.Zoom_In_Display_Order     := NULL;
+   rec_.Drill_Down_Display_Order  := NULL;
+   rec_.Display_Folder            := NULL;
+   XLR_META_UTIL_API.Install_Fact_Item(rec_);
+
+END;
+/
+
+PROMPT Installing dimension relations associated with fact &FACT
+-- Regarding display order attributes
+-- Display_Order: 
+--     The order in the navigator that dimensions will appear for a fact.  
+DECLARE
+   rec_  XLR_META_UTIL_API.Fact_Relation_Public_Rec;
+BEGIN
+
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Dimension_Id             := 'DIM_COMPANY';
+   rec_.Associated_Fact_Item_Id  := '&FACT..DIM_COMPANY_ID';
+   rec_.Has_Zoom_In_Details      := TRUE;
+   rec_.Has_Drill_Down_Details   := FALSE;
+   rec_.Display_Order            := 1;
+   rec_.Dimension_Alias          := NULL;
+   XLR_META_UTIL_API.Install_Fact_Relation(rec_);
+   
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Dimension_Id             := 'DIM_CURRENCY_CODE';
+   rec_.Associated_Fact_Item_Id  := '&FACT..DIM_CURRENCY_CODE_ID';
+   rec_.Has_Zoom_In_Details      := TRUE;
+   rec_.Has_Drill_Down_Details   := FALSE;
+   rec_.Display_Order            := 2;
+   rec_.Dimension_Alias          := NULL;
+   XLR_META_UTIL_API.Install_Fact_Relation(rec_);
+
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Dimension_Id             := 'DIM_CURRENCY_RATE_TYPE';
+   rec_.Associated_Fact_Item_Id  := '&FACT..DIM_CURRENCY_RATE_TYPE_ID';
+   rec_.Has_Zoom_In_Details      := TRUE;
+   rec_.Has_Drill_Down_Details   := FALSE;
+   rec_.Display_Order            := 3;
+   rec_.Dimension_Alias          := NULL;
+   XLR_META_UTIL_API.Install_Fact_Relation(rec_);
+END;
+/
+
+PROMPT Installing dimension id column definitions for dimensions associated with fact &FACT
+DECLARE
+   rec_  XLR_META_UTIL_API.Fact_Dim_Id_Def_Public_Rec;
+BEGIN
+      
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Dimension_Id             := 'DIM_COMPANY';
+   rec_.Dim_Id_Column_Item_Id    := '&FACT..COMPANY_KEY';
+   rec_.Id_Item_Seq_No           := 1;
+   rec_.Id_Item_Expression       := NULL;
+   XLR_META_UTIL_API.Install_Fact_Dim_Id_Def(rec_);
+   
+   
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Dimension_Id             := 'DIM_CURRENCY_CODE';
+   rec_.Dim_Id_Column_Item_Id    := '&FACT..COMPANY_KEY';
+   rec_.Id_Item_Seq_No           := 1;
+   rec_.Id_Item_Expression       := NULL;
+   XLR_META_UTIL_API.Install_Fact_Dim_Id_Def(rec_);
+   
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Dimension_Id             := 'DIM_CURRENCY_CODE';
+   rec_.Dim_Id_Column_Item_Id    := '&FACT..CURRENCY_CODE';
+   rec_.Id_Item_Seq_No           := 2;
+   rec_.Id_Item_Expression       := NULL;
+   XLR_META_UTIL_API.Install_Fact_Dim_Id_Def(rec_);
+   
+   
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Dimension_Id             := 'DIM_CURRENCY_RATE_TYPE';
+   rec_.Dim_Id_Column_Item_Id    := '&FACT..COMPANY_KEY';
+   rec_.Id_Item_Seq_No           := 1;
+   rec_.Id_Item_Expression       := NULL;
+   XLR_META_UTIL_API.Install_Fact_Dim_Id_Def(rec_);
+   
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Dimension_Id             := 'DIM_CURRENCY_RATE_TYPE';
+   rec_.Dim_Id_Column_Item_Id    := '&FACT..CURRENCY_TYPE';
+   rec_.Id_Item_Seq_No           := 2;
+   rec_.Id_Item_Expression       := NULL;
+   XLR_META_UTIL_API.Install_Fact_Dim_Id_Def(rec_);
+   
+END;
+/
+
+PROMPT Installing special join information, typically for online execution
+DECLARE
+   rec_        XLR_META_UTIL_API.Fact_Dim_Join_Public_Rec;
+   item_rec_   XLR_META_UTIL_API.Fact_Dim_Join_Item_Public_Rec;
+BEGIN
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Dimension_Id             := 'DIM_COMPANY';
+   rec_.Source_Type              := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Exact_Join               := TRUE;
+   XLR_META_UTIL_API.Install_Fact_Dim_Join(rec_);
+
+   item_rec_.Fact_Id             := '&FACT';
+   item_rec_.Dimension_Id        := 'DIM_COMPANY';
+   item_rec_.Source_Type         := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   item_rec_.Join_No             := 1;
+   item_rec_.Dimension_Item_Id   := 'DIM_COMPANY.CODE';
+   item_rec_.Fact_Item_Id        := '&FACT..COMPANY_KEY';
+   XLR_META_UTIL_API.Install_Fact_Dim_Join_Item(item_rec_);
+   
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Dimension_Id             := 'DIM_CURRENCY_CODE';
+   rec_.Source_Type              := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Exact_Join               := TRUE;
+   XLR_META_UTIL_API.Install_Fact_Dim_Join(rec_);
+
+   item_rec_.Fact_Id             := '&FACT';
+   item_rec_.Dimension_Id        := 'DIM_CURRENCY_CODE';
+   item_rec_.Source_Type         := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   item_rec_.Join_No             := 1;
+   item_rec_.Dimension_Item_Id   := 'DIM_CURRENCY_CODE.COMPANY';
+   item_rec_.Fact_Item_Id        := '&FACT..COMPANY_KEY';
+   XLR_META_UTIL_API.Install_Fact_Dim_Join_Item(item_rec_);
+
+   item_rec_.Fact_Id             := '&FACT';
+   item_rec_.Dimension_Id        := 'DIM_CURRENCY_CODE';
+   item_rec_.Source_Type         := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   item_rec_.Join_No             := 2;
+   item_rec_.Dimension_Item_Id   := 'DIM_CURRENCY_CODE.CODE';
+   item_rec_.Fact_Item_Id        := '&FACT..CURRENCY_CODE';
+   XLR_META_UTIL_API.Install_Fact_Dim_Join_Item(item_rec_);
+   
+   rec_.Fact_Id                  := '&FACT';
+   rec_.Dimension_Id             := 'DIM_CURRENCY_RATE_TYPE';
+   rec_.Source_Type              := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Exact_Join               := TRUE;
+   XLR_META_UTIL_API.Install_Fact_Dim_Join(rec_);
+
+   item_rec_.Fact_Id             := '&FACT';
+   item_rec_.Dimension_Id        := 'DIM_CURRENCY_RATE_TYPE';
+   item_rec_.Source_Type         := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   item_rec_.Join_No             := 1;
+   item_rec_.Dimension_Item_Id   := 'DIM_CURRENCY_RATE_TYPE.COMPANY';
+   item_rec_.Fact_Item_Id        := '&FACT..COMPANY_KEY';
+   XLR_META_UTIL_API.Install_Fact_Dim_Join_Item(item_rec_);
+
+   item_rec_.Fact_Id             := '&FACT';
+   item_rec_.Dimension_Id        := 'DIM_CURRENCY_RATE_TYPE';
+   item_rec_.Source_Type         := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   item_rec_.Join_No             := 2;
+   item_rec_.Dimension_Item_Id   := 'DIM_CURRENCY_RATE_TYPE.CODE';
+   item_rec_.Fact_Item_Id        := '&FACT..CURRENCY_TYPE';
+   XLR_META_UTIL_API.Install_Fact_Dim_Join_Item(item_rec_);
+                                                                                             
+END;
+/
+-- This is not a write back source. No write back related items are defined
+
+PROMPT Installing dimension items for detail handling associated with fact &FACT
+-- Zoom_In_Display_Order:
+--     Display order of zoom in attributes in design and when presenting zoom in result 
+--     in new sheet. Must be synchronized with ZOOM_IN_DISPLAY_ORDER defined for
+--     fact items.
+--     Dim items; start with 1, fact items; start with 101, light attr; start with 201
+-- Drill_Down_Display_Item:
+--     Display order of drill down in attributes in design and when presenting drill down
+--     result in new sheet. Must be synchronized with DRILL_DOWN_DISPLAY_ORDER defined for
+--     fact items.
+--     Dim items; start with 1, fact items; start with 101, light attr; start with 201
+
+DECLARE
+  rec_  XLR_META_UTIL_API.Fact_Detail_Dim_Item_Rec;
+BEGIN
+   rec_.Fact_Id                    := '&FACT';
+   rec_.Dimension_Id               := 'DIM_COMPANY';
+   rec_.Dimension_Item_Id          := 'DIM_COMPANY.CODE';
+   rec_.Zoom_In_Display_Item       := TRUE;
+   rec_.Drill_Down_Display_Item    := FALSE;
+   rec_.Zoom_In_Display_Order      := 1;
+   rec_.Drill_Down_Display_Order   := NULL;
+   XLR_META_UTIL_API.Install_Fact_Detail_Dim_Item(rec_);
+  
+   rec_.Fact_Id                    := '&FACT';
+   rec_.Dimension_Id               := 'DIM_CURRENCY_CODE';
+   rec_.Dimension_Item_Id          := 'DIM_CURRENCY_CODE.CODE';
+   rec_.Zoom_In_Display_Item       := TRUE;
+   rec_.Drill_Down_Display_Item    := FALSE;
+   rec_.Zoom_In_Display_Order      := 3;
+   rec_.Drill_Down_Display_Order   := NULL;
+  XLR_META_UTIL_API.Install_Fact_Detail_Dim_Item(rec_);
+  
+   rec_.Fact_Id                    := '&FACT';
+   rec_.Dimension_Id               := 'DIM_CURRENCY_RATE_TYPE';
+   rec_.Dimension_Item_Id          := 'DIM_CURRENCY_RATE_TYPE.CODE';
+   rec_.Zoom_In_Display_Item       := TRUE;
+   rec_.Drill_Down_Display_Item    := FALSE;
+   rec_.Zoom_In_Display_Order      := 2;
+   rec_.Drill_Down_Display_Order   := NULL;
+  XLR_META_UTIL_API.Install_Fact_Detail_Dim_Item(rec_);
+
+END;
+/
+
+-- ONLY defined if navigation to Web page from data source details should be available
+
+PROMPT Installing URL entries associated with fact &FACT
+DECLARE
+  rec_  XLR_META_UTIL_API.Fact_Url_Rec;
+   amp_  CONSTANT VARCHAR2(1) := CHR(38);
+BEGIN
+   rec_.Fact_Id          := '&FACT';
+   rec_.Url_No           := 1;
+   rec_.Url_Link         := 'page/CurrencyRates/Form';
+   rec_.Url_Text         := 'Currency Rate...';
+   rec_.Note             := 'Url with the purpose to navigate to Currecny Rates';
+   rec_.Translation_Key  := 'CURRENCY_RATES_URL';
+   rec_.Client_Type      := Xlr_Meta_Util_API.AURENA_URL_TYPE_;
+  XLR_META_UTIL_API.Install_Fact_Url(rec_);
+
+END;
+/
+
+PROMPT Installing URL item info for each Url entry associated with fact &FACT
+DECLARE
+  rec_  XLR_META_UTIL_API.Fact_Url_Item_Rec;
+BEGIN
+  rec_.Fact_Id            := '&FACT';
+  rec_.Url_No             := 1;
+  rec_.Item_No            := 1;
+  rec_.Fact_Item_Id       := NULL;
+  rec_.Dimension_Item_Id  := 'DIM_COMPANY.CODE';
+   rec_.Query_Name         := 'Company';
+  XLR_META_UTIL_API.Install_Fact_Url_Item(rec_);
+  
+  rec_.Fact_Id            := '&FACT';
+  rec_.Url_No             := 1;
+  rec_.Item_No            := 2;
+  rec_.Fact_Item_Id       := NULL;
+  rec_.Dimension_Item_Id  := 'DIM_CURRENCY_RATE_TYPE.CODE';
+   rec_.Query_Name         := 'CurrencyType';
+  XLR_META_UTIL_API.Install_Fact_Url_Item(rec_);   
+
+END;
+/
+
+
+PROMPT Installing hint items associated with fact &FACT
+DECLARE
+   rec_  XLR_META_UTIL_API.Fact_Src_Hint_Item_Public_Rec;
+BEGIN
+   -- OnLine 
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.DERIVED_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..COMPANY_KEY';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..VALID_FROM_KEY';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..CURRENCY_RATE_TYPE_KEY';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..CURRENCY_CODE_KEY';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..DIM_COMPANY_ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..DIM_CURRENCY_CODE_ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..DIM_CURRENCY_RATE_TYPE_ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..CURRENCY_CODE';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.ONLINE_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..CURRENCY_TYPE';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   -- DataMart
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..DIM_COMPANY_ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..DIM_CURRENCY_CODE_ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_); 
+   rec_.Fact_Id              := '&FACT';
+   rec_.Source_Type          := Xlr_Meta_Util_API.DM_SOURCE_TYPE_;
+   rec_.Fact_Item_Id         := '&FACT..DIM_CURRENCY_RATE_TYPE_ID';
+   rec_.Hint_Type            := Xlr_Meta_Util_API.INDEX_ITEM_HINT_TYPE_;
+   XLR_META_UTIL_API.Install_Fact_Src_Hint_Item(rec_);
+END;
+/
+
+PROMPT Installing BA Parameter Functions for fact items in fact - &FACT
+DECLARE
+   rec_  XLR_META_UTIL_API.Fact_Item_Functions_Public_Rec;
+BEGIN
+   NULL;
+END;
+/
+
+PROMPT Post validate fact &FACT
+DECLARE
+   rec_  XLR_META_UTIL_API.Fact_Public_Rec;
+BEGIN
+   rec_.Fact_Id := '&FACT';
+   XLR_META_UTIL_API.Post_Validate_Fact(rec_);
+END;
+/
+
+
+BEGIN
+   trace_sys.Set_Trace_Output(1);
+   Xlr_Import_Log_Util_API.Output_Stats_And_Finish(dbms_session.unique_session_id,
+                                                   '&LOG_MESSAGE',
+                                                   '&LOG_SOURCE_ID');
+   trace_sys.Set_Trace_Output(0);
+END;
+/
+
+COMMIT;
+
+PROMPT ================================================================
+PROMPT   End installing Meta Data for &FACT in component &MODULE
+PROMPT ================================================================
+
+-----------------------------------------------------------------------
+
+UNDEFINE MODULE
+UNDEFINE FACT             
+UNDEFINE DRILL_DOWN_SOURCE
+UNDEFINE VIEW_STD_DM
+UNDEFINE VIEW_OPT_DM                   
+UNDEFINE VIEW_ALT_DM
+UNDEFINE ALT_API_DM
+UNDEFINE VIEW_STD_OL
+UNDEFINE VIEW_OPT_OL
+UNDEFINE VIEW_ALT_OL
+UNDEFINE ALT_API_OL
+UNDEFINE LOG_MESSAGE         
+UNDEFINE LOG_SOURCE_ID
+-----------------------------------------------------------------------
+

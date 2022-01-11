@@ -1,0 +1,259 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvExeTaskAction
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210408  siselk  AD-1536, Updated Pre_Sync_Action unit test
+--  210408  siselk  AD-1039, Updated Pre_Sync_Action unit test
+--  210219  HasRLK  LMM2020R1-1571, Get_Task_Last_Action_Id changes.
+--  201203  majslk  LMM2020R1-1455- Added unit test for Get_Next_Seq.
+--  201109  KAWJLK  LMM2020R1-1391- Added test for Check_Insert___.
+--  201013  KAWJLK  LMM2020R1-1031- Added test for Get_Task_Last_Action_Id, Get_Task_Action_Count, Get_Task_Action.
+--  200902  Tajalk  LMM2020R1-841- Added tests
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should find the correct IFS lu key when MX_UNIQUE_KEY is passed in" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_tab
+   VALUES
+      | task_id | mx_unique_key |
+      | 1       | 'TASK1'       |
+      | 2       | 'TASK2'       |
+   END VALUES;
+
+   @MockTable av_exe_task_step_tab
+   VALUES
+      | task_id | mx_unique_key | task_step_id | step_ord |
+      | 1       | 'STEP1'       | 1            | 1        |
+      | 2       | 'STEP2'       | NULL         | NULL     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_    VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+   expected2_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'TASK_UNIQUE_KEY'||chr(31)||'TASK1'||chr(30)||'WITH_TASK_KEY'|
+      | 'TASK_UNIQUE_KEY'||chr(31)||'TASK2'||chr(30)||'WITH_KEY_NO_STEP'|
+      | 'ACTION_DESC'||chr(31)||'TASK ACTION 1'||chr(30)||'WITH_NO_KEY'|
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+
+      expected1_ := 'WITH_TASK_KEY'||'TASK_ID'||chr(31)||'1'||chr(30)||'TASK_STEP_ID'||chr(31)||'1'||chr(30);
+      expected2_ := 'WITH_KEY_NO_STEP'||'TASK_ID'||chr(31)||'2'||chr(30);
+      --Insert your assertions here
+      IF attr_ LIKE '%WITH_TASK_KEY%' THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||output1_;
+      ELSIF attr_ LIKE '%WITH_KEY_NO_STEP%' THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Task_Last_Action_Id should return task_action_id when task_id is given" FOR
+   FUNCTION Get_Task_Last_Action_Id(
+      task_id_ IN     NUMBER) RETURN VARCHAR2;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_action_tab
+   VALUES
+      | task_action_id |task_id | rowversion |
+      | 1              | 0      | TO_DATE('2020-09-08', 'yyyy-mm-dd') |
+      | 2              | 1      | sysdate    |
+      | 3              | 2      | sysdate    |
+      | 5              | 3      | sysdate    |
+      | 2              | 4      | sysdate    |
+      | 3              | 5      | sysdate    |
+      | 7              | 5      | sysdate +1 |
+   END VALUES;
+
+
+
+IS
+   --Insert your test variables here
+   return_   VARCHAR2(2000);
+   expected_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | expected_ | task_id_ |
+      | 1         |  0       |
+      | 2         |  1       |
+      | 3         |  2       |
+      | 5         |  3       |
+      | 2         |  4       |
+      | 7         |  5       |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Task_Last_Action_Id(task_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Task_Action_Count should return task count when task_id is given" FOR
+   FUNCTION Get_Task_Action_Count(
+      task_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_action_tab
+   VALUES
+      | task_id |
+      | 0       |
+      | 0       |
+      | 1       |
+      | 2       |
+      | 3       |
+      | 3       |
+      | 3       |
+      | 3       |
+
+
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | task_id_ |
+      | 2         |  0       |
+      | 1         |  1       |
+      | 1         |  2       |
+      | 4         |  3       |
+      | 0         |  6       |
+
+   LOOP
+      --Insert your test code here
+      return_ := Get_Task_Action_Count(task_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Task_Action should return 1 or 0 when task_step_id is given" FOR
+   FUNCTION Get_Task_Action(
+      task_step_id_ IN     NUMBER) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_exe_task_action_tab
+   VALUES
+      | task_step_id |
+      | 0            |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | task_step_id_ |
+      | 1         |  0            |
+      | 0         |  2            |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Task_Action(task_step_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Check_Insert___ should genarete next sequence number when insert data into av_exe_task_action_tab" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_exe_task_action_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Exe_Task_Action_API
+   FUNCTION Get_Next_Seq  RETURN  NUMBER
+   IS
+   BEGIN
+      RETURN 5000;
+   END Get_Next_Seq;
+
+
+
+IS
+   --Insert your test variables here
+   output1_  av_exe_task_action_tab%ROWTYPE;
+   output4_  av_exe_task_action_tab%ROWTYPE;
+   output2_  Indicator_Rec;
+
+
+
+BEGIN
+   output1_.task_action_id := NULL;
+   output4_.task_action_id := 5000;
+   FOR
+      | newrec_ | indrec_ | attr_ |
+      | output1_| output2_| 'A'   |
+      | output4_| output2_| 'A'   |
+   LOOP
+      --Insert your test code here
+      IF newrec_.task_action_id IS NULL THEN
+         newrec_.task_action_id := Get_Next_Seq();
+         --Insert your assertions here
+         ASSERT newrec_.task_action_id IS NOT NULL MESSAGE 'Returned '||newrec_.task_action_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Next_Seq should return next value of the sequence" FOR
+   FUNCTION Get_Next_Seq RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   return1_   NUMBER;
+   return2_   NUMBER;
+   output_    NUMBER;
+   expected_  NUMBER;
+BEGIN
+   FOR
+      | expected_ |
+      | 1         |
+   LOOP
+      --Insert your test code here
+      return1_ := Get_Next_Seq;
+      return2_ := Get_Next_Seq;
+
+      output_  := return2_ - return1_;
+      --Insert your assertions here
+      ASSERT output_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||output_;
+   END LOOP;
+END UNITTEST;
+
+
+

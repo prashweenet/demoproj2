@@ -1,0 +1,37 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210128_ADCOM_LMM2020R1-1477.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210118   kawjlk  Bug fix in ATW (make SUB_SYSTEM_CODE and SYSTEM_CODE nullable)
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SUB_SYSTEM_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'SUB_SYSTEM_CODE', 'VARCHAR2(50)', 'Y');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_AIRCRAFT_SYSTEM_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'SYSTEM_CODE', 'VARCHAR2(50)', 'Y');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+/
+SET SERVEROUTPUT OFF

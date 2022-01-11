@@ -1,0 +1,136 @@
+----------------------------------------------------------------------------
+--
+--  Dimension:  AnalyticAttrCodeB
+--  Component:  ACCRUL
+--  LU:         DimAccountingAttribute
+--
+--  File        : MVAccrul_DimAnalyticAttrCodeB.cre
+--  Purpose     : Create Materialized views, constraints and indexes for ACCRUL BI Services
+--  Localization: No translation needed.
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+
+
+-- ***** &MV - Start *****
+
+DEFINE MV         = ANALYTIC_ATTR_CODE_B_MV
+DEFINE TAB1       = ANALYTIC_ATTR_CODE_B_TAB
+DEFINE CODE_PART  = B
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value id,
+              a.company                           company,
+              a.code_part_value                   code,
+              a.attribute                         attribute,
+              a2.description                      attribute_description,
+              a.attribute_value                   attribute_value,
+              a3.description                      attribute_value_description
+       FROM   ACCOUNTING_ATTRIBUTE_CON_TAB a,
+   ACCOUNTING_ATTRIBUTE_TAB a2,
+   ACCOUNTING_ATTRIBUTE_VALUE_TAB a3
+       WHERE  a.code_part        = ''B''
+   AND    a2.company         = a.company
+   AND    a2.attribute       = a.attribute
+   AND    a3.company         = a.company
+   AND    a3.attribute       = a.attribute
+   AND    a3.attribute_value = a.attribute_value';
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+
+   index_name_ := table_name_ || '_IX1';
+   Database_SYS.Set_Table_Column (columns_, 'ID');
+   Database_Sys.Create_Index(table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+   Database_SYS.Reset_Column_Table(columns_); 
+
+   index_name_ := table_name_ || '_IX2';
+   Database_SYS.Set_Table_Column (columns_, 'COMPANY');
+   Database_Sys.Create_Index(table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+   Database_SYS.Reset_Column_Table(columns_);   
+
+   index_name_ := table_name_ || '_IX3';
+   Database_SYS.Set_Table_Column (columns_, 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_, 'ATTRIBUTE');
+   Database_SYS.Set_Table_Column (columns_, 'ATTRIBUTE_VALUE');
+   Database_Sys.Create_Index(table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);         
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_ || '_IX4';
+   Database_SYS.Set_Table_Column (columns_, 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_, 'CODE');
+   Database_Sys.Create_Index(table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/
+
+UNDEFINE MV
+UNDEFINE TAB1
+UNDEFINE CODE_PART 
+-- ***** &MV - End *****
+------------------------------------------------------------------

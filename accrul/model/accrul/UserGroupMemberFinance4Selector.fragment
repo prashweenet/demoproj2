@@ -1,0 +1,55 @@
+fragment UserGroupMemberFinance4Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view user_group_member_finance4";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceUserGroupMemberFinance4Selector for UserGroupMemberFinance4 {
+   static UserGroup;
+   static Description;
+}
+
+card UserGroupMemberFinance4Card for UserGroupMemberFinance4 {
+   label = "";
+   fieldranking UserGroup;
+   field UserGroup;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query UserGroupMemberFinance4 {
+   from = "user_group_member_finance4";
+   lu = UserGroupMemberFinance;
+   keys = Company, Userid, UserGroup;
+   ludependencies = UserGroupMemberFinance;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Userid Text {
+      label = "User ID";
+      lovcolumn = [false];
+   }
+   attribute UserGroup Text {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      label = "User Group Description";
+      lovcolumn = [true];
+   }
+   attribute DefaultGroup Enumeration(FinanceYesNo) {
+      lovcolumn = [false];
+      fetch = "default_group_db";
+   }
+   attribute AllowedAccPeriod Enumeration(AllowedAccountingPeriods) {
+      label = "Allowed Accounting Period";
+      lovcolumn = [false];
+      fetch = "allowed_acc_period_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

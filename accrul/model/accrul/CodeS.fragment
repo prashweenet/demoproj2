@@ -1,0 +1,40 @@
+fragment CodeS;
+component ACCRUL;
+layer Core;
+description "Contains Common Client Code and Projection Logic for Code S";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+--------------------------------- COMMANDS ----------------------------------
+command TranslationCommand for CodeS {
+   label = "Translation";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'CodeS' and AttributeKey eq $[CodeS]";
+   }
+}
+----------------------------------- LISTS -----------------------------------
+list AdditionalCodeS for CodeS {
+   field CodeS {
+      size = Small;
+   }
+   field Description;
+   daterangefield {
+      startdate ValidFrom;
+      enddate ValidUntil;
+      label = "Valid Period";
+   }
+   command TranslationCommand;
+}
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+@Override
+entity CodeS {
+   attribute CodeS Text {
+      label = "${context.Company.CodeSName}";
+   }
+   attribute Description Text {
+      label = "Description";
+   }
+}

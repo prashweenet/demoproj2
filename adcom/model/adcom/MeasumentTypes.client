@@ -1,0 +1,91 @@
+--  Date        Sign    History
+--  ----------  ------  -----------------------------------------------------
+--  200908  KAWJLK  LMM2020R1-865, Added lable Precision in MeasurementTypesList.
+--  200808  DILDLK  LMM2020R1-516, Modified navigation.
+--  200728  TAJALK  LMM2020R1-95, Created.
+-----------------------------------------------------------------------------
+client MeasumentTypes;
+component ADCOM;
+layer Core;
+projection MeasurementTypesHandling;
+
+description "Measurement Types List";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry MeasurementTypesNavEntry parent AdcomNavigator.MeasurementBasicData at index 100 {
+      label = "Measurement Types";
+      page List home AvMeasurementType;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AvMeasurementTypeSet {
+   label = "Measurement Types";
+   list MeasurementTypesList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AvEngineeringUnitNewSelector for AvEngineeringUnit {
+   label = "${EngineeringUnitCode} - ${EngineeringUnitDesc}";
+   static EngineeringUnitCode;
+   static EngineeringUnitDesc;
+}
+selector AvMeasurementCategoryNewSelector for AvMeasurementCategory {
+   label = "${MeasurementCategoryCode} - ${MeasurementCategoryDesc}";
+   static MeasurementCategoryCode;
+   static MeasurementCategoryDesc;
+}
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list MeasurementTypesList for AvMeasurementType {
+   field MeasurementTypeCode;
+   field MeasurementTypeDesc {
+      label = "Description";
+   }
+   lov EngineeringUnitRef with AvEngineeringUnitNewSelector {
+      label = "Engineering Unit";
+      description = EngineeringUnitRef.EngineeringUnitDesc;
+   }
+   lov MeasurementCategoryRef with AvMeasurementCategoryNewSelector {
+      label = "Measurement Category";
+      description = MeasurementCategoryRef.MeasurementCategoryDesc;
+   }
+   field Percision {
+      label = "Precision";
+   }
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

@@ -1,0 +1,133 @@
+client CurrencyRates;
+component ACCRUL;
+layer Core;
+projection CurrencyRatesHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CurrencyRatesNavEntry parent AccrulNavigator.CurrencyMenu at index 300 {
+      label = "Currency Rates ";
+      page Form home CurrencyRate;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using CurrencyTypeSet {
+   label = "Currency Rates";
+   crudactions {
+      new {
+         enabled = [false];
+      }
+      edit {
+         enabled = [false];
+      }
+      delete {
+         enabled = [false];
+      }
+   }
+
+   selector CurrencyTypeSelector;
+   group CurrencyTypeGroup;
+   list CurrencyRateList using CurrancyRateDetails(Company, CurrencyType, PageSearchContext.ShowOnlyValidRates) {
+      searchcontext PageSearchContext {
+         defaults = GetPageSearchContextDefaults();
+      }
+      copyoncruddefault(Company, CurrencyType, RefCurrencyCode)to(Company, CurrencyType, RefCurrencyCode);
+   }
+}
+
+searchcontext PageSearchContext for ShowOnlyValidRatesStructure {
+   label = "";
+   field ShowOnlyValidRates;
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector CurrencyTypeSelector for CurrencyType {
+   label = "${CurrencyType} - ${Description}";
+   static Company {
+      searchable = false;
+      visible = [false];
+   }
+   static CurrencyType;
+   static Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group CurrencyTypeGroup for CurrencyType {
+   label = "";
+   field CurrencyRateType {
+      searchable = false;
+   }
+   field RefCurrencyCode;
+   field RateTypeCategory;
+   field Inverted;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list CurrencyRateList for CurrencyRate {
+   label = "Currency Rates";
+   orderby = CurrencyCode, ValidFrom;
+
+   lov CurrencyCodeRef with ReferenceCurrencyCodeSelector {
+      size = Small;
+
+      validate command {
+         variable NumTempConvFact {
+            type = Number;
+         }
+         execute {
+            call GetCurrCodeAttributes(Company, CurrencyCode) into NumTempConvFact;
+            set ConvFactor = NumTempConvFact;
+         }
+      }
+      //! TODO: UXX ussolk 171013 Add Zoom in from Currency code field
+   }
+   field CurrencyRate {
+      required = [true];
+   }
+   field ValidFrom {
+      required = [true];
+   }
+   field ConvFactor {
+      editable = [false];
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

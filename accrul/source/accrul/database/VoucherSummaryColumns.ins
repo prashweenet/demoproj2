@@ -1,0 +1,54 @@
+---------------------------------------------------------------------
+--
+--  Filename      : VoucherSummaryColumns.ins
+--
+--  Module        : ACCRUL
+--
+--  Purpose       : Insert Column IDs that can be controlled if they should be used in
+--                  Voucher Summary functionality (when updating vouchers to GL) or not.
+--                  The Column IDs must exist in the voucher_row_tab.
+--
+--  Localization  : Not to be localized.
+--
+--  Date    Sign    History
+--  ------  ----    ---------------------------------------------------
+--  160825  OVJOSE  Created
+
+---------------------------------------------------------------------
+PROMPT VoucherSummaryColumns.ins Start
+---------------------------------------------------------------------
+SET SERVEROUT ON
+
+DECLARE
+   PROCEDURE Assign_And_Install___(
+      column_        IN VARCHAR2,
+      data_type_     IN VARCHAR2,
+      desc_          IN VARCHAR2,
+      repl_enabled_  IN VARCHAR2)
+   IS
+      newrec_     Voucher_Upd_Summary_Cols_TAB%ROWTYPE;
+   BEGIN
+      newrec_.column_id             := UPPER(column_);
+      newrec_.data_type             := data_type_;
+      newrec_.description           := desc_;
+      newrec_.replace_text_allowed  := repl_enabled_;
+      newrec_.rowkey                := sys_guid();
+
+      Voucher_Upd_Summary_Cols_API.Install_System_Data_(newrec_);
+   END;
+BEGIN
+   Assign_And_Install___('TEXT', 'STRING', 'Text', 'TRUE');
+   Assign_And_Install___('REFERENCE_SERIE', 'STRING', 'Reference Serie', 'FALSE');
+   Assign_And_Install___('REFERENCE_NUMBER', 'STRING', 'Reference Number', 'FALSE');
+   Assign_And_Install___('CORRECTED', 'STRING', 'Corrected', 'FALSE');
+   Assign_And_Install___('MULTI_COMPANY_ID', 'STRING', 'Multi Company ID', 'FALSE');
+   Assign_And_Install___('REFERENCE_VERSION', 'NUMBER', 'Reference Version', 'FALSE');
+   Assign_And_Install___('PARTY_TYPE', 'STRING', 'Party Type', 'FALSE');
+   Assign_And_Install___('TAX_ITEM_ID', 'NUMBER', 'Tax Item ID', 'FALSE');
+   Assign_And_Install___('PARTY_TYPE_ID', 'STRING', 'Part ID', 'FALSE');
+   Assign_And_Install___('AUTO_TAX_VOU_ENTRY', 'STRING', 'Auto Tax Voucher Entry', 'FALSE');
+   COMMIT;
+END;
+/
+
+

@@ -1,0 +1,101 @@
+projection PostingControlHandling;
+component ACCRUL;
+layer Core;
+description "Posting Control Basic Data";
+category Users;
+
+include fragment CtrlTypeAllowedValueSelector;
+include fragment AccountingCodePartValueLovSelector;
+include fragment AccountingCodePartsUsedSelector;
+include fragment CopyDetailsSetup;
+include fragment CopyToCompaniesAssistant;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PostingCtrlSet for PostingCtrl {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity PostingCtrl {
+   from = "posting_ctrl_master";
+
+   attribute PostingTypeDesc Text {
+      label = "Posting Type Description";
+      editable = [ETag = null];
+   }
+   attribute ControlTypeDesc Text {
+      label = "Control Type Description";
+      editable = [ETag = null];
+   }
+   attribute DefaultValue Text {
+      label = "Default Value No Details";
+   }
+   attribute PcValidFrom Date {
+      editable = [ETag = null];
+   }
+   attribute SortOrder Number {
+      editable = [false];
+   }
+   attribute CodeName Text {
+      editable = [true];
+      required = [true];
+   }
+
+   reference PostingTypeRef(PostingType) to PostingCtrlPostingType(PostingType) {
+      label = "Posting Type";
+   }
+   reference CodeNameRef(Company, CodeName) to AccountingCodePartsUsed(Company, CodeName) {
+      label = "Code Part Name";
+   }
+   reference CtrlTypeAllowedValueRef(Company, PostingType, CodePart, ControlType) to CtrlTypeAllowedValue(Company, PostingType, CodePart, ControlType) {
+      label = "Control Type";
+      copy ControlTypeDesc to ControlTypeDesc;
+      copy CtrlTypeCategory to CtrlTypeCategory;
+   }
+   reference PostingCtrlControlTypeRef(ControlType) to PostingCtrlControlType(ControlType) {
+      label = "Control Type";
+   }
+   reference DefaultValueRef(Company, CodePart, DefaultValue) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Default Value No Details";
+   }
+   reference DefaultValueNoCtRef(Company, CodePart, DefaultValueNoCt) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Default Value No CT Value";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetCodePart Text {
+   parameter Company Text;
+   parameter CodeName Text;
+}
+
+function GetCtrlTypeAllowedValue  Structure(CtrlTypeAllowedValueStructure) {
+   parameter Company Text;
+   parameter CodePart Text;
+   parameter PostingType Text;
+   parameter ControlType Text;
+   parameter CtrlTypeCategory Enumeration(CtrlTypeCategory);
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure CtrlTypeAllowedValueStructure {
+   attribute Module Text;
+   attribute CtrlTypeCategory Enumeration(CtrlTypeCategory);
+   attribute ControlTypeDesc Text;
+}
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------

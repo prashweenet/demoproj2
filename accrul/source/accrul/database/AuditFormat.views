@@ -1,0 +1,41 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AuditFormat
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+@SecurityCheck Company.UserAuthorized(company)
+VIEW Audit_Format_Country_Lov IS
+   Prompt = 'Audit Format Country LOV'
+   company.Flags = 'PMI--'
+   country.Flags = 'KMI-L'
+SELECT UNIQUE Iso_Country_API.Decode(country) country,
+       country                        country_db,
+       company                        company
+FROM   audit_format_tab;
+
+@SecurityCheck Company.UserAuthorized(company)
+VIEW Audit_Format_Report_Type_Lov IS
+   Prompt = 'Audit Format Report Type LOV'
+   company.Flags = 'PMI--'
+   country.Flags = 'KMI--'
+   report_type.Flags = 'KMI-L'
+SELECT Audit_Report_Types_API.Decode(report_type) report_type,
+       report_type                                report_type_db,
+       Iso_Country_API.Decode(country) country,
+       company                        company
+FROM   audit_format_tab;

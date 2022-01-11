@@ -1,0 +1,95 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     CodestringHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Codestring_Handling___(
+   company_             IN VARCHAR2,
+   code_part_           IN VARCHAR2,
+   code_a_              IN VARCHAR2,
+   code_b_              IN VARCHAR2,
+   code_c_              IN VARCHAR2,
+   code_d_              IN VARCHAR2,
+   code_e_              IN VARCHAR2,
+   code_f_              IN VARCHAR2,
+   code_g_              IN VARCHAR2,
+   code_h_              IN VARCHAR2,
+   code_i_              IN VARCHAR2,
+   code_j_              IN VARCHAR2,
+   process_code_        IN VARCHAR2,
+   quantity_            IN NUMBER,
+   text_                IN VARCHAR2,
+   project_activity_id_ IN NUMBER,
+   required_string_     IN VARCHAR2,
+   account_only_        IN VARCHAR2) RETURN Codestring_Handling_Structure_Rec
+IS    
+   temp_rec_               Accounting_Codestr_API.Codestring_Handling_Rec;
+   return_rec_             Codestring_Handling_Structure_Rec;
+BEGIN         
+   temp_rec_ := Accounting_Codestr_API.Codestring_Handling(company_,
+                                                           code_part_,
+                                                           code_a_,
+                                                           code_b_,
+                                                           code_c_,
+                                                           code_d_,
+                                                           code_e_,
+                                                           code_f_,
+                                                           code_g_,
+                                                           code_h_,
+                                                           code_i_,
+                                                           code_j_,
+                                                           process_code_,
+                                                           quantity_,
+                                                           text_,
+                                                           project_activity_id_,
+                                                           required_string_,
+                                                           account_only_);                                                           
+   -- codestring set by codestring completion when the codestring is not overwritten by codestring completion
+   return_rec_.company := temp_rec_.company;
+   return_rec_.code_a := temp_rec_.code_a;
+   return_rec_.code_b := temp_rec_.code_b;
+   return_rec_.code_c := temp_rec_.code_c;
+   return_rec_.code_d := temp_rec_.code_d;
+   return_rec_.code_e := temp_rec_.code_e;
+   return_rec_.code_f := temp_rec_.code_f;
+   return_rec_.code_g := temp_rec_.code_g;
+   return_rec_.code_h := temp_rec_.code_h;
+   return_rec_.code_i := temp_rec_.code_i;
+   return_rec_.code_j := temp_rec_.code_j;
+   return_rec_.process_code := temp_rec_.process_code;
+   return_rec_.quantity := temp_rec_.quantity;
+   return_rec_.text := temp_rec_.text;
+   return_rec_.project_id := temp_rec_.project_id;
+   return_rec_.project_activity_id := temp_rec_.project_activity_id;
+   -- Modified code string, when the code string is overwritten by the codestring completion
+   return_rec_.modified_code_a := temp_rec_.modified_code_a;
+   return_rec_.modified_code_b := temp_rec_.modified_code_b;
+   return_rec_.modified_code_c := temp_rec_.modified_code_c;
+   return_rec_.modified_code_d := temp_rec_.modified_code_d;
+   return_rec_.modified_code_e := temp_rec_.modified_code_e;
+   return_rec_.modified_code_f := temp_rec_.modified_code_f;
+   return_rec_.modified_code_g := temp_rec_.modified_code_g;
+   return_rec_.modified_code_h := temp_rec_.modified_code_h;
+   return_rec_.modified_code_i := temp_rec_.modified_code_i;
+   return_rec_.modified_code_j := temp_rec_.modified_code_j;
+   return_rec_.modified_process_code := temp_rec_.modified_process_code;
+   return_rec_.modified_quantity := temp_rec_.modified_quantity;
+   return_rec_.modified_text := temp_rec_.modified_text;
+   return_rec_.modified_project_id := temp_rec_.modified_project_id;
+   return_rec_.modified_project_activity_id := temp_rec_.modified_project_activity_id;
+   
+   return_rec_.modified_required_string := temp_rec_.modified_required_string;
+   return_rec_.required_string := temp_rec_.required_string;
+   return_rec_.modified_code_string := temp_rec_.modified_code_string;      
+   
+   RETURN return_rec_;
+END Codestring_Handling___;
+

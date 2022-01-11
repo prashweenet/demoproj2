@@ -1,0 +1,93 @@
+projection ExternalVoucherBasicDataHandling;
+component ACCRUL;
+layer Core;
+description "External Voucher Basic Data";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ExtParametersSet for ExtParameters {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ExtParameters {
+   attribute VoucherType Text {
+      required = [true];
+   }
+   attribute DefType Boolean("TRUE", "FALSE") {
+      label = "Default";
+      updatable = [false];
+   }
+   attribute ExtVoucherNoAlloc Enumeration(ExtVoucherNoAlloc) {
+      label = "Voucher Number Allocation";
+   }
+   attribute ExtVoucherDiff Enumeration(FinAllowed) {
+      label = "Voucher Differences";
+   }
+   attribute ExtGroupItem Enumeration(ExtGroupItem) {
+      label = "Grouping Criterion";
+   }
+   attribute ExtVoucherDate Enumeration(ExtVoucherDate) {
+      label = "Set Voucher Date";
+   }
+   attribute ExtAlterTrans Boolean("TRUE", "FALSE") {
+      label = "Changeable";
+   }
+   attribute AutoTaxCalcDb Boolean("Y", "N") {
+      label = "Auto Tax Calculation";
+      required = [true];
+   }
+   attribute AutoTaxCalc Enumeration(FinanceYesNo) {
+      required = [false];
+   }
+   attribute Correction Boolean("TRUE", "FALSE") {
+      label = "Use Correction Rows";
+   }
+   attribute UseCodestrCompl Boolean("TRUE", "FALSE") {
+      label = "Use Code String Completion";
+   }
+   attribute CheckWhenLoaded Boolean("TRUE", "FALSE");
+   attribute CreateWhenChecked Boolean("TRUE", "FALSE");
+   attribute AllowPartialCreate Boolean("TRUE", "FALSE");
+   attribute CalculateRate Boolean("TRUE", "FALSE") {
+      required = [true];
+      default = "FALSE";
+   }
+
+   reference VoucherTypeRef(Company, VoucherType) to VoucherType(Company, VoucherType) {
+      label = "Voucher Type";
+   }
+
+   action DoSetDefault {
+      ludependencies = ExtParameters;
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

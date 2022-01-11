@@ -1,0 +1,29 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: SourceTaxItem
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+
+DECLARE
+   columns_        Database_SYS.ColumnTabType;
+   table_name_     VARCHAR2(30) := 'SOURCE_TAX_ITEM_TAB';
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'TAX_LIMIT_CURR_AMOUNT', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'TRANSFERRED', 'VARCHAR2(20)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'TAX_PAY_AMOUNT', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'NON_DED_TAX_PAY_AMOUNT', 'NUMBER', 'Y');
+   Database_SYS.Alter_Table(table_name_, columns_, TRUE);
+END;
+

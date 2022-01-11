@@ -1,0 +1,76 @@
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210112  LAHNLK  LMM2020R1-1481, Modified..
+--  200820  SWiclk  LMM2020R1-870, Replaced AircraftTypeId by AircraftTypeCode due to key change.
+--  200625  LAHNLK  LMM2020R1-74: created.
+--  200701  MADGLK  LMM2020R1-182:added conflicting and associated deferral references
+-----------------------------------------------------------------------------
+projection DeferralReferenceHandling;
+component ADCOM;
+layer Core;
+description "This page uses to list down all the Deferral reference Information";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AvDeferralReferenceSet for AvDeferralReference;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvDeferralReference {
+   attribute DeferralReferenceId Number {
+      required = [false];
+   }
+   reference DeferralRefStatusRef(DeferralRefStatusCode) to AvDeferralRefStatus(DeferralRefStatusCode);
+   reference AircraftSubSystemRef(SubSystemId) to AvAircraftSubSystem(SubSystemId);
+   reference AircraftTypeRef(AircraftTypeCode) to AvAircraftType(AircraftTypeCode);
+   reference AvFaultSeverityRef(FaultSeverityCode) to AvFaultSeverity(FaultSeverityCode);
+   reference AvDeferralClassRef(DeferralClassCode) to AvDeferralClass(DeferralClassCode);
+   array DeferralReferenceConflictArray(DeferralReferenceId) to AvConflictingDefRef(DeferralRefId);
+   array DeferralReferenceAssociateArray(DeferralReferenceId) to AvAssociatedDefRef(DeferralRefId);
+}
+
+@Override
+entity AvConflictingDefRef {
+   crud = Create, Read, Update, Delete;
+   reference AvDeferralReferenceRef(DeferralRefId)  to AvDeferralReference(DeferralReferenceId);
+   reference AvDeferralReferenceRef2(ConflictingDeferRefId)  to AvDeferralReference(DeferralReferenceId);
+
+}
+
+@Override
+entity AvAssociatedDefRef {
+   crud = Create, Read, Update, Delete;
+   reference AvDeferralReferenceRef(DeferralRefId)  to AvDeferralReference(DeferralReferenceId);
+   reference AvDeferralReferenceRef2(AssociatedDeferralRefId)  to AvDeferralReference(DeferralReferenceId);
+
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function DeferralReferenceLovFunction List<Entity(AvDeferralReference)> {
+   parameter DeferralReffId Number;
+   where = "deferral_reference_id != :DeferralReffId ";
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

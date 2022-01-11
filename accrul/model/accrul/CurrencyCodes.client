@@ -1,0 +1,156 @@
+client CurrencyCodes;
+component ACCRUL;
+layer Core;
+projection CurrencyCodesHandling;
+
+warningsenabled = CurrencyCode;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CurrencyCodesNavEntry parent AccrulNavigator.CurrencyMenu at index 100 {
+      label = "Currency Codes";
+      page List home CurrencyCode;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using CurrencyCodeSet {
+   label = "Currency Codes";
+   list CurrencyCodeList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command IncludecurrencyasEMUcurrencyCommand for CurrencyCode {
+   label = "Include Currency as EMU-Currency";
+   enabled = [EmuCurrencyFromDate = null];
+
+   variable StrIsEmuCurr;
+   variable DtEmuValidDate {
+      type = Date;
+   }
+
+   execute {
+      dialog IncludeDlg(CurrencyCode)  into(DtEmuValidDate) {
+         when OK {
+            call IsEmuCurr(Company, CurrencyCode, DtEmuValidDate) into StrIsEmuCurr;
+            if[StrIsEmuCurr = "TRUE"] {
+               set EmuCurrencyFromDate = DtEmuValidDate;
+               call DoSetEmuFromDate(EmuCurrencyFromDate);
+            }
+            else {
+               warning("Valid as EMU currency from date should be after the Valid from date for the currency code");
+            }
+         }
+         when CANCEL {
+            exit;
+         }
+      }
+   }
+}
+
+command ExcludecurrencyasEMUcurrencyCommand for CurrencyCode {
+   label = "Exclude Currency as EMU-Currency.";
+   enabled = [EmuCurrencyFromDate != null];
+   execute {
+      set EmuCurrencyFromDate = null;
+      call DoSetEmuFromDate(EmuCurrencyFromDate);
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+group IncludeEmuCurrGroup for IncludeEmuCurrStructure {
+   label = "Include as EMU Currency From";
+
+   field EmuValidDate;
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list CurrencyCodeList for CurrencyCode {
+   orderby = CurrencyCode;
+
+   lov CurrencyCodeRef with ReferenceIsoCurrencySelector {
+      label = "Currency Code";
+      search = CurrencyCode, Description;
+      size = Large;
+      description = CurrencyCodeRef.Description;
+      validate command {
+         execute {
+            if[CurrencyCode = "EUR"] {
+               set Inverted = true;
+            }
+            else {
+               set Inverted = false;
+            }
+         }
+      }
+   }
+   field ConvFactor {
+      required = [true];
+      editable = [isNew];
+   }
+   field CurrRounding {
+      maxlength = 1;
+      required = [false];
+   }
+   field DecimalsInRate {
+      maxlength = 1;
+   }
+   field EmuCurrencyFromDate {
+      editable = [false];
+      required = [false];
+   }
+   field Inverted;
+
+   commandgroup CurrencyCodesCmdGroup {
+
+      command IncludecurrencyasEMUcurrencyCommand;
+      command ExcludecurrencyasEMUcurrencyCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+dialog IncludeDlg for IncludeEmuCurrStructure {
+   label = "Include As EMU Currency";
+   input(CurrCode);
+   output(EmuValidDate);
+   group IncludeEmuCurrGroup;
+   command Ok;
+   command Cancel;
+}
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

@@ -1,0 +1,249 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210208_ADCOM_LMM2020R1-1688.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210208   hasmlk
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_MEASUREMENT_VALUE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'MEASUREMENT_TYPE_CODE', 'VARCHAR2(8)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'MEAS_TYPE_VALUE_CODE', 'VARCHAR2(8)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'MEAS_TYPE_VALUE_DESC', 'VARCHAR2(80)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_MEASUREMENT_VALUE_PK';
+   table_name_ VARCHAR2(30) := 'AV_MEASUREMENT_VALUE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'MEASUREMENT_TYPE_CODE');
+   Database_SYS.Set_Table_Column(columns_, 'MEAS_TYPE_VALUE_CODE');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_MEASUREMENT_VALUE_RK';
+   table_name_ VARCHAR2(30) := 'AV_MEASUREMENT_VALUE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_USAGE_TYPE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'USAGE_TYPE_CODE', 'VARCHAR2(80)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ENGINEERING_UNIT_CODE', 'VARCHAR2(8)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'USAGE_TYPE_DESC', 'VARCHAR2(40)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'PRECISION', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_USAGE_TYPE_PK';
+   table_name_ VARCHAR2(30) := 'AV_USAGE_TYPE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'USAGE_TYPE_CODE');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_USAGE_TYPE_RK';
+   table_name_ VARCHAR2(30) := 'AV_USAGE_TYPE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_ASSEMBLY_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ASSEMBLY_TYPE_CODE', 'VARCHAR2(8)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ASSEMBLY_TYPE_NAME', 'VARCHAR2(80)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ASSEMBLY_TYPE_CLASS_CODE', 'VARCHAR2(8)', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_ASSEMBLY_PK';
+   table_name_ VARCHAR2(30) := 'AV_ASSEMBLY_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ASSEMBLY_TYPE_CODE');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_ASSEMBLY_RK';
+   table_name_ VARCHAR2(30) := 'AV_ASSEMBLY_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_ASSEMBLY_FLIGHT_MEAS_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ASSEMBLY_TYPE_CODE', 'VARCHAR2(8)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'MEASUREMENT_TYPE_CODE', 'VARCHAR2(80)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'MEASUREMENT_ORDER', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_ASSEMBLY_FLIGHT_MEAS_PK';
+   table_name_ VARCHAR2(30) := 'AV_ASSEMBLY_FLIGHT_MEAS_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ASSEMBLY_TYPE_CODE');
+   Database_SYS.Set_Table_Column(columns_, 'MEASUREMENT_TYPE_CODE');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_ASSEMBLY_FLIGHT_MEAS_RK';
+   table_name_ VARCHAR2(30) := 'AV_ASSEMBLY_FLIGHT_MEAS_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_ASSEMBLY_FLIGHT_USAGE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ASSEMBLY_TYPE_CODE', 'VARCHAR2(8)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'USAGE_TYPE_CODE', 'VARCHAR2(80)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'USAGE_ORDER', 'NUMBER', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'DATE', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY', 'VARCHAR2(50)', 'N', 'sys_guid()');
+   Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_ASSEMBLY_FLIGHT_USAGE_PK';
+   table_name_ VARCHAR2(30) := 'AV_ASSEMBLY_FLIGHT_USAGE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ASSEMBLY_TYPE_CODE');
+   Database_SYS.Set_Table_Column(columns_, 'USAGE_TYPE_CODE');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'P', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   index_name_ VARCHAR2(30) := 'AV_ASSEMBLY_FLIGHT_USAGE_RK';
+   table_name_ VARCHAR2(30) := 'AV_ASSEMBLY_FLIGHT_USAGE_TAB';
+   columns_    Database_SYS.ColumnTabType;
+BEGIN
+   Database_SYS.Reset_Column_Table(columns_);
+   Database_SYS.Set_Table_Column(columns_, 'ROWKEY');
+   Database_SYS.Create_Constraint(table_name_, index_name_, columns_, 'U', '&IFSAPP_INDEX', NULL, TRUE, TRUE);
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+SET SERVEROUTPUT OFF

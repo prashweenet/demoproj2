@@ -1,0 +1,58 @@
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  210112  LAHNLK  LMM2020R1-1481, Modified..
+--  201015      MADGLK  AD2020R1-792, AD2020R1-764 related aurena correction
+--  200820  SWiclk  LMM2020R1-870, Replaced AircraftTypeId by AircraftTypeCode due to key change.
+--  200702  TAJALK  LMM2020R1-270, Bug fixes
+--  200625  LAHNLK  LMM2020R1-84: created.
+-----------------------------------------------------------------------------
+projection AircraftSubSystemHandling;
+component ADCOM;
+layer Core;
+description "This page uses to list down all the Aircraft sub system Information";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AvAircraftSubSystemSet for AvAircraftSubSystem;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvAircraftSubSystem {
+   attribute SubSystemId Number {
+      required = [false];
+   }
+   attribute SubSystemCode Text {
+      required = [true];
+   }
+   attribute AircraftTypeCode Text {
+      editable = [true];
+   }
+   reference AvAircraftSystemRef(AircraftTypeCode, SystemId) to AvAircraftSystem(AircraftTypeCode, SystemId);
+   reference AvAircraftTypeRef(AircraftTypeCode) to  AvAircraftType(AircraftTypeCode);
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

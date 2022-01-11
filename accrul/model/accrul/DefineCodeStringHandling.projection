@@ -1,0 +1,111 @@
+projection DefineCodeStringHandling;
+component ACCRUL;
+layer Core;
+description "Define Code String";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountingCodePartsSet for AccountingCodeParts {
+   context Company(Company);
+}
+
+entityset AdditionalCodePartsSet for AdditionalCodeParts {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountingCodeParts {
+   crud = Read, Update;
+   attribute CodePart Text {
+      editable = [false];
+   }
+   attribute CodeName Text {
+      label = "Internal Name";
+      fetch = "substr(Code_Name, 1, 10)";
+      maxlength = 10;
+   }
+   attribute CodePartUsedDb Boolean("Y", "N") {
+      label = "Code Used";
+      required = [true];
+   }
+   attribute CodePartFunction Enumeration(AccountingCodePartFu.AccCodePart) {
+      required = [true];
+   }
+   attribute MaxNumberOfChar Number {
+      label = "Max No of Char";
+   }
+   attribute Description Text {
+      maxlength = 35;
+   }
+   attribute BaseForPfe Boolean("TRUE", "FALSE") {
+      label = "Base for Cost/Revenue Element";
+      editable = [false];
+   }
+
+   action DoSetBaseForCostRevenueElement {
+      ludependencies = AccountingCodeParts;
+   }
+}
+
+@Override
+entity AdditionalCodeParts using AccountingCodeParts {
+   crud = Read, Update;
+   from = "additional_code_parts";
+   attribute CodePart Text {
+      editable = [false];
+      format = uppercase;
+   }
+   attribute CodeName Text {
+      label = "Internal Name";
+   }
+   attribute CodePartUsedDb Boolean("Y", "N") {
+      label = "Code Used";
+      required = [true];
+   }
+   attribute CodePartFunction Enumeration(AccountingCodePartFu.AddCodePart) {
+      required = [true];
+      editable = [false];
+      updatable = [false];
+   }
+   attribute MaxNumberOfChar Number {
+      label = "Max No of Char";
+   }
+   attribute CodePartMappingExists Boolean("TRUE", "FALSE") {
+      label = "Code Part Mapping";
+   }
+   attribute SystemDefined Boolean("TRUE", "FALSE") {
+      editable = [false];
+   }
+   reference CompanyRef(Company) to Company(Company);
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetBaseCodePart Text {
+   parameter Company Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

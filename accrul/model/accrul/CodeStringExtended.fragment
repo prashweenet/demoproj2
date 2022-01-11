@@ -1,0 +1,813 @@
+fragment CodeStringExtended;
+component ACCRUL;
+layer Core;
+description "Fragment with a fieldset for Codepart B-J using the ReferenceSelector of the CodeB-J. Also support Codestring Completion and Pseudo codes and code part demands";
+// Note:
+// Fieldsets:
+// 1. CodeStringExtendedLovFieldSet
+//    Support for codestring completion, pseudo codes and code part demands
+// 2. CodeStringExtended2LovFieldSet
+//    Same as above but Account is named CodeA. To be used when Account is named CodeA in the projection/client
+// 3. CodeStringExtended2ValidDateLovFieldSet
+//    Same as field set 2. but LOV will include only the code parts within the Valid From and Valid Until dates
+// 4. CodeStringExtendedMultiCompanyLovFieldSet
+//    Support for codestring completion, pseudo codes and code part demands
+//    To be used for Multi Company pages where typically the posting
+//    is done per company (voucher company). The fieldset then uses the attibute VoucherCompany for the code string handling.
+// 5. CodeStringExtendedMultiCompanyValidDateLovFieldSet
+//    Same as field set 5. but LOV will include only the code parts within the Valid From and Valid Until dates
+// 6. CodeStringCodePartDemandLovFieldSet
+//    Only support for code part demands. Code B-J will be controlled (enabled/disabled) by the code part demand set by the Account
+// 7. CodeStringCodePartDemandValidDateLovFieldSet
+//    Same as field set 6. but LOV will include only the code parts within the Valid From and Valid Until dates
+// The page using fieldsets in this fragment must be Company Context dependent
+// The fragment should be used together with a fragment that handles account, such as CodeStringAcountLovExtended or CodeStringPsCodeAcountExtended
+// The reference in the projection must be named AccountRef and CodeB-JRef (e.g. CodeBRef) and the attributes needs to be called Account and CodeB-J.
+// When using the fieldset CodeStringPsCodeAccountExtendedMultiCompanyLovFieldSet the attribute VoucherCompany must exist in the projection.
+// When using the fieldset CodeStringExtended2LovFieldSet the attribute CodeA must exist in the projection.
+// The projection also needs an attribute named RequiredString defined as:
+// attribute RequiredString Text {
+//    fetch = "Account_API.Get_Required_Code_Part_List(company, account)";
+//    editable = [true];
+// }
+// The fragment has support for codepart handling which means that it will display the correct label and if the code part is visible or not
+// If also has support for Code String Completion, Pseudo Codes and Code Part Demands.
+// If there is a need for specific Validate Command handling then override the command
+// named ValidateCodeStringExtendedCode<CODEPART>Ref e.g. ValidateCodeStringExtendedCodeBRef for the field set CodeStringExtendedLovFieldSet
+// named ValidateCodeStringCodePartDemandCode<CODEPART>Ref e.g. ValidateCodeStringCodePartDemandCodeBRef for the field set CodeStringCodePartDemandLovFieldSet
+// named ValidateCodeStringExtendedMultiCompany<CODEPART>Ref e.g. ValidateCodeStringExtendedMultiCompanyCodeBRef for the field set CodeStringExtendedMultiCompanyLovFieldSet
+// named ValidateCodeStringExtended2Code<CODEPART>Ref e.g. ValidateCodeStringExtended2CodeBRef for the field set CodeStringExtended2LovFieldSet
+//
+// When using fieldset CodeStringExtended2ValidDateLovFieldSet and CodeStringCodePartDemandValidDateLovFieldSet, there should be an attribute named TransactionDate in parent projection
+// TransactionDate could be InvoiceDate, VoucherDate, etc. depending on the functional requirement of the relevant client
+include fragment CodestringHandling;
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+--------------------------------- SELECTOR ----------------------------------
+
+
+--------------------------------- LOV LISTS ---------------------------------
+@Override
+list CodeBLovList for CodeB {
+   label = "${context.Company.CodeBName}";
+   static CodeB {
+      label = "${context.Company.CodeBName}";
+   }
+}
+@Override
+list CodeCLovList for CodeC {
+   label = "${context.Company.CodeCName}";
+   static CodeC {
+      label = "${context.Company.CodeCName}";
+   }
+}
+@Override
+list CodeDLovList for CodeD {
+   label = "${context.Company.CodeDName}";
+   static CodeD {
+      label = "${context.Company.CodeDName}";
+   }
+}
+@Override
+list CodeELovList for CodeE {
+   label = "${context.Company.CodeEName}";
+   static CodeE {
+      label = "${context.Company.CodeEName}";
+   }
+}
+@Override
+list CodeFLovList for CodeF {
+   label = "${context.Company.CodeFName}";
+   static CodeF {
+      label = "${context.Company.CodeFName}";
+   }
+}
+@Override
+list CodeGLovList for CodeG {
+   label = "${context.Company.CodeGName}";
+   static CodeG {
+      label = "${context.Company.CodeGName}";
+   }
+}
+@Override
+list CodeHLovList for CodeH {
+   label = "${context.Company.CodeHName}";
+   static CodeH {
+      label = "${context.Company.CodeHName}";
+   }
+}
+@Override
+list CodeILovList for CodeI {
+   label = "${context.Company.CodeIName}";
+   static CodeI {
+      label = "${context.Company.CodeIName}";
+   }
+}
+@Override
+list CodeJLovList for CodeJ {
+   label = "${context.Company.CodeJName}";
+   static CodeJ {
+      label = "${context.Company.CodeJName}";
+   }
+}
+
+-------------------------------- FIELD SETS ---------------------------------
+fieldset CodeStringExtendedLovFieldSet {
+   lov CodeBRef with ReferenceCodeBSelector {
+      label = "${context.Company.CodeBName}";
+      columnvisible = [context.Company.CodeBUsed = "Y"];
+      visible = [context.Company.CodeBUsed = "Y"];
+      editable = [substring(RequiredString, 0, 1) = "K" or substring(RequiredString, 0, 1) = "M" or RequiredString = null];
+      search = CodeB, Description;
+      description = CodeBRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringExtendedCodeBRef;
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      label = "${context.Company.CodeCName}";
+      columnvisible = [context.Company.CodeCUsed = "Y"];
+      visible = [context.Company.CodeCUsed = "Y"];
+      editable = [substring(RequiredString, 2, 1) = "K" or substring(RequiredString, 2, 1) = "M" or RequiredString = null];
+      search = CodeC, Description;
+      description = CodeCRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringExtendedCodeCRef;
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      label = "${context.Company.CodeDName}";
+      columnvisible = [context.Company.CodeDUsed = "Y"];
+      visible = [context.Company.CodeDUsed = "Y"];
+      editable = [substring(RequiredString, 4, 1) = "K" or substring(RequiredString, 4, 1) = "M" or RequiredString = null];
+      search = CodeD, Description;
+      description = CodeDRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringExtendedCodeDRef;
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      label = "${context.Company.CodeEName}";
+      columnvisible = [context.Company.CodeEUsed = "Y"];
+      visible = [context.Company.CodeEUsed = "Y"];
+      editable = [substring(RequiredString, 6, 1) = "K" or substring(RequiredString, 6, 1) = "M" or RequiredString = null];
+      search = CodeE, Description;
+      description = CodeERef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringExtendedCodeERef;
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      label = "${context.Company.CodeFName}";
+      columnvisible = [context.Company.CodeFUsed = "Y"];
+      visible = [context.Company.CodeFUsed = "Y"];
+      editable = [substring(RequiredString, 8, 1) = "K" or substring(RequiredString, 8, 1) = "M" or RequiredString = null];
+      search = CodeF, Description;
+      description = CodeFRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringExtendedCodeFRef;
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      label = "${context.Company.CodeGName}";
+      columnvisible = [context.Company.CodeGUsed = "Y"];
+      visible = [context.Company.CodeGUsed = "Y"];
+      editable = [substring(RequiredString, 10, 1) = "K" or substring(RequiredString, 10, 1) = "M" or RequiredString = null];
+      search = CodeG, Description;
+      description = CodeGRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringExtendedCodeGRef;
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      label = "${context.Company.CodeHName}";
+      columnvisible = [context.Company.CodeHUsed = "Y"];
+      visible = [context.Company.CodeHUsed = "Y"];
+      editable = [substring(RequiredString, 12, 1) = "K" or substring(RequiredString, 12, 1) = "M" or RequiredString = null];
+      search = CodeH, Description;
+      description = CodeHRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringExtendedCodeHRef;
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      label = "${context.Company.CodeIName}";
+      columnvisible = [context.Company.CodeIUsed = "Y"];
+      visible = [context.Company.CodeIUsed = "Y"];
+      editable = [substring(RequiredString, 14, 1) = "K" or substring(RequiredString, 14, 1) = "M" or RequiredString = null];
+      search = CodeI, Description;
+      description = CodeIRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringExtendedCodeIRef;
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      label = "${context.Company.CodeJName}";
+      columnvisible = [context.Company.CodeJUsed = "Y"];
+      visible = [context.Company.CodeJUsed = "Y"];
+      editable = [substring(RequiredString, 16, 1) = "K" or substring(RequiredString, 16, 1) = "M" or RequiredString = null];
+      search = CodeJ, Description;
+      description = CodeJRef.Description;
+      maxlength = 10;
+      format = uppercase;
+      validate command ValidateCodeStringExtendedCodeJRef;
+   }
+}
+
+//  Same as CodeStringExtendedLovFieldSet but Account is named CodeA in projection and client
+fieldset CodeStringExtended2LovFieldSet clone CodeStringExtendedLovFieldSet {
+   lov CodeBRef with ReferenceCodeBSelector {
+      validate command ValidateCodeStringExtended2CodeBRef;
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      validate command ValidateCodeStringExtended2CodeCRef;
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      validate command ValidateCodeStringExtended2CodeDRef;
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      validate command ValidateCodeStringExtended2CodeERef;
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      validate command ValidateCodeStringExtended2CodeFRef;
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      validate command ValidateCodeStringExtended2CodeGRef;
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      validate command ValidateCodeStringExtended2CodeHRef;
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      validate command ValidateCodeStringExtended2CodeIRef;
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      validate command ValidateCodeStringExtended2CodeJRef;
+   }
+}
+
+fieldset CodeStringExtended2ValidDateLovFieldSet clone CodeStringExtended2LovFieldSet {
+   lov CodeBRef with ReferenceCodeBSelector using FetchValidDateCodeB(Company, parent.TransactionDate);
+   lov CodeCRef with ReferenceCodeCSelector using FetchValidDateCodeC(Company, parent.TransactionDate);
+   lov CodeDRef with ReferenceCodeDSelector using FetchValidDateCodeD(Company, parent.TransactionDate);
+   lov CodeERef with ReferenceCodeESelector using FetchValidDateCodeE(Company, parent.TransactionDate);
+   lov CodeFRef with ReferenceCodeFSelector using FetchValidDateCodeF(Company, parent.TransactionDate);
+   lov CodeGRef with ReferenceCodeGSelector using FetchValidDateCodeG(Company, parent.TransactionDate);
+   lov CodeHRef with ReferenceCodeHSelector using FetchValidDateCodeH(Company, parent.TransactionDate);
+   lov CodeIRef with ReferenceCodeISelector using FetchValidDateCodeI(Company, parent.TransactionDate);
+   lov CodeJRef with ReferenceCodeJSelector using FetchValidDateCodeJ(Company, parent.TransactionDate);
+}
+
+fieldset CodeStringExtendedMultiCompanyLovFieldSet clone CodeStringExtendedLovFieldSet {
+   lov CodeBRef with ReferenceCodeBSelector {
+      validate command ValidateCodeStringExtendedMultiCompanyCodeBRef;
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      validate command ValidateCodeStringExtendedMultiCompanyCodeCRef;
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      validate command ValidateCodeStringExtendedMultiCompanyCodeDRef;
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      validate command ValidateCodeStringExtendedMultiCompanyCodeERef;
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      validate command ValidateCodeStringExtendedMultiCompanyCodeFRef;
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      validate command ValidateCodeStringExtendedMultiCompanyCodeGRef;
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      validate command ValidateCodeStringExtendedMultiCompanyCodeHRef;
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      validate command ValidateCodeStringExtendedMultiCompanyCodeIRef;
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      validate command ValidateCodeStringExtendedMultiCompanyCodeJRef;
+   }
+}
+
+fieldset CodeStringExtendedMultiCompanyValidDateLovFieldSet clone CodeStringExtendedMultiCompanyLovFieldSet {
+   lov CodeBRef with ReferenceCodeBSelector using FetchValidDateCodeB(VoucherCompany, parent.VoucherDate);
+   lov CodeCRef with ReferenceCodeCSelector using FetchValidDateCodeC(VoucherCompany, parent.VoucherDate);
+   lov CodeDRef with ReferenceCodeDSelector using FetchValidDateCodeD(VoucherCompany, parent.VoucherDate);
+   lov CodeERef with ReferenceCodeESelector using FetchValidDateCodeE(VoucherCompany, parent.VoucherDate);
+   lov CodeFRef with ReferenceCodeFSelector using FetchValidDateCodeF(VoucherCompany, parent.VoucherDate);
+   lov CodeGRef with ReferenceCodeGSelector using FetchValidDateCodeG(VoucherCompany, parent.VoucherDate);
+   lov CodeHRef with ReferenceCodeHSelector using FetchValidDateCodeH(VoucherCompany, parent.VoucherDate);
+   lov CodeIRef with ReferenceCodeISelector using FetchValidDateCodeI(VoucherCompany, parent.VoucherDate);
+   lov CodeJRef with ReferenceCodeJSelector using FetchValidDateCodeJ(VoucherCompany, parent.VoucherDate);
+}
+
+fieldset CodeStringCodePartDemandLovFieldSet clone CodeStringExtendedLovFieldSet {
+   lov CodeBRef with ReferenceCodeBSelector {
+      validate command ValidateCodeStringCodePartDemandCodeBRef;
+   }
+   lov CodeCRef with ReferenceCodeCSelector {
+      validate command ValidateCodeStringCodePartDemandCodeCRef;
+   }
+   lov CodeDRef with ReferenceCodeDSelector {
+      validate command ValidateCodeStringCodePartDemandCodeDRef;
+   }
+   lov CodeERef with ReferenceCodeESelector {
+      validate command ValidateCodeStringCodePartDemandCodeERef;
+   }
+   lov CodeFRef with ReferenceCodeFSelector {
+      validate command ValidateCodeStringCodePartDemandCodeFRef;
+   }
+   lov CodeGRef with ReferenceCodeGSelector {
+      validate command ValidateCodeStringCodePartDemandCodeGRef;
+   }
+   lov CodeHRef with ReferenceCodeHSelector {
+      validate command ValidateCodeStringCodePartDemandCodeHRef;
+   }
+   lov CodeIRef with ReferenceCodeISelector {
+      validate command ValidateCodeStringCodePartDemandCodeIRef;
+   }
+   lov CodeJRef with ReferenceCodeJSelector {
+      validate command ValidateCodeStringCodePartDemandCodeJRef;
+   }
+}
+
+fieldset CodeStringCodePartDemandValidDateLovFieldSet clone CodeStringCodePartDemandLovFieldSet {
+   lov CodeBRef with ReferenceCodeBSelector using FetchValidDateCodeB(Company, parent.TransactionDate);
+   lov CodeCRef with ReferenceCodeCSelector using FetchValidDateCodeC(Company, parent.TransactionDate);
+   lov CodeDRef with ReferenceCodeDSelector using FetchValidDateCodeD(Company, parent.TransactionDate);
+   lov CodeERef with ReferenceCodeESelector using FetchValidDateCodeE(Company, parent.TransactionDate);
+   lov CodeFRef with ReferenceCodeFSelector using FetchValidDateCodeF(Company, parent.TransactionDate);
+   lov CodeGRef with ReferenceCodeGSelector using FetchValidDateCodeG(Company, parent.TransactionDate);
+   lov CodeHRef with ReferenceCodeHSelector using FetchValidDateCodeH(Company, parent.TransactionDate);
+   lov CodeIRef with ReferenceCodeISelector using FetchValidDateCodeI(Company, parent.TransactionDate);
+   lov CodeJRef with ReferenceCodeJSelector using FetchValidDateCodeJ(Company, parent.TransactionDate);
+}
+
+--------------------------------- COMMANDS ----------------------------------
+command ValidateCodeStringExtendedGeneral {
+   variable CurrentCodePart {
+      type = Text;
+   }
+   variable MultiCompanyToUse {
+      type = Text;
+   }
+   variable CompanyToUse {
+      type = Text;
+   }
+   variable AccountFieldName {
+      type = Text;
+   }
+   variable AccountValue {
+      type = Text;
+   }
+   variable ModifiedCodeString {
+      type = Text;
+   }
+   variable CodestringHandlingRec {
+      type = Structure(CodestringHandlingStructure);
+   }
+   execute {
+      // to support multi company pages where the value of the company is not using an attribute named Company
+      if [MultiCompanyToUse != null] {
+         set CompanyToUse = MultiCompanyToUse;
+      }
+      // If CompanyToUse is not defined assume to use Company attribute (to support pages with VoucherCompany)
+      if [CompanyToUse = null] {
+         set CompanyToUse = Company;
+      }
+      // To support pages where Account is named CodeA
+      if [AccountFieldName = "CodeA"] {
+         set AccountValue = CodeA;
+      }
+      else {
+         set AccountValue = Account;
+      }
+      if [CurrentCodePart = null] {
+         set CurrentCodePart = null;
+      }
+      else {
+         call CodestringHandling(CompanyToUse, CurrentCodePart, AccountValue, CodeB, CodeC, CodeD, CodeE, CodeF, CodeG, CodeH, CodeI, CodeJ, ProcessCode, Quantity, Text, ProjectActivityId, RequiredString, "FALSE"
+         ) into CodestringHandlingRec;
+         set ModifiedCodeString = "${CodestringHandlingRec.ModifiedCodeString}";
+         if [ModifiedCodeString = "TRUE"] {
+            confirm("Existing code part information will be modified.") {
+               when OK {
+                  if [AccountFieldName = "CodeA"] {
+                     set CodeA = CodestringHandlingRec.ModifiedCodeA;
+                  }
+                  else {
+                     set Account = CodestringHandlingRec.ModifiedCodeA;
+                  }
+                  set CodeB = CodestringHandlingRec.ModifiedCodeB;
+                  set CodeC = CodestringHandlingRec.ModifiedCodeC;
+                  set CodeD = CodestringHandlingRec.ModifiedCodeD;
+                  set CodeE = CodestringHandlingRec.ModifiedCodeE;
+                  set CodeF = CodestringHandlingRec.ModifiedCodeF;
+                  set CodeG = CodestringHandlingRec.ModifiedCodeG;
+                  set CodeH = CodestringHandlingRec.ModifiedCodeH;
+                  set CodeI = CodestringHandlingRec.ModifiedCodeI;
+                  set CodeJ = CodestringHandlingRec.ModifiedCodeJ;
+                  set ProcessCode = CodestringHandlingRec.ModifiedProcessCode;
+                  set Quantity = CodestringHandlingRec.ModifiedQuantity;
+                  set Text = CodestringHandlingRec.ModifiedText;
+                  set ProjectActivityId = CodestringHandlingRec.ModifiedProjectActivityId;
+                  set ProjectId = CodestringHandlingRec.ModifiedProjectId;
+                  set RequiredString = CodestringHandlingRec.ModifiedRequiredString;
+               }
+            }
+         }
+         else {
+            if [AccountFieldName = "CodeA"] {
+               set CodeA = CodestringHandlingRec.CodeA;
+            }
+            else {
+               set Account = CodestringHandlingRec.CodeA;
+            }
+            set CodeB = CodestringHandlingRec.CodeB;
+            set CodeC = CodestringHandlingRec.CodeC;
+            set CodeD = CodestringHandlingRec.CodeD;
+            set CodeE = CodestringHandlingRec.CodeE;
+            set CodeF = CodestringHandlingRec.CodeF;
+            set CodeG = CodestringHandlingRec.CodeG;
+            set CodeH = CodestringHandlingRec.CodeH;
+            set CodeI = CodestringHandlingRec.CodeI;
+            set CodeJ = CodestringHandlingRec.CodeJ;
+            set ProcessCode = CodestringHandlingRec.ProcessCode;
+            set Quantity = CodestringHandlingRec.Quantity;
+            set Text = CodestringHandlingRec.Text;
+            set ProjectActivityId = CodestringHandlingRec.ProjectActivityId;
+            set ProjectId = CodestringHandlingRec.ProjectId;
+            set RequiredString = CodestringHandlingRec.RequiredString;
+         }
+      }
+   }
+}
+
+// Clone commands from General command
+command ValidateCodeStringExtendedCodeBRef clone ValidateCodeStringExtendedGeneral {
+   execute {
+      set CurrentCodePart = "B";
+      //Only call super when field has a value, to avoid db-calls
+      if [CodeB != null or context.Company.ProjCodePart = CurrentCodePart] {
+         super;
+      }
+   }
+}
+command ValidateCodeStringExtendedCodeCRef clone ValidateCodeStringExtendedGeneral {
+   execute {
+      set CurrentCodePart = "C";
+      if [CodeC != null or context.Company.ProjCodePart = CurrentCodePart] {
+         super;
+      }
+   }
+}
+command ValidateCodeStringExtendedCodeDRef clone ValidateCodeStringExtendedGeneral {
+   execute {
+      set CurrentCodePart = "D";
+      if [CodeD != null or context.Company.ProjCodePart = CurrentCodePart] {
+         super;
+      }
+   }
+}
+command ValidateCodeStringExtendedCodeERef clone ValidateCodeStringExtendedGeneral {
+   execute {
+      set CurrentCodePart = "E";
+      if [CodeE != null or context.Company.ProjCodePart = CurrentCodePart] {
+         super;
+      }
+   }
+}
+command ValidateCodeStringExtendedCodeFRef clone ValidateCodeStringExtendedGeneral {
+   execute {
+      set CurrentCodePart = "F";
+      if [CodeF != null or context.Company.ProjCodePart = CurrentCodePart] {
+         super;
+      }
+   }
+}
+command ValidateCodeStringExtendedCodeGRef clone ValidateCodeStringExtendedGeneral {
+   execute {
+      set CurrentCodePart = "G";
+      if [CodeG != null or context.Company.ProjCodePart = CurrentCodePart] {
+         super;
+      }
+   }
+}
+command ValidateCodeStringExtendedCodeHRef clone ValidateCodeStringExtendedGeneral {
+   execute {
+      set CurrentCodePart = "H";
+      if [CodeH != null or context.Company.ProjCodePart = CurrentCodePart] {
+         super;
+      }
+   }
+}
+command ValidateCodeStringExtendedCodeIRef clone ValidateCodeStringExtendedGeneral {
+   execute {
+      set CurrentCodePart = "I";
+      if [CodeI != null or context.Company.ProjCodePart = CurrentCodePart] {
+         super;
+      }
+   }
+}
+command ValidateCodeStringExtendedCodeJRef clone ValidateCodeStringExtendedGeneral {
+   execute {
+      set CurrentCodePart = "J";
+      if [CodeJ != null or context.Company.ProjCodePart = CurrentCodePart] {
+         super;
+      }
+   }
+}
+
+
+// Commands for fieldset CodeStringExtended2LovFieldSet
+-------------- COMMAND FOR CODE STRING EXTENDED2 LOV FIELD SET --------------
+command ValidateCodeStringExtended2CodeBRef clone ValidateCodeStringExtendedCodeBRef {
+   execute {
+      set AccountFieldName = "CodeA";
+      super;
+   }
+}
+command ValidateCodeStringExtended2CodeCRef clone ValidateCodeStringExtendedCodeCRef {
+   execute {
+      set AccountFieldName = "CodeA";
+      super;
+   }
+}
+command ValidateCodeStringExtended2CodeDRef clone ValidateCodeStringExtendedCodeDRef {
+   execute {
+      set AccountFieldName = "CodeA";
+      super;
+   }
+}
+command ValidateCodeStringExtended2CodeERef clone ValidateCodeStringExtendedCodeERef {
+   execute {
+      set AccountFieldName = "CodeA";
+      super;
+   }
+}
+command ValidateCodeStringExtended2CodeFRef clone ValidateCodeStringExtendedCodeFRef {
+   execute {
+      set AccountFieldName = "CodeA";
+      super;
+   }
+}
+command ValidateCodeStringExtended2CodeGRef clone ValidateCodeStringExtendedCodeGRef {
+   execute {
+      set AccountFieldName = "CodeA";
+      super;
+   }
+}
+command ValidateCodeStringExtended2CodeHRef clone ValidateCodeStringExtendedCodeHRef {
+   execute {
+      set AccountFieldName = "CodeA";
+      super;
+   }
+}
+command ValidateCodeStringExtended2CodeIRef clone ValidateCodeStringExtendedCodeIRef {
+   execute {
+      set AccountFieldName = "CodeA";
+      super;
+   }
+}
+command ValidateCodeStringExtended2CodeJRef clone ValidateCodeStringExtendedCodeJRef {
+   execute {
+      set AccountFieldName = "CodeA";
+      super;
+   }
+}
+
+// Commands for fieldset CodeStringExtendedMultiCompanyLovFieldSet
+------------------ COMMAND FOR MULTI COMPANY LOV FIELD SET ------------------
+command ValidateCodeStringExtendedMultiCompanyCodeBRef clone ValidateCodeStringExtendedCodeBRef {
+   execute {
+      if [MultiCompanyToUse = null] {
+         set MultiCompanyToUse = VoucherCompany;
+      }
+      super;
+   }
+}
+command ValidateCodeStringExtendedMultiCompanyCodeCRef clone ValidateCodeStringExtendedCodeCRef {
+   execute {
+      if [MultiCompanyToUse = null] {
+         set MultiCompanyToUse = VoucherCompany;
+      }
+      super;
+   }
+}
+command ValidateCodeStringExtendedMultiCompanyCodeDRef clone ValidateCodeStringExtendedCodeDRef {
+   execute {
+      if [MultiCompanyToUse = null] {
+         set MultiCompanyToUse = VoucherCompany;
+      }
+      super;
+   }
+}
+command ValidateCodeStringExtendedMultiCompanyCodeERef clone ValidateCodeStringExtendedCodeERef {
+   execute {
+      if [MultiCompanyToUse = null] {
+         set MultiCompanyToUse = VoucherCompany;
+      }
+      super;
+   }
+}
+command ValidateCodeStringExtendedMultiCompanyCodeFRef clone ValidateCodeStringExtendedCodeFRef {
+   execute {
+      if [MultiCompanyToUse = null] {
+         set MultiCompanyToUse = VoucherCompany;
+      }
+      super;
+   }
+}
+command ValidateCodeStringExtendedMultiCompanyCodeGRef clone ValidateCodeStringExtendedCodeGRef {
+   execute {
+      if [MultiCompanyToUse = null] {
+         set MultiCompanyToUse = VoucherCompany;
+      }
+      super;
+   }
+}
+command ValidateCodeStringExtendedMultiCompanyCodeHRef clone ValidateCodeStringExtendedCodeHRef {
+   execute {
+      if [MultiCompanyToUse = null] {
+         set MultiCompanyToUse = VoucherCompany;
+      }
+      super;
+   }
+}
+command ValidateCodeStringExtendedMultiCompanyCodeIRef clone ValidateCodeStringExtendedCodeIRef {
+   execute {
+      if [MultiCompanyToUse = null] {
+         set MultiCompanyToUse = VoucherCompany;
+      }
+      super;
+   }
+}
+command ValidateCodeStringExtendedMultiCompanyCodeJRef clone ValidateCodeStringExtendedCodeJRef {
+   execute {
+      if [MultiCompanyToUse = null] {
+         set MultiCompanyToUse = VoucherCompany;
+      }
+      super;
+   }
+}
+
+// Commands for fieldset CodeStringCodePartDemandLovFieldSet
+----------- COMMAND FOR CODE STRING CODE PART DEMAND LOV FIELDSET -----------
+command ValidateCodeStringCodePartDemandCodeBRef {
+   variable Dummy Text;
+}
+command ValidateCodeStringCodePartDemandCodeCRef {
+   variable Dummy Text;
+}
+command ValidateCodeStringCodePartDemandCodeDRef {
+   variable Dummy Text;
+}
+command ValidateCodeStringCodePartDemandCodeERef {
+   variable Dummy Text;
+}
+command ValidateCodeStringCodePartDemandCodeFRef {
+   variable Dummy Text;
+}
+command ValidateCodeStringCodePartDemandCodeGRef {
+   variable Dummy Text;
+}
+command ValidateCodeStringCodePartDemandCodeHRef {
+   variable Dummy Text;
+}
+command ValidateCodeStringCodePartDemandCodeIRef {
+   variable Dummy Text;
+}
+command ValidateCodeStringCodePartDemandCodeJRef {
+   variable Dummy Text;
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+@Override
+entity Account {
+   attribute Account Text {
+      label = "${context.Company.CodeAName}";
+   }
+   attribute AccntGroup Text {
+      lovcolumn = [true];
+   }
+   attribute AccntType Text {
+      lovcolumn = [true];
+   }
+}
+@Override
+entity CodeB {
+   attribute CodeB Text {
+      label = "${context.Company.CodeBName}";
+   }
+}
+@Override
+entity CodeC {
+   attribute CodeC Text {
+      label = "${context.Company.CodeCName}";
+   }
+}
+@Override
+entity CodeD {
+   attribute CodeD Text {
+      label = "${context.Company.CodeDName}";
+   }
+}
+@Override
+entity CodeE {
+   attribute CodeE Text {
+      label = "${context.Company.CodeEName}";
+   }
+}
+@Override
+entity CodeF {
+   attribute CodeF Text {
+      label = "${context.Company.CodeFName}";
+   }
+}
+@Override
+entity CodeG {
+   attribute CodeG Text {
+      label = "${context.Company.CodeGName}";
+   }
+}
+@Override
+entity CodeH {
+   attribute CodeH Text {
+      label = "${context.Company.CodeHName}";
+   }
+}
+@Override
+entity CodeI {
+   attribute CodeI Text {
+      label = "${context.Company.CodeIName}";
+   }
+}
+@Override
+entity CodeJ {
+   attribute CodeJ Text {
+      label = "${context.Company.CodeJName}";
+   }
+}
+
+--------------------------------- FUNCTIONS ---------------------------------
+function FetchValidDateCodeB List < Entity(CodeB) > {
+   parameter Company Text;
+   parameter TransactionDate Date;
+   where = "(company = :Company AND (:TransactionDate BETWEEN valid_from AND valid_until))";
+}
+
+
+function FetchValidDateCodeC List < Entity(CodeC) > {
+   parameter Company Text;
+   parameter TransactionDate Date;
+   where = "(company = :Company AND (:TransactionDate BETWEEN valid_from AND valid_until))";
+}
+
+
+function FetchValidDateCodeD List < Entity(CodeD) > {
+   parameter Company Text;
+   parameter TransactionDate Date;
+   where = "(company = :Company AND (:TransactionDate BETWEEN valid_from AND valid_until))";
+}
+
+
+function FetchValidDateCodeE List < Entity(CodeE) > {
+   parameter Company Text;
+   parameter TransactionDate Date;
+   where = "(company = :Company AND (:TransactionDate BETWEEN valid_from AND valid_until))";
+}
+
+
+function FetchValidDateCodeF List < Entity(CodeF) > {
+   parameter Company Text;
+   parameter TransactionDate Date;
+   where = "(company = :Company AND (:TransactionDate BETWEEN valid_from AND valid_until))";
+}
+
+
+function FetchValidDateCodeG List < Entity(CodeG) > {
+   parameter Company Text;
+   parameter TransactionDate Date;
+   where = "(company = :Company AND (:TransactionDate BETWEEN valid_from AND valid_until))";
+}
+
+
+function FetchValidDateCodeH List < Entity(CodeH) > {
+   parameter Company Text;
+   parameter TransactionDate Date;
+   where = "(company = :Company AND (:TransactionDate BETWEEN valid_from AND valid_until))";
+}
+
+
+function FetchValidDateCodeI List < Entity(CodeI) > {
+   parameter Company Text;
+   parameter TransactionDate Date;
+   where = "(company = :Company AND (:TransactionDate BETWEEN valid_from AND valid_until))";
+}
+
+
+function FetchValidDateCodeJ List < Entity(CodeJ) > {
+   parameter Company Text;
+   parameter TransactionDate Date;
+   where = "(company = :Company AND (:TransactionDate BETWEEN valid_from AND valid_until))";
+}

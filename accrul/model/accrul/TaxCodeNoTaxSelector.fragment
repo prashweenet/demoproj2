@@ -1,0 +1,92 @@
+fragment TaxCodeNoTaxSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view tax_code_no_tax";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceTaxCodeNoTaxSelector for TaxCodeNoTax {
+   static FeeCode;
+   static Description;
+}
+
+card TaxCodeNoTaxCard for TaxCodeNoTax {
+   label = "";
+   fieldranking FeeCode;
+   field FeeCode;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query TaxCodeNoTax {
+   from = "tax_code_no_tax";
+   lu = StatutoryFee;
+   keys = Company, FeeCode;
+   ludependencies = StatutoryFee;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute FeeCode Text {
+      label = "Tax Code";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute FeeRate Number {
+      label = "Tax (%)";
+      lovcolumn = [true];
+   }
+   attribute ValidFrom Date {
+      lovcolumn = [true];
+   }
+   attribute ValidUntil Date {
+      label = "Valid To";
+      lovcolumn = [true];
+   }
+   attribute FeeType Enumeration(FeeType) {
+      label = "Tax Type";
+      lovcolumn = [true];
+      fetch = "fee_type_db";
+   }
+   attribute VatReceived Enumeration(VatMethod) {
+      label = "Tax Method Tax Received";
+      lovcolumn = [true];
+      fetch = "vat_received_db";
+   }
+   attribute VatDisbursed Enumeration(VatMethod) {
+      label = "Tax Method Tax Disbursed";
+      lovcolumn = [true];
+      fetch = "vat_disbursed_db";
+   }
+   attribute Deductible Number {
+      label = "Deductible (%)";
+      lovcolumn = [true];
+   }
+   attribute TaxAmountAtInvPrint Enumeration(TaxAmountAtInvPrint) {
+      label = "Tax Amount at Invoice Printout";
+      lovcolumn = [true];
+      fetch = "tax_amount_at_inv_print_db";
+   }
+   attribute TaxAmtLimit Number {
+      label = "Tax Amount Limit in Accounting Currency";
+      lovcolumn = [true];
+   }
+   attribute TaxReportingCategory Enumeration(TaxReportingCategory) {
+      lovcolumn = [true];
+      fetch = "tax_reporting_category_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------
+
+function TaxCodeNoTaxFetchValidTaxCodes List < Entity(TaxCodeNoTax) > {
+   parameter ValidationDate Date;
+
+   where = "VALID_FROM <= TRUNC(:ValidationDate) AND VALID_UNTIL >= TRUNC(:ValidationDate)";
+}

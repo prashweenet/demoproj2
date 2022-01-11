@@ -1,0 +1,67 @@
+projection CodePartAttributeConnectionHandling;
+component ACCRUL;
+layer Core;
+description "Code Part Attribute Connection";
+category Users;
+include fragment AccountingCodePartsUsed2Selector;
+include fragment CopyToCompaniesAssistant;
+include fragment BudgetAccCodePartValueSelector;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountingAttributeConSet for AccountingAttributeCon {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountingAttributeCon {
+   attribute AttributeValue Text {
+      format = uppercase;
+   }
+   reference AttributeRef(Company, Attribute) to AccountingAttribute(Company, Attribute) {
+      label = "Attribute";
+      copy CodePart to CodePart;
+   }
+   reference CodePartRef(Company, CodePart) to AccountingCodePartsUsed2(Company, CodePart) {
+      label = "Code Part";
+   }
+   reference CodePartValueRef(Company, CodePart, CodePartValue) to BudgetAccCodePartValue(Company, CodePart, CodePartValue) {
+      label = "Code Part Value";
+   }
+   reference AttributeValueRef(Company, Attribute, AttributeValue) to AccountingAttributeValue(Company, Attribute, AttributeValue) {
+      label = "Attribute Value";
+   }
+}
+
+@Override
+entity AccountingAttributeValue {
+   reference AttributeValueRef(Company, Attribute, AttributeValue) to AccountingAttributeValue(Company, Attribute, AttributeValue) {
+      label = "Attribute Value";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

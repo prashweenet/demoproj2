@@ -1,0 +1,109 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvPartGroup
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201124  aruflk  Remove Get_Common_Hardware Unit Test.
+--  201106  majslk  LMM2020R1-1382 - Added test for Check_Insert__
+--  201026  Swiclk  AD2020R1-958, Added unit test for Pre_Sync_Action().
+--  201002  majslk  Created, Added Get_Common_Hardware.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should return correct attr depending on existance of the Part_Group record" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_part_group_tab
+   VALUES
+      | part_group_id | mx_unique_key |
+      | 1             | '4650:10000'  |
+   END VALUES;
+
+
+IS
+   --Insert your test variables here
+   output1_  VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'EXISTS_PART_GROUP_TAG'||chr(31)||'TAG'||chr(30)||'MX_UNIQUE_KEY'||chr(31)||'4650:10000'||chr(30) || 'AIRCRAFT_TYPE_CODE'||chr(31)||'ATC'||chr(30)||'CONFIG_SLOT_CODE'||chr(31)||'CSC'||chr(30) || 'PART_GROUP_CODE'||chr(31)||'PGC'||chr(30) |
+      | 'NOT_EXISTS_TAG'||chr(31)||'TAG'||chr(30)||'MX_UNIQUE_KEY'||chr(31)||'4650:10001'||chr(30) || 'AIRCRAFT_TYPE_CODE'||chr(31)||'ATC'||chr(30)||'CONFIG_SLOT_CODE'||chr(31)||'CSC'||chr(30) || 'PART_GROUP_CODE'||chr(31)||'PGC'||chr(30) |
+
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+      expected1_ := 'EXISTS_PART_GROUP_TAG'||chr(31)||'TAG'||chr(30)||'MX_UNIQUE_KEY'||chr(31)||'4650:10000'||chr(30);
+      --Insert your assertions here
+      IF (output1_ LIKE 'EXISTS_PART_GROUP_TAG%') THEN
+         ASSERT output1_ = expected1_ MESSAGE ' Assert1: Expected '||expected1_  ||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Assert2: Expected '||attr_||' but  was '||output1_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+
+UNITTEST "Check_Insert___ should genarate next sequence value when part_group_id is NULL" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT av_part_group_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   @MockTable dual
+   VALUES
+      | dummy |
+      | 1     |
+   END VALUES;
+
+IS
+   test_rec1_  av_part_group_tab%ROWTYPE;
+   test_rec2_  av_part_group_tab%ROWTYPE;
+   output_  Indicator_Rec;
+BEGIN
+   test_rec1_.part_group_id := NULL;
+   test_rec1_.aircraft_type_code := 'YOW-348';
+   test_rec1_.config_slot_code := 'left';
+   test_rec1_.part_group_code := 'P001';
+   test_rec1_.part_group_name := 'Part1';
+   test_rec1_.inventory_class_code := 'Inv1';
+   test_rec1_.part_quantity := 10;
+   test_rec1_.is_line_replaceable := 1;
+   test_rec1_.applicability_range := 'AppliRange1';
+   test_rec1_.is_common_hardware := 'true';
+   test_rec1_.is_req_spec_part := 'true';
+   test_rec1_.conditions_desc := 'Condition1';
+   test_rec1_.mx_unique_key := NULL;
+   test_rec1_.alt_id := 'Alt1';
+
+   test_rec2_.part_group_id := 5000;
+   FOR
+      | newrec_    | indrec_ | attr_ |
+      | test_rec1_ | output_ |  'A'  |
+      | test_rec2_ | output_ |  'A'  |
+   LOOP
+      IF newrec_.part_group_id IS NULL THEN
+         newrec_.part_group_id := PART_GROUP_ID_SEQ.NEXTVAL;
+         ASSERT newrec_.part_group_id IS NOT NULL MESSAGE 'Returned '||newrec_.part_group_id;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+
+
+

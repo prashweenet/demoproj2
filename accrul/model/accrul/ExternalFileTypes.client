@@ -1,0 +1,304 @@
+client ExternalFileTypes;
+component ACCRUL;
+layer Core;
+projection ExternalFileTypesHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry ExternalFileTypesNavEntry parent AccrulNavigator.ExternalFileBasicDataMenu at index 200 {
+      label = "External File Types";
+      page List home ExtFileType;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using ExtFileTypeSet {
+   label = "External File Types";
+
+   list ExtFileTypeList;
+
+   command CreateFileTypeTemplateCommand;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+-- Note: This command has been kept hidden as 21R1 release won't support customer/user defined external file types and templates based on views.
+command CreateFileTypeTemplateCommand {
+   --mode = Global;
+   label = "New File Type and File Template from View Definition";
+   visible = [false];
+
+   execute {
+      dialog CreateFileTypeTemplateDlg(true, false, true) into(StrFileType) {
+         when OK {
+            if [StrFileType != null]
+               {
+               navigate "page/ExternalFileTypes/List?$filter=FileType eq $[StrFileType]";
+            }
+         }
+      }
+   }
+}
+
+command DetailsCommand for ExtFileType {
+   icon = "popup";
+   style = IconOnly;
+   label = "Details";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/ExternalFileType/Form?$filter=FileType eq $[FileType]";
+   }
+
+}
+
+command CopyFileTypeCommand for ExtFileType {
+   label = "Copy File Type";
+   enabled = [false];
+
+   execute {
+      dialog CopyFileTypeDlg(FileType, Description) into(StrFileType) {
+         when OK {
+            if [StrFileType != null]
+               {
+               navigate "page/ExternalFileTypes/List?$filter=FileType eq $[StrFileType]";
+
+            }
+         }
+      }
+   }
+}
+
+command Ok for CreateFileTypeTemplateStructure {
+   label = "OK";
+   enabled = [Component != null and ViewName != null and FileType != null and FileTypeDescription != null and((CreateFileTemplate = true and FileTemplate != null and FileTemplateDescription != null) or CreateFileTemplate = false)];
+
+   execute {
+      call DoCreateFileTypeTemplate(ViewName, InputPackage, Component, FileType, FileTypeDescription, FileTemplate, FileTemplateDescription, CreateInputDefinition, CreateOutputDefinition) into NewKeyRef;
+      exit OK;
+   }
+}
+
+command Ok for CopyFileTypeStructure {
+   label = "OK";
+   enabled = [FileTypeFrom != null and FileTypeTo != null and FileTypeDescriptionTo != null];
+
+   execute {
+      call DoCopyFileTypeFromType(FileTypeTo, FileTypeDescriptionTo, FileTypeFrom) into NewKeyRef;
+      exit OK;
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ReferenceExtFileModuleNameQuerySelector for ExtFileModuleNameQuery {
+   orderby = Name;
+
+   static Component;
+   static Name;
+   static Version;
+}
+
+@Override
+selector ReferenceExtFileViewNameQuerySelector for ExtFileViewNameQuery {
+   orderby = ViewName;
+
+   static ViewName;
+   static Component;
+   static ViewType;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group CopyFileTypeStructSourceGroup for CopyFileTypeStructure {
+   label = "Source";
+
+   lov FileTypeFromRef with ReferenceExtFileTypeSelector {
+      search = FileType, Description;
+      description = FileTypeFromRef.Description;
+      size = Large;
+   }
+}
+
+group CopyFileTypeStructDestinationGroup for CopyFileTypeStructure {
+   label = "Destination";
+
+   field FileTypeTo {
+      size = Small;
+   }
+   field FileTypeDescriptionTo {
+      size = Large;
+   }
+}
+
+group CreateFileTypeTemplateSourceGroup for CreateFileTypeTemplateStructure {
+   label = "Source";
+
+   lov ComponentRef with ReferenceExtFileModuleNameQuerySelector {
+      size = Small;
+      validate command {
+         execute {
+            set InputPackage = null;
+         }
+      }
+   }
+   lov ViewNameRef with ReferenceExtFileViewNameQuerySelector {
+      size = Large;
+      validate command {
+         execute {
+            call GetInputPackage(ViewName) into InputPackage;
+         }
+      }
+   }
+   field InputPackage {
+      size = Large;
+   }
+}
+
+group CreateFileTypeDestinationGroup for CreateFileTypeTemplateStructure {
+   label = "Destination";
+
+   field FileType {
+      size = Small;
+      validate command {
+         execute {
+            set FileTemplate = FileType;
+         }
+      }
+   }
+   field FileTypeDescription {
+      size = Large;
+      validate command {
+         execute {
+            set FileTemplateDescription = FileTypeDescription;
+         }
+      }
+   }
+   field CreateFileTemplate {
+      size = FullWidth;
+      validate command {
+         execute {
+            if [CreateFileTemplate = true] {
+               set FileTemplate = FileType;
+               set FileTemplateDescription = FileTypeDescription;
+               set CreateInputDefinition = false;
+               set CreateOutputDefinition = true;
+            }
+            if [CreateFileTemplate = false] {
+               set FileTemplate = null;
+               set FileTemplateDescription = null;
+               set CreateInputDefinition = false;
+               set CreateOutputDefinition = false;
+            }
+         }
+      }
+   }
+   field FileTemplate {
+      size = Small;
+      editable = [CreateFileTemplate = true];
+   }
+   field FileTemplateDescription {
+      size = Large;
+      editable = [CreateFileTemplate = true];
+   }
+   field CreateInputDefinition {
+      editable = [CreateFileTemplate = true and InputPackage != null];
+      emphasis Neutral = [true];
+      emphasis Neutral = [false];
+   }
+   field CreateOutputDefinition {
+      editable = [CreateFileTemplate = true];
+      emphasis Neutral = [true];
+      emphasis Neutral = [false];
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list ExtFileTypeList for ExtFileType {
+   orderby = FileType;
+   crudactions {
+      delete {
+         enabled = [SystemDefined != true];
+      }
+   }
+
+   lov ExtFileTypeRef with ReferenceExtFileTypeSelector {
+      search = FileType, Description;
+      description = ExtFileTypeRef.Description;
+   }
+   field Component {
+      size = Small;
+   }
+   field SystemDefined;
+   field UsableFileTemplate;
+
+   command DetailsCommand;
+   command CopyFileTypeCommand;
+}
+
+@Override
+list ExtFileModuleNameQueryLovList for ExtFileModuleNameQuery {
+   orderby = Name asc;
+}
+
+@Override
+list ExtFileViewNameQueryLovList for ExtFileViewNameQuery {
+   orderby = ViewName;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+dialog CopyFileTypeDlg for CopyFileTypeStructure {
+   label = "Copy File Type";
+   input(FileTypeFrom, FileTypeDescriptionFrom);
+   output(NewKeyRef);
+
+   group CopyFileTypeStructSourceGroup;
+   group CopyFileTypeStructDestinationGroup;
+
+   command Ok;
+   command Cancel;
+}
+
+dialog CreateFileTypeTemplateDlg for CreateFileTypeTemplateStructure {
+   label = "New File Type and File Template from View Definition";
+   input(CreateFileTemplate, CreateInputDefinition, CreateOutputDefinition);
+   output(NewKeyRef);
+
+   group CreateFileTypeTemplateSourceGroup;
+   group CreateFileTypeDestinationGroup;
+
+   command Ok;
+   command Cancel;
+}
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

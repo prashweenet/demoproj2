@@ -1,0 +1,163 @@
+client CodePartAttributeConnection;
+component ACCRUL;
+layer Core;
+projection CodePartAttributeConnectionHandling;
+
+include fragment AccountingCodePartsUsed2Selector;
+include fragment CopyToCompaniesAssistant;
+include fragment BudgetAccCodePartValueSelector;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CodePartAttributeConnectionNavEntry parent AccrulNavigator.CodeStringMenu at index 1500 {
+      label = "Code Part Attribute Connection";
+      page List home AccountingAttributeCon;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AccountingAttributeConSet {
+   label = "Code Part Attribute Connection";
+   list AccountingAttributeConList using AccountingAttributeConSet;
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command AttributeValueCommand {
+   label = "Attribute Value";
+   mode = SelectedRecords;
+   bulkexecute {
+      bulknavigate "page/AttributeValue/Form?$contexts=Company:$[Company]&$filter=Attribute eq $[Attribute]";
+   }
+}
+
+command CopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      assistant CopyToCompaniesAssistant(CurrentCompanyVar, "AccountingAttributeCon", "MANUAL", Selection, "Accounting_Attribute_Con_API") {
+         when OK {
+            exit;
+
+         }
+      }
+   }
+}
+
+command AutoCopyToCompaniesCommand {
+   label = "Copy to Companies";
+   mode = SelectedRecords;
+   variable CurrentCompanyVar;
+   variable SelectionVar;
+   variable StateVar;
+   bulkexecute {
+      set CurrentCompanyVar = "${context.Company}";
+      call IsActiveLuExist(CurrentCompanyVar, "AccountingAttribute") into StateVar;
+      if [StateVar = "TRUE"] {
+         if[CreateCount > 0] {
+            set SelectionVar = CreateList;
+         }
+         if[UpdateCount > 0] {
+            set SelectionVar = UpdateList;
+         }
+         if[DeleteCount > 0] {
+            set SelectionVar = DeleteList;
+         }
+         assistant CopyToCompaniesAssistant(CurrentCompanyVar, "AccountingAttributeCon", "AUTOMATIC", SelectionVar, "Accounting_Attribute_Con_API") {
+            when OK {
+               exit;
+            }
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector ReferenceAccountingAttributeSelector for AccountingAttribute {
+   static Attribute;
+   static Description;
+   static CodeName {
+      label = "Code Part";
+   }
+}
+
+@Override
+selector ReferenceAccountingCodePartsUsed2Selector for AccountingCodePartsUsed2 {
+   orderby = Company, CodePart;
+   static CodePart;
+   static CodeName;
+   static Description;
+
+   fieldorder = CodePart, CodeName, Description;
+}
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountingAttributeConList for AccountingAttributeCon {
+   crudactions {
+      after command AutoCopyToCompaniesCommand;
+   }
+   lov AttributeRef with ReferenceAccountingAttributeSelector {
+      search = Attribute, Description;
+      size = Large;
+      description = AttributeRef.Description;
+   }
+   lov CodePartRef with ReferenceAccountingCodePartsUsed2Selector {
+      size = Large;
+      search = CodePart, CodeName;
+      description = CodePartRef.CodeName;
+      editable = [false];
+   }
+   lov CodePartValueRef with ReferenceBudgetAccCodePartValueSelector {
+      search = CodePartValue, Description;
+      size = Large;
+      description = CodePartValueRef.Description;
+   }
+   lov AttributeValueRef with ReferenceAccountingAttributeValueSelector {
+      search = AttributeValue, Description;
+      size = Large;
+      description = AttributeValueRef.Description;
+   }
+   command AttributeValueCommand;
+   command CopyToCompaniesCommand;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

@@ -1,0 +1,105 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CostRevElementsHanding
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Get_Result___ (
+   key_ IN Project_Cost_Element_Key ) RETURN Base_Code_Part_And_Result_Structure_Rec
+IS
+   rec_ Base_Code_Part_And_Result_Structure_Rec;
+BEGIN
+   rec_.base_code_part := Accounting_Code_Parts_API.Get_Name(key_.company , Accounting_Code_Parts_API.Get_Base_For_Followup_Element(key_.company));
+   Project_Cost_Element_API.Check_Default_No_Base_Exist__(rec_.result, key_.company);
+   RETURN rec_;
+END Get_Result___;
+
+PROCEDURE Do_Set_Default_No_Base___ (
+   key_ IN Project_Cost_Element_Key ) 
+IS
+BEGIN
+   Project_Cost_Element_API.Set_Default_No_Base__(key_.company, key_.project_cost_element);
+END Do_Set_Default_No_Base___;
+
+FUNCTION Get_Default_No_Base___ (
+   key_ IN Project_Cost_Element_Key ) RETURN VARCHAR2
+IS
+BEGIN
+   RETURN Project_Cost_Element_API.Get_Default_No_Base(key_.company);
+END Get_Default_No_Base___;
+
+PROCEDURE Do_Reset_Default_No_Base___ (
+   key_ IN Project_Cost_Element_Key ) 
+IS
+BEGIN
+   Project_Cost_Element_API.Reset_Default_No_Base__(key_.company, key_.project_cost_element);
+END Do_Reset_Default_No_Base___;
+
+PROCEDURE Do_Set_Default_Cost_Element___ (
+   key_ IN Project_Cost_Element_Key ) 
+IS
+   info_       VARCHAR2(50); 
+   attr_       VARCHAR2(50);
+   objid_      VARCHAR2(2000);
+   objversion_ VARCHAR2(2000);
+   default_cost_element_ VARCHAR2(100);
+   current_default_key_ Project_Cost_Element_Key;
+BEGIN
+   default_cost_element_ := Project_Cost_Element_API.Get_Default_For_Company(key_.company);
+   
+   IF default_cost_element_ IS NOT NULL THEN 
+      current_default_key_.company := key_.company;
+      current_default_key_.project_cost_element := default_cost_element_;
+      Do_Reset_Default_Cost_Element___(current_default_key_);
+   END IF;
+   
+   Get_Objid_Objversion___(objid_, objversion_, key_);  
+   Client_SYS.Add_To_Attr('DEFAULT_COST_ELEMENT', 'TRUE', attr_);
+   Project_Cost_Element_API.Modify__(info_, objid_, objversion_, attr_, 'DO');
+END Do_Set_Default_Cost_Element___;
+
+PROCEDURE Do_Reset_Default_Cost_Element___ (
+   key_ IN Project_Cost_Element_Key ) 
+IS
+   info_       VARCHAR2(50); 
+   attr_       VARCHAR2(50);
+   objid_      VARCHAR2(2000);
+   objversion_ VARCHAR2(2000);
+BEGIN
+   Get_Objid_Objversion___(objid_, objversion_, key_);    
+   Client_SYS.Add_To_Attr('DEFAULT_COST_ELEMENT', 'FALSE', attr_);
+   Project_Cost_Element_API.Modify__(info_, objid_, objversion_, attr_, 'DO');
+END Do_Reset_Default_Cost_Element___;
+
+@Override
+PROCEDURE CRUD_Create___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Project_Cost_Element_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN   
+   super(etag_, key_, attr_, info_, action_);
+   Project_Cost_Element_API.Check_Default_Element__(key_.company);
+END CRUD_Create___;
+
+@Override
+PROCEDURE CRUD_Update___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Project_Cost_Element_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   super(etag_, key_, attr_, info_, action_);
+   Project_Cost_Element_API.Check_Default_Element__(key_.company);
+END CRUD_Update___;

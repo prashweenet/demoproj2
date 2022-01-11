@@ -1,0 +1,5275 @@
+----------------------------------------------------------------------------
+--                                              
+--  Filename      : MVAccrul.cre
+--
+--  Module        : ACCRUL
+--
+--  Purpose       : Create Materialized views, constraints and indexes for ACCRUL BI Services
+--
+--  Localization  : No translation needed.
+--
+--  Date     Sign   History
+--  ------   ----   -----------------------------------------------------------
+--  110318   Umdolk Created
+--  110819   Gadalk BA-1175: Added null handling for ACCOUNTING_PERIOD_MV
+--  110923   Anwese  Updated
+--  110930   Anwese  Updated constraints and indexes
+--  131004   Mohrlk  TIBE-4193, Added CURRENCY_RATE_MV.  
+---------------------------------------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+-- ***** ANALYTIC_ATTR_CODE_E_MV - Start *****
+
+DEFINE TAB        = ACCOUNTING_ATTRIBUTE_CON_TAB
+DEFINE TAB2       = ACCOUNTING_ATTRIBUTE_TAB
+DEFINE TAB3       = ACCOUNTING_ATTRIBUTE_VALUE_TAB
+DEFINE MV         = ANALYTIC_ATTR_CODE_E_MV
+DEFINE CODE_PART  = E
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value              id,
+              a.code_part_value                                code,
+              a.company                                        company,
+              a.attribute                                      attribute,
+              a2.description                                   attribute_description,
+              a.attribute_value                                attribute_value,
+              a3.description                                   attribute_value_description
+       FROM   &TAB a,
+              &TAB2 a2,
+              &TAB3 a3
+       WHERE  a.code_part        = ''&CODE_PART''
+       AND    a2.company         = a.company
+       AND    a2.attribute       = a.attribute
+       AND    a3.company         = a.company
+       AND    a3.attribute       = a.attribute
+       AND    a3.attribute_value = a.attribute_value';
+      
+      EXECUTE IMMEDIATE stmt_;
+END;
+/   
+  
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   index_name_ := table_name_||'_IX1';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);   
+
+   index_name_ := table_name_||'_IX2';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX3';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE_VALUE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX4';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+END;
+/   
+
+UNDEFINE TAB
+UNDEFINE TAB2
+UNDEFINE TAB3
+UNDEFINE MV
+UNDEFINE CODE_PART     
+
+-- ***** ANALYTIC_ATTR_CODE_E_MV - End *****
+
+-----------------------------------------------------------------------------
+
+-- ***** ANALYTIC_ATTR_CODE_F_MV - Start *****
+
+DEFINE TAB        = ACCOUNTING_ATTRIBUTE_CON_TAB
+DEFINE TAB2       = ACCOUNTING_ATTRIBUTE_TAB
+DEFINE TAB3       = ACCOUNTING_ATTRIBUTE_VALUE_TAB
+DEFINE MV         = ANALYTIC_ATTR_CODE_F_MV
+DEFINE CODE_PART  = F
+
+PROMPT Create Materialized View &MV             
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value              id,
+              a.code_part_value                                code,
+              a.company                                        company,
+              a.attribute                                      attribute,
+              a2.description                                   attribute_description,
+              a.attribute_value                                attribute_value,
+              a3.description                                   attribute_value_description
+       FROM   &TAB a,
+              &TAB2 a2,
+              &TAB3 a3
+       WHERE  a.code_part        = ''&CODE_PART''
+       AND    a2.company         = a.company
+       AND    a2.attribute       = a.attribute
+       AND    a3.company         = a.company
+       AND    a3.attribute       = a.attribute
+       AND    a3.attribute_value = a.attribute_value';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/   
+
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   index_name_ := table_name_||'_IX1';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_); 
+
+   index_name_ := table_name_||'_IX2';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX3';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE_VALUE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX4';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+END;
+/   
+
+UNDEFINE TAB
+UNDEFINE TAB2
+UNDEFINE TAB3
+UNDEFINE MV
+UNDEFINE CODE_PART 
+
+-- ***** ANALYTIC_ATTR_CODE_F_MV - End *****   
+
+-----------------------------------------------------------------------------
+
+-- ***** ANALYTIC_ATTR_CODE_G_MV - Start ***** 
+  
+DEFINE TAB        = ACCOUNTING_ATTRIBUTE_CON_TAB
+DEFINE TAB2       = ACCOUNTING_ATTRIBUTE_TAB
+DEFINE TAB3       = ACCOUNTING_ATTRIBUTE_VALUE_TAB
+DEFINE MV         = ANALYTIC_ATTR_CODE_G_MV
+DEFINE CODE_PART  = G
+
+PROMPT Create Materialized View &MV             
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value              id,
+              a.code_part_value                                code,
+              a.company                                        company,
+              a.attribute                                      attribute,
+              a2.description                                   attribute_description,
+              a.attribute_value                                attribute_value,
+              a3.description                                   attribute_value_description
+       FROM   &TAB a,
+              &TAB2 a2,
+              &TAB3 a3
+       WHERE  a.code_part        = ''&CODE_PART''
+       AND    a2.company         = a.company
+       AND    a2.attribute       = a.attribute
+       AND    a3.company         = a.company
+       AND    a3.attribute       = a.attribute
+       AND    a3.attribute_value = a.attribute_value';
+      
+      EXECUTE IMMEDIATE stmt_;
+END;
+/   
+  
+PROMPT Create constraints and index(s) on Materialized View &MV 
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_); 
+
+   index_name_ := table_name_||'_IX2';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX3';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE_VALUE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX4';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+END;
+/   
+
+UNDEFINE TAB
+UNDEFINE TAB2
+UNDEFINE TAB3
+UNDEFINE MV
+UNDEFINE CODE_PART 
+
+-- ***** ANALYTIC_ATTR_CODE_G_MV - End *****  
+
+-----------------------------------------------------------------------------
+
+-- ***** ANALYTIC_ATTR_CODE_H_MV - Start *****  
+
+DEFINE TAB        = ACCOUNTING_ATTRIBUTE_CON_TAB
+DEFINE TAB2       = ACCOUNTING_ATTRIBUTE_TAB
+DEFINE TAB3       = ACCOUNTING_ATTRIBUTE_VALUE_TAB
+DEFINE MV         = ANALYTIC_ATTR_CODE_H_MV
+DEFINE CODE_PART  = H
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value              id,
+              a.code_part_value                                code,
+              a.company                                        company,
+              a.attribute                                      attribute,
+              a2.description                                   attribute_description,
+              a.attribute_value                                attribute_value,
+              a3.description                                   attribute_value_description
+       FROM   &TAB a,
+              &TAB2 a2,
+              &TAB3 a3
+       WHERE  a.code_part        = ''&CODE_PART''
+       AND    a2.company         = a.company
+       AND    a2.attribute       = a.attribute
+       AND    a3.company         = a.company
+       AND    a3.attribute       = a.attribute
+       AND    a3.attribute_value = a.attribute_value';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   index_name_ := table_name_||'_IX1';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_); 
+
+   index_name_ := table_name_||'_IX2';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX3';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE_VALUE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX4';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+END;
+/   
+
+UNDEFINE TAB
+UNDEFINE TAB2
+UNDEFINE TAB3
+UNDEFINE MV
+UNDEFINE CODE_PART 
+
+-- ***** ANALYTIC_ATTR_CODE_H_MV - End ***** 
+
+-----------------------------------------------------------------------------
+
+-- ***** ANALYTIC_ATTR_CODE_I_MV - Start *****
+
+DEFINE TAB        = ACCOUNTING_ATTRIBUTE_CON_TAB
+DEFINE TAB2       = ACCOUNTING_ATTRIBUTE_TAB
+DEFINE TAB3       = ACCOUNTING_ATTRIBUTE_VALUE_TAB
+DEFINE MV         = ANALYTIC_ATTR_CODE_I_MV
+DEFINE CODE_PART  = I
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value              id,
+              a.code_part_value                                code,
+              a.company                                        company,
+              a.attribute                                      attribute,
+              a2.description                                   attribute_description,
+              a.attribute_value                                attribute_value,
+              a3.description                                   attribute_value_description
+       FROM   &TAB a,
+              &TAB2 a2,
+              &TAB3 a3
+       WHERE  a.code_part        = ''&CODE_PART''
+       AND    a2.company         = a.company
+       AND    a2.attribute       = a.attribute
+       AND    a3.company         = a.company
+       AND    a3.attribute       = a.attribute
+       AND    a3.attribute_value = a.attribute_value';
+      
+    EXECUTE IMMEDIATE stmt_;
+END;
+/      
+    
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   index_name_ := table_name_||'_IX1';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_); 
+
+   index_name_ := table_name_||'_IX2';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX3';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE_VALUE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX4';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+END;
+/   
+
+UNDEFINE TAB
+UNDEFINE TAB2
+UNDEFINE TAB3
+UNDEFINE MV
+UNDEFINE CODE_PART    
+
+-- ***** ANALYTIC_ATTR_CODE_I_MV - End *****
+
+-----------------------------------------------------------------------------
+
+-- ***** ANALYTIC_ATTR_CODE_J_MV - Start *****
+
+DEFINE TAB        = ACCOUNTING_ATTRIBUTE_CON_TAB
+DEFINE TAB2       = ACCOUNTING_ATTRIBUTE_TAB
+DEFINE TAB3       = ACCOUNTING_ATTRIBUTE_VALUE_TAB
+DEFINE MV         = ANALYTIC_ATTR_CODE_J_MV
+DEFINE CODE_PART  = J
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value              id,
+              a.code_part_value                                code,
+              a.company                                        company,
+              a.attribute                                      attribute,
+              a2.description                                   attribute_description,
+              a.attribute_value                                attribute_value,
+              a3.description                                   attribute_value_description
+       FROM   &TAB a,
+              &TAB2 a2,
+              &TAB3 a3
+       WHERE  a.code_part        = ''&CODE_PART''
+       AND    a2.company         = a.company
+       AND    a2.attribute       = a.attribute
+       AND    a3.company         = a.company
+       AND    a3.attribute       = a.attribute
+       AND    a3.attribute_value = a.attribute_value';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/      
+  
+PROMPT Create constraints and index(s) on Materialized View &MV    
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   index_name_ := table_name_||'_IX1';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_); 
+
+   index_name_ := table_name_||'_IX2';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX3';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE');
+   Database_SYS.Set_Table_Column (columns_ , 'ATTRIBUTE_VALUE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX4';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+END;
+/   
+
+UNDEFINE TAB
+UNDEFINE TAB2
+UNDEFINE TAB3
+UNDEFINE MV
+UNDEFINE CODE_PART
+
+-- ***** ANALYTIC_ATTR_CODE_J_MV - End *****
+
+------------------------------------------------------------------
+
+-- ***** ACCOUNT_TRANSLATION_MV - Start *****
+
+DEFINE MV_TRANS   = ACCOUNT_TRANSLATION_MV
+DEFINE TAB5       = KEY_LU_TRANSLATION_TAB
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module,
+              key_name                                  dummy
+       FROM &TAB5
+       WHERE lu     IN (''Account'',''AccountGroup'',''AccountType'',''SatAccountGroup'')
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/       
+     
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN      
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV_TRANS     
+UNDEFINE TAB5
+
+-- ***** ACCOUNT_TRANSLATION_MV - End *****
+
+---------------------------------------------------------------------------
+
+-- ***** CODE_B_MV - Start *****
+
+
+DEFINE MV         = CODE_B_MV                            
+DEFINE MV_TRANS   = CODE_B_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB  
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value   id,
+              a.code_part_value                     code,
+              a.description                         description,
+              a.company                             company,
+              a.valid_from                          valid_from,
+              a.valid_until                         valid_until,
+              a.bud_account                         budget_value
+       FROM  &TAB1 a
+       WHERE a.code_part      = ''B''
+       UNION ALL                                                                  
+       SELECT company || ''^'' || ''#''              id,  
+              NULL                                   code,
+              NULL                                   description,
+              company                                company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                                   budget_value
+       FROM &TAB2
+       UNION ALL                                                                  
+       SELECT ''#'' || ''^'' || ''#''                id,  
+              NULL                                   code,
+              NULL                                   description,
+              NULL                                   company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                                   budget_value
+       FROM BI_DUAL_TAB';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeB''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE MV_TRANS
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** CODE_B_MV - End *****
+
+-------------------------------------------------------------------
+
+-- ***** CODE_C_MV - Start *****
+
+DEFINE MV         = CODE_C_MV                            
+DEFINE MV_TRANS   = CODE_C_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value   id,
+              a.code_part_value                     code,
+              a.description                         description,
+              a.company                             company,
+              a.valid_from                          valid_from,
+              a.valid_until                         valid_until,
+	           a.bud_account                         budget_value
+       FROM  &TAB1 a
+       WHERE a.code_part      = ''C''
+       UNION ALL                                                                  
+       SELECT company || ''^'' || ''#''             id,  
+              NULL                                  code,
+              NULL                                  description,
+              company                               company,
+              NULL                                  valid_from,
+              NULL                                  valid_until,
+	      NULL			            budget_value
+       FROM &TAB2       
+       UNION ALL                                                                  
+       SELECT ''#'' || ''^'' || ''#''               id,  
+              NULL                                  code,
+              NULL                                  description,
+              NULL                                  company,
+              NULL                                  valid_from,
+              NULL                                  valid_until,
+	      NULL			            budget_value
+	
+       FROM BI_DUAL_TAB';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/  
+
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeC''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/     
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE MV_TRANS
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** CODE_C_MV - End *****
+
+-------------------------------------------------------------------
+
+-- ***** CODE_D_MV - Start *****
+
+DEFINE MV         = CODE_D_MV                            
+DEFINE MV_TRANS   = CODE_D_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB
+                         
+PROMPT Create Materialized View &MV             
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value   id,
+              a.code_part_value                     code,
+              a.description                         description,
+              a.company                             company,
+              a.valid_from                          valid_from,
+              a.valid_until                         valid_until,
+	           a.bud_account			                budget_value
+       FROM  &TAB1 a
+       WHERE a.code_part      = ''D''
+       UNION ALL                                                                  
+       SELECT company || ''^'' || ''#''              id,  
+              NULL                                   code,
+              NULL                                   description,
+              company                                company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+	           NULL			                          budget_value
+       FROM &TAB2       
+       UNION ALL                                                                  
+       SELECT ''#'' || ''^'' || ''#''                id,  
+              NULL                                   code,
+              NULL                                   description,
+              NULL                                   company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+	           NULL                                   budget_value
+       FROM BI_DUAL_TAB';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+    
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN   
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeD''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/   
+                                                                     
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN 
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV        
+UNDEFINE MV_TRANS  
+UNDEFINE TAB1      
+UNDEFINE TAB2      
+UNDEFINE TAB3   
+
+-- ***** CODE_D_MV - End *****            
+
+-------------------------------------------------------------------
+
+-- ***** CODE_E_MV - Start *****
+
+DEFINE MV         = CODE_E_MV                            
+DEFINE MV_TRANS   = CODE_E_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB
+
+PROMPT Create Materialized View &MV             
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value   id,
+              a.code_part_value                     code,
+              a.description                         description,
+              a.company                             company,
+              a.valid_from                          valid_from,
+              a.valid_until                         valid_until,
+              a.bud_account                         budget_value
+       FROM  &TAB1 a
+       WHERE a.code_part      = ''E''
+       UNION ALL                                                                  
+       SELECT company || ''^'' || ''#''              id,  
+              NULL                                   code,
+              NULL                                   description,
+              company                                company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                                   budget_value
+       FROM &TAB2       
+       UNION ALL                                                                  
+       SELECT ''#'' || ''^'' || ''#''                id,  
+              NULL                                   code,
+              NULL                                   description,
+              NULL                                   company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL               			           budget_value
+       FROM BI_DUAL_TAB';
+
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/      
+
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeE''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+   
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   index_name_ := table_name_||'_IX1';  
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV       
+UNDEFINE MV_TRANS 
+UNDEFINE TAB1     
+UNDEFINE TAB2     
+UNDEFINE TAB3     
+
+-- ***** CODE_E_MV - End *****
+
+-------------------------------------------------------------------
+
+-- ***** CODE_F_MV - Start *****
+
+DEFINE MV         = CODE_F_MV                            
+DEFINE MV_TRANS   = CODE_F_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB
+
+PROMPT Create Materialized View &MV             
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value   id,
+              a.code_part_value                     code,
+              a.description                         description,
+              a.company                             company,
+              a.valid_from                          valid_from,
+              a.valid_until                         valid_until,
+              a.bud_account                         budget_value
+       FROM  &TAB1 a
+       WHERE a.code_part      = ''F''
+       UNION ALL                                                                  
+       SELECT company || ''^'' || ''#''              id,  
+              NULL                                   code,
+              NULL                                   description,
+              company                                company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                 	    	           budget_value
+       FROM &TAB2       
+       UNION ALL                                                                  
+       SELECT ''#'' || ''^'' || ''#''                id,  
+              NULL                                   code,
+              NULL                                   description,
+              NULL                                   company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL			                          budget_value
+       FROM BI_DUAL_TAB';
+
+   EXECUTE IMMEDIATE stmt_;
+END;
+/         
+
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeF''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN 
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV      
+UNDEFINE MV_TRANS
+UNDEFINE TAB1    
+UNDEFINE TAB2    
+UNDEFINE TAB3    
+
+-- ***** CODE_F_MV - End *****
+
+-------------------------------------------------------------------
+
+-- ***** CODE_G_MV - Start *****
+
+DEFINE MV         = CODE_G_MV                            
+DEFINE MV_TRANS   = CODE_G_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB
+    
+PROMPT Create Materialized View &MV                      
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value   id,
+              a.code_part_value                     code,
+              a.description                         description,
+              a.company                             company,
+              a.valid_from                          valid_from,
+              a.valid_until                         valid_until,
+              a.bud_account                         budget_value
+       FROM  &TAB1 a
+       WHERE a.code_part      = ''G''
+       UNION ALL                                                                  
+       SELECT company || ''^'' || ''#''              id,  
+              NULL                                   code,
+              NULL                                   description,
+              company                                company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                                   budget_value
+       FROM &TAB2       
+       UNION ALL                                                                  
+       SELECT ''#'' || ''^'' || ''#''                id,  
+              NULL                                   code,
+              NULL                                   description,
+              NULL                                   company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                                   budget_value
+       FROM BI_DUAL_TAB';
+    
+   EXECUTE IMMEDIATE stmt_;
+END;
+/   
+ 
+PROMPT Create constraints and index(s) on Materialized View &MV 
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeG''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+  
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS 
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN 
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+
+UNDEFINE MV      
+UNDEFINE MV_TRANS
+UNDEFINE TAB1    
+UNDEFINE TAB2    
+UNDEFINE TAB3    
+
+-- ***** CODE_G_MV - End *****
+
+-------------------------------------------------------------------
+
+-- ***** CODE_H_MV - Start *****
+
+DEFINE MV         = CODE_H_MV                            
+DEFINE MV_TRANS   = CODE_H_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB
+
+PROMPT Create Materialized View &MV             
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value   id,
+              a.code_part_value                     code,
+              a.description                         description,
+              a.company                             company,
+              a.valid_from                          valid_from,
+              a.valid_until                         valid_until,
+              a.bud_account                         budget_value
+       FROM  &TAB1 a
+       WHERE a.code_part      = ''H''
+       UNION ALL                                                                  
+       SELECT company || ''^'' || ''#''              id,  
+              NULL                                   code,
+              NULL                                   description,
+              company                                company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                 		              budget_value
+       FROM &TAB2       
+       UNION ALL                                                                  
+       SELECT ''#'' || ''^'' || ''#''                id,  
+              NULL                                   code,
+              NULL                                   description,
+              NULL                                   company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                                   budget_value
+       FROM BI_DUAL_TAB';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeH''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+
+UNDEFINE MV      
+UNDEFINE MV_TRANS
+UNDEFINE TAB1    
+UNDEFINE TAB2    
+UNDEFINE TAB3    
+
+-- ***** CODE_H_MV - End *****
+
+-------------------------------------------------------------------
+
+-- ***** CODE_I_MV - Start *****
+
+DEFINE MV         = CODE_I_MV                            
+DEFINE MV_TRANS   = CODE_I_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB
+
+PROMPT Create Materialized View &MV             
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value   id,
+              a.code_part_value                     code,
+              a.description                         description,
+              a.company                             company,
+              a.valid_from                          valid_from,
+              a.valid_until                         valid_until,
+              a.bud_account                         budget_value
+       FROM  &TAB1 a
+       WHERE a.code_part      = ''I''
+       UNION ALL                                                                  
+       SELECT company || ''^'' || ''#''              id,  
+              NULL                                   code,
+              NULL                                   description,
+              company                                company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                                   budget_value
+       FROM &TAB2       
+       UNION ALL                                                                  
+       SELECT ''#'' || ''^'' || ''#''                id,  
+              NULL                                   code,
+              NULL                                   description,
+              NULL                                   company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                                   budget_value
+       FROM BI_DUAL_TAB';
+
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeI''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   index_name_ := table_name_||'_IX1';   
+
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV      
+UNDEFINE MV_TRANS
+UNDEFINE TAB1    
+UNDEFINE TAB2    
+UNDEFINE TAB3  
+
+-- ***** CODE_I_MV - End *****  
+
+-------------------------------------------------------------------
+
+-- ***** CODE_J_MV - Start *****
+
+DEFINE MV         = CODE_J_MV                            
+DEFINE MV_TRANS   = CODE_J_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB
+
+PROMPT Create Materialized View &MV             
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value   id,
+              a.code_part_value                     code,
+              a.description                         description,
+              a.company                             company,
+              a.valid_from                          valid_from,
+              a.valid_until                         valid_until,
+              a.bud_account                         budget_value
+       FROM  &TAB1 a
+       WHERE a.code_part      = ''J''
+       UNION ALL                                                                  
+       SELECT company || ''^'' || ''#''              id,  
+              NULL                                   code,
+              NULL                                   description,
+              company                                company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                                   budget_value
+       FROM &TAB2       
+       UNION ALL                                                                  
+       SELECT ''#'' || ''^'' || ''#''                id,  
+              NULL                                   code,
+              NULL                                   description,
+              NULL                                   company,
+              NULL                                   valid_from,
+              NULL                                   valid_until,
+              NULL                                   budget_value
+       FROM BI_DUAL_TAB';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/   
+
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN   
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeJ''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/      
+  
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS 
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+
+UNDEFINE MV      
+UNDEFINE MV_TRANS
+UNDEFINE TAB1    
+UNDEFINE TAB2    
+UNDEFINE TAB3    
+
+-- ***** CODE_J_MV - End *****
+
+---------------------------------------------------------------
+
+-- ***** VOUCHER_TYPE_MV - Start *****
+
+DEFINE MV         = VOUCHER_TYPE_MV
+DEFINE MV_TRANS   = VOUCHER_TYPE_TRANSL_MV
+DEFINE TAB        = VOUCHER_TYPE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB   
+DEFINE TAB_TRANS  = KEY_LU_TRANSLATION_TAB
+
+PROMPT Create Materialized View &MV             
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT t.company||''^''||t.voucher_type          id,
+              t.voucher_type                            code,
+              t.company                                 company,
+              t.description                             description,
+              t.ledger_id                               ledger_id,
+              t.automatic_allot                         automatic_allot,
+              t.use_manual                              use_manual,
+              t.single_function_group                   single_function_group,
+              t.simulation_voucher                      simulation_voucher
+       FROM &TAB t
+       UNION ALL
+              SELECT c.company || ''^'' || ''#''        id,
+              NULL                                      code,
+              c.company                                 company,
+              NULL                                      description,
+              NULL                                      ledger_id,
+              NULL                                      automatic_allot,
+              NULL                                      use_manual,
+              NULL                                      single_function_group,
+              NULL                                      simulation_voucher
+       FROM &TAB2 c
+       UNION ALL
+              SELECT ''#'' || ''^'' || ''#''            id,
+              NULL                                      code,
+              NULL                                      company,
+              NULL                                      description,
+              NULL                                      ledger_id,
+              NULL                                      automatic_allot,
+              NULL                                      use_manual,
+              NULL                                      single_function_group,
+              NULL                                      simulation_voucher
+       FROM BI_DUAL_TAB';
+
+   EXECUTE IMMEDIATE stmt_;
+END;
+/   
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN   
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'U',
+                               '&IFSAPP_INDEX',
+                               NULL,
+                               TRUE,
+                               TRUE);
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB_TRANS
+       WHERE lu     = ''VoucherType''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+   
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE MV_TRANS
+UNDEFINE TAB
+UNDEFINE TAB2
+UNDEFINE TAB_TRANS
+
+-- ***** VOUCHER_TYPE_MV - End *****
+
+-------------------------------------------------------------------
+
+-- ***** ACCOUNTING_PROCESS_CODE_MV - Start *****
+
+DEFINE TAB1       = ACCOUNTING_PROCESS_CODE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB_TRANS  = KEY_LU_TRANSLATION_TAB
+DEFINE MV         = ACCOUNTING_PROCESS_CODE_MV
+DEFINE MV_TRANS   = ACC_PROCESS_CODE_TRANSL_MV
+                              
+PROMPT Create Materialized View &MV                          
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT company||''^''||process_code           id,
+              process_code                           code,
+              company                                company,
+              description                            description,
+              valid_from                             valid_from,
+              valid_until                            valid_until
+       FROM &TAB1
+       UNION ALL
+       SELECT company || ''^'' || ''#''              id,
+              NULL                                   code,
+              company                                company,
+              NULL                                   description,
+              NULL                                   valid_from,
+              NULL                                   valid_until
+       FROM &TAB2                                
+       UNION ALL                                                                  
+       SELECT ''#'' || ''^'' || ''#''                id,  
+              NULL                                   code,
+              NULL                                   description,
+              NULL                                   company,
+              NULL                                   valid_from,
+              NULL                                   valid_until
+       FROM BI_DUAL_TAB';
+             
+   EXECUTE IMMEDIATE stmt_;
+
+   dbms_output.put_line('Create constraint and index(s) on Materialized View &MV');
+
+   constraint_name_ := table_name_||'_PK';                            
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_SYS.Create_Constraint ( table_name_,
+                               constraint_name_,
+                               columns_,
+                               'P',
+                               '&IFSAPP_INDEX',
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_); 
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'U',
+                               '&IFSAPP_INDEX',
+                               NULL,
+                               TRUE,
+                               TRUE);
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                    company,
+              attribute_key                                translation_key,
+              language_code                                language_code,
+              SUBSTR(current_translation,1,100)            description,
+              lu                                           lu,
+              module                                       module,
+              key_name                                     dummy
+       FROM &TAB_TRANS
+       WHERE lu     = ''AccountProcessCode''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+   
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN 
+   index_name_ := table_name_||'_IX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB_TRANS
+UNDEFINE MV
+UNDEFINE MV_TRANS
+
+-- ***** ACCOUNTING_PROCESS_CODE_MV - End *****
+
+---------------------------------------------------------------
+                     
+-- ***** TAXCODE_TRANSLATION_MV - Start *****
+
+DEFINE MV_TRANS   = TAXCODE_TRANSLATION_MV
+DEFINE TAB_TRANS  = KEY_LU_TRANSLATION_TAB                  
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB_TRANS
+       WHERE lu     = ''StatutoryFee''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/   
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+ 
+UNDEFINE MV_TRANS
+UNDEFINE TAB_TRANS
+
+-- ***** TAXCODE_TRANSLATION_MV - End *****
+
+-------------------------------------------------------------------
+
+-- ***** CURRENCY_CODE_MV - Start *****                                    
+
+DEFINE MV      = CURRENCY_CODE_MV
+DEFINE TAB1    = CURRENCY_CODE_TAB
+DEFINE TAB2    = COMPANY_FINANCE_TAB
+
+PROMPT Create Materialized View &MV           
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);   
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT company||''^''||currency_code                  id,
+              company                                        company,
+              currency_code                                  code,
+              conv_factor                                    conversion_factor,
+              currency_rounding                              no_of_decimals_in_amt,
+              decimals_in_rate                               no_of_decimals_in_rate,
+              emu_currency_from_date                         emu_currency_from_date,
+              inverted                                       inverted
+       FROM &TAB1 a
+       UNION ALL
+       SELECT company || ''^'' || ''#''                      id,       
+              company                                        company,
+              NULL                                           code,
+              NULL                                           conversion_factor,
+              NULL                                           no_of_decimals_in_amt,   
+              NULL                                           no_of_decimals_in_rate,  
+              NULL                                           emu_currency_from_date,  
+              NULL                                           inverted                 
+       FROM &TAB2
+       UNION ALL
+       SELECT ''#'' || ''^'' || ''#''                        id,       
+              NULL                                           company,
+              NULL                                           code,
+              NULL                                           conversion_factor,
+              NULL                                           no_of_decimals_in_amt,   
+              NULL                                           no_of_decimals_in_rate,  
+              NULL                                           emu_currency_from_date,  
+              NULL                                           inverted
+       FROM BI_DUAL_TAB';
+      
+   EXECUTE IMMEDIATE stmt_;
+
+   dbms_output.put_line('Create constraint and index(s) on Materialized View &MV');
+   
+   constraint_name_ := table_name_||'_PK';                                         
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_SYS.Create_Constraint ( table_name_,
+                               constraint_name_,
+                               columns_,
+                               'P',
+                               '&IFSAPP_INDEX',
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'U',
+                               '&IFSAPP_INDEX',
+                               NULL,
+                               TRUE,
+                               TRUE); 
+END;
+/   
+
+UNDEFINE MV  
+UNDEFINE TAB1
+UNDEFINE TAB2
+
+-- ***** CURRENCY_CODE_MV - End *****
+
+-------------------------------------------------------------------
+-- ***** TAX_BOOK_TRANSLATION_MV - Start *****
+
+DEFINE MV_TRANS  = TAX_BOOK_TRANSLATION_MV
+DEFINE TAB_TRANS = KEY_LU_TRANSLATION_TAB
+
+PROMPT Create Materialized View &MV_TRANS 
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB_TRANS
+       WHERE lu     = ''TaxBook''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+   
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+      index_name_ := table_name_||'_IX1';
+   
+      Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+      Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+      Database_SYS.Set_Table_Column (columns_ , 'LU');
+      Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+      Database_SYS.Create_Index ( table_name_,
+                                  index_name_,
+                                  columns_,
+                                  'N',
+                                  '&IFSAPP_INDEX');
+END;
+/   
+ 
+UNDEFINE MV_TRANS  
+UNDEFINE TAB_TRANS
+
+-- ***** TAX_BOOK_TRANSLATION_MV - End *****
+
+------------------------------------------------------------------
+
+-- ***** CURRENCY_RATE_TYPE_MV - Start *****
+
+DEFINE MV                       = CURRENCY_RATE_TYPE_MV
+
+PROMPT Create Materialized view &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN      
+      dbms_output.put_line('Primary key cascade drop ON &MV');
+      Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+      dbms_output.put_line('Drop Materialized View &MV');
+      Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+      dbms_output.put_line('Create Materialized View &MV');
+      stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+          SELECT company||''^''||currency_type               id,
+              company                                        company,
+              currency_type                                  code,
+              description                                    description,
+              ref_currency_code                              ref_currency_code,
+              type_default                                   type_default
+          FROM CURRENCY_TYPE_TAB 
+          UNION ALL
+          SELECT company || ''^'' || ''#''                   id,       
+              company                                        company,
+              NULL                                           code,
+              NULL                                           description,   
+              NULL                                           ref_currency_code,  
+              NULL                                           type_default               
+          FROM COMPANY_FINANCE_TAB
+          UNION ALL
+          SELECT  ''#''||''^''||''#''                        id,
+              NULL                                           company,
+              NULL                                           code,
+              NULL                                           description,
+              NULL                                           ref_currency_code,
+              NULL                                           type_default
+          FROM BI_DUAL_TAB';
+
+      
+      EXECUTE IMMEDIATE stmt_;
+   
+      dbms_output.put_line('Create constraint and index(s) on Materialized View &MV');
+   
+      constraint_name_ := table_name_ || '_PK';
+      Database_SYS.Set_Table_Column (columns_ , 'ID');
+      Database_SYS.Create_Constraint( table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+      Database_SYS.Reset_Column_Table(columns_);
+   
+      index_name_ := table_name_||'_UX1';
+      Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+      Database_SYS.Set_Table_Column (columns_ , 'CODE');
+      Database_SYS.Create_Index ( table_name_,
+                                  index_name_,
+                                  columns_,
+                                  'U',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE); 
+END;
+/   
+
+UNDEFINE MV
+
+-- ***** CURRENCY_RATE_TYPE_MV - End *****
+
+-----------------------------------------------------------------------------
+-- ***** RPD_COMPANY_PERIOD_MV - Start *****    
+
+DEFINE TABLE_RPD_COMPANY = RPD_COMPANY_TAB
+DEFINE TABLE_RPD_COM_DET = RPD_COMPANY_PERIOD_DET_TAB
+DEFINE TABLE_RPD         = RPD_IDENTITY_TAB
+DEFINE TABLE_RPD_PERIOD  = RPD_PERIOD_TAB
+DEFINE TABLE_RPD_YEAR     = RPD_YEAR_TAB
+DEFINE TABLE_BI_DUAL     = BI_DUAL_TAB
+DEFINE TABLE_COMPANY     = COMPANY_FINANCE_TAB
+DEFINE MV                = RPD_COMPANY_PERIOD_MV
+
+
+PROMPT Create Materialized View &MV
+
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT 
+           d.COMPANY                    || ''^'' ||
+           TO_CHAR(d.ACCOUNTING_DATE, ''YYYY-MM-DD'')
+                                              ID, 
+           d.COMPANY                    || ''^'' ||
+           TO_CHAR(d.REPORTING_DATE, ''YYYY-MM-DD'')
+                                              ALT_DIM_ID,
+           d.RPD_ID                     || ''^'' ||
+           d.COMPANY                    || ''^'' ||
+           TO_CHAR(d.ACCOUNTING_DATE, ''YYYY-MM-DD'', ''NLS_CALENDAR=Gregorian'')
+                                              ID_WITH_RPD_ID, 
+           d.RPD_ID                     || ''^'' ||
+           d.COMPANY                    || ''^'' ||
+           TO_CHAR(d.REPORTING_DATE, ''YYYY-MM-DD'', ''NLS_CALENDAR=Gregorian'')
+                                              ALT_DIM_ID_WITH_RPD_ID,
+           d.REPORTING_DATE                   CODE,
+           d.RPD_ID                           RPD_ID, 
+           d.COMPANY                          COMPANY, 
+           d.RPD_YEAR                         RPD_YEAR, 
+           d.RPD_PERIOD                       RPD_PERIOD, 
+           d.REPORTING_DATE                   REPORTING_DATE,
+           d.ACCOUNTING_DATE                  ACCOUNTING_DATE,
+           i.DESCRIPTION                      RPD_ID_DESCRIPTION,
+           p.FROM_DATE                        FROM_DATE,
+           p.UNTIL_DATE                       UNTIL_DATE,
+           p.YEAR_PERIOD_NUM                  YEAR_PERIOD_NUM,
+           p.YEAR_PERIOD_STR                  YEAR_PERIOD_STR,
+           p.STRING_ATTRIBUTE1                STRING_ATTRIBUTE1,     
+           p.STRING_ATTRIBUTE2                STRING_ATTRIBUTE2,
+           p.STRING_ATTRIBUTE3                STRING_ATTRIBUTE3,
+           p.STRING_ATTRIBUTE4                STRING_ATTRIBUTE4,
+           p.STRING_ATTRIBUTE5                STRING_ATTRIBUTE5,
+           p.NUMBER_ATTRIBUTE1                NUMBER_ATTRIBUTE1,
+           p.NUMBER_ATTRIBUTE2                NUMBER_ATTRIBUTE2,
+           p.NUMBER_ATTRIBUTE3                NUMBER_ATTRIBUTE3,
+           p.NUMBER_ATTRIBUTE4                NUMBER_ATTRIBUTE4,
+           p.NUMBER_ATTRIBUTE5                NUMBER_ATTRIBUTE5                
+       FROM  &TABLE_RPD_COM_DET d, &TABLE_RPD i, &TABLE_RPD_PERIOD p
+       WHERE i.RPD_ID     = d.RPD_ID
+         AND p.RPD_ID     = d.RPD_ID
+         AND p.RPD_YEAR   = d.RPD_YEAR
+         AND p.RPD_PERIOD = d.RPD_PERIOD
+      UNION ALL
+      SELECT 
+           ''#^#''                            ID, 
+           ''#^#''                            ALT_DIM_ID,
+           ''#^#^#''                          ID_WITH_RPD_ID, 
+           ''#^#^#''                          ALT_DIM_ID_WITH_RPD_ID,
+           NULL                               CODE,
+           NULL                               RPD_ID, 
+           NULL                               COMPANY, 
+           NULL                               RPD_YEAR, 
+           NULL                               RPD_PERIOD, 
+           NULL                               REPORTING_DATE,
+           NULL                               ACCOUNTING_DATE,
+           NULL                               RPD_ID_DESCRIPTION,
+           NULL                               FROM_DATE,
+           NULL                               UNTIL_DATE,
+           NULL                               YEAR_PERIOD_NUM,
+           NULL                               YEAR_PERIOD_STR,
+           NULL                               STRING_ATTRIBUTE1,     
+           NULL                               STRING_ATTRIBUTE2,
+           NULL                               STRING_ATTRIBUTE3,
+           NULL                               STRING_ATTRIBUTE4,
+           NULL                               STRING_ATTRIBUTE5,
+           NULL                               NUMBER_ATTRIBUTE1,
+           NULL                               NUMBER_ATTRIBUTE2,
+           NULL                               NUMBER_ATTRIBUTE3,
+           NULL                               NUMBER_ATTRIBUTE4,
+           NULL                               NUMBER_ATTRIBUTE5           
+      FROM  &TABLE_BI_DUAL
+      UNION ALL
+      SELECT 
+           c.COMPANY || ''^#''
+                                              ID, 
+           c.COMPANY || ''^#''    
+                                              ALT_DIM_ID,
+           ''#^#^#''                          ID_WITH_RPD_ID, 
+           ''#^#^#''                          ALT_DIM_ID_WITH_RPD_ID,
+           NULL                               CODE,
+           NULL                               RPD_ID, 
+           NULL                               COMPANY, 
+           NULL                               RPD_YEAR, 
+           NULL                               RPD_PERIOD, 
+           NULL                               REPORTING_DATE,
+           NULL                               ACCOUNTING_DATE,
+           NULL                               RPD_ID_DESCRIPTION,
+           NULL                               FROM_DATE,
+           NULL                               UNTIL_DATE,
+           NULL                               YEAR_PERIOD_NUM,
+           NULL                               YEAR_PERIOD_STR,
+           NULL                               STRING_ATTRIBUTE1,     
+           NULL                               STRING_ATTRIBUTE2,
+           NULL                               STRING_ATTRIBUTE3,
+           NULL                               STRING_ATTRIBUTE4,
+           NULL                               STRING_ATTRIBUTE5,
+           NULL                               NUMBER_ATTRIBUTE1,
+           NULL                               NUMBER_ATTRIBUTE2,
+           NULL                               NUMBER_ATTRIBUTE3,
+           NULL                               NUMBER_ATTRIBUTE4,
+           NULL                               NUMBER_ATTRIBUTE5           
+      FROM  &TABLE_COMPANY c
+      UNION ALL
+      SELECT 
+           NULL                               ID, 
+           NULL                               ALT_DIM_ID,
+           r.RPD_ID || ''^#^#''               ID_WITH_RPD_ID, 
+           r.RPD_ID || ''^#^#''               ALT_DIM_ID_WITH_RPD_ID,
+           NULL                               CODE,
+           NULL                               RPD_ID, 
+           NULL                               COMPANY, 
+           NULL                               RPD_YEAR, 
+           NULL                               RPD_PERIOD, 
+           NULL                               REPORTING_DATE,
+           NULL                               ACCOUNTING_DATE,
+           NULL                               RPD_ID_DESCRIPTION,
+           NULL                               FROM_DATE,
+           NULL                               UNTIL_DATE,
+           NULL                               YEAR_PERIOD_NUM,
+           NULL                               YEAR_PERIOD_STR,
+           NULL                               STRING_ATTRIBUTE1,     
+           NULL                               STRING_ATTRIBUTE2,
+           NULL                               STRING_ATTRIBUTE3,
+           NULL                               STRING_ATTRIBUTE4,
+           NULL                               STRING_ATTRIBUTE5,
+           NULL                               NUMBER_ATTRIBUTE1,
+           NULL                               NUMBER_ATTRIBUTE2,
+           NULL                               NUMBER_ATTRIBUTE3,
+           NULL                               NUMBER_ATTRIBUTE4,
+           NULL                               NUMBER_ATTRIBUTE5           
+      FROM  &TABLE_RPD r';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+BEGIN
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'RPD_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'REPORTING_DATE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX1';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);  
+
+   index_name_ := table_name_||'_IX2';
+   Database_SYS.Set_Table_Column (columns_ , 'ALT_DIM_ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);  
+
+   index_name_ := table_name_||'_IX3';
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX4';
+   Database_SYS.Set_Table_Column (columns_ , 'RPD_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'RPD_YEAR');
+   Database_SYS.Set_Table_Column (columns_ , 'RPD_PERIOD');
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'REPORTING_DATE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+   
+   Database_SYS.Reset_Column_Table(columns_);  
+
+   index_name_ := table_name_||'_IX5';
+   Database_SYS.Set_Table_Column (columns_ , 'RPD_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);  
+
+   index_name_ := table_name_||'_IX6';
+   Database_SYS.Set_Table_Column (columns_ , 'RPD_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'ACCOUNTING_DATE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+   
+   Database_SYS.Reset_Column_Table(columns_);  
+
+   index_name_ := table_name_||'_IX7';
+   Database_SYS.Set_Table_Column (columns_ , 'ID_WITH_RPD_ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);  
+
+   index_name_ := table_name_||'_IX8';
+   Database_SYS.Set_Table_Column (columns_ , 'ALT_DIM_ID_WITH_RPD_ID');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX',                               
+                               NULL,
+                               TRUE,
+                               TRUE);
+
+
+   
+END;
+/   
+
+UNDEFINE TABLE_RPD_COMPANY 
+UNDEFINE TABLE_RPD_COM_DET 
+UNDEFINE TABLE_RPD        
+UNDEFINE TABLE_RPD_PERIOD  
+UNDEFINE TABLE_RPD_YEAR
+UNDEFINE TABLE_BI_DUAL
+UNDEFINE TABLE_COMPANY
+UNDEFINE MV                
+
+-- ***** RPD_COMPANY_PERIOD_MV - End *****
+
+-----------------------------------------------------------------------------
+
+-- ***** COUNTER_PART_ONE_MV - Start *****
+
+DEFINE MV         = COUNTER_PART_ONE_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+
+PROMPT Create Materialized View &MV             
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+                                                                                             
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT company||''^''||CODE_PART_VALUE id,
+              company                         company,
+              CODE_PART_VALUE                 code,
+              DESCRIPTION                     description
+       FROM   &TAB1 
+       WHERE code_part = ''K''       
+       UNION ALL
+       SELECT company||''^''||''#''           id,
+              company                         company,
+              NULL                            code,
+              NULL                            description
+       FROM   &TAB2
+       UNION ALL
+       SELECT ''#''||''^''||''#''             id,
+              NULL                            company,
+              NULL                            code,
+              NULL                            description
+       FROM BI_DUAL_TAB
+    ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE TAB1
+UNDEFINE TAB2
+
+-- ***** COUNTER_PART_ONE_MV - End *****
+
+-----------------------------------------------------------------------------
+
+-- ***** COUNTER_PART_TWO_MV - Start *****
+
+DEFINE MV         = COUNTER_PART_TWO_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+
+PROMPT Create Materialized View &MV             
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT company||''^''||CODE_PART_VALUE id,
+              company                         company,
+              CODE_PART_VALUE                 code,
+              DESCRIPTION                     description
+       FROM   &TAB1 
+       WHERE code_part = ''L''       
+       UNION ALL
+       SELECT company||''^''||''#''           id,
+              company                         company,
+              NULL                            code,
+              NULL                            description
+       FROM   &TAB2
+       UNION ALL
+       SELECT ''#''||''^''||''#''             id,
+              NULL                            company,
+              NULL                            code,
+              NULL                            description
+       FROM BI_DUAL_TAB
+    ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE TAB1
+UNDEFINE TAB2
+
+-- ***** COUNTER_PART_TWO_MV - End *****
+
+-----------------------------------------------------------------------------
+
+-- ***** CODE_N_MV - Start *****
+
+
+DEFINE MV         = CODE_N_MV                            
+DEFINE MV_TRANS   = CODE_N_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB  
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value id,
+              a.company                           company,
+              a.code_part_value                   code,
+              a.description                       description
+       FROM   &TAB1 a
+       WHERE a.code_part      = ''N''       
+       UNION ALL
+       SELECT company||''^''||''#''               id,
+              company                             company,
+              NULL                                code,
+              NULL                                description
+       FROM   &TAB2
+       UNION ALL
+       SELECT ''#''||''^''||''#''                 id,
+              NULL                                company,
+              NULL                                code,
+              NULL                                description
+       FROM BI_DUAL_TAB
+    ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeN''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE MV_TRANS
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** CODE_N_MV - End *****
+
+-----------------------------------------------------------------------------
+
+-- ***** CODE_O_MV - Start *****
+
+
+DEFINE MV         = CODE_O_MV                            
+DEFINE MV_TRANS   = CODE_O_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB  
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value id,
+              a.company                           company,
+              a.code_part_value                   code,
+              a.description                       description
+       FROM   &TAB1 a
+       WHERE a.code_part      = ''O''       
+       UNION ALL
+       SELECT company||''^''||''#''               id,
+              company                             company,
+              NULL                                code,
+              NULL                                description
+       FROM   &TAB2
+       UNION ALL
+       SELECT ''#''||''^''||''#''                 id,
+              NULL                                company,
+              NULL                                code,
+              NULL                                description
+       FROM BI_DUAL_TAB
+    ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeO''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE MV_TRANS
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** CODE_O_MV - End *****
+
+-----------------------------------------------------------------------------
+
+-- ***** CODE_P_MV - Start *****
+
+
+DEFINE MV         = CODE_P_MV                            
+DEFINE MV_TRANS   = CODE_P_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB  
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value id,
+              a.company                           company,
+              a.code_part_value                   code,
+              a.description                       description
+       FROM   &TAB1 a
+       WHERE a.code_part      = ''P''       
+       UNION ALL
+       SELECT company||''^''||''#''               id,
+              company                             company,
+              NULL                                code,
+              NULL                                description
+       FROM   &TAB2
+       UNION ALL
+       SELECT ''#''||''^''||''#''                 id,
+              NULL                                company,
+              NULL                                code,
+              NULL                                description
+       FROM BI_DUAL_TAB
+    ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeP''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE MV_TRANS
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** CODE_P_MV - End *****
+
+-----------------------------------------------------------------------------
+
+-- ***** CODE_Q_MV - Start *****
+
+
+DEFINE MV         = CODE_Q_MV                            
+DEFINE MV_TRANS   = CODE_Q_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB  
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value id,
+              a.company                           company,
+              a.code_part_value                   code,
+              a.description                       description
+       FROM   &TAB1 a
+       WHERE a.code_part      = ''Q''       
+       UNION ALL
+       SELECT company||''^''||''#''               id,
+              company                             company,
+              NULL                                code,
+              NULL                                description
+       FROM   &TAB2
+       UNION ALL
+       SELECT ''#''||''^''||''#''                 id,
+              NULL                                company,
+              NULL                                code,
+              NULL                                description
+       FROM BI_DUAL_TAB
+          ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeQ''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE MV_TRANS
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** CODE_Q_MV - End *****
+
+-----------------------------------------------------------------------------
+
+-- ***** CODE_R_MV - Start *****
+
+
+DEFINE MV         = CODE_R_MV                            
+DEFINE MV_TRANS   = CODE_R_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB  
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value id,
+              a.company                           company,
+              a.code_part_value                   code,
+              a.description                       description
+       FROM   &TAB1 a
+       WHERE a.code_part      = ''R''       
+       UNION ALL
+       SELECT company||''^''||''#''               id,
+              company                             company,
+              NULL                                code,
+              NULL                                description
+       FROM   &TAB2
+       UNION ALL
+       SELECT ''#''||''^''||''#''                 id,
+              NULL                                company,
+              NULL                                code,
+              NULL                                description
+       FROM BI_DUAL_TAB
+    ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeR''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE MV_TRANS
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** CODE_R_MV - End *****
+
+-----------------------------------------------------------------------------
+
+-- ***** CODE_S_MV - Start *****
+
+
+DEFINE MV         = CODE_S_MV                            
+DEFINE MV_TRANS   = CODE_S_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB  
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value id,
+              a.company                           company,
+              a.code_part_value                   code,
+              a.description                       description
+       FROM   &TAB1 a
+       WHERE a.code_part      = ''S''       
+       UNION ALL
+       SELECT company||''^''||''#''               id,
+              company                             company,
+              NULL                                code,
+              NULL                                description
+       FROM   &TAB2
+       UNION ALL
+       SELECT ''#''||''^''||''#''                 id,
+              NULL                                company,
+              NULL                                code,
+              NULL                                description
+       FROM BI_DUAL_TAB
+    ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeS''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE MV_TRANS
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** CODE_S_MV - End *****
+
+-----------------------------------------------------------------------------
+
+-- ***** CODE_T_MV - Start *****
+
+
+DEFINE MV         = CODE_T_MV                            
+DEFINE MV_TRANS   = CODE_T_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB  
+
+PROMPT Create Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.code_part_value id,
+              a.company                           company,
+              a.code_part_value                   code,
+              a.description                       description
+       FROM   &TAB1 a
+       WHERE a.code_part      = ''T''       
+       UNION ALL
+       SELECT company||''^''||''#''               id,
+              company                             company,
+              NULL                                code,
+              NULL                                description
+       FROM   &TAB2
+       UNION ALL
+       SELECT ''#''||''^''||''#''                 id,
+              NULL                                company,
+              NULL                                code,
+              NULL                                description
+       FROM BI_DUAL_TAB
+    ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/ 
+   
+PROMPT Create constraints and index(s) on Materialized View &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+                                  constraint_name_,
+                                  columns_,
+                                  'P',
+                                  '&IFSAPP_INDEX',
+                                  NULL,
+                                  TRUE,
+                                  TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index (table_name_,
+                              index_name_,
+                              columns_,
+                              'U',
+                              '&IFSAPP_INDEX',
+                              NULL,
+                              TRUE,
+                              TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/   
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeT''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV
+UNDEFINE MV_TRANS
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** CODE_T_MV - End *****
+--------------------------------------------------------------
+--  
+-- ***** CODE_M_TRANSLATION_MV - Start *****
+
+DEFINE MV_TRANS   = CODE_M_TRANSLATION_MV
+DEFINE TAB1       = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+DEFINE TAB3       = KEY_LU_TRANSLATION_TAB 
+
+PROMPT Create Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV_TRANS');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Drop Materialized View &MV_TRANS');
+   Database_SYS.Remove_Materialized_View('&MV_TRANS', TRUE);
+   
+   dbms_output.put_line('Create Materialized View &MV_TRANS');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV_TRANS 
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT key_value                                 company,
+              attribute_key                             translation_key,
+              language_code                             language_code,
+              SUBSTR(current_translation,1,100)         description,
+              lu                                        lu,
+              module                                    module
+       FROM &TAB3
+       WHERE lu     = ''CodeM''
+       AND module   = ''ACCRUL''
+       AND key_name = ''CompanyKeyLu''
+       AND rowtype  = ''CompanyKeyLuTranslation'' ';
+      
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+PROMPT Create constraints and index(s) on Materialized View &MV_TRANS
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV_TRANS';
+   index_name_      VARCHAR2(30);
+BEGIN   
+   index_name_ := table_name_||'_IX1';
+   
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'TRANSLATION_KEY');
+   Database_SYS.Set_Table_Column (columns_ , 'LU');
+   Database_SYS.Set_Table_Column (columns_ , 'LANGUAGE_CODE');
+   Database_SYS.Create_Index ( table_name_,
+                               index_name_,
+                               columns_,
+                               'N',
+                               '&IFSAPP_INDEX');
+END;
+/   
+
+UNDEFINE MV_TRANS
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** CODE_M_TRANSLATION_MV - End ***** 
+
+-----------------------------------------------------------------------------------------
+
+-- ***** Cost_Rev_Element_MV - Start *****
+
+DEFINE MV     = COST_REV_ELEMENT_MV
+DEFINE TAB1   = PROJECT_COST_ELEMENT
+DEFINE TAB3   = COMPANY_TAB
+
+PROMPT CREATE Materialized VIEW &MV
+DECLARE
+   stmt_                    VARCHAR2(32000);
+columns_                 Database_SYS.ColumnTabType;
+table_name_              VARCHAR2(30) := '&MV';
+index_name_              VARCHAR2(30);
+constraint_name_         VARCHAR2(30);
+BEGIN
+   Database_SYS.Remove_All_Cons_And_Idx('COST_REV_ELEMENT_MV', TRUE);
+   Database_SYS.Remove_Materialized_View('COST_REV_ELEMENT_MV', TRUE);
+
+   stmt_ :=
+   'CREATE MATERIALIZED VIEW &MV
+    TABLESPACE &IFSAPP_DATA
+    BUILD DEFERRED
+    USING NO INDEX
+    REFRESH COMPLETE ON DEMAND
+    EVALUATE USING CURRENT EDITION
+    AS
+    SELECT a.company || ''^'' || a.project_cost_element id,
+          a.company                                     company,
+          a.project_cost_element                        code,
+          a.project_cost_element                        project_cost_element,
+          a.description                                 element_description,
+          a.default_cost_element                        default_cost_element,
+          a.state                                    validity,
+          Prj_Followup_Element_Type_API.Decode(a.element_type_db) element_type,
+          a.element_type_db                             element_type_db
+   FROM   &TAB1 a
+   UNION ALL
+   SELECT company || ''^'' || ''#''                    id,
+          company                                      company,
+          NULL                                         code,
+          NULL                                         project_cost_element,
+          NULL                                         element_description,
+          NULL                                         default_cost_element,
+          NULL                                         validity,
+          NULL                                         element_type,
+          NULL                                         element_type_db
+   FROM   &TAB3 a
+   UNION ALL
+   SELECT ''#'' || ''^'' || ''#''                      id,
+          NULL                                         company,
+          NULL                                         code,
+          NULL                                         project_cost_element,
+          NULL                                         element_description,
+          NULL                                         default_cost_element,
+          NULL                                         validity,
+          NULL                                         element_type,
+          NULL                                         element_type_db
+   FROM   BI_DUAL_TAB';
+
+   EXECUTE IMMEDIATE stmt_;
+
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+   constraint_name_,
+   columns_,
+   'P',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+   index_name_ := table_name_||'_UIX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+   index_name_,
+   columns_,
+   'U',
+   '&IFSAPP_INDEX');
+   Database_SYS.Reset_Column_Table(columns_);
+END;
+/
+
+UNDEFINE MV
+UNDEFINE TAB1
+UNDEFINE TAB3
+
+-- ***** Cost_Rev_Element_MV - End *****
+
+-----------------------------------------------------------------------------------------------------------------
+
+-- ***** COST_STRUC_HEAD_MV - Start *****
+
+DEFINE MV         = COST_STRUC_HEAD_MV
+DEFINE TAB1       = COST_STRUCTURE_TAB
+DEFINE TAB2       = COMPANY_FINANCE_TAB
+
+PROMPT CREATE Materialized VIEW &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+            'CREATE MATERIALIZED VIEW &MV
+             TABLESPACE &IFSAPP_DATA
+             BUILD DEFERRED
+             USING NO INDEX
+             REFRESH COMPLETE ON DEMAND
+             EVALUATE USING CURRENT EDITION
+             AS
+             SELECT a.company||''^''||a.cost_structure_id id,
+                    a.company                             company,
+                    a.cost_structure_id                   code,
+                    a.cost_structure_id                   cost_structure_id,
+                    a.description                         structure_id_description
+             FROM   &TAB1 a
+             WHERE a.rowstate         = ''Active''
+             ';
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+DECLARE
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+   constraint_name_,
+   columns_,
+   'P',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+   index_name_,
+   columns_,
+   'U',
+   '&IFSAPP_INDEX');
+   Database_SYS.Reset_Column_Table(columns_);
+
+END;
+/
+
+UNDEFINE MV
+UNDEFINE TAB1
+UNDEFINE TAB2
+
+-- ***** COST_STRUC_HEAD_MV - End *****
+
+-----------------------------------------------------------------------------------------
+-- ***** Cost_Struc_Level_MV - Start *****
+
+DEFINE MV         = COST_STRUC_LEVEL_MV
+DEFINE TAB1       = COST_STRUCTURE_LEVEL_TAB
+DEFINE TAB2       = COST_STRUCTURE_TAB
+DEFINE TAB3       = COMPANY_FINANCE_TAB
+
+PROMPT CREATE Materialized VIEW &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+columns_         Database_SYS.ColumnTabType;
+table_name_      VARCHAR2(30) := '&MV';
+index_name_      VARCHAR2(30);
+constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.cost_structure_id||''^''||a.level_id id,
+              a.company                                                company,
+              a.cost_structure_id                                      cost_structure_id,
+              a.level_id                                               code,
+              a.level_id                                               level_id,
+              a.description                                            level_id_description,
+              a.level_above                                            parent_level_id
+       FROM   &TAB1 a,
+               &TAB2 b
+       WHERE a.company            = b.company
+       AND    a.cost_structure_id = b.cost_structure_id
+       AND    b.rowstate          = ''Active''
+    ';
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+DECLARE
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+   constraint_name_,
+   columns_,
+   'P',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'COST_STRUCTURE_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+   index_name_,
+   columns_,
+   'U',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'COST_STRUCTURE_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'LEVEL_ID');
+   Database_SYS.Create_Index ( table_name_,
+   index_name_,
+   columns_,
+   'N',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+END;
+/
+
+UNDEFINE MV
+UNDEFINE TAB
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** Cost_Struc_Level_MV - End *****
+
+-- ***** Cost_Struc_Node_MV - Start *****
+
+DEFINE MV         = COST_STRUC_NODE_MV
+DEFINE TAB1       = COST_STRUCTURE_ITEM_TAB
+DEFINE TAB2       = COST_STRUCTURE_TAB
+DEFINE TAB3       = COMPANY_FINANCE_TAB
+
+PROMPT CREATE Materialized VIEW &MV
+
+DECLARE
+   stmt_            VARCHAR2(32000);
+columns_         Database_SYS.ColumnTabType;
+table_name_      VARCHAR2(30) := '&MV';
+index_name_      VARCHAR2(30);
+constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.cost_structure_id||''^''||a.name_value id,
+              a.company                                                  company,
+              a.cost_structure_id                                        cost_structure_id,
+              a.name_value                                               code,
+              a.name_value                                               node_id,
+              a.description                                              node_id_description,
+              a.item_above                                               parent_node_id,
+              a.level_id                                                 level_id
+       FROM   &TAB1 a,
+              &TAB2 b
+       WHERE a.company                    = b.company
+       AND    a.cost_structure_id          = b.cost_structure_id
+       AND    a.cost_struct_item_type = ''NODE''
+       AND    b.rowstate                   = ''Active''
+    ';
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+DECLARE
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+   constraint_name_,
+   columns_,
+   'P',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'COST_STRUCTURE_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+   index_name_,
+   columns_,
+   'U',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_IX';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'COST_STRUCTURE_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'NODE_ID');
+   Database_SYS.Create_Index ( table_name_,
+   index_name_,
+   columns_,
+   'N',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+END;
+/
+
+UNDEFINE MV
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** Cost_Struc_Node_MV - End *****
+
+-----------------------------------------------------------------------------------------------------------------
+
+-- ***** Cost_Struc_Leaf_MV - Start *****
+
+DEFINE MV         = COST_STRUC_LEAF_MV
+DEFINE TAB1       = COST_STRUCTURE_ITEM_TAB
+DEFINE TAB2       = COST_STRUCTURE_TAB
+DEFINE TAB3       = COMPANY_FINANCE_TAB
+
+PROMPT CREATE Materialized VIEW &MV
+DECLARE
+   stmt_            VARCHAR2(32000);
+columns_         Database_SYS.ColumnTabType;
+table_name_      VARCHAR2(30) := '&MV';
+index_name_      VARCHAR2(30);
+constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.cost_structure_id||''^''||a.item_above||''^''||a.name_value id,
+              a.company                                                                       company,
+              a.cost_structure_id                                                             cost_structure_id,
+              a.item_above                                                                    node_id,
+              a.name_value                                                                    code
+       FROM   &TAB1 a, &TAB2 b
+       WHERE a.company                    = b.company
+       AND    a.cost_structure_id          = b.cost_structure_id
+       AND    a.cost_struct_item_type = ''COST_ELEMENT''
+       AND    b.rowstate                   = ''Active''
+    ';
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+DECLARE
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_Sys.Create_Constraint(table_name_,
+   constraint_name_,
+   columns_,
+   'P',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX1';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'COST_STRUCTURE_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Create_Index ( table_name_,
+   index_name_,
+   columns_,
+   'U',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+END;
+/
+
+UNDEFINE MV
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** Cost_Struc_Leaf_MV - End *****
+-----------------------------------------------------------------------------
+
+-- ***** Analytic_Cost_Str_MV - Start *****
+
+DEFINE MV         = ANALYTIC_COST_STR_MV
+DEFINE TAB1       = ANALYTIC_STRUCT_CACHE_TAB
+DEFINE TAB2       = COMPANY_TAB
+DEFINE TAB3       = COST_STRUCTURE_TAB
+
+PROMPT CREATE Materialized VIEW &MV
+
+DECLARE
+   stmt_            VARCHAR2(32000);
+columns_         Database_SYS.ColumnTabType;
+table_name_      VARCHAR2(30) := '&MV';
+index_name_      VARCHAR2(30);
+constraint_name_ VARCHAR2(30);
+BEGIN
+   dbms_output.put_line('Primary key cascade drop ON &MV');
+   Database_SYS.Remove_All_Cons_And_Idx('&MV', TRUE);
+
+   dbms_output.put_line('Drop Materialized View &MV');
+   Database_SYS.Remove_Materialized_View('&MV', TRUE);
+
+   dbms_output.put_line('Create Materialized View &MV');
+   stmt_ :=
+      'CREATE MATERIALIZED VIEW &MV
+       TABLESPACE &IFSAPP_DATA
+       BUILD DEFERRED
+       USING NO INDEX
+       REFRESH COMPLETE ON DEMAND
+       EVALUATE USING CURRENT EDITION
+       AS
+       SELECT a.company||''^''||a.project_cost_element id,
+              a.company                                company,
+              a.project_cost_element                   code,
+              a.cost_structure_id                      cost_structure_id,
+              a2.description                           structure_description,
+              a.structure_node                         structure_node,
+              a.structure_node_desc                    node_description,
+              a.level_id                               level_id,
+              a.level_id_desc                          level_description
+       FROM   &TAB1 a,
+              &TAB3 a2
+       WHERE a.company           = a2.company
+       AND    a.cost_structure_id = a2.cost_structure_id
+       AND    a2.rowstate         = ''Active''
+       UNION ALL
+       SELECT company||''^''||''#''                    id,
+              company                                  company,
+              NULL                                     code,
+              NULL                                     cost_structure_id,
+              NULL                                     structure_description,
+              NULL                                     structure_node,
+              NULL                                     node_description,
+              NULL                                     level_id,
+              NULL                                     level_description
+       FROM   &TAB2
+       UNION ALL
+       SELECT ''#''||''^''||''#''                      id,
+              NULL                                     company,
+              NULL                                     code,
+              NULL                                     cost_structure_id,
+              NULL                                     structure_description,
+              NULL                                     structure_node,
+              NULL                                     node_description,
+              NULL                                     level_id,
+              NULL                                     level_description
+       FROM BI_DUAL_TAB
+       ';
+   EXECUTE IMMEDIATE stmt_;
+END;
+/
+
+DECLARE
+   columns_         Database_SYS.ColumnTabType;
+   table_name_      VARCHAR2(30) := '&MV';
+   index_name_      VARCHAR2(30);
+   constraint_name_ VARCHAR2(30);
+BEGIN
+   constraint_name_ := table_name_ || '_PK';
+   Database_SYS.Set_Table_Column (columns_ , 'ID');
+   Database_SYS.Set_Table_Column (columns_ , 'COST_STRUCTURE_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'STRUCTURE_NODE');
+   Database_SYS.Set_Table_Column (columns_ , 'LEVEL_ID');
+   Database_Sys.Create_Constraint(table_name_,
+   constraint_name_,
+   columns_,
+   'P',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+
+   Database_SYS.Reset_Column_Table(columns_);
+
+   index_name_ := table_name_||'_UX';
+   Database_SYS.Set_Table_Column (columns_ , 'COMPANY');
+   Database_SYS.Set_Table_Column (columns_ , 'COST_STRUCTURE_ID');
+   Database_SYS.Set_Table_Column (columns_ , 'CODE');
+   Database_SYS.Set_Table_Column (columns_ , 'STRUCTURE_NODE');
+   Database_SYS.Set_Table_Column (columns_ , 'LEVEL_ID');
+   Database_SYS.Create_Index ( table_name_,
+   index_name_,
+   columns_,
+   'U',
+   '&IFSAPP_INDEX',
+   NULL,
+   TRUE,
+   TRUE);
+   Database_SYS.Reset_Column_Table(columns_);
+END;
+/
+
+UNDEFINE MV
+UNDEFINE TAB1
+UNDEFINE TAB2
+UNDEFINE TAB3
+
+-- ***** Analytic_Cost_Str_MV - End *****
+
+-----------------------------------------------------------------------------------------------------------------
+

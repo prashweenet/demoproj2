@@ -1,0 +1,61 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 191121      Kagalk  gelr: Added to support Global Extension Functionalities.
+-- 191121              GESPRING20-4, Added for es_sii_reporting
+----------------------------------------------------------------------------------------------------
+client SiiTaxInformation;
+component ACCRUL;
+layer Core;
+projection SiiTaxInformationHandling;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using SiiTaxCodeSet {
+   label = "SII Tax Details";
+   list SiiTaxCodeList using SiiTaxCodeSet;
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+@DynamicComponentDependency EREP
+selector BusinessTransTypeSelector for SiiBusinessTransType {
+   label = "";
+   static Company {
+      visible = [false];
+   }
+   static BusinessTransType;
+   static PartyType;
+   static Description;
+}
+
+----------------------------- VISUAL COMPONENTS -----------------------------
+
+list SiiTaxCodeList for StatutoryFee {
+   orderby = FeeCode;
+
+   lov FeeCodeRef with ReferenceStatutoryFeeSelector {
+      description = FeeCodeRef.Description;
+   }
+   @DynamicComponentDependency EREP
+   field TaxLiabilityClass;
+   @DynamicComponentDependency EREP
+   lov SiiExemptReasonRef with ReferenceSiiExemptionReasonSelector {
+      editable = [FeeRate = 0];
+   }
+   @DynamicComponentDependency EREP
+   lov BusinessTransTypeCustRef with BusinessTransTypeSelector using SiiBusTransUserWhere("CUSTOMER");
+   @DynamicComponentDependency EREP
+   lov BusinessTransTypeSuppRef with BusinessTransTypeSelector using SiiBusTransUserWhere("SUPPLIER");
+   field ExcludeFromSiiReporting;
+   @DynamicComponentDependency EREP
+   field SiiOperationType;
+}

@@ -1,0 +1,135 @@
+client TaxBooks;
+component ACCRUL;
+layer Core;
+projection TaxBooksHandling;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+warningsenabled = TaxBook;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry TaxBookNavNavEntry parent AccrulNavigator.TaxMenu at index 200 {
+      label = "Tax Books";
+      page List home TaxBook;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using TaxBookSet {
+   label = "Tax Books";
+   initcontext PageInitContext;
+   list TaxBookList;
+}
+
+initcontext PageInitContext {
+   parameter TaxBookAndNumberingEnabled Boolean;
+   init command {
+      execute {
+          -- gelr:localization_control_center, begin
+         call InitLocalizationFunctionalities(context.Company) into LocalizationFunctionalityStructure;
+         set TaxBookAndNumberingEnabled = LocalizationFunctionalityStructure.TaxBookAndNumbering;
+         -- gelr:localization_control_center, end
+      }
+   }
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command TaxCodesPerTaxBookCommand {
+   mode = SelectedRecords;
+   label = "Tax Codes Per Tax Book";
+   enabled = [TaxBookBaseDb = "TAX_CODE" and TaxBookBaseValuesDb = "RESTRICTED"];
+   bulkexecute {
+      bulknavigate "page/TaxCodePerTaxBook/Form?contexts=Company:$[Company]&$filter=TaxBookId eq $[TaxBookId]";
+   }
+}
+
+-- gelr:tax_book_and_numbering, begin
+command InvoiceSeriesPerTaxBookCommand {
+   mode = SelectedRecords;
+   label = "Invoice Series Per Tax Book";
+   enabled = [initcontext.TaxBookAndNumberingEnabled and TaxBookBaseDb = "INVOICE_SERIES" and TaxBookBaseValuesDb = "RESTRICTED"];
+   bulkexecute {
+      bulknavigate "page/InvoiceSeriesPerTaxBook/Form?contexts=Company:$[Company]&$filter=TaxBookId eq $[TaxBookId]";
+   }
+}
+
+command InvoiceTypesPerTaxBookCommand {
+   mode = SelectedRecords;
+   label = "Invoice Types Per Tax Book";
+   enabled = [initcontext.TaxBookAndNumberingEnabled and TaxBookBaseDb = "INVOICE_TYPE" and TaxBookBaseValuesDb = "RESTRICTED"];
+   bulkexecute {
+      bulknavigate "page/InvoiceTypesPerTaxBook/Form?contexts=Company:$[Company]&$filter=TaxBookId eq $[TaxBookId]";
+   }
+}
+-- gelr:tax_book_and_numbering, end
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list TaxBookList for TaxBook {
+   label = "";
+
+   field TaxBookId {
+      size = Small;
+   }
+   field Description;
+   field TaxDirectionSp;
+   field TaxBookBase {
+      when[not initcontext.TaxBookAndNumberingEnabled] use subset SubTaxBookBase;
+   }
+   field TaxBookBaseValues;
+   @DynamicComponentDependency TAXLED
+   lov TaxSeriesIdRef with ReferenceTaxSeriesSelector {
+      size = Small;
+      format = uppercase;
+   }
+
+   command TaxCodesPerTaxBookCommand;
+   -- gelr:tax_book_and_numbering, begin
+   command InvoiceSeriesPerTaxBookCommand;
+   command InvoiceTypesPerTaxBookCommand;
+   -- gelr:tax_book_and_numbering, end
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

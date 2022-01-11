@@ -1,0 +1,2635 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     VoucherCalculations
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+TYPE voucher_row_info_rec IS RECORD (
+   company                       Voucher_Row_Tab.company%TYPE, 
+   voucher_type                  Voucher_Row_Tab.voucher_type%TYPE,  
+   multi_company_id              Voucher_Row_Tab.multi_company_id%TYPE,  
+   multi_company_voucher_type    Voucher_Row_Tab.voucher_type%TYPE,  
+   voucher_date                  Voucher_Tab.voucher_date%TYPE,
+   function_group                Voucher_TAB.function_group%TYPE,
+   conversion_factor             NUMBER,
+   parallel_conversion_factor    NUMBER,
+   currency_rate                 NUMBER,
+   parallel_currency_rate        NUMBER,
+   tax_code                      voucher_row_tab.optional_code%TYPE,
+   tax_percentage                NUMBER,   
+   currency_inverted             VARCHAR2(5),  
+   parallel_currency_inverted    VARCHAR2(5),   
+   Decimals_In_Amount            NUMBER,
+   Decimals_In_trans_Amount      NUMBER,
+   Decimals_In_parallel_Amount   NUMBER,
+   Tax_Direction                 Voucher_row_tab.tax_direction%TYPE,
+   correction                    VARCHAR2(5),
+   is_credit                     BOOLEAN );  
+
+  
+TYPE tax_amount_Rec IS RECORD (   
+   deductible_tax_value  NUMBER,
+   calculated_tax_value  NUMBER );
+   
+FUNCTION Convert_to_currency_rec (
+   company_                            IN VARCHAR2,
+   currency_code_                      IN VARCHAR2,
+   correction_                         IN BOOLEAN,
+   amount_                             IN NUMBER,  
+   currency_amount_                    IN NUMBER,
+   parallel_currency_amount_           IN NUMBER,
+   tax_base_amount_                    IN NUMBER,
+   currency_tax_base_amount_           IN NUMBER,
+   parallel_currency_tax_base_amount_  IN NUMBER,
+   currency_rate_                      IN NUMBER,
+   parallel_currency_rate_             IN NUMBER,
+   conversion_factor_                  IN NUMBER,
+   parallel_conversion_factor_         IN NUMBER,
+   currency_rate_type_                 IN VARCHAR2,
+   parallel_currency_rate_type_        IN VARCHAR2,
+   tax_amount_                         IN NUMBER,
+   currency_tax_amount_                IN NUMBER,
+   parallel_currency_tax_amount_       IN NUMBER,
+   is_credit_                          IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_       Currency_Amount_Structure_Rec;
+   correction_flag_  VARCHAR2(5);
+BEGIN
+	return_rec_.amount := amount_;
+   return_rec_.currency_amount := currency_amount_;
+   return_rec_.third_currency_amount := parallel_currency_amount_;
+   IF (correction_) THEN
+      correction_flag_ := 'Y';
+   ELSE
+      correction_flag_ := 'N';
+   END IF;
+   
+   return_rec_ := Adjust_Currency_Values___(company_, return_rec_, correction_flag_, is_credit_);
+   
+   return_rec_.tax_base_amount := tax_base_amount_;
+   return_rec_.currency_code := currency_code_;
+   return_rec_.currency_tax_base_amount := currency_tax_base_amount_;
+   return_rec_.parallel_curr_tax_base_amount := parallel_currency_tax_base_amount_;
+   return_rec_.currency_rate := currency_rate_;
+   return_rec_.parallel_currency_rate := parallel_currency_rate_;
+   return_rec_.conversion_factor :=  conversion_factor_;
+   return_rec_.parallel_conversion_factor := parallel_conversion_factor_;
+   return_rec_.Currency_Type := currency_rate_type_;
+   return_rec_.Parallel_Curr_Rate_Type := parallel_currency_rate_type_;
+   return_rec_.Tax_Amount := tax_amount_;
+   return_rec_.Currency_Tax_Amount := currency_tax_amount_;
+   return_rec_.parallel_curr_tax_amount := parallel_currency_tax_amount_;
+  
+   RETURN return_rec_;
+END Convert_to_currency_rec;
+
+FUNCTION Adjust_Currency_Values___ (
+   company_           IN VARCHAR2,
+   currency_rec_      IN Currency_Amount_Structure_Rec,
+   correction_flag_   IN VARCHAR2,
+   is_credit_         IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_ Currency_Amount_Structure_Rec;
+   company_rec_      company_finance_API.Public_Rec;
+BEGIN
+   return_rec_ := currency_rec_;
+   company_rec_ := Company_Finance_API.Get(company_);
+   
+	IF ((return_rec_.amount > 0 AND correction_flag_ = 'Y') OR (return_rec_.amount < 0 AND correction_flag_ = 'N')) THEN
+      return_rec_.credit_amount := -return_rec_.amount;              
+      return_rec_.debet_amount := NULL;  
+   
+   ELSE 
+      IF (is_credit_  AND return_rec_.amount IS NOT NULL AND return_rec_.amount = 0) THEN
+         return_rec_.credit_amount := return_rec_.amount;
+         return_rec_.debet_amount := NULL;
+   
+      ELSE 
+         return_rec_.debet_amount := return_rec_.amount;
+         return_rec_.credit_amount := NULL;
+   
+      END IF;
+   END IF;
+   
+   IF ((return_rec_.currency_amount > 0 AND correction_flag_ = 'Y') OR (return_rec_.currency_amount < 0 AND correction_flag_ = 'N')) THEN
+      return_rec_.currency_credit_amount := -return_rec_.currency_amount;               
+      return_rec_.Currency_Debet_Amount := NULL;               
+   ELSE
+      IF (is_credit_  AND return_rec_.currency_amount IS NOT NULL AND return_rec_.currency_amount = 0) THEN
+         return_rec_.currency_credit_amount := return_rec_.currency_amount;
+         return_rec_.Currency_Debet_Amount := NULL;
+      ELSE
+         return_rec_.Currency_Debet_Amount := return_rec_.currency_amount;
+         return_rec_.currency_credit_amount := NULL;
+      END IF;
+   END IF;
+   
+   IF (company_rec_.parallel_acc_currency IS NOT NULL ) THEN
+      IF ((return_rec_.third_currency_amount > 0 AND correction_flag_ = 'Y') OR (return_rec_.third_currency_amount < 0 AND correction_flag_ = 'N')) THEN
+         return_rec_.third_currency_credit_amount := -return_rec_.third_currency_amount;              
+         return_rec_.third_currency_debit_amount := NULL;              
+      ELSE 
+         IF (is_credit_  AND return_rec_.third_currency_amount IS NOT NULL AND return_rec_.third_currency_amount = 0) THEN
+            return_rec_.third_currency_credit_amount := return_rec_.third_currency_amount;
+            return_rec_.third_currency_debit_amount := NULL;
+         ELSE
+            return_rec_.third_currency_debit_amount := return_rec_.third_currency_amount;
+            return_rec_.third_currency_credit_amount := NULL;
+         END IF;
+      END IF;
+   ELSE
+      return_rec_.third_currency_amount         := NULL;              
+      return_rec_.third_currency_credit_amount  := NULL;    
+      return_rec_.third_currency_debit_amount   := NULL;    
+   END IF;
+   
+	RETURN return_rec_;
+END Adjust_Currency_Values___;
+
+
+
+FUNCTION Convert_to_voucher_info_rec (  
+  voucher_date_              IN DATE,
+  company_                    IN VARCHAR2, 
+  voucher_type_               IN VARCHAR2, 
+  multi_company_id_           IN VARCHAR2, 
+  multi_company_voucher_type_ IN VARCHAR2, 
+  tax_code_                   IN VARCHAR2, 
+  tax_percentage_             IN NUMBER,
+  tax_direction_              IN VARCHAR2,
+  currency_code_              IN VARCHAR2,
+  correction_                 IN BOOLEAN,
+  is_credit_                  IN BOOLEAN ) RETURN voucher_row_info_rec
+IS
+   correction_flag_  VARCHAR2(5);
+   return_rec_       voucher_row_info_rec;   
+   company_rec_      Company_Finance_API.Public_Rec;
+BEGIN 
+   company_rec_                           := Company_Finance_API.Get(company_);	
+   return_rec_.company                    := company_; 
+   return_rec_.voucher_type               := voucher_type_; 
+   return_rec_.multi_company_id           := multi_company_id_; 
+   return_rec_.multi_company_voucher_type := multi_company_voucher_type_; 
+   return_rec_.tax_code                   := tax_code_;
+    return_rec_.tax_percentage            := tax_percentage_;
+    -- THPELK : TODO
+   IF (return_rec_.tax_percentage IS NULL ) THEN
+      return_rec_.tax_percentage := Statutory_Fee_API.Get_Fee_Rate(return_rec_.company, return_rec_.tax_code);
+   END IF;
+   -- Currency_Rate_API.Currency_Rate___
+   return_rec_.currency_inverted := Currency_Code_API.Get_Inverted(company_, company_rec_.currency_code);  
+   return_rec_.parallel_currency_inverted := Currency_Rate_API.Is_Parallel_Curr_Rate_Inverted(company_, currency_code_);  
+--   IF (company_rec_.parallel_base IS NOT NULL AND company_rec_.parallel_base = 'ACCOUNTING_CURRENCY') THEN
+--      return_rec_.parallel_currency_inverted := Currency_Rate_API.Is_Parallel_Curr_Rate_Inverted(company_, company_rec_.currency_code);   
+--   ELSIF (company_rec_.parallel_base IS NOT NULL) THEN
+--      return_rec_.parallel_currency_inverted := Currency_Rate_API.Is_Parallel_Curr_Rate_Inverted(company_, currency_code_);   
+--   END IF;
+    
+    return_rec_.Tax_Direction := tax_direction_;
+    IF (correction_ ) THEN
+      correction_flag_ := 'Y';
+   ELSE
+      correction_flag_ := 'N';
+   END IF;
+    return_rec_.correction := correction_flag_;
+    return_rec_.is_credit  := is_credit_;    
+
+   return_rec_.decimals_in_amount := NVL(Currency_Code_API.Get_Currency_Rounding(company_, company_rec_.currency_code),2);
+   return_rec_.decimals_in_trans_amount := NVL(Currency_Code_API.Get_Currency_Rounding(company_, currency_code_),2);
+   return_rec_.decimals_in_parallel_amount := NVL(Currency_Code_API.Get_Currency_Rounding(company_, company_rec_.parallel_acc_currency),2);
+   return_rec_.voucher_date := voucher_date_;
+   RETURN return_rec_;
+END Convert_to_voucher_info_rec;
+
+FUNCTION Cal_Base_Curr_Amount_For_Rate(
+   company_             IN VARCHAR2, 
+   currency_amount_     IN NUMBER, 
+   currency_rate_       IN NUMBER , 
+   conversion_factor_   IN NUMBER, -- Fetch_Currency_Rate_Base.i_nFinConversionFactor
+   base_rounding_       IN NUMBER, -- accounting_currency_rounding
+   inverted_            IN VARCHAR2 ) RETURN NUMBER
+        
+IS 
+   amount_  NUMBER:= 0;   
+BEGIN
+   
+   IF (inverted_ = 'TRUE') THEN            
+      IF ( conversion_factor_ = 0 OR currency_rate_ / conversion_factor_ = 0 ) THEN
+         Raise_devided_by_Zero_Error___();
+      ELSE
+         amount_ := ROUND(currency_amount_ * (1 / (currency_rate_ / conversion_factor_)), base_rounding_);
+      END IF;
+   ELSE      
+      IF (conversion_factor_ = 0) THEN
+         Raise_devided_by_Zero_Error___();
+      ELSE
+         amount_ := ROUND(currency_amount_ * (currency_rate_ / conversion_factor_), base_rounding_);         
+      END IF;
+   END IF;
+   
+   RETURN amount_;
+END Cal_Base_Curr_Amount_For_Rate;
+
+-- GetTransCurrAmountForRateMC() or GetTransCurrAmountForRate()
+FUNCTION cal_trans_curr_amount_for_rate(
+   company_             IN VARCHAR2, 
+   currency_amount_     IN NUMBER, 
+   currency_rate_       IN NUMBER , 
+   conversion_factor_   IN NUMBER, -- Fetch_Currency_Rate_Base.i_nFinConversionFactor
+   base_rounding_       IN NUMBER, -- accounting_currency_rounding
+   inverted_            IN VARCHAR2 ) RETURN NUMBER
+        
+IS 
+   amount_  NUMBER:= 0;   
+BEGIN
+      
+   IF (inverted_ = 'TRUE') THEN
+      IF (conversion_factor_ = 0) THEN
+         Raise_devided_by_Zero_Error___();
+      ELSE
+         amount_ := ROUND(currency_amount_ * (currency_rate_ / conversion_factor_), base_rounding_);         
+      END IF;
+   ELSE     
+      IF ( conversion_factor_ = 0 OR currency_rate_ / conversion_factor_ = 0 ) THEN
+         Raise_devided_by_Zero_Error___();
+      ELSE
+         amount_ := ROUND(currency_amount_ * (1 / (currency_rate_ / conversion_factor_)), base_rounding_);
+      END IF;      
+   END IF;
+   
+   RETURN amount_;
+END cal_trans_curr_amount_for_rate;
+
+-- FetchDefaultCurrencyData
+--FUNCTION Currency_Default_Data___(
+--	company_ IN VARCHAR2) RETURN Voucher_Currency_Data_Structure_Rec
+--IS
+-- 
+--   voucher_date_              DATE;   
+--   voucher_currency_data_rec_ Voucher_Currency_Data_Structure_Rec;   
+--   company_finance_rec_       Company_Finance_API.Public_Rec;
+--   
+--BEGIN   
+--   voucher_date_       := SYSDATE;                                   
+--   company_finance_rec_ := Company_Finance_API.Get(company_);
+--   
+--   voucher_currency_data_rec_.currency_code          := company_finance_rec_.currency_code;
+--   voucher_currency_data_rec_.parallel_currency      := company_finance_rec_.parallel_acc_currency;
+--   voucher_currency_data_rec_.parallel_base_type     := company_finance_rec_.parallel_base;
+--   voucher_currency_data_rec_.parallel_rate_type     := company_finance_rec_.parallel_rate_type;  
+--   
+--   voucher_currency_data_rec_.parallel_curr_valid_from := Company_Finance_API.Get_Time_Stamp(company_ );
+--       
+--   
+--   
+--   voucher_currency_data_rec_.is_currency_emu    := Currency_Code_API.Get_Valid_Emu( company_ , voucher_currency_data_rec_.currency_code, voucher_date_);                                            
+--   voucher_currency_data_rec_.decimals_in_amount:= NVL( Currency_Code_API.Get_Currency_Rounding( company_ , voucher_currency_data_rec_.currency_code), 0); 
+--   voucher_currency_data_rec_.decimals_in_rate  := NVL( Currency_Code_API.Get_No_Of_Decimals_In_Rate( company_ , voucher_currency_data_rec_.currency_code), 0); 
+--   voucher_currency_data_rec_.acc_curr_rate_type  := NVL( Currency_Type_API.Get_Default_Type( company_), 0); 
+--   
+--   voucher_currency_data_rec_.parallel_decimals_in_amount := NVL(Currency_Code_API.Get_Currency_Rounding(company_, voucher_currency_data_rec_.parallel_currency), 0); 
+--   
+--   voucher_currency_data_rec_.rounding_method        := Tax_Handling_Util_API.Get_Tax_Rounding_Method_Db(company_, NULL, NULL, NULL);
+--   voucher_currency_data_rec_.parallel_decimals_in_rate  := NVL( Currency_Code_API.Get_No_Of_Decimals_In_Rate(company_, voucher_currency_data_rec_.parallel_currency), 0);                                           
+--     
+--     RETURN voucher_currency_data_rec_;
+--END Currency_Default_Data___;
+
+-- calc_currency_amount___()
+-- SetAnotherValue -> CURRENT_AMOUNT
+FUNCTION calc_based_on_currency_amount___ (
+   currency_rec_              IN Currency_Amount_Structure_Rec, 
+   voucher_row_rec_        IN voucher_row_info_rec,
+   prev_currency_amount_    IN NUMBER,
+   amount_method_           IN VARCHAR2,
+   calculation_type_        IN VARCHAR2,
+   calculate_tax_           IN VARCHAR2 ) RETURN Currency_Amount_Structure_Rec
+IS
+   calculate_value_           NUMBER;
+   calculated_tax_value_      NUMBER;
+   s_call_frm_dcamnt_         VARCHAR2(5)   := 'FALSE';
+   return_rec_  Currency_Amount_Structure_Rec;
+   
+BEGIN
+   return_rec_ := currency_rec_;               
+--this.GetAttributesMC(tblVoucherPosting_colsCompany.Text, tblVoucherPosting_colsCurrencyCode.Text, this.tblVoucherPosting_colsAccountingCurencyCode.Text , tblVoucherPosting_colsCurrencyType.Text, frmMultiCompanyEntryVoucher.FromHandle(
+--Ifs.Fnd.ApplicationForms.Int.GetParent(i_hWndFrame)).dfdVoucherDate.DateTime);
+   IF (calculate_tax_ != 'FALSE') THEN  
+      -- Calculate the Tax value and adjust the currency amounts accordingly
+      return_rec_ := Calculate_Tax_Value(return_rec_, voucher_row_rec_, prev_currency_amount_, amount_method_, 'CURRENT_AMOUNT');
+          
+   END IF;
+               -- currency_amount_ := value_;
+--                IF (act_currency_rate_ IS NULL ) THEN
+--                    act_currency_rate_ := currency_rate_;
+--                END IF;
+                -- this.GetBaseCurrAmountForRateMC(tblVoucherPosting_colsCompany.Text, nMyValue, tblVoucherPosting_colnActCurrencyRate.Number, ref nCalculateValue);
+             --   calculate_value_ := cal_base_curr_amount_for_rate(company_, value_, act_currency_rate_, conversion_factor_, base_rounding_, inverted_);
+                
+               -- this.GetBaseCurrAmountForRateMC(tblVoucherPosting_colsCompany.Text, nMyValue, tblVoucherPosting_colnCurrencyRate.Number, ref nCalculateValue);
+   calculate_value_ := cal_base_curr_amount_for_rate(voucher_row_rec_.company, return_rec_.currency_amount, return_rec_.currency_rate, return_rec_.conversion_factor, Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company)), voucher_row_rec_.currency_inverted);
+               
+   IF (s_call_frm_dcamnt_ = 'FALSE') THEN
+        --  this.GetBaseCurrAmountForRateMC(tblVoucherPosting_colsCompany.Text, tblVoucherPosting_colnCurrencyTaxBaseAmount.Number, tblVoucherPosting_colnCurrencyRate.Number, ref nTaxBaseAmount);
+      calculated_tax_value_ := cal_base_curr_amount_for_rate(voucher_row_rec_.company, return_rec_.currency_tax_base_amount, return_rec_.currency_rate, return_rec_.conversion_factor, Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company)), voucher_row_rec_.currency_inverted);
+      return_rec_.tax_base_amount := calculated_tax_value_;
+      -- tblVoucherPosting_colnTaxBaseAmount.Number = nTaxBaseAmount;
+      -- tblVoucherPosting_colnAmount.Number = nCalculateValue;
+      return_rec_.amount := calculate_value_;         
+   ELSE                
+     IF (Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company) = return_rec_.currency_code OR return_rec_.currency_amount IS NULL ) THEN
+        return_rec_.tax_base_amount := return_rec_.currency_tax_base_amount;                    
+        return_rec_.amount := calculate_value_;
+     END IF;
+   END IF;
+               
+   IF  (calculate_value_ IS NOT NULL ) THEN
+      IF ((calculate_value_ > 0 AND voucher_row_rec_.correction = 'Y') OR (calculate_value_ <= 0 AND voucher_row_rec_.correction = 'N')) THEN
+         return_rec_.credit_amount := -calculate_value_;                
+      ELSE 
+         return_rec_.debet_amount := calculate_value_;
+      END IF;
+    END IF;
+               --  THPELK  Seems no need
+--                IF  (calculate_value_ IS NOT NULL ) THEN
+--                    IF ((calculate_value_ < 0 AND correction_ = 'N') OR (calculate_value_ > 0 AND correction_ = 'Y')) THEN
+--                        return_rec_.amount := -1 * calculate_value_;
+--                    END IF;
+--                 END IF;
+                 -- THPELK - CHECK ???
+                 -- set the value of the accounting amounts accounting amount field is set to calculate_value_
+--                IF ((sCallFrmDCAmnt = 'FALSE') OR (base_currency_code_ = CurrencyCode OR value_ IS NULL )) THEN
+--                
+--                    Sal.SendMsg(hWndRival, Ifs.Fnd.ApplicationForms.Const.PM_DataItemValueSet, 1, nCalculateValue.ToString(99).ToHandle());
+--               END IF;
+       -- THPELK set this rate when doing setAnotherValue() and validate commands
+--   CurrencyAmount :=  
+--   tblVoucherPosting_colnCurrencyDebetAmount
+--   tblVoucherPosting_colnCurrencyCreditAmount
+--   tblVoucherPosting_colnAmount 
+--   tblVoucherPosting_debit_Amount
+--   tblVoucherPosting_credit_Amount
+--   
+--   tblVoucherPosting_colnCurrencyTaxBaseAmount
+--   tblVoucherPosting_colnTaxBaseAmount
+--   tblVoucherPosting_colnActCurrencyRate:=    
+	RETURN return_rec_;
+END calc_based_on_currency_amount___;
+
+
+
+---- GetBaseCurrAmountForRateMC()
+---- GetBaseCurrencyAmountMC is similar to this => when curr rate is not changed. Here the rounded currency rate is usefd where as the other method unrounded currency rate is used.
+--SetAnotherValue() IF (calculation_type_ = 'RATE') THEN
+FUNCTION Rate_Based_Amount_Calculation___ (
+   company_             IN VARCHAR2,
+   rate_changed_        IN BOOLEAN,
+   currency_amount_     IN NUMBER,
+   currency_rate_       IN NUMBER,
+   correction_          IN VARCHAR2,
+   conversion_factor_   IN NUMBER,
+   base_rounding_       IN NUMBER,
+   inverted_            IN VARCHAR2 ) RETURN NUMBER
+IS
+   calculate_value_        NUMBER;
+   base_currency_amount_   NUMBER;
+BEGIN   
+--                this.GetAttributesMC(tblVoucherPosting_colsCompany.Text, tblVoucherPosting_colsCurrencyCode.Text, tblVoucherPosting_colsAccountingCurencyCode.Text, tblVoucherPosting_colsCurrencyType.Text, frmMultiCompanyEntryVoucher.FromHandle(
+--                        Ifs.Fnd.ApplicationForms.Int.GetParent(i_hWndFrame)).dfdVoucherDate.DateTime);
+--                
+   IF (rate_changed_) THEN --  (nMyValue != nPrevRate) THEN -- rate is changed
+    -- if rate is changed => calculate the base currency amount for the given rate                
+
+      calculate_value_ := cal_base_curr_amount_for_rate(company_, currency_amount_, currency_rate_,conversion_factor_, base_rounding_, inverted_);
+
+   ELSE
+      calculate_value_ := cal_base_curr_amount_for_rate(company_, currency_amount_, currency_rate_,conversion_factor_, base_rounding_, inverted_);
+
+       -- this.GetBaseCurrencyAmountMC(tblVoucherPosting_colsCompany.Text, tblVoucherPosting_colnCurrencyAmount.Number, ref nCalculateValue);
+   END IF;
+   IF (calculate_value_ = 0) THEN                
+       calculate_value_ := NULL;
+   END IF;               
+                
+   -- this.tblVoucherPosting_colnPrevAmount.Number = tblVoucherPosting_colnAmount.Number;
+   base_currency_amount_:= calculate_value_;                
+   -- amount column handling
+
+   --IF ((base_currency_amount_ > 0 AND correction_ = 'Y') OR (base_currency_amount_ <= 0 AND correction_ = 'N')) THEN
+   --   credit_amount_ := -calculate_value_;                
+   --ELSE 
+   --   debit_amount_ := calculate_value_;
+   --END IF;   
+  RETURN calculate_value_;
+END Rate_Based_Amount_Calculation___;
+
+
+---- if (sStatus = 'ACCOUNTING_AMOUNT')THEN
+-- SetAnotherValue() else if (sStatus == "ACCOUNTING_AMOUNT") 
+FUNCTION Validate_accounting_currency_amount___ (
+   currency_rec_           IN Currency_Amount_Structure_Rec, 
+   voucher_row_rec_        IN voucher_row_info_rec,
+   prev_amount_            IN NUMBER,
+   amount_method_          IN VARCHAR2,
+   calculation_type_       IN VARCHAR2,   
+   calculate_tax_          IN VARCHAR2   ) RETURN Currency_Amount_Structure_Rec
+IS
+   
+ --  prev_currency_amount_   NUMBER;
+   temp_rate_              NUMBER;
+   actual_currency_rate_   NUMBER;
+   currency_is_valid_emu_  VARCHAR2(5);
+   return_currency_rec_    Currency_Amount_Structure_Rec;   
+BEGIN   
+   currency_is_valid_emu_ := Currency_Code_API.Get_Emu(voucher_row_rec_.company, currency_rec_.currency_code);
+   --  else if (sStatus = 'ACCOUNTING_AMOUNT')THEN 
+   return_currency_rec_ := currency_rec_;
+   
+   IF ( return_currency_rec_.amount IS NOT NULL ) THEN
+      return_currency_rec_.amount := ROUND(return_currency_rec_.amount, Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company)));                                       
+      IF ((calculate_tax_ != 'FALSE') and (return_currency_rec_.Currency_Code = Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company)))THEN           
+         -- THPELK
+          return_currency_rec_ := Calculate_Tax_Value(return_currency_rec_, voucher_row_rec_, prev_amount_, amount_method_, 'ACCOUNTING_AMOUNT');
+      END IF;          
+      IF ( return_currency_rec_.currency_amount IS NOT NULL AND return_currency_rec_.currency_amount != 0) THEN
+         --- SET Transaction currency values START ---------------------
+         IF ((return_currency_rec_.currency_amount < 0 and return_currency_rec_.amount > 0) OR (return_currency_rec_.currency_amount > 0 AND return_currency_rec_.amount < 0)) THEN
+              -- set the SIGN of the transaction currency amount 
+            return_currency_rec_.currency_amount := -1 * return_currency_rec_.currency_amount;           
+            -- SET Other currency_debit and creadit_amuonts           
+            IF ( return_currency_rec_.Currency_Debet_Amount IS NULL ) THEN
+               return_currency_rec_.Currency_Debet_Amount := return_currency_rec_.currency_credit_amount;
+               return_currency_rec_.currency_credit_amount:= NULL;
+            ELSE
+               return_currency_rec_.currency_credit_amount := return_currency_rec_.Currency_Debet_Amount;               
+               return_currency_rec_.Currency_Debet_Amount := NULL;               
+            END IF;
+            
+         END IF;
+           ---SET Transaction currency values END --------------------
+                     ---   this.GetAttributesMC(tblVoucherPosting_colsCompany.Text, tblVoucherPosting_colsCurrencyCode.Text, this.tblVoucherPosting_colsAccountingCurencyCode.Text , tblVoucherPosting_colsCurrencyType.Text, frmMultiCompanyEntryVoucher.FromHandle(
+                         --       Ifs.Fnd.ApplicationForms.Int.GetParent(i_hWndFrame)).dfdVoucherDate.DateTime);
+         --   if (nMyValue.Abs() != tblVoucherPosting_colnPrevAmount.Number.Abs()) THEN - THPELK : TODO is this needed in aurena
+--                            GetEmu();
+
+                                
+         IF (( return_currency_rec_.currency_code != Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company)) AND (currency_is_valid_emu_ = 'FALSE')) THEN
+            -- SET Rate values --------------------
+           
+            IF (return_currency_rec_.amount IS NOT NULL ) THEN
+               temp_rate_ := Calculate_Currency_Rate___( voucher_row_rec_.company,  return_currency_rec_.amount, return_currency_rec_.currency_amount, return_currency_rec_.currency_code , return_currency_rec_.conversion_factor, TRUE, voucher_row_rec_.currency_inverted );
+              -- IF (temp_rate_ IS NOT NULL AND temp_rate_ != 0) THEN
+               return_currency_rec_.currency_rate := temp_rate_;
+              -- END IF;
+            END IF;
+            IF ( actual_currency_rate_ IS NULL ) THEN 
+                actual_currency_rate_ := return_currency_rec_.currency_rate;
+            END IF;
+            actual_currency_rate_ := Calculate_Currency_Rate___(voucher_row_rec_.company, return_currency_rec_.amount, return_currency_rec_.currency_amount, return_currency_rec_.currency_code , return_currency_rec_.conversion_factor, FALSE, voucher_row_rec_.currency_inverted );
+            -- actual_currency_rate_ := Calculate_Currency_Rate___(voucher_row_rec_.company, return_currency_rec_.amount, return_currency_rec_.currency_amount, return_currency_rec_.currency_code , voucher_row_rec_.conversion_factor, get_rounded_rate_ => FALSE, voucher_row_rec_.currency_inverted );
+                                 -- THPELK may not need  tblVoucherPosting_colnActCurrencyRate.Number := temp2;
+         ELSE               
+            -- Set Currency Amount values
+            IF (return_currency_rec_.currency_code = Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company) )THEN
+               
+               return_currency_rec_.currency_tax_base_amount       := return_currency_rec_.tax_base_amount;
+               return_currency_rec_.currency_tax_amount       := return_currency_rec_.tax_amount;
+               IF ( return_currency_rec_.credit_amount IS NULL ) THEN                                    
+                  return_currency_rec_.Currency_Debet_Amount      := return_currency_rec_.debet_amount;
+                  return_currency_rec_.currency_amount            := return_currency_rec_.debet_amount;
+                  return_currency_rec_.currency_credit_amount     := NULL;               
+               ELSE
+                  return_currency_rec_.currency_credit_amount     := return_currency_rec_.credit_amount;
+                  return_currency_rec_.currency_amount            := -1 * return_currency_rec_.credit_amount;
+                  return_currency_rec_.Currency_Debet_Amount      := NULL;                    
+               END IF;
+            END IF;
+         END IF;
+                           -- nPrevRate := tblVoucherPosting_colnCurrencyRate.Number;
+                         --   nPrevActRate := tblVoucherPosting_colnActCurrencyRate.Number;
+                                   
+      ELSIF (return_currency_rec_.debet_amount IS NOT NULL OR return_currency_rec_.credit_amount IS NOT NULL ) THEN                    
+        
+         IF ( return_currency_rec_.currency_code = Company_Finance_API.Get_Currency_Code( voucher_row_rec_.company)) THEN 
+             return_currency_rec_.currency_tax_base_amount       := return_currency_rec_.tax_base_amount;
+             return_currency_rec_.currency_tax_amount       := return_currency_rec_.tax_amount;
+            IF ( return_currency_rec_.credit_amount IS NULL ) THEN                                    
+               return_currency_rec_.Currency_Debet_Amount      := return_currency_rec_.debet_amount;
+               return_currency_rec_.currency_amount            := return_currency_rec_.debet_amount;
+               return_currency_rec_.currency_credit_amount     := NULL;               
+           ELSE
+               return_currency_rec_.currency_credit_amount     := return_currency_rec_.credit_amount;
+               return_currency_rec_.currency_amount            := -1 * return_currency_rec_.credit_amount;
+               return_currency_rec_.Currency_Debet_Amount      := NULL;                    
+           END IF;
+         END IF;
+     END IF;
+  END IF;
+ 
+ RETURN return_currency_rec_;         
+            
+END Validate_accounting_currency_amount___;
+
+
+
+-- GetParallelCurrAmountForRateMC() - THPELK Done
+FUNCTION Cal_Parallel_Curr_Amount_Rate____ (
+   amount_                          IN NUMBER,
+   currency_amount_                 IN NUMBER,
+   parallel_base_type_              IN VARCHAR2,
+   is_parallel_currency_inverted_   IN VARCHAR2,
+   parallel_conversion_factor_      IN NUMBER,
+   parallel_currency_rate_          IN NUMBER,
+   parallel_currency_rounding_      IN NUMBER ) RETURN NUMBER
+
+IS
+   parallel_amount_ NUMBER;
+BEGIN
+   IF (parallel_base_type_ = 'TRANSACTION_CURRENCY') THEN
+      IF (is_parallel_currency_inverted_ = 'TRUE') THEN
+         IF (parallel_conversion_factor_ = 0 OR (parallel_currency_rate_ / parallel_conversion_factor_) = 0) THEN
+               Raise_devided_by_Zero_Error___();
+         ELSE
+            parallel_amount_ := ROUND(currency_amount_ * (1 / (parallel_currency_rate_ / parallel_conversion_factor_)), parallel_currency_rounding_);
+         END IF;                
+      ELSE
+         IF (parallel_conversion_factor_ = 0) THEN
+            Raise_devided_by_Zero_Error___();                    
+         ELSE
+            parallel_amount_ := ROUND(currency_amount_ * (parallel_currency_rate_ / parallel_conversion_factor_), parallel_currency_rounding_);
+         END IF;
+      END IF;            
+   ELSIF (parallel_base_type_ = 'ACCOUNTING_CURRENCY') THEN
+      IF (is_parallel_currency_inverted_ = 'TRUE') THEN
+         IF (parallel_conversion_factor_ = 0) THEN
+            Raise_devided_by_Zero_Error___();                    
+         ELSE
+            parallel_amount_ := ROUND(amount_ * (parallel_currency_rate_ / parallel_conversion_factor_), parallel_currency_rounding_);
+         END IF;                
+      ELSE
+         IF (parallel_conversion_factor_ = 0 OR (parallel_currency_rate_ / parallel_conversion_factor_) = 0) THEN
+            Raise_devided_by_Zero_Error___();
+         ELSE
+            parallel_amount_ := ROUND(amount_ * (1 / (parallel_currency_rate_ / parallel_conversion_factor_)), parallel_currency_rounding_);
+         END IF;
+      END IF;
+   END IF;          
+           
+	--parallel_amount_ := Currency_Amount_API.Calc_Parallel_Amt_Rate_Round(voucher_row_rec_.company, amount_, currency_amount_, company_rec_.currency_code, currency_rec_.currency_code, currency_rec_.parellel_currency_rate, currency_rec_.parallel_conversion_factor, company_rec_.parallel_base);
+	RETURN parallel_amount_;
+END Cal_Parallel_Curr_Amount_Rate____;
+
+PROCEDURE Raise_devided_by_Zero_Error___            
+IS
+BEGIN
+   Error_SYS.Record_General(lu_name_, 'DEVIDEBYZERO: DEVIDED_BY_ZERO_Error: Divided by zero error.');
+END Raise_devided_by_Zero_Error___;
+
+
+-- CalculateTaxValue() - calcualtes the tax value and adjust the deductible amount is aplicable
+FUNCTION Calculate_Tax_Value (
+   currency_rec_      IN Currency_Amount_Structure_Rec,
+   voucher_row_rec_   IN voucher_row_info_rec,
+   prev_amount_       IN NUMBER,
+   amount_method_     IN VARCHAR2,
+   based_on_value_    IN VARCHAR2 ) RETURN Currency_Amount_Structure_Rec
+IS
+ --  return_rec_ tax_amount_Rec;
+   calculated_tax_value_       NUMBER := 0;
+   deductible_tax_value_       NUMBER := 0;
+   temp_                       NUMBER;
+   amount_value_               NUMBER;   
+   b_amt_changed_              BOOLEAN;
+   b_currency_amt_changed_     BOOLEAN;
+   
+   function_group_             VARCHAR2(10);   
+   s_consider_deduct_per_      VARCHAR2(5);
+   return_rec_                 Currency_Amount_Structure_Rec;
+BEGIN
+   
+   return_rec_ :=  currency_rec_;
+   function_group_ := Voucher_Type_Detail_API.Get_Function_Group(voucher_row_rec_.multi_company_id, voucher_row_rec_.multi_company_voucher_type );
+   IF ( based_on_value_ = 'CURRENT_AMOUNT' ) THEN
+      b_currency_amt_changed_ := TRUE;      
+      amount_value_ := return_rec_.currency_amount;
+   ELSIF (based_on_value_ = 'ACCOUNTING_AMOUNT') THEN
+      b_amt_changed_ := TRUE;
+      amount_value_ := return_rec_.amount;
+   END IF;	 
+	
+   -- SalNumber nCalculateTaxValue = 0;
+   -- SalNumber nDeductValue = 0;
+           
+   --  bAmtChanged = TRUE and prev value = current value means only the sign has changed. so only change the sign of the tax amount
+   -- THPELK : TODO Do we need prev_amount_ ??
+   -- NVL(amount_value_, 0) != 0 => if 0 need to calculate and set null values for tax_amount and tax_base_amounts 
+   IF (NVL(amount_value_, 0) != 0 AND b_amt_changed_ AND abs(return_rec_.Amount) = abs(NVL(prev_amount_,0))) THEN
+
+      deductible_tax_value_ := 0;
+      return_rec_.Tax_Amount := -1 * return_rec_.Tax_Amount;
+      return_rec_.Tax_Base_Amount := -1 * return_rec_.Tax_Base_Amount;
+    
+      --  return nDeductValue;
+
+   ELSIF (NVL(amount_value_, 0) != 0 AND b_currency_amt_changed_ AND abs(return_rec_.Currency_Amount) = abs(NVL(prev_amount_,0))) THEN
+
+      deductible_tax_value_ := 0;
+      return_rec_.currency_Tax_Amount := -1 * return_rec_.currency_Tax_Amount;
+      return_rec_.currency_Tax_Base_Amount := -1 * return_rec_.currency_Tax_Base_Amount;
+     
+      -- return nDeductValue;  = deductible_tax_value_
+   ELSE
+      -- if (nMyValue.Abs() != nPreviousAmount.Abs() || (tblVoucherPosting_colnCurrencyTaxAmount.Number == Sys.NUMBER_Null) || ((tblVoucherPosting_colnAmount.Number != Sys.NUMBER_Null) && (tblVoucherPosting_colnTaxAmount.Number == Sys.NUMBER_Null)) || bCurrencyAmtChanged || bAmtChanged || bTaxCodeChanged)
+      -- {
+     
+      --   nTaxBaseValue := nMyValue;
+--                if (!SetAutoBalance(true))
+--                {
+--                    return false;
+--                }
+
+
+      IF (voucher_row_rec_.tax_code IS NOT NULL AND function_group_ != 'Q') THEN
+         IF (voucher_row_rec_.Tax_Direction = Tax_Direction_API.DB_TAX_RECEIVED) THEN
+             s_consider_deduct_per_ := 'TRUE';                    
+         ELSE                    
+             s_consider_deduct_per_ := 'FALSE';
+         END IF;
+
+         Tax_Handling_Accrul_Util_API.Calculate_Tax_Amounts( temp_ ,
+                                                            calculated_tax_value_,
+                                                            deductible_tax_value_,
+                                                            voucher_row_rec_.company,
+                                                            return_rec_.Currency_Code,
+                                                            voucher_row_rec_.tax_code,
+                                                            voucher_row_rec_.Tax_Percentage,                                                                                              
+                                                            s_consider_deduct_per_,                                                                                            
+                                                            amount_value_,
+                                                            amount_method_,
+                                                            Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, return_rec_.Currency_Code),
+                                                            Tax_Handling_Util_API.Get_Tax_Rounding_Method_Db(voucher_row_rec_.company, NULL ,NULL , NULL ),
+                                                            voucher_row_rec_.voucher_date );
+
+
+    
+      ELSE 
+         calculated_tax_value_ := 0;
+         deductible_tax_value_ := 0;
+      END IF;
+      
+         -- if (sCalculateTax != "FALSE")
+      IF (amount_method_ = Def_Amount_Method_API.DB_GROSS) THEN
+         IF ( based_on_value_ = 'CURRENT_AMOUNT' ) THEN
+            IF (return_rec_.currency_amount IS NOT NULL ) THEN
+               return_rec_.currency_Tax_Amount := calculated_tax_value_;
+
+              return_rec_.currency_tax_base_amount := ROUND(return_rec_.currency_amount - (calculated_tax_value_ + deductible_tax_value_), Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, return_rec_.currency_code)); 
+              return_rec_.currency_amount := ROUND(return_rec_.currency_amount, Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, return_rec_.currency_code)); 
+            END IF;
+         ELSIF ( based_on_value_ = 'ACCOUNTING_AMOUNT' ) THEN
+            IF (return_rec_.amount IS NOT NULL ) THEN
+               return_rec_.Tax_Amount := calculated_tax_value_;
+               return_rec_.tax_base_amount := return_rec_.amount - (calculated_tax_value_ + deductible_tax_value_);
+               return_rec_.amount := ROUND(return_rec_.amount, Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company)));
+
+            END IF;
+         END IF;
+      ELSE
+         IF ( based_on_value_ = 'CURRENT_AMOUNT' ) THEN
+            IF (return_rec_.currency_amount IS NOT NULL ) THEN
+                  return_rec_.currency_Tax_Amount := calculated_tax_value_;
+                  return_rec_.currency_tax_base_amount := ROUND(return_rec_.currency_amount, Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, return_rec_.currency_code)); 
+                  return_rec_.currency_amount := ROUND((return_rec_.currency_amount + deductible_tax_value_), Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, return_rec_.currency_code)); 
+            END IF;
+         ELSIF ( based_on_value_ = 'ACCOUNTING_AMOUNT' ) THEN
+            IF (return_rec_.amount IS NOT NULL ) THEN
+                  return_rec_.Tax_Amount := calculated_tax_value_;
+                  return_rec_.tax_base_amount := return_rec_.amount;
+                  return_rec_.amount := ROUND((return_rec_.amount + deductible_tax_value_), Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company)));                      
+               END IF;
+         END IF;
+      END IF;
+   END IF;                         
+	RETURN return_rec_;
+END Calculate_Tax_Value;
+
+           
+
+-- Currency_Rate() - DONE             
+FUNCTION Calculate_Currency_Rate___ (
+   company_             IN VARCHAR2,
+   amount_              IN NUMBER,
+   currency_amount_     IN NUMBER,
+   currency_code_       IN VARCHAR2,
+   conversion_factor_   IN NUMBER,
+   get_rounded_rate_    IN BOOLEAN,
+   currency_code_inverted_ IN VARCHAR2 ) RETURN NUMBER 
+IS
+   currency_rate_    NUMBER;
+   decimals_trans_curr_code_   NUMBER;
+BEGIN
+IF ( currency_code_inverted_ = 'TRUE') THEN
+     IF (amount_ = 0) THEN
+        Raise_devided_by_Zero_Error___();
+     ELSE        
+        currency_rate_ := ((currency_amount_ * conversion_factor_ ) / amount_); -- Conversion_Factor_ -> i_nFinConversionFactor
+     END IF;     
+ELSE
+   IF (currency_amount_ = 0) THEN
+      Raise_devided_by_Zero_Error___();
+   ELSE
+       currency_rate_ := ((amount_ * conversion_factor_) / currency_amount_);
+   END IF;
+END IF;
+IF ( get_rounded_rate_) THEN
+   Currency_Code_API.Get_No_Of_Decimals_In_Rate_( decimals_trans_curr_code_, company_, currency_code_);
+   currency_rate_ := ROUND(currency_rate_, decimals_trans_curr_code_); 
+
+END IF;
+
+RETURN currency_rate_;
+
+END Calculate_Currency_Rate___;
+
+--
+-- GetThirdCurrencyAmountMC()
+FUNCTION Execute_Parallel_Currency_Calculation___ (
+   company_                         IN VARCHAR2,
+   parallel_currency_code_          IN VARCHAR2,
+   amount_                          IN NUMBER,
+   currency_amount_                 IN NUMBER,
+   parallel_base_type_              IN VARCHAR2,
+   parallel_currency_rate_          IN NUMBER,
+   is_parallel_currency_inverted_   IN VARCHAR2,
+   parallel_conversion_factor_      IN NUMBER ) RETURN NUMBER
+IS
+   parallel_currency_amount_        NUMBER;
+   parallel_currency_amount_round_  NUMBER;
+BEGIN
+	parallel_currency_amount_round_ := Currency_Code_API.Get_Currency_Rounding(company_, parallel_currency_code_);
+   IF ( parallel_base_type_ = 'TRANSACTION_CURRENCY') THEN            
+      -- TRANSACTION_CURRENCY => Use CurrencyAmount
+      IF (is_parallel_currency_inverted_ = 'TRUE' ) THEN
+         IF ( parallel_conversion_factor_ = 0 OR (parallel_currency_rate_ / parallel_conversion_factor_) = 0) THEN                    
+            parallel_currency_amount_ := 0;                        
+         ELSE                   
+            parallel_currency_amount_ := ROUND(currency_amount_ * (1 / (parallel_currency_rate_ / parallel_conversion_factor_)), parallel_currency_amount_round_);
+         END IF;
+      ELSE
+         IF (parallel_conversion_factor_ = 0) THEN
+            parallel_currency_amount_ := 0;
+         ELSE
+            parallel_currency_amount_ := ROUND(currency_amount_ * (parallel_currency_rate_ / parallel_conversion_factor_), parallel_currency_amount_round_);
+         END IF;
+      END IF;            
+   ELSE  -- parallel_base_type_ = 'ACCOUNTING_CURRENCY'
+      -- ACCOUNTING_CURRENCY => Use Amount
+      IF (is_parallel_currency_inverted_ = 'TRUE') THEN
+         IF (parallel_conversion_factor_ = 0) THEN
+            parallel_currency_amount_ := 0;
+         ELSE 
+            parallel_currency_amount_ := ROUND(amount_ * (parallel_currency_rate_ / parallel_conversion_factor_), parallel_currency_amount_round_);
+         END IF;                  
+      ELSE
+         IF (parallel_conversion_factor_ = 0 OR (parallel_currency_rate_ / parallel_conversion_factor_) = 0) THEN
+            parallel_currency_amount_ := 0;
+         ELSE
+            parallel_currency_amount_ := ROUND(amount_ * (1 / (parallel_currency_rate_ / parallel_conversion_factor_)), parallel_currency_amount_round_);
+         END IF;
+      END IF;
+   END IF;
+   RETURN parallel_currency_amount_;
+            
+END Execute_Parallel_Currency_Calculation___;
+--
+--
+---- THPELK CalcualteParallelCurrTaxValue()
+FUNCTION Cal_Parallel_Curr_Tax_Value (
+   currency_rec_                    IN Currency_Amount_Structure_Rec,
+   company_rec_                     IN Company_Finance_API.Public_Rec, 
+   voucher_row_rec_                 IN voucher_row_info_rec,  
+   based_on_                        IN VARCHAR2,
+   voucher_head_rec_                IN Voucher_API.Public_Rec) RETURN Currency_Amount_Structure_Rec
+ 
+IS -- we dont need to pass this to outside
+   calculate_tax_value_          NUMBER := 0;
+   parallel_curr_tax_amount_     NUMBER;   
+   total_tax_amount_             NUMBER;
+   non_ded_para_curr_tax_amount_ NUMBER;
+   deductible_tax_amount_        NUMBER;
+   tax_rounding_method_          VARCHAR2(20); -- THPELK TODO   
+   return_rec_                   Currency_Amount_Structure_Rec;
+   
+BEGIN
+   return_rec_ := currency_rec_;                  
+   IF (company_rec_.parallel_acc_currency IS NULL ) THEN
+      RETURN return_rec_;
+   END IF;
+  tax_rounding_method_ := Tax_Handling_Util_API.Get_Tax_Rounding_Method_Db(voucher_row_rec_.company, NULL ,NULL , NULL );
+    
+--   parallel_currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, currency_rec_.currency_code);
+   
+  -- IF (company_rec_.parallel_acc_currency IS NOT NULL ) THEN
+   IF ( based_on_ IS NULL OR based_on_ = 'RATE') THEN
+         calculate_tax_value_ := 0;
+      
+         -- GetThirdCurrencyAttributesMC(tblVoucherPosting_colsCompany.Text, frmMultiCompanyEntryVoucher.FromHandle(Ifs.Fnd.ApplicationForms.Int.GetParent(i_hWndFrame)).sParallelCurrencyCodeList[tblVoucherPosting_colsCompany.Text], frmMultiCompanyEntryVoucher.FromHandle(Ifs.Fnd.ApplicationForms.Int.GetParent(i_hWndFrame)).sAccCurrencyCodeList[this.tblVoucherPosting_colsCompany.Text], frmMultiCompanyEntryVoucher.FromHandle(Ifs.Fnd.ApplicationForms.Int.GetParent(i_hWndFrame)).dfdVoucherDate.DateTime, "DUMMY", "DUMMY", frmMultiCompanyEntryVoucher.FromHandle(Ifs.Fnd.ApplicationForms.Int.GetParent(i_hWndFrame)).sParallelBaseTypeList[tblVoucherPosting_colsCompany.Text], frmMultiCompanyEntryVoucher.FromHandle(Ifs.Fnd.ApplicationForms.Int.GetParent(i_hWndFrame)).sParallelRateTypeList[tblVoucherPosting_colsCompany.Text]);
+      IF ( company_rec_.parallel_base = 'TRANSACTION_CURRENCY') THEN
+         IF (return_rec_.parallel_currency_rate IS NOT NULL AND return_rec_.parallel_currency_rate != 0 ) THEN   
+           calculate_tax_value_ := Cal_Parallel_Curr_Amount_Rate____(return_rec_.tax_amount, return_rec_.currency_tax_amount, company_rec_.parallel_base, voucher_row_rec_.parallel_currency_inverted, return_rec_.parallel_conversion_factor, return_rec_.parallel_currency_rate, voucher_row_rec_.decimals_in_parallel_amount);
+           --    this.GetParallelCurrAmountForRateMC(tblVoucherPosting_colsCompany.Text, tblVoucherPosting_colnCurrencyTaxAmount.Number, tblVoucherPosting_colnParallelCurrRate.Number, ref nCalculateTaxValue);
+         END IF;                    
+      ELSE
+         IF ( return_rec_.currency_code = company_rec_.parallel_acc_currency) THEN
+            calculate_tax_value_ := return_rec_.currency_tax_amount;
+            return_rec_.parallel_curr_tax_base_amount := return_rec_.currency_tax_base_amount;                                                  
+         ELSE
+            -- THPELK 12345
+            IF (return_rec_.parallel_currency_rate IS NOT NULL  AND return_rec_.parallel_currency_rate != 0 ) THEN
+               calculate_tax_value_ := Cal_Parallel_Curr_Amount_Rate____(return_rec_.tax_amount, return_rec_.currency_tax_amount, company_rec_.parallel_base, voucher_row_rec_.parallel_currency_inverted, return_rec_.parallel_conversion_factor, return_rec_.parallel_currency_rate, voucher_row_rec_.decimals_in_parallel_amount);
+            END IF;
+         END IF;
+      END IF;    
+      return_rec_.parallel_curr_tax_amount := calculate_tax_value_;
+     
+
+      -- THPELK : TO DO with optional auto balance
+      --IF ((deductible_percent_ IS NOT NULL AND auto_balance_ ) OR (deductible_percent_ IS NULL )) THEN
+         --                        if (!SetAutoBalance(false))
+         --                        {
+         --                            return false;
+         --                        }
+
+      /*IF (voucher_head_rec_.amount_method = 'NET') THEN
+       
+            --IF  (auto_balance_) THEN
+               IF (voucher_row_rec_.tax_code IS NOT NULL AND voucher_head_rec_.function_group != 'Q') THEN
+                  -- tax_percentage_ := Source_Tax_Item_API.Get_Tax_Code_Percentage(company, 'MANUAL_VOUCHER', TO_CHAR(accounting_year), voucher_type, TO_CHAR(voucher_no), TO_CHAR(row_no), '*', optional_code) tax_percentage,
+                  Tax_Handling_Accrul_Util_API.Calc_Para_Curr_Tax_Amount(total_tax_amount_,
+                                                                        deductible_tax_amount_,
+                                                                        non_ded_para_curr_tax_amount_,
+                                                                        voucher_row_rec_.company,
+                                                                        voucher_head_rec_.amount_method,
+                                                                        voucher_row_rec_.tax_code,
+                                                                        voucher_row_rec_.tax_percentage,
+                                                                        'TRUE',
+                                                                        'FALSE',
+                                                                        return_rec_.third_currency_amount,
+                                                                        voucher_row_rec_.decimals_in_parallel_amount,
+                                                                        tax_rounding_method_,
+                                                                        voucher_head_rec_.voucher_date);
+                                                                                        
+               
+               return_rec_.parallel_curr_tax_amount := total_tax_amount_;                    
+                  --  non_ded_para_curr_tax_amount_ := 0;
+               return_rec_.Parallel_Currency_tax_base_amount := return_rec_.third_currency_amount - (total_tax_amount_ + deductible_tax_amount_);
+               return_rec_.third_currency_amount := ROUND((return_rec_.third_currency_amount+deductible_tax_amount_), Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, Company_Finance_API.Get_Parallel_Acc_Currency(voucher_row_rec_.company)));
+              
+            ELSE
+               non_ded_para_curr_tax_amount_ := 0;
+               
+            END IF;
+                                               
+         ELSE                            
+             non_ded_para_curr_tax_amount_ := 0;
+         END IF;
+         */
+      --END IF;
+   ELSE
+      
+     
+      -- based_on_ != RATE
+    --  IF ( (abs(currency_rec_.currency_amount) != prev_currency_amount_) OR 
+      --   (( return_rec_.third_currency_amount IS NOT NULL ) 
+        -- AND ( return_rec_.parallel_curr_tax_amount IS NULL ))
+       --  or b_currency_amt_changed_ or  OR
+         --) THEN
+
+     -- IF ((deductible_percent_ IS NOT NULL AND auto_balance_ ) OR
+       --  (deductible_percent_ IS NULL )) THEN
+            
+            IF (voucher_row_rec_.tax_code IS NOT NULL AND voucher_head_rec_.function_group != 'Q') THEN                             
+               Tax_Handling_Accrul_Util_API.Calc_Para_Curr_Tax_Amount(total_tax_amount_,
+                                                                     deductible_tax_amount_,
+                                                                     non_ded_para_curr_tax_amount_,
+                                                                     voucher_row_rec_.company,
+                                                                     voucher_head_rec_.amount_method,
+                                                                     voucher_row_rec_.tax_code,
+                                                                     voucher_row_rec_.tax_percentage,
+                                                                     'TRUE',
+                                                                     'FALSE',
+                                                                     return_rec_.third_currency_amount,
+                                                                     voucher_row_rec_.decimals_in_parallel_amount,
+                                                                     tax_rounding_method_,
+                                                                     voucher_head_rec_.voucher_date);
+
+                                                                    
+            ELSE                           
+               total_tax_amount_ := 0;
+               deductible_tax_amount_ := 0;
+               parallel_curr_tax_amount_ := 0;
+            END IF;
+            
+            IF  (voucher_head_rec_.amount_method = 'NET') THEN
+               
+               -- THPELK: TODO may not need auto_balance code
+--                IF (auto_balance_) THEN                                
+--                    return_rec_.parallel_curr_tax_amount := deductible_tax_amount_;
+--                    auto_balance_ := false;
+--                ELSE
+                     return_rec_.parallel_curr_tax_amount := total_tax_amount_;                    
+                  --  non_ded_para_curr_tax_amount_ := 0;
+               
+                     return_rec_.Parallel_Curr_tax_base_amount := return_rec_.third_currency_amount - (total_tax_amount_ + deductible_tax_amount_);
+                     return_rec_.third_currency_amount := ROUND((return_rec_.third_currency_amount+deductible_tax_amount_), Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, Company_Finance_API.Get_Parallel_Acc_Currency(voucher_row_rec_.company)));
+             
+            ELSIF (voucher_head_rec_.amount_method = 'GROSS') THEN
+             
+                -- THPELK : TODO May not need auto balance
+--               IF (auto_balance_) THEN
+--                  return_rec_.parallel_curr_tax_amount := deductible_tax_amount_;
+--                  auto_balance_ := false;                                
+--               ELSE
+                  return_rec_.parallel_curr_tax_amount := total_tax_amount_;                                    
+            --   END IF;
+             --  non_ded_para_curr_tax_amount_ := 0;
+             return_rec_.Parallel_Curr_tax_base_amount := return_rec_.third_currency_amount;
+                return_rec_.third_currency_amount := ROUND(return_rec_.third_currency_amount, Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, Company_Finance_API.Get_Parallel_Acc_Currency(voucher_row_rec_.company)));
+
+            END IF;
+               -- :THPELK  TODO
+                 --  calculate_tax_value_ := this.RoundOfTax(frmMultiCompanyEntryVoucher.FromHandle(Ifs.Fnd.ApplicationForms.Int.GetParent(i_hWndFrame)).sRoundingMethodList[tblVoucherPosting_colsCompany.Text], nCalculateTaxValue, tblVoucherPosting_colnDecimalsInAmount.Number);
+             --  return_rec_.parallel_curr_tax_base_amount := return_rec_.third_currency_amount;
+           -- END IF;
+         --END IF;
+      --END IF;
+   END IF;
+	RETURN return_rec_;
+END Cal_Parallel_Curr_Tax_Value;
+
+-- GetRateMC() and GetThirdCurrencyRateMC() by passing the parallel currency code
+FUNCTION Get_Rounded_Curr_Rate(
+   company_       IN VARCHAR2,
+   currency_code_ IN VARCHAR2,
+   currency_rate_ IN NUMBER ) RETURN NUMBER
+IS
+   no_of_decimals_in_rate_ NUMBER;
+BEGIN
+   -- Get the default currency rate for the   
+   Currency_Code_API.Get_No_Of_Decimals_In_Rate_(no_of_decimals_in_rate_, -- OUT i_nFinRound
+                                                 company_,
+                                                 currency_code_);
+   RETURN ROUND(currency_rate_, no_of_decimals_in_rate_);                                                
+END Get_Rounded_Curr_Rate;
+
+
+-- tblVoucherPosting_colnCurrencyRate_OnPM_DataItemValidate
+FUNCTION Validate_Currency_Rate___ (
+	-- key_ IN Voucher_Posting_Key,
+   multi_company_id_              IN VARCHAR2,
+ --  multi_company_acc_year_        IN NUMBER,
+   multi_company_voucher_type_    IN VARCHAR2,
+ --  multi_company_voucher_no_      IN NUMBER,
+   voucher_date_                  IN DATE,
+   company_                       IN VARCHAR2,
+ --  acc_year_                      IN NUMBER,
+   voucher_type_                  IN VARCHAR2,
+ --  voucher_no_                    IN NUMBER,
+	currency_code_                IN VARCHAR2,
+   correction_                   IN BOOLEAN, -- we need to have it because this is correction check box. so it can be a new row where the 
+	amount_                       IN NUMBER,
+	currency_amount_              IN NUMBER,
+	parallel_currency_amount_     IN NUMBER,
+	currency_rate_                IN NUMBER,
+   old_currency_rate_            IN NUMBER,
+	conversion_factor_            IN NUMBER,
+	parallel_currency_rate_       IN NUMBER,
+	parallel_conversion_factor_   IN NUMBER,
+	currency_rate_type_           IN VARCHAR2,
+	parallel_currency_rate_type_  IN VARCHAR2,
+   tax_base_amount_              IN  NUMBER,
+   currency_tax_base_amount_     IN NUMBER,
+   parallel_currency_tax_base_amount_ IN NUMBER,  
+   tax_amount_                   IN NUMBER,
+   currency_tax_amount_          IN NUMBER,
+   parallel_currency_tax_amount_ IN NUMBER,
+   tax_code_                     IN VARCHAR2,
+   tax_percentage_               IN NUMBER,
+   tax_direction_                IN VARCHAR2,
+   amount_method_                IN VARCHAR2,
+   function_group_               IN VARCHAR2,
+   is_credit_                    IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+IS
+   decimals_in_amount_  NUMBER;
+   curr_rate_rounded_   NUMBER;
+   tmp_currency_rate_   NUMBER;
+   return_amount_       NUMBER; -- THPELK TODO
+   rate_changed_        BOOLEAN;
+   
+   return_rec_          Currency_Amount_Structure_Rec;
+   voucher_head_rec_    Voucher_API.Public_Rec;
+   base_currency_code_  Voucher_Row_Tab.currency_code%TYPE;
+   voucher_row_rec_     voucher_row_info_rec;
+   company_rec_         Company_Finance_API.Public_Rec;    
+   
+BEGIN
+   
+   base_currency_code_  := Company_Finance_API.Get_Currency_Code(company_ );
+   company_rec_         := Company_Finance_API.Get(company_);
+   voucher_head_rec_.amount_method  := amount_method_;
+   voucher_head_rec_.voucher_date   := voucher_date_;
+   voucher_head_rec_.function_group := function_group_;
+   
+	-- voucher_head_rec_ := Voucher_API.Get(multi_company_id_, multi_company_acc_year_, multi_company_voucher_type_, multi_company_voucher_no_);
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_,currency_amount_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+   voucher_row_rec_ := Convert_to_voucher_info_rec( voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+  
+   IF (return_rec_.currency_rate IS NOT NULL AND return_rec_.currency_rate <= 0) THEN 
+      Error_SYS.Record_General(lu_name_, 'NEGATIVECURRRATE: Currency Rate cannot be zero or negative.');
+   END IF;
+   curr_rate_rounded_ := Get_Rounded_Curr_Rate(company_, currency_code_, tmp_currency_rate_);
+   
+   -- IF ( old_currency_rate_ IS NULL AND curr_rate_rounded_ != currency_rate_) THEN
+   rate_changed_ := TRUE;
+   --   END IF;
+   IF (return_rec_.currency_amount IS NOT NULL AND return_rec_.currency_amount != 0) THEN   
+      decimals_in_amount_ := Currency_Code_API.Get_Currency_Rounding(company_, company_rec_.currency_code);
+      -- return_number_ := Set_Another_Value___(company_, currency_amount_rec_.Currency_Rate, currency_amount_rec_.Currency_Amount, 'RATE', rate_changed_, calculate_parallel_curr_tax_ => 'FALSE');
+      return_amount_ := Rate_Based_Amount_Calculation___ (company_, rate_changed_, return_rec_.Currency_Amount,  return_rec_.Currency_Rate,
+         voucher_row_rec_.correction, return_rec_.conversion_factor, voucher_row_rec_.decimals_in_amount, voucher_row_rec_.currency_inverted);    
+      return_rec_.amount := return_amount_;     
+   END IF;
+   return_rec_ := Set_Parallel_currency_amounts(voucher_row_rec_.company, return_rec_ , voucher_row_rec_, voucher_head_rec_);
+  
+   return_rec_ := Adjust_Currency_Values___(company_, return_rec_, voucher_row_rec_.correction, is_credit_);
+   IF (return_rec_.tax_amount IS NOT NULL AND return_rec_.currency_tax_amount IS NOT NULL ) THEN   
+      return_rec_ := Reset_Tax_Amount_From_Curr_Tax_Amount(return_rec_.currency_tax_amount, return_rec_.currency_tax_amount + 1,return_rec_, voucher_row_rec_,  company_rec_ , voucher_head_rec_); 
+   END IF;       
+   
+RETURN return_rec_;
+END Validate_Currency_Rate___;
+
+-- tblVoucherPosting_colsCurrencyCode_OnPM_DataItemValidate()
+FUNCTION Validate_Currency_Code___ (
+   multi_company_id_             IN VARCHAR2,
+   --multi_company_acc_year_       IN NUMBER,
+   multi_company_voucher_type_   IN VARCHAR2,
+   --multi_company_voucher_no_     IN NUMBER,
+   voucher_date_                 IN DATE,
+   company_                      IN VARCHAR2,
+   --acc_year_                     IN NUMBER,
+   voucher_type_                 IN VARCHAR2,
+   --voucher_no_                   IN NUMBER,
+	currency_code_                IN VARCHAR2,
+   correction_                   IN BOOLEAN, -- we need to have it because this is correction check box. so it can be a new row where the 
+	amount_                       IN NUMBER,
+	currency_amount_              IN NUMBER,
+	parallel_currency_amount_     IN NUMBER,
+	currency_rate_                IN NUMBER,
+   old_currency_rate_            IN NUMBER,
+	conversion_factor_            IN NUMBER,
+	parallel_currency_rate_       IN NUMBER,
+	parallel_conversion_factor_   IN NUMBER,
+	currency_rate_type_           IN VARCHAR2,
+	parallel_currency_rate_type_  IN VARCHAR2,
+   tax_base_amount_              IN  NUMBER,
+   currency_tax_base_amount_     IN NUMBER,
+   parallel_currency_tax_base_amount_ IN NUMBER,  
+   tax_amount_                   IN NUMBER,
+   currency_tax_amount_          IN NUMBER,
+   parallel_currency_tax_amount_ IN NUMBER,
+   tax_code_                     IN VARCHAR2,
+   tax_percentage_               IN NUMBER,
+   tax_direction_                IN VARCHAR2,
+   amount_method_                IN VARCHAR2,
+   function_group_               IN VARCHAR2,
+   is_credit_                    IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+IS
+  
+   return_rec_             Currency_Amount_Structure_Rec;
+   voucher_head_rec_       Voucher_API.Public_Rec;
+   base_currency_code_     Voucher_Row_Tab.currency_code%TYPE;
+   
+   decimals_in_amount_     NUMBER;
+   curr_rate_rounded_      NUMBER;
+   tmp_conversion_factor_  NUMBER;
+   tmp_currency_rate_      NUMBER;
+   return_amount_          NUMBER; -- THPELK TODO
+   rate_changed_           BOOLEAN;   
+   currency_inverted_      VARCHAR2(5); -- THPELK TODO
+   
+   voucher_row_rec_ voucher_row_info_rec;
+   company_rec_ Company_Finance_API.Public_Rec;
+ 
+BEGIN   
+   
+ 
+   base_currency_code_  := Company_Finance_API.Get_Currency_Code(company_ );
+   company_rec_         := Company_Finance_API.Get(company_);
+   voucher_head_rec_.amount_method  := amount_method_;
+   voucher_head_rec_.voucher_date   := voucher_date_;
+   voucher_head_rec_.function_group := function_group_;
+ 	
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_,currency_amount_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+   voucher_row_rec_ := Convert_to_voucher_info_rec( voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+   
+   -- ValidateCurrencyCode()
+   IF ( currency_code_ IS NOT NULL AND currency_rate_type_ IS NOT NULL ) THEN
+      
+      -- fetch default rate specific values for the currency
+      Currency_Rate_API.Fetch_Currency_Rate_Base( tmp_conversion_factor_, tmp_currency_rate_, currency_inverted_,  company_, currency_code_, base_currency_code_, currency_rate_type_, voucher_head_rec_.voucher_date, 'DUMMY' );
+      -- tblVoucherPosting_colnCurrencyRate 
+      curr_rate_rounded_ := Get_Rounded_Curr_Rate(company_, currency_code_, tmp_currency_rate_);
+      return_rec_.Currency_Rate :=  curr_rate_rounded_;
+      return_rec_.Conversion_Factor := tmp_conversion_factor_; 
+      
+      -- currency_amount_rec_.Act_Currency_Rate := currency_amount_rec_.Currency_Rate;
+      decimals_in_amount_ := Currency_Code_API.Get_Currency_Rounding(company_, currency_code_);
+     
+--    -- Validate
+      IF (return_rec_.Parallel_Curr_Rate_Type IS NOT NULL ) THEN
+         -- Calculate parallel Currency
+         -- GetParallelCurrencyRate
+         return_rec_ := Validate_parallel_currency_rate_type(return_rec_, voucher_row_rec_, voucher_head_rec_);
+      END IF;
+       --  Sal.PostMsg(tblVoucherPosting_colnParallelCurrRateType, Ifs.Fnd.ApplicationForms.Const.PM_DataItemValidate, Sys.wParam, Sys.lParam);
+      IF (currency_amount_ IS NOT NULL AND currency_amount_ != 0) THEN 
+        -- THPELK        
+         IF ( old_currency_rate_ IS NULL AND curr_rate_rounded_ != currency_rate_) THEN
+            rate_changed_ := TRUE;
+         END IF;      
+         rate_changed_ := TRUE;
+          -- return_number_ := Set_Another_Value___(company_, currency_amount_rec_.Currency_Rate, currency_amount_rec_.Currency_Amount, 'RATE', rate_changed_, calculate_parallel_curr_tax_ => 'FALSE');
+         return_amount_ := Rate_Based_Amount_Calculation___ (company_, rate_changed_, return_rec_.Currency_Amount,  return_rec_.Currency_Rate,
+         voucher_row_rec_.correction, return_rec_.conversion_factor, voucher_row_rec_.decimals_in_amount, voucher_row_rec_.currency_inverted);    
+         return_rec_.amount := return_amount_;
+         return_rec_ := Adjust_Currency_Values___(company_, return_rec_,voucher_row_rec_.correction,is_credit_);
+      END IF;
+      
+      IF (return_rec_.tax_amount IS NOT NULL AND return_rec_.currency_tax_amount IS NOT NULL ) THEN   
+         return_rec_ := Reset_Tax_Amount_From_Curr_Tax_Amount(return_rec_.currency_tax_amount, return_rec_.currency_tax_amount + 1,return_rec_, voucher_row_rec_,  company_rec_ , voucher_head_rec_); 
+      END IF;
+      return_rec_ := Set_Parallel_currency_amounts(voucher_row_rec_.company, return_rec_ , voucher_row_rec_, voucher_head_rec_);
+   END IF;
+   -- return_rec_ := Adjust_Currency_Values___(return_rec_, correction_);
+   -- set the visibility of the currency_rate when the currency code is changed     
+     
+RETURN return_rec_;
+END Validate_Currency_Code___;
+
+-- GetParallelCurrencyRate()
+-- THPELK DONE
+FUNCTION Get_Parallel_Currency_Rate (
+   company_                      IN VARCHAR2,
+   currency_code_                IN VARCHAR2,
+   parallel_currency_rate_type_  IN VARCHAR2,
+   voucher_date_                 IN DATE ) RETURN Currency_Amount_Structure_Rec
+IS
+   company_rec_ Company_Finance_API.Public_Rec;
+   parallel_rate_info_rec_ Currency_Amount_Structure_Rec;
+   parallel_inverted_ VARCHAR2(5);
+   
+BEGIN
+   company_rec_ := Company_Finance_API.Get(company_);
+	Currency_Rate_API.Get_Parallel_Currency_Rate(parallel_rate_info_rec_.parallel_currency_rate,
+                                                parallel_rate_info_rec_.parallel_conversion_factor,
+                                                parallel_inverted_,
+                                                company_,
+                                                currency_code_,
+                                                voucher_date_,
+                                                parallel_currency_rate_type_,
+                                                company_rec_.parallel_base,
+                                                company_rec_.currency_code,
+                                                company_rec_.parallel_acc_currency,
+                                                NULL,
+                                                NULL );
+   
+	RETURN parallel_rate_info_rec_;
+END Get_Parallel_Currency_Rate;
+
+
+-- SetThirdCurrencyAmounts()
+FUNCTION Set_Parallel_currency_amounts (
+   company_             IN VARCHAR2, 
+   currency_rec_        IN Currency_Amount_Structure_Rec,
+   voucher_row_rec_     IN  voucher_row_info_rec,
+   voucher_head_rec_    IN Voucher_API.Public_Rec,
+   calculate_rate_      IN BOOLEAN DEFAULT FALSE) RETURN Currency_Amount_Structure_Rec
+IS
+   rounded_parallel_rate_  NUMBER;
+   parallel_amount_        NUMBER;
+   
+   company_rec_            Company_Finance_API.Public_Rec;
+   prallel_currency_rec_   Currency_Amount_Structure_Rec;
+   return_rec_             Currency_Amount_Structure_Rec;
+   
+   
+BEGIN
+   return_rec_ := currency_rec_;
+   company_rec_ := Company_Finance_API.Get(company_);
+  
+   IF ( company_rec_.parallel_acc_currency IS NOT NULL ) THEN
+      
+      IF ( return_rec_.Parallel_Curr_Rate_Type IS NOT NULL ) THEN
+         IF ( company_rec_.parallel_base IS NOT NULL ) THEN
+            IF (calculate_rate_) THEN     
+               prallel_currency_rec_ := Get_Parallel_Currency_Rate(company_, return_rec_.currency_code, return_rec_.Parallel_Curr_Rate_Type, voucher_row_rec_.voucher_date);
+               return_rec_.parallel_currency_rate := prallel_currency_rec_.parallel_currency_rate;
+               return_rec_.parallel_conversion_factor := prallel_currency_rec_.parallel_conversion_factor;
+              -- return_rec_.Parallel_Inverted := prallel_currency_rec_.Parallel_Inverted;
+              
+            END IF; 
+         END IF;
+      ELSE
+         Error_SYS.Record_General(lu_name_, 'PARARATETYPENULL: A Parallel Currency Rate Type must be specified in the voucher postings line.');         
+
+      END IF;
+      IF (company_rec_.parallel_base = 'ACCOUNTING_CURRENCY' AND 
+        return_rec_.currency_code IS NOT NULL AND return_rec_.currency_code = company_rec_.parallel_acc_currency ) THEN
+        return_rec_.parallel_currency_rate := return_rec_.currency_rate;
+      END IF;
+      
+      IF ( company_rec_.parallel_base = 'TRANSACTION_CURRENCY' AND return_rec_.currency_amount IS NULL ) THEN         
+         IF (return_rec_.debet_amount IS NOT NULL ) THEN
+            return_rec_.third_currency_amount := 0;
+            return_rec_.third_currency_debit_amount := 0;
+            return_rec_.third_currency_credit_amount := NULL;
+         ELSIF (return_rec_.credit_amount IS NOT NULL ) THEN
+            return_rec_.third_currency_amount := 0;
+            return_rec_.third_currency_debit_amount := NULL;
+            return_rec_.third_currency_credit_amount := 0;
+         ELSE
+            return_rec_.third_currency_amount := 0;
+            return_rec_.third_currency_debit_amount := NULL;
+            return_rec_.third_currency_credit_amount := NULL;
+         END IF;
+      ELSIF ( company_rec_.parallel_base = 'ACCOUNTING_CURRENCY' AND return_rec_.amount IS NULL ) THEN
+         IF (return_rec_.Currency_Debet_Amount IS NOT NULL ) THEN
+            return_rec_.third_currency_amount := 0;
+            return_rec_.third_currency_debit_amount := 0;
+            return_rec_.third_currency_credit_amount := NULL;
+         ELSIF (return_rec_.currency_credit_amount IS NOT NULL ) THEN
+            return_rec_.third_currency_amount := 0;
+            return_rec_.third_currency_debit_amount := NULL;
+            return_rec_.third_currency_credit_amount := 0;
+         ELSE
+            return_rec_.third_currency_amount := 0;
+            return_rec_.third_currency_debit_amount := NULL;
+            return_rec_.third_currency_credit_amount := NULL;
+         END IF;
+      ELSE
+         
+         IF ( return_rec_.currency_code = company_rec_.parallel_acc_currency ) THEN
+            return_rec_.parallel_curr_tax_base_amount := return_rec_.currency_tax_base_amount;
+            IF (return_rec_.Currency_Debet_Amount IS NOT NULL ) THEN
+               return_rec_.third_currency_amount := return_rec_.Currency_Debet_Amount;
+               return_rec_.third_currency_debit_amount := return_rec_.Currency_Debet_Amount;
+               return_rec_.third_currency_credit_amount := NULL;
+            ELSIF (return_rec_.currency_credit_amount IS NOT NULL ) THEN
+               return_rec_.third_currency_amount := - 1 * return_rec_.currency_credit_amount;
+               return_rec_.third_currency_debit_amount := NULL;
+               return_rec_.third_currency_credit_amount := return_rec_.currency_credit_amount;
+            END IF;
+         ELSE
+            rounded_parallel_rate_ := Get_Rounded_Curr_Rate(company_, return_rec_.currency_code, return_rec_.parallel_currency_rate );
+            IF (rounded_parallel_rate_ IS NOT NULL ) THEN
+               IF (return_rec_.currency_debet_amount IS NOT NULL ) THEN
+                  -- GetThirdCurrencyRateMC() - no need to implement
+                  -- GetThirdCurrencyAmountMC()
+                  
+                  parallel_amount_ := Execute_Parallel_Currency_Calculation___ ( company_,
+                                                               company_rec_.parallel_acc_currency,              
+                                                               return_rec_.amount,
+                                                               return_rec_.currency_amount,
+                                                               company_rec_.parallel_base,
+                                                               return_rec_.parallel_currency_rate,  
+                                                               voucher_row_rec_.parallel_currency_inverted,
+                                                               return_rec_.parallel_conversion_factor );
+                   
+                  return_rec_.third_currency_amount := parallel_amount_;
+                   
+                  return_rec_.third_currency_debit_amount := parallel_amount_;
+                  return_rec_.third_currency_credit_amount := NULL;
+              
+               ELSIF (return_rec_.currency_credit_amount IS NOT NULL ) THEN
+                  -- GetThirdCurrencyRateMC()
+                  -- GetThirdCurrencyAmountMC()
+                  parallel_amount_ := Execute_Parallel_Currency_Calculation___ ( company_,
+                                                               company_rec_.parallel_acc_currency,              
+                                                               return_rec_.amount,
+                                                               return_rec_.currency_amount,
+                                                               company_rec_.parallel_base,
+                                                               return_rec_.parallel_currency_rate,  
+                                                               voucher_row_rec_.parallel_currency_inverted,
+                                                               return_rec_.parallel_conversion_factor );
+                                                               
+                   
+                   
+                 
+                  return_rec_.third_currency_amount := parallel_amount_;
+                  return_rec_.third_currency_debit_amount := NULL;
+                  return_rec_.third_currency_credit_amount := -1 * parallel_amount_;
+                   
+               END IF;
+               -- GetThirdCurrencyAmountMC()
+               -- for tax base amounts
+               parallel_amount_ := Execute_Parallel_Currency_Calculation___ ( company_,
+                                                               company_rec_.parallel_acc_currency,              
+                                                               return_rec_.tax_base_amount,
+                                                               return_rec_.currency_tax_base_amount,
+                                                               company_rec_.parallel_base,
+                                                               return_rec_.parallel_currency_rate,  
+                                                               voucher_row_rec_.parallel_currency_inverted,
+                                                               return_rec_.parallel_conversion_factor );
+                                                               
+               return_rec_.parallel_curr_tax_base_amount  := parallel_amount_;  
+          
+                  
+            END IF;  
+            
+         END IF;
+    END IF;  
+   return_rec_ := Cal_Parallel_Curr_Tax_Value(return_rec_, company_rec_, voucher_row_rec_ , 'RATE', voucher_head_rec_);
+        -- :THPELK Revisit
+         -- CalcualteParallelCurrTaxValue();
+         
+         
+   ELSE -- no parallel currency code defined
+      return_rec_.third_currency_amount := 0;
+      return_rec_.third_currency_debit_amount := NULL;
+      return_rec_.third_currency_credit_amount := NULL;
+      
+      
+   END IF;   
+           
+	RETURN return_rec_;
+END Set_Parallel_currency_amounts;
+
+-- tblVoucherPosting_colnParallelCurrRateType_OnPM_DataItemValidate
+-- THPELK DONE
+FUNCTION Validate_Parallel_Currency_Rate_Type (
+   currency_rec_        IN Currency_Amount_Structure_Rec,
+   voucher_row_rec_     IN voucher_row_info_rec,
+   voucher_head_rec_    IN Voucher_API.Public_Rec ) RETURN Currency_Amount_Structure_Rec
+IS 
+   company_rec_ Company_Finance_API.Public_Rec;
+   prallel_currency_rec_ Currency_Amount_Structure_Rec;
+   return_rec_ Currency_Amount_Structure_Rec;
+  -- parallel_inverted_ VARCHAR2(5);
+BEGIN
+	company_rec_ := Company_Finance_API.Get(voucher_row_rec_.company);
+   return_rec_:= currency_rec_;
+   IF ( company_rec_.parallel_acc_currency IS NOT NULL ) THEN
+      IF ( currency_rec_.Parallel_Curr_Rate_Type IS NOT NULL ) THEN
+         IF ( company_rec_.parallel_base IS NOT NULL ) THEN
+            prallel_currency_rec_ := Get_Parallel_Currency_Rate( voucher_row_rec_.company, currency_rec_.currency_code, currency_rec_.Parallel_Curr_Rate_Type, voucher_row_rec_.voucher_date);
+            return_rec_.parallel_currency_rate := prallel_currency_rec_.parallel_currency_rate;
+            return_rec_.parallel_conversion_factor := prallel_currency_rec_.parallel_conversion_factor;
+          --  return_rec_.Parallel_Inverted := prallel_currency_rec_.Parallel_Inverted;
+            
+            return_rec_ := Set_Parallel_currency_amounts(voucher_row_rec_.company, return_rec_ , voucher_row_rec_, voucher_head_rec_, TRUE);
+         END IF;
+         -- SetThirdCurrencyAmounts()
+        -- return_rec_ := Set_Parallel_currency_amounts (voucher_row_rec_.company, currency_rec_, voucher_row_rec_);
+  
+      ELSE
+         Error_SYS.Record_General(lu_name_, 'PARARATETYPENULL: A Parallel Currency Rate Type must be specified in the voucher postings line.');         
+      END IF;
+   END IF;
+   
+      
+	RETURN return_rec_;
+END Validate_Parallel_Currency_Rate_Type;
+
+
+-- ResetTaxAmountFromCurrTaxAmount()
+-- :THPELK DONE except for tax rounding
+FUNCTION Reset_Tax_Amount_From_Curr_Tax_Amount (   
+   tax_amount_                IN NUMBER,
+   old_value_                 IN NUMBER,
+   currency_rec_              IN Currency_Amount_Structure_Rec,
+   voucher_row_rec_           IN Voucher_Row_Info_rec,
+   company_rec_               IN Company_Finance_API.Public_Rec,
+   voucher_head_rec_          IN Voucher_API.Public_Rec) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_ Currency_Amount_Structure_Rec;
+   calculate_tax_value_ NUMBER;
+   calculate_third_curr_tax_amount_ NUMBER;
+   parallel_currency_rounding_ NUMBER;
+BEGIN
+   return_rec_ := currency_rec_;
+   
+   parallel_currency_rounding_ := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, company_rec_.parallel_acc_currency);
+   
+   IF (old_value_ != tax_amount_ ) THEN
+      IF (voucher_row_rec_.tax_code IS NOT NULL ) THEN
+         
+         IF (return_rec_.currency_tax_amount IS NOT NULL ) THEN
+            -- ROUND TO NEATEST, ROUND UP
+            -- :THPELK Revisit
+            -- RoundOfTax()
+            
+            -- GetBaseCurrAmountForRateMC()
+            calculate_tax_value_ := cal_base_curr_amount_for_rate(voucher_row_rec_.company, return_rec_.currency_tax_amount, return_rec_.currency_rate, currency_rec_.conversion_factor, voucher_row_rec_.Decimals_In_Amount , voucher_row_rec_.currency_inverted);
+          
+            IF (company_rec_.parallel_acc_currency IS NOT NULL AND return_rec_.currency_code = company_rec_.parallel_acc_currency ) THEN
+               calculate_third_curr_tax_amount_ := return_rec_.currency_tax_amount;
+            ELSE
+               IF (company_rec_.parallel_base = 'ACCOUNTING_CURRENCY' OR return_rec_.currency_code = company_rec_.currency_code ) THEN
+                  IF (return_rec_.parallel_currency_rate IS NULL OR return_rec_.parallel_currency_rate = 0 ) THEN
+                     calculate_third_curr_tax_amount_ := 0;
+                  ELSE
+                     -- GetParallelCurrAmountForRateMC()
+                     calculate_third_curr_tax_amount_ := Cal_Parallel_Curr_Amount_Rate____(tax_amount_, calculate_tax_value_, company_rec_.parallel_base, voucher_row_rec_.parallel_currency_inverted,currency_rec_.parallel_conversion_factor, currency_rec_.parallel_currency_rate, parallel_currency_rounding_);
+         
+                  END IF;
+               ELSIF (company_rec_.parallel_base = 'TRANSACTION_CURRENCY' ) THEN
+                  IF ( return_rec_.parallel_currency_rate IS NULL AND return_rec_.parallel_currency_rate = 0 ) THEN
+                     calculate_third_curr_tax_amount_ := 0;
+                  ELSE
+                     calculate_third_curr_tax_amount_ := Cal_Parallel_Curr_Amount_Rate____(tax_amount_, return_rec_.currency_tax_amount, company_rec_.parallel_base, voucher_row_rec_.parallel_currency_inverted, currency_rec_.parallel_conversion_factor, currency_rec_.parallel_currency_rate, parallel_currency_rounding_);
+         
+                  END IF;
+               END IF;
+            END IF;
+            -- :THPELK TODO MONDAY
+            IF (return_rec_.Amount IS NOT NULL ) THEN
+               return_rec_.tax_amount := calculate_tax_value_;
+               IF (company_rec_.parallel_base IS NOT NULL ) THEN
+                  return_rec_.parallel_curr_tax_amount := calculate_third_curr_tax_amount_;                  
+               ELSE
+                  return_rec_.parallel_curr_tax_amount := NULL;
+               END IF;
+            END IF;            
+         ELSE
+            return_rec_.tax_amount := NULL;
+         END IF;
+      ELSE
+         return_rec_.tax_amount := 0;
+         IF (company_rec_.parallel_base IS NOT NULL ) THEN
+            return_rec_.parallel_curr_tax_amount := 0;
+         ELSE
+            return_rec_.parallel_curr_tax_amount := NULL;
+         END IF;
+      END IF;
+   END IF;
+   RETURN return_rec_;
+END Reset_Tax_Amount_From_Curr_Tax_Amount;
+      
+FUNCTION Clear_Amounts___(
+   currency_rec_ IN Currency_Amount_Structure_Rec ) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_ Currency_Amount_Structure_Rec;
+BEGIN
+   return_rec_ := currency_rec_;
+   return_rec_.credit_amount := NULL;
+   return_rec_.debet_amount := NULL;
+   return_rec_.amount := NULL;
+   return_rec_.currency_credit_amount := NULL;
+   return_rec_.Currency_Debet_Amount := NULL;
+   return_rec_.currency_amount := NULL;
+   return_rec_.third_currency_credit_amount := NULL;
+   return_rec_.third_currency_debit_amount := NULL;
+   return_rec_.third_currency_amount := NULL;
+   return_rec_.tax_amount := NULL;
+   return_rec_.currency_tax_amount := NULL;
+   return_rec_.parallel_curr_tax_amount := NULL;
+   return_rec_.tax_base_amount := NULL;
+   return_rec_.currency_tax_base_amount := NULL;
+   return_rec_.parallel_curr_tax_base_amount := NULL;  
+   
+   RETURN return_rec_;
+END Clear_Amounts___;
+
+FUNCTION Validate_Currency_Amount___ (
+	multi_company_id_             IN VARCHAR2,
+	--multi_company_acc_year_       IN NUMBER,
+	multi_company_voucher_type_   IN VARCHAR2,
+	--multi_company_voucher_no_     IN NUMBER,
+	voucher_date_                 IN DATE,
+	company_                      IN VARCHAR2,
+	--acc_year_                     IN NUMBER,
+	voucher_type_                 IN VARCHAR2,
+	--voucher_no_                   IN NUMBER,
+	currency_code_                IN VARCHAR2,
+	correction_                   IN BOOLEAN,
+	amount_                       IN NUMBER,
+	currency_amount_              IN NUMBER,
+	parallel_currency_amount_     IN NUMBER,
+	currency_rate_                IN NUMBER,
+	conversion_factor_            IN NUMBER,
+	parallel_currency_rate_       IN NUMBER,
+	parallel_conversion_factor_   IN NUMBER,
+	currency_rate_type_           IN VARCHAR2,
+	parallel_currency_rate_type_  IN VARCHAR2,
+	tax_base_amount_              IN NUMBER,
+	currency_tax_base_amount_     IN NUMBER,
+	parallel_currency_tax_base_amount_  IN NUMBER,
+	tax_amount_                         IN NUMBER,
+	currency_tax_amount_                IN NUMBER,
+	parallel_currency_tax_amount_       IN NUMBER,
+	tax_code_                           IN VARCHAR2,
+	tax_percentage_                     IN NUMBER,
+   tax_direction_                      IN VARCHAR2,
+   amount_method_                      IN VARCHAR2,
+   function_group_                     IN VARCHAR2,
+   is_credit_                          IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_ Currency_Amount_Structure_Rec;
+ --  prallel_currency_rec_ Currency_Amount_Structure_Rec;
+   voucher_head_rec_ Voucher_API.Public_Rec;
+   base_currency_code_  Voucher_Row_Tab.currency_code%TYPE; -- THPELK TODO
+   currency_amount_tmp_ NUMBER;
+   voucher_row_rec_ voucher_row_info_rec;
+   company_rec_ Company_Finance_API.Public_Rec;
+   prev_amount_ NUMBER;
+ 
+BEGIN  
+   --Test_Trace___('START Validate_Currency_Amount___' );
+	base_currency_code_ := Company_Finance_API.Get_Currency_Code(company_ );
+   
+   company_rec_ := Company_Finance_API.Get(company_);
+   base_currency_code_ := company_rec_.currency_code;
+   currency_amount_tmp_ := currency_amount_;
+   IF (currency_amount_ IS NOT NULL ) THEN      
+      currency_amount_tmp_ := ROUND(currency_amount_, Currency_Code_API.Get_Currency_Rounding(company_, currency_code_));
+   END IF;
+ 
+	-- voucher_head_rec_ := Voucher_API.Get(multi_company_id_, multi_company_acc_year_, multi_company_voucher_type_, multi_company_voucher_no_);
+   voucher_head_rec_.voucher_date := voucher_date_;
+   voucher_head_rec_.amount_method := amount_method_;
+   voucher_head_rec_.function_group := function_group_;
+  -- amount_method_ := voucher_head_rec_.amount_method;
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_,currency_amount_tmp_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+   
+   voucher_row_rec_ := Convert_to_voucher_info_rec( voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+   
+   IF (currency_amount_ IS NULL ) THEN
+      return_rec_ := Clear_Amounts___(return_rec_);
+      RETURN return_rec_;
+   END IF;
+   
+  -- Caluclate Tax 
+  -- adjust iti to currency amounts
+  -- calcualte accounting currency amount
+  
+   return_rec_ := Set_Currency_Values___(return_rec_, voucher_row_rec_, voucher_head_rec_, prev_amount_, voucher_row_rec_.correction);
+  -- Test_Trace___('END Validate_Currency_Amount___' );
+  /*
+   return_rec_ := calc_based_on_currency_amount___(return_rec_, voucher_row_rec_, prev_amount_, amount_method_, 'CURRENCYAMOUNT', 'TRUE');
+
+   IF (return_rec_.Currency_Debet_Amount IS NOT NULL ) THEN
+      return_rec_.credit_amount := NULL;
+      return_rec_.third_currency_credit_amount := NULL;
+   ELSE
+      return_rec_.debet_amount := NULL;
+      return_rec_.third_currency_debit_amount := NULL;
+   END IF;
+   
+   -- SetTaxValue -- THPELK :TODO
+  -- return_rec_ := calc_Tax_amount___(return_rec_, prev_amount_, amount_method_, 'CURRENCYAMOUNT');
+
+   return_rec_ := Calculate_Based_on_Currency_tax_Value(return_rec_,  voucher_row_rec_);
+   return_rec_ := Set_Parallel_currency_amounts(voucher_row_rec_.company, return_rec_ , voucher_row_rec_);*/
+  RETURN return_rec_;
+END Validate_Currency_Amount___;
+
+--FUNCTION Reset_Values___(
+--   currency_rec_     IN Currency_Amount_Structure_Rec,
+--   is_credit_        IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+--IS
+--   return_rec_ Currency_Amount_Structure_Rec;
+--BEGIN
+--   return_rec_ := currency_rec_;
+--   IF (is_credit_ AND )
+--   RETURN return_rec_;
+--END Reset_Values___;  
+
+
+FUNCTION Set_Currency_Values___ (
+   currency_rec_     IN Currency_Amount_Structure_Rec,
+   voucher_row_rec_  IN voucher_row_info_rec,
+   voucher_head_rec_ IN Voucher_API.Public_Rec,
+   prev_amount_      IN NUMBER,   
+   correction_       IN VARCHAR2 ) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_  Currency_Amount_Structure_Rec;
+BEGIN
+	return_rec_ := currency_rec_;
+	return_rec_ := calc_based_on_currency_amount___(return_rec_, voucher_row_rec_, prev_amount_, voucher_head_rec_.amount_method, 'CURRENCY_AMOUNT', 'TRUE');
+
+   
+   
+   -- SetTaxValue -- THPELK :TODO
+  -- return_rec_ := calc_Tax_amount___(return_rec_, prev_amount_, amount_method_, 'CURRENCYAMOUNT');
+
+   return_rec_ := Calculate_Based_on_Currency_tax_Value(return_rec_,  voucher_row_rec_);
+   return_rec_ := Set_Parallel_currency_amounts(voucher_row_rec_.company, return_rec_ , voucher_row_rec_, voucher_head_rec_);
+   
+   return_rec_ := Adjust_Currency_Values___(voucher_row_rec_.company, return_rec_, correction_, voucher_row_rec_.is_credit);
+   IF (return_rec_.Currency_Debet_Amount IS NOT NULL ) THEN
+      return_rec_.credit_amount := NULL;
+      return_rec_.third_currency_credit_amount := NULL;
+   ELSE
+      return_rec_.debet_amount := NULL;
+      return_rec_.third_currency_debit_amount := NULL;
+   END IF;
+  RETURN return_rec_;
+END Set_Currency_Values___;
+
+-- SetTaxValue - CURRENT_AMOUNT
+FUNCTION  Calculate_Based_on_Currency_tax_Value (
+   currency_rec_     IN Currency_Amount_Structure_Rec,
+   voucher_row_rec_  IN voucher_row_info_rec ) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_ Currency_Amount_Structure_Rec;
+   calculated_tax_value_ NUMBER;
+BEGIN
+   return_rec_ := currency_rec_;
+   IF (return_rec_.currency_amount IS NOT NULL ) THEN
+      --if ((bCurrencyAmtChanged)  || (bAmtChanged)) THPELK : TODO
+      
+      calculated_tax_value_ := cal_base_curr_amount_for_rate(voucher_row_rec_.company, return_rec_.currency_tax_amount, return_rec_.currency_rate, return_rec_.conversion_factor, Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company)), voucher_row_rec_.currency_inverted);
+      return_rec_.Tax_Amount   := calculated_tax_value_;  
+      
+   ELSE
+      return_rec_.Currency_Tax_Amount := NULL;
+      return_rec_.Tax_Amount := NULL;
+   END IF;
+   RETURN return_rec_;
+END Calculate_Based_on_Currency_tax_Value;
+
+FUNCTION  Calculate_Accounting_tax_Value (
+   currency_rec_     IN Currency_Amount_Structure_Rec,
+   voucher_row_rec_  IN voucher_row_info_rec ) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_             Currency_Amount_Structure_Rec;
+   calculated_tax_value_   NUMBER;
+BEGIN
+   return_rec_ := currency_rec_;
+   IF (return_rec_.amount IS NOT NULL ) THEN
+    --  IF (rec_.currency_tax_amount IS NULL )THEN
+      --if ((bCurrencyAmtChanged)  || (bAmtChanged)) THPELK : TODO
+      calculated_tax_value_ := cal_base_curr_amount_for_rate(voucher_row_rec_.company, return_rec_.currency_tax_amount, return_rec_.currency_rate, return_rec_.conversion_factor, Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company)), voucher_row_rec_.currency_inverted);
+      return_rec_.Tax_Amount   := calculated_tax_value_;
+      
+      calculated_tax_value_ := cal_base_curr_amount_for_rate(voucher_row_rec_.company, return_rec_.currency_tax_base_amount, return_rec_.currency_rate, return_rec_.conversion_factor, Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, Company_Finance_API.Get_Currency_Code(voucher_row_rec_.company)), voucher_row_rec_.currency_inverted);
+      return_rec_.tax_base_amount   := calculated_tax_value_;  
+   ELSE
+      
+      return_rec_.Tax_Amount := NULL;
+   END IF;
+   RETURN return_rec_;
+END Calculate_Accounting_tax_Value;
+
+
+FUNCTION Validate_Amount___ (
+	multi_company_id_                   IN VARCHAR2,
+	
+	multi_company_voucher_type_         IN VARCHAR2,
+	
+	voucher_date_                       IN DATE,
+	company_                            IN VARCHAR2,
+	
+	voucher_type_                       IN VARCHAR2,
+	
+	currency_code_                      IN VARCHAR2,
+	correction_                         IN BOOLEAN,
+	amount_                             IN NUMBER,
+	currency_amount_                    IN NUMBER,
+	parallel_currency_amount_           IN NUMBER,
+	currency_rate_                      IN NUMBER,
+	old_currency_rate_                  IN NUMBER,
+	conversion_factor_                  IN NUMBER,
+	parallel_currency_rate_             IN NUMBER,
+	parallel_conversion_factor_         IN NUMBER,
+	currency_rate_type_                 IN VARCHAR2,
+	parallel_currency_rate_type_        IN VARCHAR2,
+	tax_base_amount_                    IN NUMBER,
+	currency_tax_base_amount_           IN NUMBER,
+	parallel_currency_tax_base_amount_  IN NUMBER,
+	tax_amount_                         IN NUMBER,
+	currency_tax_amount_                IN NUMBER,
+	parallel_currency_tax_amount_       IN NUMBER,
+	tax_code_                           IN VARCHAR2,
+	tax_percentage_                     IN NUMBER,
+	tax_direction_                      IN VARCHAR2,
+   amount_method_                      IN VARCHAR2,
+   function_group_                     IN VARCHAR2,
+   is_credit_                          IN BOOLEAN) RETURN Currency_Amount_Structure_Rec
+IS
+   prev_amount_            NUMBER;
+   currency_amount_tmp_    NUMBER;   
+   return_rec_             Currency_Amount_Structure_Rec; 
+   voucher_head_rec_       Voucher_API.Public_Rec;
+   base_currency_code_     Voucher_Row_Tab.currency_code%TYPE; -- THPELK TODO   
+   voucher_row_rec_        voucher_row_info_rec;
+   company_rec_            Company_Finance_API.Public_Rec;
+BEGIN
+ --  base_currency_code_  := Company_Finance_API.Get_Currency_Code(company_ );   
+   company_rec_         := Company_Finance_API.Get(company_);
+   base_currency_code_  := company_rec_.currency_code;
+   currency_amount_tmp_ := currency_amount_;
+   IF (currency_amount_ IS NOT NULL ) THEN
+      
+      currency_amount_tmp_ := ROUND(currency_amount_, Currency_Code_API.Get_Currency_Rounding(company_, base_currency_code_));
+   END IF;
+      
+	-- voucher_head_rec_ := Voucher_API.Get(multi_company_id_, multi_company_acc_year_, multi_company_voucher_type_, multi_company_voucher_no_);
+   
+--   amount_method_ := voucher_head_rec_.amount_method;
+   voucher_head_rec_.amount_method := amount_method_;
+   voucher_head_rec_.function_group := function_group_;
+   
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_,currency_amount_tmp_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+   
+   voucher_row_rec_ := Convert_to_voucher_info_rec( voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+
+   IF (amount_ IS NULL ) THEN
+      return_rec_ := Clear_Amounts___(return_rec_);
+      RETURN return_rec_;
+   END IF;
+  -- Caluclate Tax 
+  -- adjust iti to currency amounts
+  -- calcualte accounting currency amount
+  -- ACCOUNTING_AMOUNT
+  
+  -- return_rec_ := calc_based_on_currency_amount___(return_rec_, voucher_row_rec_, prev_amount_, amount_method_, 'CURRENCY_AMOUNT', 'TRUE');
+  
+   return_rec_ := Validate_accounting_currency_Amount___(return_rec_, voucher_row_rec_, prev_amount_, amount_method_, 'ACCOUNTING_AMOUNT', 'TRUE');
+   return_rec_ := Calculate_Accounting_tax_Value(return_rec_, voucher_row_rec_);
+   return_rec_ := Set_Parallel_Currency_Amounts(voucher_row_rec_.company, return_rec_ , voucher_row_rec_, voucher_head_rec_);
+   return_rec_ := Adjust_Currency_Values___(company_, return_rec_, voucher_row_rec_.correction, is_credit_);
+   RETURN return_rec_;
+END Validate_Amount___;
+
+
+
+FUNCTION Validate_Tax_Code___ (
+	multi_company_id_                   IN VARCHAR2,
+	
+	multi_company_voucher_type_         IN VARCHAR2,
+	
+	voucher_date_                       IN DATE,
+	company_                            IN VARCHAR2,
+	
+	voucher_type_                       IN VARCHAR2,
+	
+	currency_code_                      IN VARCHAR2,
+	correction_                         IN BOOLEAN,
+	amount_                             IN NUMBER,
+	currency_amount_                    IN NUMBER,
+	parallel_currency_amount_           IN NUMBER,
+	currency_rate_                      IN NUMBER,
+	old_currency_rate_                  IN NUMBER,
+	conversion_factor_                  IN NUMBER,
+	parallel_currency_rate_             IN NUMBER,
+	parallel_conversion_factor_         IN NUMBER,
+	currency_rate_type_                 IN VARCHAR2,
+	parallel_currency_rate_type_        IN VARCHAR2,
+	tax_base_amount_                    IN NUMBER,
+	currency_tax_base_amount_           IN NUMBER,
+	parallel_currency_tax_base_amount_  IN NUMBER,
+	tax_amount_                         IN NUMBER,
+	currency_tax_amount_                IN NUMBER,
+	parallel_currency_tax_amount_       IN NUMBER,
+	tax_code_                           IN VARCHAR2,
+	tax_percentage_                     IN NUMBER,
+	tax_direction_                      IN VARCHAR2,
+   amount_method_                      IN VARCHAR2,
+   function_group_                     IN VARCHAR2,
+   is_credit_                          IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+IS   
+   prev_amount_                  NUMBER;
+   voucher_head_rec_             Voucher_API.Public_Rec;
+   return_rec_                   Currency_Amount_Structure_Rec;
+   voucher_row_rec_              voucher_row_info_rec;
+BEGIN
+  -- tax_rec_ := Fetch_Validate_Tax_Code___(company_, account_, tax_code_);
+   --voucher_head_rec_ := Voucher_API.Get(multi_company_id_, multi_company_acc_year_, multi_company_voucher_type_, multi_company_voucher_no_);
+   --amount_method_ := voucher_head_rec_.amount_method;
+   voucher_head_rec_.amount_method := amount_method_;
+   voucher_head_rec_.function_group := function_group_;
+   voucher_head_rec_.voucher_date := voucher_date_;
+   
+   
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_, currency_amount_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+   voucher_row_rec_ := Convert_to_voucher_info_rec(voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+--   return_rec_.tax_percentage := tax_rec_.tax_percentage;
+--   return_rec_.tax_direction := tax_rec_.tax_direction;
+--   return_rec_.tax_type := tax_rec_.tax_type;
+--   return_rec_.tax_direction := tax_rec_.tax_direction;
+
+   IF (tax_code_ IS NULL ) THEN
+      -- reset tax values
+      return_rec_.tax_amount                          := 0;
+      return_rec_.currency_tax_amount                 := 0;
+      return_rec_.parallel_curr_tax_amount        := 0;
+      return_rec_.tax_base_amount                     := NULL;
+      return_rec_.currency_tax_base_amount            := NULL;
+      return_rec_.parallel_curr_tax_base_amount   := NULL;
+      RETURN return_rec_;
+   END IF;
+                                                                    
+   return_rec_ := Reset_Tax_Amount(return_rec_, voucher_row_rec_, voucher_head_rec_, prev_amount_, voucher_row_rec_.correction);   
+   RETURN return_rec_;
+END Validate_Tax_Code___;
+
+FUNCTION Reset_Tax_Amount(
+   currency_rec_     IN Currency_Amount_Structure_Rec,
+   voucher_row_rec_  IN voucher_row_info_rec,
+   voucher_head_rec_ IN Voucher_API.Public_Rec,
+   prev_amount_      IN NUMBER,   
+   correction_       IN VARCHAR2 ) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_ Currency_Amount_Structure_Rec;
+BEGIN
+   return_rec_ := currency_rec_;
+   IF (voucher_row_rec_.tax_code IS NULL AND currency_rec_.Currency_Tax_Amount IS NOT NULL ) THEN
+         return_rec_ := Calculate_Based_on_Currency_tax_Value(return_rec_, voucher_row_rec_);
+   ELSIF (voucher_row_rec_.tax_code IS NULL AND currency_rec_.Tax_Amount IS NOT NULL ) THEN
+      return_rec_ := Calculate_Accounting_tax_Value(return_rec_, voucher_row_rec_);
+   ELSIF (currency_rec_.Currency_Amount IS NOT NULL AND currency_rec_.Currency_Amount != 0) THEN
+      return_rec_ := Set_Currency_Values___(return_rec_, voucher_row_rec_, voucher_head_rec_, prev_amount_, voucher_row_rec_.correction);
+     -- THPELK : TODO
+      -- Validate_Currency_Amount___(multi_company_id_, multi_company_acc_year_, multi_company_voucher_type_, multi_company_voucher_no_, voucher_date_, company_, acc_year_, voucher_type_, voucher_no_, currency_code_, correction_, amount_, currency_amount_, parallel_currency_amount_, currency_rate_, old_currency_rate_, conversion_factor_, parallel_currency_rate_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, tax_code_, tax_percentage_, tax_direction_)
+   ELSIF (currency_rec_.Amount IS NOT NULL AND currency_rec_.Amount != 0) THEN
+      
+      -- THPELK : TODO
+      -- Validate_Amount___(multi_company_id_, multi_company_acc_year_, multi_company_voucher_type_, multi_company_voucher_no_, voucher_date_, company_, acc_year_, voucher_type_, voucher_no_, currency_code_, correction_, amount_, currency_amount_, parallel_currency_amount_, currency_rate_, old_currency_rate_, conversion_factor_, parallel_currency_rate_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, tax_code_, tax_percentage_, tax_direction_)
+      return_rec_ := Validate_accounting_currency_Amount___(return_rec_, voucher_row_rec_, prev_amount_, voucher_head_rec_.amount_method, 'ACCOUNTING_AMOUNT', 'TRUE');
+   
+      return_rec_ := Set_Parallel_Currency_Amounts(voucher_row_rec_.company, return_rec_ , voucher_row_rec_, voucher_head_rec_);
+          
+   END IF;
+   RETURN return_rec_;
+END Reset_Tax_Amount;
+
+FUNCTION Get_Valid_Emu___ (
+	company_       IN VARCHAR2,
+	currency_code_ IN VARCHAR2,
+	voucher_date_  IN DATE ) RETURN VARCHAR2
+IS
+BEGIN
+	RETURN Currency_Code_API.Get_Valid_Emu(company_, currency_code_, voucher_date_);
+END Get_Valid_Emu___;
+
+FUNCTION Validate_Currency_Type___ (
+	multi_company_id_                   IN VARCHAR2,
+	multi_company_voucher_type_         IN VARCHAR2,
+	voucher_date_                       IN DATE,
+	company_                            IN VARCHAR2,
+	voucher_type_                       IN VARCHAR2,
+	currency_code_                      IN VARCHAR2,
+	correction_                         IN BOOLEAN,
+	amount_                             IN NUMBER,
+	currency_amount_                    IN NUMBER,
+	parallel_currency_amount_           IN NUMBER,
+	currency_rate_                      IN NUMBER,
+	old_currency_rate_                  IN NUMBER,
+	conversion_factor_                  IN NUMBER,
+	parallel_currency_rate_             IN NUMBER,
+	parallel_conversion_factor_         IN NUMBER,
+	currency_rate_type_                 IN VARCHAR2,
+	parallel_currency_rate_type_        IN VARCHAR2,
+	tax_base_amount_                    IN NUMBER,
+	currency_tax_base_amount_           IN NUMBER,
+	parallel_currency_tax_base_amount_  IN NUMBER,
+	tax_amount_                         IN NUMBER,
+	currency_tax_amount_                IN NUMBER,
+	parallel_currency_tax_amount_       IN NUMBER,
+	tax_code_                           IN VARCHAR2,
+	tax_percentage_                     IN NUMBER,
+	tax_direction_                      IN VARCHAR2,
+	amount_method_                      IN VARCHAR2,
+	function_group_                     IN VARCHAR2,
+   is_credit_                          IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+IS
+   return_amount_          NUMBER;
+   curr_rate_rounded_      NUMBER;
+   tmp_conversion_factor_  NUMBER;
+   tmp_currency_rate_      NUMBER;
+   decimals_in_amount_     NUMBER;
+   rate_changed_           BOOLEAN;
+   currency_inverted_      VARCHAR2(5); -- THPELK TODO
+   return_rec_             Currency_Amount_Structure_Rec;
+   voucher_row_rec_        voucher_row_info_rec;
+   voucher_head_rec_       Voucher_API.Public_Rec;
+   company_rec_            Company_Finance_API.Public_Rec;  
+   base_currency_code_     Voucher_Row_Tab.currency_code%TYPE;
+   
+   
+   
+   
+BEGIN
+   base_currency_code_ := Company_Finance_API.Get_Currency_Code(company_ );
+   company_rec_ := Company_Finance_API.Get(company_);
+   base_currency_code_  := company_rec_.currency_code;
+	voucher_head_rec_.amount_method := amount_method_;
+   voucher_head_rec_.function_group := function_group_;
+   voucher_head_rec_.voucher_date := voucher_date_;   
+   
+   return_rec_ := Convert_to_currency_rec(company_,currency_code_, correction_, amount_, currency_amount_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+   voucher_row_rec_ := Convert_to_voucher_info_rec(voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+   
+   IF (return_rec_.Currency_Type IS NULL ) THEN
+      Error_SYS.Record_General(lu_name_, 'NOCURRRATE: A Currency Rate Type must be specified in the voucher postings line.');
+   ELSE
+      Currency_Type_API.Exist(voucher_row_rec_.company, return_rec_.Currency_Type);
+      IF (return_rec_.currency_code IS NOT NULL ) THEN
+         Currency_Rate_API.Fetch_Currency_Rate_Base( tmp_conversion_factor_, tmp_currency_rate_, currency_inverted_,  company_, currency_code_, base_currency_code_, currency_rate_type_, voucher_head_rec_.voucher_date, 'DUMMY' );
+         curr_rate_rounded_ := Get_Rounded_Curr_Rate(company_, currency_code_, tmp_currency_rate_);
+         return_rec_.Currency_Rate :=  curr_rate_rounded_;
+         IF (return_rec_.currency_amount IS NOT NULL AND return_rec_.currency_amount !=0 ) THEN        
+            decimals_in_amount_ := Currency_Code_API.Get_Currency_Rounding(company_, currency_code_);      
+            IF ( old_currency_rate_ IS NULL AND curr_rate_rounded_ != currency_rate_) THEN
+               rate_changed_ := TRUE;
+            END IF;
+               -- THPELK :TODO
+               rate_changed_ := TRUE;
+         
+               voucher_row_rec_.Decimals_In_trans_Amount := decimals_in_amount_;            
+               -- return_number_ := Set_Another_Value___(company_, currency_amount_rec_.Currency_Rate, currency_amount_rec_.Currency_Amount, 'RATE', rate_changed_, calculate_parallel_curr_tax_ => 'FALSE');
+               return_amount_ := Rate_Based_Amount_Calculation___ (company_, rate_changed_, return_rec_.Currency_Amount,  return_rec_.Currency_Rate,
+                        voucher_row_rec_.correction, return_rec_.conversion_factor, decimals_in_amount_, currency_inverted_);    
+               return_rec_.amount := return_amount_;
+               return_rec_ := Set_Parallel_currency_amounts(voucher_row_rec_.company, return_rec_ , voucher_row_rec_, voucher_head_rec_);               
+               return_rec_ := Adjust_Currency_Values___(company_, return_rec_, voucher_row_rec_.correction, is_credit_);            
+         END IF;
+      END IF;
+   END IF;
+   RETURN return_rec_;
+END Validate_Currency_Type___;
+
+
+
+FUNCTION Validate_Parallel_Currency_Rate_Type___ (
+	multi_company_id_                   IN VARCHAR2,	
+	multi_company_voucher_type_         IN VARCHAR2,
+	voucher_date_                       IN DATE,
+	company_                            IN VARCHAR2,	
+	voucher_type_                       IN VARCHAR2,	
+	currency_code_                      IN VARCHAR2,
+	correction_                         IN BOOLEAN,
+	amount_                             IN NUMBER,
+	currency_amount_                    IN NUMBER,
+	parallel_currency_amount_           IN NUMBER,
+	currency_rate_                      IN NUMBER,
+	old_currency_rate_                  IN NUMBER,
+	conversion_factor_                  IN NUMBER,
+	parallel_currency_rate_             IN NUMBER,
+	parallel_conversion_factor_         IN NUMBER,
+	currency_rate_type_                 IN VARCHAR2,
+	parallel_currency_rate_type_        IN VARCHAR2,
+	tax_base_amount_                    IN NUMBER,
+	currency_tax_base_amount_           IN NUMBER,
+	parallel_currency_tax_base_amount_  IN NUMBER,
+	tax_amount_                         IN NUMBER,
+	currency_tax_amount_                IN NUMBER,
+	parallel_currency_tax_amount_       IN NUMBER,
+	tax_code_                           IN VARCHAR2,
+	tax_percentage_                     IN NUMBER,
+	tax_direction_                      IN VARCHAR2,
+	amount_method_                      IN VARCHAR2,
+	function_group_                     IN VARCHAR2,
+   is_credit_                          IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+IS
+   acc_curr_rounding_            NUMBER;
+   trans_currency_rounding_      NUMBER;
+   parallel_currency_rounding_   NUMBER;
+   return_rec_          Currency_Amount_Structure_Rec;
+   voucher_row_rec_     voucher_row_info_rec;
+   voucher_head_rec_    Voucher_API.Public_Rec;
+   company_rec_         Company_Finance_API.Public_Rec;
+   
+BEGIN
+   --base_currency_code_ := Company_Finance_API.Get_Currency_Code(company_ );
+   company_rec_ := Company_Finance_API.Get(company_);
+	voucher_head_rec_.amount_method := amount_method_;
+   voucher_head_rec_.function_group := function_group_;
+   voucher_head_rec_.voucher_date := voucher_date_;
+    -- Currency_Rate_API.Fetch_Currency_Rate_Base( tmp_conversion_factor_, tmp_currency_rate_, currency_inverted_,  company_, currency_code_, base_currency_code_, currency_rate_type_, voucher_head_rec_.voucher_date, 'DUMMY' );
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_, currency_amount_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+   voucher_row_rec_ := Convert_to_voucher_info_rec(voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+   parallel_currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, company_rec_.parallel_acc_currency);
+   trans_currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, return_rec_.currency_code);
+   acc_curr_rounding_  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, company_rec_.currency_code);
+ 
+   
+	return_rec_ := Validate_Parallel_Currency_Rate_Type(return_rec_, voucher_row_rec_, voucher_head_rec_);
+   RETURN return_rec_;
+END Validate_Parallel_Currency_Rate_Type___;
+
+
+FUNCTION Validate_Parallel_Currency_Rate___ (
+	multi_company_id_                   IN VARCHAR2,
+--	multi_company_acc_year_             IN NUMBER,
+	multi_company_voucher_type_         IN VARCHAR2,
+--	multi_company_voucher_no_           IN NUMBER,
+	voucher_date_                       IN DATE,
+	company_                            IN VARCHAR2,
+--	acc_year_                           IN NUMBER,
+	voucher_type_                       IN VARCHAR2,
+--	voucher_no_                         IN NUMBER,
+	currency_code_                      IN VARCHAR2,
+	correction_                         IN BOOLEAN,
+	amount_                             IN NUMBER,
+	currency_amount_                    IN NUMBER,
+	parallel_currency_amount_           IN NUMBER,
+	currency_rate_                      IN NUMBER,
+	old_currency_rate_                  IN NUMBER,
+	conversion_factor_                  IN NUMBER,
+	parallel_currency_rate_             IN NUMBER,
+	parallel_conversion_factor_         IN NUMBER,
+	currency_rate_type_                 IN VARCHAR2,
+	parallel_currency_rate_type_        IN VARCHAR2,
+	tax_base_amount_                    IN NUMBER,
+	currency_tax_base_amount_           IN NUMBER,
+	parallel_currency_tax_base_amount_  IN NUMBER,
+	tax_amount_                         IN NUMBER,
+	currency_tax_amount_                IN NUMBER,
+	parallel_currency_tax_amount_       IN NUMBER,
+	tax_code_                           IN VARCHAR2,
+	tax_percentage_                     IN NUMBER,
+	tax_direction_                      IN VARCHAR2,
+	amount_method_                      IN VARCHAR2,
+	function_group_                     IN VARCHAR2,
+   is_credit_                          IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+IS
+   parallel_curency_amount_      NUMBER;
+  
+   return_rec_          Currency_Amount_Structure_Rec;
+   voucher_row_rec_     voucher_row_info_rec;
+   voucher_head_rec_    Voucher_API.Public_Rec;
+   company_rec_         Company_Finance_API.Public_Rec;
+   
+   
+BEGIN
+   company_rec_ := Company_Finance_API.Get(company_);
+	voucher_head_rec_.amount_method := amount_method_;
+   voucher_head_rec_.function_group := function_group_;
+   voucher_head_rec_.voucher_date := voucher_date_;
+   
+   -- THPELK: TODO - Need to Verify with a BSA
+  -- parallel_currency_inverted_ := Currency_Code_API.Get_Inverted(company_, company_rec_.parallel_acc_currency);
+    -- Currency_Rate_API.Fetch_Currency_Rate_Base( tmp_conversion_factor_, tmp_currency_rate_, currency_inverted_,  company_, currency_code_, base_currency_code_, currency_rate_type_, voucher_head_rec_.voucher_date, 'DUMMY' );
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_, currency_amount_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+   voucher_row_rec_ := Convert_to_voucher_info_rec(voucher_date_, company_, voucher_type_, multi_company_id_,  multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+  -- parallel_currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, company_rec_.parallel_acc_currency);
+  -- trans_currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, return_rec_.currency_code);
+  -- acc_curr_rounding_  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, company_rec_.currency_code);
+ 
+ IF ((return_rec_.debet_amount IS NOT NULL AND return_rec_.debet_amount != 0) OR return_rec_.credit_amount IS NOT NULL ) THEN
+   parallel_curency_amount_ := Execute_Parallel_Currency_Calculation___(company_, company_rec_.parallel_acc_currency, amount_, currency_amount_, company_rec_.parallel_base, parallel_currency_rate_, voucher_row_rec_.parallel_currency_inverted, parallel_conversion_factor_);
+    IF (return_rec_.debet_amount IS NOT NULL AND return_rec_.debet_amount != 0) THEN
+      return_rec_.third_currency_amount := parallel_curency_amount_;
+      return_rec_.third_currency_debit_amount := parallel_curency_amount_;
+      return_rec_.third_currency_credit_amount := NULL;
+    ELSIF (return_rec_.credit_amount IS NOT NULL) THEN
+      return_rec_.third_currency_amount := parallel_curency_amount_;
+      return_rec_.third_currency_credit_amount := -1 * parallel_curency_amount_;
+      return_rec_.third_currency_debit_amount := NULL;
+    END IF;
+   return_rec_ := Cal_Parallel_Curr_Tax_Value(return_rec_, company_rec_, voucher_row_rec_ , 'RATE', voucher_head_rec_);
+  -- Adjust_Currency_Values___(currency_rec_, correction_);
+  END IF; 
+   RETURN return_rec_;
+END Validate_Parallel_Currency_Rate___;
+
+-- CalcualteParallelCurrencyRateMC DONE
+FUNCTION Calculate_Parallel_Currency_Rate___ (
+   company_rec_      IN Company_Finance_API.Public_Rec,   
+   voucher_row_rec_  IN voucher_row_info_rec,
+   currency_rec_     IN Currency_Amount_Structure_Rec) RETURN NUMBER
+IS
+   parallel_curr_rate_ NUMBER;
+BEGIN
+   
+   parallel_curr_rate_ := Currency_Amount_API.Calculate_Parallel_Curr_Rate(voucher_row_rec_.company, voucher_row_rec_.voucher_date, currency_rec_.amount, currency_rec_.currency_amount, currency_rec_.third_currency_amount, company_rec_.currency_code, currency_rec_.currency_code, company_rec_.parallel_acc_currency, company_rec_.parallel_base, currency_rec_.Parallel_Curr_Rate_Type);
+   
+--   IF ( parallel_base_type_ = 'TRANSACTION_CURRENCY') THEN
+--      IF  (is_parallel_currency_inverted_ = 'TRUE') THEN
+--        IF (parallel_currency_amount_ = 0 ) THEN
+--            Raise_devided_by_Zero_Error___();                                           
+--        ELSE
+--              parallel_curr_rate_ := ROUND((currency_amount_ * parallel_conversion_factor_) / parallel_currency_amount_, parallel_currency_rounding_);
+--        END IF;               
+--      ELSE
+--         IF (currency_amount_ = 0) THEN
+--            Raise_devided_by_Zero_Error___();                   
+--          ELSE
+--              parallel_curr_rate_ := ROUND((parallel_currency_amount_ * parallel_conversion_factor_) / currency_amount_, parallel_currency_rounding_);
+--          END IF;
+--      END IF;
+--   ELSE
+--      IF ( is_parallel_currency_inverted_ = 'TRUE') THEN
+--         IF ( amount_ = 0) THEN
+--            Raise_devided_by_Zero_Error___();                      
+--         ELSE
+--            parallel_curr_rate_ := ROUND((parallel_currency_amount_ * parallel_conversion_factor_) / amount_, parallel_currency_rounding_);
+--         END IF;                
+--      ELSE
+--         IF (parallel_currency_amount_ = 0) THEN
+--            Raise_devided_by_Zero_Error___();                      
+--         ELSE                     
+--            parallel_curr_rate_ := ROUND((amount_ * parallel_conversion_factor_) / parallel_currency_amount_, parallel_currency_rounding_);
+--         END IF;
+--      END IF;
+--
+--   END IF;
+	RETURN parallel_curr_rate_;
+END Calculate_Parallel_Currency_Rate___;
+
+
+
+FUNCTION Validate_Third_Currency_Amount___ (
+	multi_company_id_                   IN VARCHAR2,
+	
+	multi_company_voucher_type_         IN VARCHAR2,
+	
+	voucher_date_                       IN DATE,
+	company_                            IN VARCHAR2,
+	
+	voucher_type_                       IN VARCHAR2,
+	
+	currency_code_                      IN VARCHAR2,
+	correction_                         IN BOOLEAN,
+	amount_                             IN NUMBER,
+	currency_amount_                    IN NUMBER,
+	parallel_currency_amount_           IN NUMBER,
+	currency_rate_                      IN NUMBER,
+	old_currency_rate_                  IN NUMBER,
+	conversion_factor_                  IN NUMBER,
+	parallel_currency_rate_             IN NUMBER,
+	parallel_conversion_factor_         IN NUMBER,
+	currency_rate_type_                 IN VARCHAR2,
+	parallel_currency_rate_type_        IN VARCHAR2,
+	tax_base_amount_                    IN NUMBER,
+	currency_tax_base_amount_           IN NUMBER,
+	parallel_currency_tax_base_amount_  IN NUMBER,
+	tax_amount_                         IN NUMBER,
+	currency_tax_amount_                IN NUMBER,
+	parallel_currency_tax_amount_       IN NUMBER,
+	tax_code_                           IN VARCHAR2,
+	tax_percentage_                     IN NUMBER,
+	tax_direction_                      IN VARCHAR2,
+	amount_method_                      IN VARCHAR2,
+	function_group_                     IN VARCHAR2,
+   is_credit_                          IN BOOLEAN ) RETURN Currency_Amount_Structure_Rec
+IS
+   prev_amount_            NUMBER;   
+   return_rec_             Currency_Amount_Structure_Rec;
+   voucher_row_rec_        voucher_row_info_rec;
+   voucher_head_rec_       Voucher_API.Public_Rec;
+   company_rec_            Company_Finance_API.Public_Rec;
+  -- prallel_currency_rec_   Currency_Amount_Structure_Rec;
+
+   
+BEGIN
+	company_rec_ := Company_Finance_API.Get(company_);
+	voucher_head_rec_.amount_method := amount_method_;
+   voucher_head_rec_.function_group := function_group_;
+   voucher_head_rec_.voucher_date := voucher_date_;
+      
+   -- THPELK: TODO - Need to Verify with a BSA       
+   -- parallel_currency_inverted_ := Currency_Code_API.Get_Inverted(company_, company_rec_.parallel_acc_currency);
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_, currency_amount_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+   voucher_row_rec_ := Convert_to_voucher_info_rec(voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+      
+   IF (return_rec_.third_currency_amount IS NOT NULL ) THEN
+   -- Currency_Rate_API.Fetch_Currency_Rate_Base( tmp_conversion_factor_, tmp_currency_rate_, currency_inverted_,  company_, currency_code_, base_currency_code_, currency_rate_type_, voucher_head_rec_.voucher_date, 'DUMMY' );
+   --      voucher_row_rec_.Decimals_In_parallel_Amount := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, company_rec_.parallel_acc_currency);
+   --   
+   --   voucher_row_rec_.Decimals_In_trans_Amount  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, return_rec_.currency_code);
+   --   voucher_row_rec_.Decimals_In_Amount  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, company_rec_.currency_code);
+   -- 
+      
+      IF (voucher_row_rec_.tax_code IS NOT NULL) THEN -- AND return_rec_.currency_code IS NOT NULL AND return_rec_.currency_code != company_rec_.parallel_acc_currency) THEN
+         IF ((return_rec_.currency_amount IS NULL OR return_rec_.currency_amount = 0 AND company_rec_.parallel_base  = 'TRANSACTION_CURRENCY') OR
+            (return_rec_.amount IS NULL OR return_rec_.amount = 0 AND company_rec_.parallel_base  = 'ACCOUNTING_CURRENCY')
+            OR (return_rec_.currency_code IS NOT NULL AND return_rec_.currency_code = company_rec_.parallel_acc_currency)) THEN
+            return_rec_ := Cal_Parallel_Curr_Tax_Value(return_rec_, company_rec_, voucher_row_rec_ , 'AMOUNT', voucher_head_rec_);           
+         ELSE         
+           
+            return_rec_ := Cal_Parallel_Curr_Tax_Value(return_rec_, company_rec_, voucher_row_rec_ , 'RATE', voucher_head_rec_);
+         END IF;
+      END IF;
+      IF ( return_rec_.currency_amount IS NOT NULL AND return_rec_.currency_amount !=0 AND company_rec_.parallel_base = 'TRANSACTION_CURRENCY' OR
+         return_rec_.amount IS NOT NULL AND return_rec_.amount !=0 AND company_rec_.parallel_base = 'ACCOUNTING_CURRENCY') THEN
+         IF (abs(return_rec_.third_currency_amount) > 0 )  THEN
+            IF (return_rec_.currency_code IS NOT NULL AND return_rec_.currency_code != company_rec_.parallel_acc_currency) THEN
+              -- prallel_currency_rec_ := Get_Parallel_Currency_Rate(company_, return_rec_.currency_code, return_rec_.Parallel_Curr_Rate_Type, voucher_row_rec_.voucher_date);
+               -- CalcualteParallelCurrencyRateMC()
+               --return_rec_.parallel_currency_rate := Calculate_Parallel_Currency_Rate___ ( return_rec_.amount, return_rec_.currency_amount, return_rec_.third_currency_amount, company_rec_.parallel_base, voucher_row_rec_.parallel_currency_inverted, return_rec_.parallel_conversion_factor, voucher_row_rec_.Decimals_In_parallel_Amount );
+               return_rec_.parallel_currency_rate := Calculate_Parallel_Currency_Rate___ ( company_rec_, voucher_row_rec_, return_rec_);
+            END IF;
+         ELSIF (return_rec_.third_currency_amount = 0) THEN
+            return_rec_.parallel_currency_rate := 0;         
+         END IF;
+      END IF;
+      
+      IF ( voucher_row_rec_.tax_code IS NOT NULL AND return_rec_.currency_code != company_rec_.parallel_acc_currency ) THEN
+         IF ((return_rec_.currency_amount IS NULL OR (return_rec_.currency_amount = 0 AND company_rec_.parallel_base  = 'TRANSACTION_CURRENCY')) OR
+            (return_rec_.amount IS NULL OR (return_rec_.amount = 0 AND company_rec_.parallel_base  = 'ACCOUNTING_CURRENCY')) OR
+            (return_rec_.currency_code = company_rec_.parallel_acc_currency)) THEN
+            return_rec_ := Cal_Parallel_Curr_Tax_Value(return_rec_, company_rec_, voucher_row_rec_ , 'AMOUNT', voucher_head_rec_);
+         ELSE         
+            return_rec_ := Cal_Parallel_Curr_Tax_Value(return_rec_, company_rec_, voucher_row_rec_ , 'RATE', voucher_head_rec_);
+         END IF;      
+      END IF;   
+
+   ELSE
+    
+      return_rec_.parallel_currency_rate := 0;
+      return_rec_.third_currency_amount := 0;
+      return_rec_.parallel_curr_tax_base_amount := 0;
+   END IF;
+
+   IF (return_rec_.currency_code = company_rec_.parallel_acc_currency) THEN
+      return_rec_.currency_amount := return_rec_.third_currency_amount;
+      -- SetTaxValue()
+      return_rec_ := Calculate_Based_on_Currency_tax_Value(return_rec_, voucher_row_rec_);
+      -- SetAnotherValue() - CURRUNT_AMOUNT
+      return_rec_ := calc_based_on_currency_amount___(return_rec_, voucher_row_rec_, prev_amount_, voucher_head_rec_.amount_method, 'CURRENCY_AMOUNT', 'TRUE');
+
+      IF (return_rec_.third_currency_amount IS NOT NULL AND return_rec_.third_currency_amount != 0  AND ((return_rec_.currency_amount IS NOT NULL OR return_rec_.currency_amount != 0 AND company_rec_.parallel_base  = 'TRANSACTION_CURRENCY') OR
+            (return_rec_.amount IS NOT NULL OR return_rec_.amount != 0 AND company_rec_.parallel_base  = 'ACCOUNTING_CURRENCY'))) THEN
+           -- prallel_currency_rec_ := Get_Parallel_Currency_Rate(company_, return_rec_.currency_code, return_rec_.Parallel_Curr_Rate_Type, voucher_row_rec_.voucher_date);
+            -- CalcualteParallelCurrencyRateMC()
+           -- return_rec_.parallel_currency_rate := Calculate_Parallel_Currency_Rate___ ( return_rec_.amount, return_rec_.currency_amount, return_rec_.third_currency_amount, company_rec_.parallel_base, voucher_row_rec_.parallel_currency_inverted, return_rec_.parallel_conversion_factor, voucher_row_rec_.Decimals_In_parallel_Amount );
+           return_rec_.parallel_currency_rate := Calculate_Parallel_Currency_Rate___ ( company_rec_, voucher_row_rec_, return_rec_);
+        
+      END IF;
+   END IF;
+   IF (return_rec_.third_currency_amount IS NULL ) THEN
+      return_rec_.parallel_curr_tax_amount := 0;
+   END IF;   
+   return_rec_ := Adjust_Currency_Values___(company_, return_rec_, voucher_row_rec_.correction, is_credit_);   
+   RETURN return_rec_;
+END Validate_Third_Currency_Amount___;
+
+
+FUNCTION Validate_Parallel_Tax_Amount___ (
+	multi_company_id_                   IN VARCHAR2,
+	
+	multi_company_voucher_type_         IN VARCHAR2,
+	
+	voucher_date_                       IN DATE,
+	company_                            IN VARCHAR2,
+	
+	voucher_type_                       IN VARCHAR2,
+	
+	currency_code_                      IN VARCHAR2,
+	correction_                         IN BOOLEAN,
+	amount_                             IN NUMBER,
+	currency_amount_                    IN NUMBER,
+	parallel_currency_amount_           IN NUMBER,
+	currency_rate_                      IN NUMBER,
+	old_currency_rate_                  IN NUMBER,
+	conversion_factor_                  IN NUMBER,
+	parallel_currency_rate_             IN NUMBER,
+	parallel_conversion_factor_         IN NUMBER,
+	currency_rate_type_                 IN VARCHAR2,
+	parallel_currency_rate_type_        IN VARCHAR2,
+	tax_base_amount_                    IN NUMBER,
+	currency_tax_base_amount_           IN NUMBER,
+	parallel_currency_tax_base_amount_  IN NUMBER,
+	tax_amount_                         IN NUMBER,
+	currency_tax_amount_                IN NUMBER,
+	parallel_currency_tax_amount_       IN NUMBER,
+	tax_code_                           IN VARCHAR2,
+	tax_percentage_                     IN NUMBER,
+	tax_direction_                      IN VARCHAR2,
+	amount_method_                      IN VARCHAR2,
+	function_group_                     IN VARCHAR2,
+   is_credit_                          IN BOOLEAN) RETURN Currency_Amount_Structure_Rec
+IS
+   acc_curr_rounding_            NUMBER;
+   trans_currency_rounding_      NUMBER;
+   parallel_currency_rounding_   NUMBER;
+   parallel_currency_inverted_   VARCHAR2(5); -- THPELK TODO
+   currency_inverted_            VARCHAR2(5);
+   
+   return_rec_          Currency_Amount_Structure_Rec;
+   voucher_row_rec_     voucher_row_info_rec;
+   voucher_head_rec_    Voucher_API.Public_Rec;
+   company_rec_         Company_Finance_API.Public_Rec;
+   
+   
+BEGIN
+   company_rec_ := Company_Finance_API.Get(company_);
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_, currency_amount_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+   IF ( return_rec_.currency_code IS NOT NULL AND company_rec_.parallel_acc_currency IS NOT NULL AND company_rec_.parallel_acc_currency != return_rec_.currency_code ) THEN	
+      voucher_head_rec_.amount_method := amount_method_;
+      voucher_head_rec_.function_group := function_group_;
+      voucher_head_rec_.voucher_date := voucher_date_;  
+    
+    --  parallel_currency_inverted_ := Currency_Code_API.Get_Inverted(company_, company_rec_.parallel_acc_currency);
+      
+     -- currency_inverted_ := Currency_Code_API.Get_Inverted(company_, company_rec_.currency_code);
+   
+      --parallel_currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(company_, company_rec_.parallel_acc_currency);
+      --trans_currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(company_, return_rec_.currency_code);
+     -- acc_curr_rounding_  := Currency_Code_API.Get_Currency_Rounding(company_, company_rec_.currency_code);
+      return_rec_.currency_tax_amount := return_rec_.currency_tax_amount;
+      voucher_row_rec_ := Convert_to_voucher_info_rec(voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+      return_rec_ := Reset_Tax_Amount_From_Curr_Tax_Amount(return_rec_.currency_tax_amount, return_rec_.currency_tax_amount + 1,return_rec_, voucher_row_rec_,  company_rec_ , voucher_head_rec_); 
+   END IF;
+   
+   RETURN return_rec_;
+END Validate_Parallel_Tax_Amount___;
+
+
+--return_rec_ := Reset_Tax_Amount_From_Curr_Tax_Amount(return_rec_.currency_tax_amount, return_rec_.currency_tax_amount + 1,return_rec_, voucher_row_rec_,  company_rec_ , voucher_head_rec_); 
+
+
+FUNCTION Validate_Currency_Tax_Amount___ (
+	multi_company_id_                   IN VARCHAR2,
+--	multi_company_acc_year_             IN NUMBER,
+	multi_company_voucher_type_         IN VARCHAR2,
+--	multi_company_voucher_no_           IN NUMBER,
+	voucher_date_                       IN DATE,
+	company_                            IN VARCHAR2,
+--	acc_year_                           IN NUMBER,
+	voucher_type_                       IN VARCHAR2,
+--	voucher_no_                         IN NUMBER,
+	currency_code_                      IN VARCHAR2,
+	correction_                         IN BOOLEAN,
+	amount_                             IN NUMBER,
+	currency_amount_                    IN NUMBER,
+	parallel_currency_amount_           IN NUMBER,
+	currency_rate_                      IN NUMBER,
+	old_currency_rate_                  IN NUMBER, -- to be used as prev_value
+	conversion_factor_                  IN NUMBER,
+	parallel_currency_rate_             IN NUMBER,
+	parallel_conversion_factor_         IN NUMBER,
+	currency_rate_type_                 IN VARCHAR2,
+	parallel_currency_rate_type_        IN VARCHAR2,
+	tax_base_amount_                    IN NUMBER,
+	currency_tax_base_amount_           IN NUMBER,
+	parallel_currency_tax_base_amount_  IN NUMBER,
+	tax_amount_                         IN NUMBER,
+	currency_tax_amount_                IN NUMBER,
+	parallel_currency_tax_amount_       IN NUMBER,
+	tax_code_                           IN VARCHAR2,
+	tax_percentage_                     IN NUMBER,
+	tax_direction_                      IN VARCHAR2,
+	amount_method_                      IN VARCHAR2,
+	function_group_                     IN VARCHAR2,
+   is_credit_                          IN BOOLEAN) RETURN Currency_Amount_Structure_Rec
+IS
+   acc_curr_rounding_            NUMBER;
+   trans_currency_rounding_      NUMBER;
+   parallel_currency_rounding_   NUMBER;
+   parallel_currency_inverted_   VARCHAR2(5); -- THPELK TODO
+   currency_inverted_            VARCHAR2(5);
+   
+   return_rec_          Currency_Amount_Structure_Rec;
+   voucher_row_rec_     voucher_row_info_rec;
+   voucher_head_rec_    Voucher_API.Public_Rec;
+   company_rec_         Company_Finance_API.Public_Rec;
+   tax_type_            Statutory_Fee_TAB.fee_type%TYPE;
+BEGIN
+   IF (tax_code_ IS NOT NULL ) THEN
+      tax_type_ := Statutory_Fee_API.Get_Fee_Type_Db(company_, tax_code_);
+      IF (tax_type_ != 'NOTAX') THEN
+         IF (((NVL(currency_tax_amount_,0) < 0 AND NVL(currency_amount_,0) > 0) OR (NVL(currency_tax_amount_,0) > 0 AND NVL(currency_amount_,0) < 0))) THEN
+            Error_SYS.Record_General(lu_name_, 'CURRTAXAMOUNTSIGN: Different sign in Currency Tax Amount');
+         END IF;
+         
+         IF (((NVL(tax_amount_,0) < 0 AND NVL(amount_,0) > 0) OR (NVL(tax_amount_,0) > 0 AND NVL(amount_,0) < 0))) THEN
+            Error_SYS.Record_General(lu_name_, 'ACCCURRTAXAMOUNTSIGN: Different sign in Tax Amount');
+         END IF;         
+       
+         IF (((NVL(parallel_currency_tax_amount_,0) < 0 AND NVL(parallel_currency_amount_,0) > 0) OR (NVL(parallel_currency_tax_amount_,0) > 0 AND NVL(parallel_currency_amount_,0) < 0))) THEN
+            Error_SYS.Record_General(lu_name_, 'PARACURRTAXAMOUNTSIGN: Different sign in Parallel Currency Tax Amount');
+         END IF;
+      
+
+      END IF;            
+      IF ((currency_tax_amount_ IS NULL AND parallel_currency_tax_amount_ IS NULL ) AND tax_type_ != 'NOTAX') THEN
+         Error_SYS.Record_General(lu_name_, 'CURRTAXAMOUNTNULL: Currency Tax Amount must be entered');
+      END IF;
+   END IF;
+	company_rec_ := Company_Finance_API.Get(company_);
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_, currency_amount_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+  -- IF ( return_rec_.currency_code IS NOT NULL AND company_rec_.parallel_acc_currency IS NOT NULL AND company_rec_.parallel_acc_currency != return_rec_.currency_code ) THEN	
+   voucher_head_rec_.amount_method := amount_method_;
+   voucher_head_rec_.function_group := function_group_;
+   voucher_head_rec_.voucher_date := voucher_date_;  
+
+  -- parallel_currency_inverted_ := Currency_Code_API.Get_Inverted(company_, company_rec_.parallel_acc_currency);
+   --acc_curr_rounding_ := Currency_Code_API.Get_Currency_Rounding(company_, company_rec_.currency_code);
+   voucher_row_rec_ := Convert_to_voucher_info_rec(voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+ --  END IF;
+     
+   return_rec_ := Reset_Tax_Amount_From_Curr_Tax_Amount(return_rec_.currency_tax_amount, return_rec_.currency_tax_amount + 1,return_rec_, voucher_row_rec_,  company_rec_ , voucher_head_rec_); 
+  
+   RETURN return_rec_;
+END Validate_Currency_Tax_Amount___;
+
+
+FUNCTION Validate_Tax_Amount___ (
+	multi_company_id_                   IN VARCHAR2,
+	
+	multi_company_voucher_type_         IN VARCHAR2,
+	
+	voucher_date_                       IN DATE,
+	company_                            IN VARCHAR2,
+	
+	voucher_type_                       IN VARCHAR2,
+	
+	currency_code_                      IN VARCHAR2,
+	correction_                         IN BOOLEAN,
+	amount_                             IN NUMBER,
+	currency_amount_                    IN NUMBER,
+	parallel_currency_amount_           IN NUMBER,
+	currency_rate_                      IN NUMBER,
+	old_currency_rate_                  IN NUMBER,
+	conversion_factor_                  IN NUMBER,
+	parallel_currency_rate_             IN NUMBER,
+	parallel_conversion_factor_         IN NUMBER,
+	currency_rate_type_                 IN VARCHAR2,
+	parallel_currency_rate_type_        IN VARCHAR2,
+	tax_base_amount_                    IN NUMBER,
+	currency_tax_base_amount_           IN NUMBER,
+	parallel_currency_tax_base_amount_  IN NUMBER,
+	tax_amount_                         IN NUMBER,
+	currency_tax_amount_                IN NUMBER,
+	parallel_currency_tax_amount_       IN NUMBER,
+	tax_code_                           IN VARCHAR2,
+	tax_percentage_                     IN NUMBER,
+	tax_direction_                      IN VARCHAR2,
+	amount_method_                      IN VARCHAR2,
+	function_group_                     IN VARCHAR2,
+   is_credit_                          IN BOOLEAN) RETURN Currency_Amount_Structure_Rec
+IS
+   acc_curr_rounding_            NUMBER;   
+   parallel_currency_rounding_   NUMBER;
+   trans_currency_rounding_      NUMBER;
+   parallel_currency_inverted_   VARCHAR2(5);
+   currency_inverted_            VARCHAR2(5);
+   company_rec_                  Company_Finance_API.Public_Rec;
+   return_rec_                   Currency_Amount_Structure_Rec;
+   voucher_row_rec_              voucher_row_info_rec;
+   voucher_head_rec_             Voucher_API.Public_Rec;   
+   tax_type_                     Statutory_Fee_Tab.fee_type%TYPE;
+  -- acc_curr_rounding_ NUMBER;
+ --  parallel_currency_inverted_ VARCHAR2(5);
+BEGIN
+   company_rec_ := Company_Finance_API.Get(company_);
+	voucher_head_rec_.amount_method := amount_method_;
+   voucher_head_rec_.function_group := function_group_;
+   voucher_head_rec_.voucher_date := voucher_date_;
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_, currency_amount_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+  -- currency_inverted_ := Currency_Code_API.Get_Inverted(company_, company_rec_.currency_code);
+ --  base_inverted_ := Currency_Code_API.Get_Inverted(company_, company_rec_.currency_code);
+  -- parallel_currency_inverted_ := Currency_Code_API.Get_Inverted(company_, company_rec_.parallel_acc_currency);
+   
+   parallel_currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(company_, company_rec_.parallel_acc_currency);
+   trans_currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(company_, return_rec_.currency_code);
+   acc_curr_rounding_  := Currency_Code_API.Get_Currency_Rounding(company_, company_rec_.currency_code);
+   voucher_row_rec_ := Convert_to_voucher_info_rec(voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+
+       --    this.ResetCurrTaxAmountFromTaxAmount(this.tblVoucherPosting_colnTaxAmount.Number, this.nPrevTaxAmount);
+   return_rec_ := Reset_Curr_Tax_Amount_From_Tax_Amount(return_rec_.tax_amount, return_rec_.tax_amount + 1, return_rec_, voucher_row_rec_,  company_rec_ , voucher_head_rec_); 
+   
+   IF  (tax_code_ IS NOT NULL ) THEN
+      tax_type_ := Statutory_Fee_API.Get_Fee_Type_Db(company_, tax_code_);
+      IF (tax_amount_ IS NULL AND tax_type_ != 'NOTAX') THEN 
+         Error_SYS.Record_General(lu_name_, 'NOTAX: Tax Amount must have a value.');
+      END IF;
+      IF (((return_rec_.tax_amount < 0 AND currency_amount_ > 0) OR (return_rec_.tax_amount > 0 AND return_rec_.currency_amount < 0)) AND tax_type_ != 'NOTAX') THEN
+         Error_SYS.Record_General(lu_name_, 'DIFFSIGNTAX: Different sign in Tax Amount.');
+      END IF;
+   END IF;
+
+   IF (tax_code_ IS NULL ) THEN               
+      return_rec_.tax_amount := NULL;
+   END IF;
+   
+   RETURN return_rec_;
+END Validate_Tax_Amount___;
+
+
+FUNCTION Reset_Tax_Amount___ (
+	multi_company_id_                   IN VARCHAR2,
+	multi_company_voucher_type_         IN VARCHAR2,	
+	voucher_date_                       IN DATE,
+	company_                            IN VARCHAR2,
+	voucher_type_                       IN VARCHAR2,	
+	currency_code_                      IN VARCHAR2,
+	correction_                         IN BOOLEAN,
+	amount_                             IN NUMBER,
+	currency_amount_                    IN NUMBER,
+	parallel_currency_amount_           IN NUMBER,
+	currency_rate_                      IN NUMBER,
+	old_currency_rate_                  IN NUMBER,
+	conversion_factor_                  IN NUMBER,
+	parallel_currency_rate_             IN NUMBER,
+	parallel_conversion_factor_         IN NUMBER,
+	currency_rate_type_                 IN VARCHAR2,
+	parallel_currency_rate_type_        IN VARCHAR2,
+	tax_base_amount_                    IN NUMBER,
+	currency_tax_base_amount_           IN NUMBER,
+	parallel_currency_tax_base_amount_  IN NUMBER,
+	tax_amount_                         IN NUMBER,
+	currency_tax_amount_                IN NUMBER,
+	parallel_currency_tax_amount_       IN NUMBER,
+	tax_code_                           IN VARCHAR2,
+	tax_percentage_                     IN NUMBER,
+	tax_direction_                      IN VARCHAR2,
+	amount_method_                      IN VARCHAR2,
+	function_group_                     IN VARCHAR2,
+   is_credit_                          IN BOOLEAN) RETURN Currency_Amount_Structure_Rec
+IS
+   parallel_currency_rounding_   NUMBER;
+   acc_curr_rounding_            NUMBER;
+   trans_currency_rounding_      NUMBER;  
+   
+   return_rec_          Currency_Amount_Structure_Rec;
+   voucher_row_rec_     voucher_row_info_rec;
+   voucher_head_rec_    Voucher_API.Public_Rec;
+   company_rec_         Company_Finance_API.Public_Rec;   
+BEGIN   
+   company_rec_ := Company_Finance_API.Get(company_);
+	voucher_head_rec_.amount_method := amount_method_;
+   voucher_head_rec_.function_group := function_group_;
+   voucher_head_rec_.voucher_date := voucher_date_;
+   return_rec_ := Convert_to_currency_rec(company_, currency_code_, correction_, amount_, currency_amount_, parallel_currency_amount_, tax_base_amount_, currency_tax_base_amount_, parallel_currency_tax_base_amount_, currency_rate_, parallel_currency_rate_, conversion_factor_, parallel_conversion_factor_, currency_rate_type_, parallel_currency_rate_type_, tax_amount_, currency_tax_amount_, parallel_currency_tax_amount_, is_credit_);
+  -- parallel_currency_inverted_ := Currency_Code_API.Get_Inverted(company_, company_rec_.currency_code);
+  -- parallel_currency_inverted_ := Currency_Code_API.Get_Inverted(company_, company_rec_.parallel_acc_currency);
+   
+   parallel_currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, company_rec_.parallel_acc_currency);
+   trans_currency_rounding_  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, return_rec_.currency_code);
+   acc_curr_rounding_  := Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, company_rec_.currency_code);
+   voucher_row_rec_ := Convert_to_voucher_info_rec(voucher_date_, company_, voucher_type_, multi_company_id_, multi_company_voucher_type_, tax_code_, tax_percentage_, tax_direction_, currency_code_, correction_, is_credit_);
+    
+	return_rec_ := Reset_Tax_Amount(return_rec_, voucher_row_rec_, voucher_head_rec_, NULL, voucher_row_rec_.correction);
+   RETURN return_rec_;
+END Reset_Tax_Amount___;
+
+-- ResetCurrTaxAmountFromTaxAmount()
+FUNCTION Reset_Curr_Tax_Amount_From_Tax_Amount (   
+   tax_amount_                IN NUMBER,
+   old_value_                 IN NUMBER,
+   currency_rec_              IN Currency_Amount_Structure_Rec,
+   voucher_row_rec_           IN Voucher_Row_Info_rec,
+   company_rec_               IN Company_Finance_API.Public_Rec,
+   voucher_head_rec_          IN Voucher_API.Public_Rec) RETURN Currency_Amount_Structure_Rec
+IS
+   return_rec_ Currency_Amount_Structure_Rec;
+   temp_value_ NUMBER;
+   calculate_value_ NUMBER;
+BEGIN
+   return_rec_ := currency_rec_; 
+   IF (old_value_ != tax_amount_ ) THEN        
+   IF (voucher_row_rec_.tax_code IS NOT NULL ) THEN
+      IF (currency_rec_.tax_amount IS NOT NULL ) THEN
+         
+         temp_value_ := ROUND(currency_rec_.tax_amount, voucher_row_rec_.Decimals_In_Amount);         
+          calculate_value_ := cal_trans_curr_amount_for_rate(voucher_row_rec_.company, temp_value_, return_rec_.currency_rate, return_rec_.conversion_factor, Currency_Code_API.Get_Currency_Rounding(company_rec_.company, return_rec_.currency_code), voucher_row_rec_.currency_inverted);
+                         
+--                        this.GetTransCurrAmountForRate(nMyValue, tblVoucherPosting_colnActCurrencyRate.Number, ref nCalculateAccTaxValue);
+--                        this.GetTransCurrAmountForRate(nMyValue, tblVoucherPosting_colnCurrencyRate.Number, ref nCalculateAccTaxValue);
+                     
+         IF (company_rec_.parallel_base IS NOT NULL AND company_rec_.parallel_base = 'ACCOUNTING_CURRENCY' OR return_rec_.currency_code = company_rec_.currency_code) THEN
+            IF (return_rec_.Parallel_Currency_Rate IS NULL OR return_rec_.Parallel_Currency_Rate = 0 ) THEN
+                return_rec_.parallel_curr_tax_amount := 0;
+            ELSE
+             --   this.GetParallelCurrAmountForRateMC(this.tblVoucherPosting_colsCompany.Text, nMyValue, tblVoucherPosting_colnParallelCurrRate.Number, ref nCalculaeThirdCurrTaxAmount);
+               return_rec_.parallel_curr_tax_amount  := Cal_Parallel_Curr_Amount_Rate____(temp_value_, calculate_value_, company_rec_.parallel_base, voucher_row_rec_.parallel_currency_inverted, return_rec_.parallel_conversion_factor, return_rec_.parallel_currency_rate, voucher_row_rec_.Decimals_In_parallel_Amount);
+
+            END IF;
+         ELSIF (company_rec_.parallel_base IS NOT NULL AND company_rec_.parallel_base = 'TRANSACTION_CURRENCY') THEN
+            IF (return_rec_.Parallel_Currency_Rate IS NULL OR return_rec_.Parallel_Currency_Rate = 0) THEN
+               return_rec_.parallel_curr_tax_amount  := 0;
+            ELSE
+              return_rec_.parallel_curr_tax_amount  := Cal_Parallel_Curr_Amount_Rate____(temp_value_, calculate_value_, company_rec_.parallel_base, voucher_row_rec_.parallel_currency_inverted, return_rec_.parallel_conversion_factor, return_rec_.parallel_currency_rate, voucher_row_rec_.Decimals_In_parallel_Amount);
+          END IF;
+         END IF;
+         IF (return_rec_.currency_amount IS NOT NULL ) THEN
+            
+            return_rec_.Currency_Tax_Amount := calculate_value_;                            
+           
+         END IF;                    
+      ELSE
+         return_rec_.Currency_Tax_Amount := NULL;
+      END IF;
+   ELSE                
+      return_rec_.Tax_Amount := 0;
+      IF (company_rec_.parallel_acc_currency IS NOT NULL ) THEN                      
+         return_rec_.parallel_curr_tax_amount := 0;
+      END IF;
+   END IF;
+END IF;
+RETURN return_rec_;
+END Reset_Curr_Tax_Amount_From_Tax_Amount;    
+

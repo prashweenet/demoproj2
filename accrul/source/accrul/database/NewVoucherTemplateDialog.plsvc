@@ -1,0 +1,52 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     NewVoucherTemplateDialog
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+FUNCTION Fetch_Default_Data___ RETURN Default_Data_Rec
+IS
+   rec_              Default_Data_Rec;
+   valid_until_      Accrul_Attribute_Tab.attribute_value%TYPE;
+BEGIN
+   valid_until_         := Accrul_Attribute_API.Get_Attribute_Value('DEFAULT_VALID_TO');
+   
+   rec_.valid_from      := TRUNC(SYSDATE);
+   rec_.valid_until     := TRUNC(TO_DATE(valid_until_, 'YYYYMMDD'));
+   RETURN rec_;
+END Fetch_Default_Data___;
+
+PROCEDURE Create_Voucher_Template___ (
+   company_           IN VARCHAR2,
+   template_          IN VARCHAR2,
+   description_       IN VARCHAR2,
+   valid_from_        IN DATE,
+   valid_until_       IN DATE,
+   accounting_year_   IN NUMBER,
+   voucher_type_      IN VARCHAR2,
+   voucher_no_        IN NUMBER,
+   include_amount_    IN BOOLEAN,
+   multi_company_     IN VARCHAR2)
+IS
+   include_amount_val_  VARCHAR2(5) := 'FALSE';
+BEGIN
+   IF (include_amount_) THEN
+      include_amount_val_ := 'TRUE';
+   END IF;
+	Voucher_Template_API.Insert_Table_( company_,
+                                     template_,
+                                     description_,
+                                     valid_from_,
+                                     valid_until_,
+                                     accounting_year_,
+                                     voucher_type_,
+                                     voucher_no_,
+                                     include_amount_val_,
+                                     multi_company_); 
+END Create_Voucher_Template___;

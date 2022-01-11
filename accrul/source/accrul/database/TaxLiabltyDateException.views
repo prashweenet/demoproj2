@@ -1,0 +1,36 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TaxLiabltyDateException
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+
+VIEW Tax_Liablty_Date_Exception_Av IS
+   Prompt = 'Tax Liablty Date Exception (Audit)'
+   Fee_Code.Flags = 'A----'
+   Customer_Credit_Liability_Date.Flags = 'A----'
+   Customer_Credit_Liability_Date.Datatype = 'STRING(200)'
+   Customer_Credit_Liability_Date.Prompt = 'Customer Credit/Correction Invoices'
+   Customer_Liability_Date.Flags = 'A----'
+   Supplier_Liability_Date.Flags = 'A----'
+SELECT company                        company,
+       fee_code                       fee_code,
+       Tax_Liability_Date_API.Decode(customer_liability_date) customer_liability_date,
+       Tax_Liability_Date_API.Decode(customer_credit_liability_date) customer_credit_liability_date,
+       Tax_Liability_Date_API.Decode(supplier_liability_date) supplier_liability_date
+FROM   tax_liablty_date_exception_tab;
+

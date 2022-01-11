@@ -1,0 +1,359 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherTypeUserGroup
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140130  MEALLK  PBFI-4333, added LOV view Voucher_Type_User_Group_Lov
+--  151118  Bhhilk  STRFI-39, Modified DefaultType enumeration to FinanceYesNo.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Ledger_Id IS
+   Flags      = 'A----'
+   Datatype   = 'STRING(10)'
+   Prompt     = 'Ledger ID';
+
+COLUMN Simulation_Voucher IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING(5)'
+   Prompt     = 'Simulation Voucher';
+
+COLUMN Row_Group_Validation IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING(1)'
+   Prompt     = 'Row Group Validation';
+
+COLUMN Description IS
+   Flags      = 'A---L'
+   Datatype   = 'STRING(200)'
+   Prompt     = 'Description';
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@SecurityCheck Company.UserAuthorized(company)   
+VIEW Voucher_Type_User_Group_Lov IS 
+   Prompt = 'Voucher Type User Group'   
+   Voucher_Type.Flags = 'PMIUL'    
+   Function_Group.Flags = 'A-IU-'  
+SELECT
+       company                        company,
+       accounting_year                accounting_year,
+       user_group                     user_group,
+       voucher_type                   voucher_type,
+       function_group                 function_group,
+       Finance_Yes_No_API.Decode(default_type) default_type,
+       default_type                   default_type_db,
+       Voucher_Type_API.Get_Description(company, voucher_type) voucher_type_desc,
+       Authorize_Level_API.Decode(authorize_level) authorize_level,
+       authorize_level                authorize_level_db,
+       FUNCTION_GROUP                 voucher_group,
+       rowkey                         objkey,
+       to_char(rowversion,'YYYYMMDDHH24MISS') objversion,
+       rowid                          objid
+FROM   voucher_type_user_group_tab;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_User_Group2 IS
+   Prompt = 'Voucher Type User Group'
+   Company.Flags = 'PMIU-'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   Voucher_Type.Flags = 'PMIUL'
+   Default_Type_Db.Datatype = 'STRING(20)'
+   Function_Group.Flags = 'A---L'
+   Function_Group.Datatype = 'STRING'
+   Voucher_Type_Desc.Prompt = 'Voucher Type Description'
+SELECT a.company                                  company,
+       a.accounting_year                          accounting_year,
+       a.user_group                               user_group,
+       a.voucher_type                             voucher_type,
+       Finance_Yes_No_API.Decode(a.default_type)    default_type,
+       a.default_type                             default_type_db,
+       a.function_group                           function_group,
+       Voucher_Type_API.Get_Description(a.company, a.voucher_type) voucher_type_desc,
+       b.ledger_id                                ledger_id,
+       a.rowid                                    objid,
+       rtrim(rpad(to_char(a.rowversion,'YYYYMMDDHH24MISS'),2000))  objversion,
+       a.rowkey                                   objkey
+FROM   voucher_type_user_group_tab a, voucher_type_tab b
+WHERE  a.company = b.company
+AND    a.voucher_type = b.voucher_type
+AND    a.function_group = 'P';
+
+VIEW Voucher_Type_User_Group3 IS
+   Prompt = 'Voucher Type User Group'
+   Company.Flags = 'PMIU-'
+   Accounting_Year.Flags = 'PMI-L'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   Voucher_Type.Flags = 'PMIUL'
+   Default_Type_Db.Datatype = 'STRING(20)'
+   Function_Group.Flags = 'AMIUL'
+   Function_Group.Datatype = 'STRING(10)'
+   Voucher_Type_Desc.Prompt = 'Voucher Type Description'
+SELECT a.company                                company,
+       accounting_year                          accounting_year,
+       user_group                               user_group,
+       a.voucher_type                           voucher_type,
+       Finance_Yes_No_API.Decode(default_type)  default_type,
+       default_type                             default_type_db,
+       a.function_group                         function_group,
+       Voucher_Type_API.Get_Description(a.company, a.voucher_type) voucher_type_desc,
+       simulation_voucher                       simulation_voucher,
+       Voucher_Type_API.Is_Row_Group_Validated(a.company, a.voucher_type)
+                                                row_group_validation,
+       a.rowkey                                objkey
+FROM   voucher_type_user_group_tab a, voucher_type_tab b
+WHERE  a.company = b.company
+AND    a.voucher_type = b.voucher_type
+AND    a.function_group IN ('K','M','Q')
+AND    b.ledger_id IN ('*', '00');
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_User_Vov IS
+   Prompt = 'Voucher Type User Group'
+   Company.Flags = 'PMIU-'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   Function_Group.Flags = 'P---L'
+   Function_Group.Datatype = 'STRING'
+   Voucher_Type.Flags = 'KMIUL'
+   Voucher_Type_Desc.Prompt = 'Voucher Type Description'
+SELECT a.company                                company,
+       accounting_year                          accounting_year,
+       user_group                               user_group,
+       function_group                           function_group,
+       voucher_type                             voucher_type,
+       Voucher_Type_API.Get_Description(a.company, voucher_type) voucher_type_desc,
+       a.rowid                                 objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                              objversion,
+       rowkey                                  objkey
+FROM   voucher_type_user_group_tab a;
+
+VIEW Voucher_Type_User_Grp_Internal IS
+   Prompt = 'Voucher Type User Group'
+   Company.Flags = 'PMIU-'
+   Accounting_Year.Flags = 'PMI-L'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   Ledger_Id.Flags = 'PMI--'
+   Ledger_Id.Datatype = 'STRING(10)/UPPERCASE'
+   Ledger_Id.Prompt = 'Ledger Id'
+   Voucher_Type.Flags = 'PMIUL'
+   Default_Type_Db.Datatype = 'STRING(20)'
+   Function_Group.Flags = 'AMIUL'
+   Function_Group.Datatype = 'STRING(10)'
+   Voucher_Type_Desc.Prompt = 'Voucher Type Description'
+SELECT a.company                                company,
+       accounting_year                          accounting_year,
+       user_group                               user_group,
+       ledger_id                                ledger_id,
+       a.voucher_type                           voucher_type,
+       Finance_Yes_No_API.Decode(default_type)  default_type,
+       default_type                             default_type_db,
+       a.function_group                         function_group,
+       Voucher_Type_API.Get_Description(a.company, a.voucher_type) voucher_type_desc,
+       a.rowkey                                objkey
+FROM   voucher_type_user_group_tab a, voucher_type_tab b
+WHERE  a.company = b.company
+AND    a.voucher_type = b.voucher_type
+AND    a.function_group IN ('K','M','Q');
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_User_Grp_Fa IS
+   Prompt = 'Voucher Type User Group'
+   Company.Flags = 'PMIU-'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   Function_Group.Flags = 'P---L'
+   Function_Group.Datatype = 'STRING'
+   Voucher_Type.Flags = 'KMIUL'
+   Voucher_Type_Desc.Prompt = 'Voucher Type Description'
+   Ledger_Id.Datatype = 'STRING(10)/UPPERCASE'
+   Ledger_Id.Prompt = 'Ledger Id'
+SELECT a.company                                company,
+       accounting_year                          accounting_year,
+       user_group                               user_group,
+       a.function_group                         function_group,
+       a.voucher_type                           voucher_type,
+       Voucher_Type_API.Get_Description(a.company, a.voucher_type) voucher_type_desc,
+       b.ledger_id                              ledger_id,
+       a.rowkey                                objkey
+FROM   voucher_type_user_group_tab a, voucher_type_tab b
+WHERE  a.company = b.company
+AND    a.voucher_type = b.voucher_type
+AND    a.function_group IN ('A')
+AND    b.ledger_id IN ('*', '00');
+
+VIEW Voucher_Type_Interim_Vou IS
+   Prompt = 'Voucher Type User Group'
+   Company.Flags = 'PMIU-'
+   Accounting_Year.Flags = 'PMI-L'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   Ledger_Id.Flags = 'PMI--'
+   Ledger_Id.Datatype = 'STRING(10)/UPPERCASE'
+   Ledger_Id.Prompt = 'Ledger Id'
+   Voucher_Type.Flags = 'PMIUL'
+   Default_Type_Db.Datatype = 'STRING(20)'
+   Function_Group.Flags = 'AMIUL'
+   Function_Group.Datatype = 'STRING(10)'
+   Voucher_Type_Desc.Prompt = 'Voucher Type Description'
+SELECT a.company                                company,
+       accounting_year                          accounting_year,
+       user_group                               user_group,
+       ledger_id                                ledger_id,
+       a.voucher_type                           voucher_type,
+       Finance_Yes_No_API.Decode(default_type)  default_type,
+       default_type                             default_type_db,
+       a.function_group                         function_group,
+       Voucher_Type_API.Get_Description(a.company, a.voucher_type) voucher_type_desc,
+       simulation_voucher                       simulation_voucher,
+       a.rowkey                                objkey
+FROM   voucher_type_user_group_tab a, voucher_type_tab b
+WHERE  a.company = b.company
+AND    a.voucher_type = b.voucher_type
+AND    a.function_group IN ('R');
+
+VIEW Voucher_Type_Internal_Period IS
+   Prompt = 'Voucher Type User Group'
+   Company.Flags = 'PMIU-'
+   Accounting_Year.Flags = 'PMI-L'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   Ledger_Id.Flags = 'PMI--'
+   Ledger_Id.Datatype = 'STRING(10)/UPPERCASE'
+   Ledger_Id.Prompt = 'Ledger Id'
+   Voucher_Type.Flags = 'PMIUL'
+   Default_Type_Db.Datatype = 'STRING(20)'
+   Function_Group.Flags = 'AMIUL'
+   Function_Group.Datatype = 'STRING(10)'
+   Voucher_Type_Desc.Prompt = 'Voucher Type Description'
+SELECT a.company                                company,
+       accounting_year                          accounting_year,
+       user_group                               user_group,
+       ledger_id                                ledger_id,
+       a.voucher_type                           voucher_type,
+       Finance_Yes_No_API.Decode(default_type)  default_type,
+       default_type                             default_type_db,
+       a.function_group                         function_group,
+       Voucher_Type_API.Get_Description(a.company, a.voucher_type) voucher_type_desc,
+       a.rowkey                                objkey
+FROM   voucher_type_user_group_tab a, voucher_type_tab b
+WHERE  a.company = b.company
+AND    a.voucher_type = b.voucher_type
+AND    a.function_group IN ('X')
+AND    ledger_id <> '00';
+
+VIEW Voucher_Type_For_I IS
+   Prompt = 'Voucher Type Query'
+   Accounting_Year.Flags = 'PMI-L'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   User_Group.Datatype = 'STRING(27)/UPPERCASE'
+   Voucher_Type.Flags = 'KMI-L'
+SELECT vtug.company                             company,
+       accounting_year                          accounting_year,
+       user_group                               user_group,
+       vtug.voucher_type                        voucher_type,
+       Voucher_Type_API.Get_Description(vtug.company, vtug.voucher_type)
+                                                description,
+       vtug.rowkey                             objkey
+FROM   voucher_type_user_group_tab vtug, voucher_type_tab vt
+WHERE  vtug.company         = vt.company
+AND    vtug.voucher_type    = vt.voucher_type
+AND    vtug.function_group IN ('I');
+
+@SecurityCheck Company.UserAuthorized(vtug.company)
+VIEW Voucher_Type_User_Grp_All_Gl IS
+   Prompt = 'Voucher Type User Group'
+   Company.Flags = 'P----'
+   Accounting_Year.Flags = 'A----'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   User_Group.Flags = 'A----'
+   Voucher_Type.Flags = 'K---L'
+   Function_Group.Flags = 'A----'
+SELECT vtug.company                             company,
+       accounting_year                          accounting_year,
+       user_group                               user_group,
+       vtug.voucher_type                        voucher_type,
+       vtug.function_group                      function_group,
+       vtug.rowkey                             objkey
+FROM   voucher_type_user_group_tab vtug, voucher_type_tab vt
+WHERE  vtug.company        = vt.company
+AND    vtug.voucher_type   = vt.voucher_type
+AND    vtug.function_group = 'X'
+AND    vt.ledger_id IN ('*', '00')             ;
+
+@SecurityCheck Company.UserAuthorized(vtug.company)
+VIEW Voucher_Type_User_Group_Int IS
+   Prompt = 'Voucher Type User Group'
+   Company.Flags = 'P----'
+   Accounting_Year.Flags = 'A----'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   User_Group.Flags = 'A----'
+   Voucher_Type.Flags = 'K---L'
+   Function_Group.Flags = 'A----'
+SELECT vtug.company                             company,
+       accounting_year                          accounting_year,
+       user_group                               user_group,
+       vtug.voucher_type                        voucher_type,
+       vtug.function_group                      function_group,
+       vtug.rowkey                             objkey
+FROM   voucher_type_user_group_tab vtug, voucher_type_tab vt
+WHERE  vtug.company        = vt.company
+AND    vtug.voucher_type   = vt.voucher_type
+AND    vtug.function_group = 'X'
+AND    vt.ledger_id NOT IN ('*', '00')             ;
+
+VIEW Voucher_Type_User_Group4 IS
+   Prompt = 'Voucher Type User Group4'   
+   Voucher_Type.Flags = 'PMIUL'    
+   Function_Group.Flags = 'A-IU-'  
+SELECT
+       a.company                       company,
+       accounting_year                 accounting_year,
+       user_group                      user_group,
+       a.voucher_type                  voucher_type,
+       function_group                  function_group,
+       Voucher_Type_API.Get_Description(a.company, a.voucher_type) 
+                                       voucher_type_desc,
+       Authorize_Level_API.Decode(authorize_level) 
+                                       authorize_level,
+       authorize_level                 authorize_level_db,
+       ledger_id                       ledger_id,
+       b.simulation_voucher            simulation_voucher,
+       a.rowkey                        objkey,
+       to_char(a.rowversion,'YYYYMMDDHH24MISS') 
+                                       objversion,
+       a.rowid                         objid
+FROM   voucher_type_user_group_tab a, voucher_type_tab b
+WHERE  a.company        = b.company
+AND    a.voucher_type   = b.voucher_type;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Type_User_Grp_La IS
+   Prompt = 'Voucher Type User Group'
+   Company.Flags = 'PMIU-'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   Function_Group.Flags = 'P---L'
+   Function_Group.Datatype = 'STRING'
+   Voucher_Type.Flags = 'KMIUL'
+   Voucher_Type_Desc.Prompt = 'Voucher Type Description'
+   Ledger_Id.Datatype = 'STRING(10)/UPPERCASE'
+   Ledger_Id.Prompt = 'Ledger Id'
+SELECT a.company                                company,
+       accounting_year                          accounting_year,
+       user_group                               user_group,
+       a.function_group                         function_group,
+       a.voucher_type                           voucher_type,
+       Voucher_Type_API.Get_Description(a.company, a.voucher_type) voucher_type_desc,
+       b.ledger_id                              ledger_id,
+       a.rowkey                                objkey
+FROM   voucher_type_user_group_tab a, voucher_type_tab b
+WHERE  a.company = b.company
+AND    a.voucher_type = b.voucher_type
+AND    a.function_group IN ('LA')
+AND    b.ledger_id IN ('*', '00');

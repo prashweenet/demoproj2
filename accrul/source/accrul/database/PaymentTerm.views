@@ -1,0 +1,65 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PaymentTerm
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+VIEW Payment_Term_Pub IS
+   Prompt = 'Payment term'
+   Pay_Term_Id.Datatype = 'STRING/UPPERCASE'
+SELECT pay_term_id                              pay_term_id,
+       Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'PaymentTerm', PAY_TERM_ID)
+                                                description,
+       company                                  company,
+       rowkey                                  objkey
+FROM   payment_term_tab;
+
+VIEW Payment_Term_Afp_Valid_Pub IS
+   Prompt = 'Payment term'
+   Pay_Term_Id.Datatype = 'STRING/UPPERCASE'
+   Block_For_Direct_Debiting.Flags = 'A-IUL'
+   Consider_Pay_Vac_Period.Datatype = 'STRING'
+   Use_Commercial_Year.Datatype = 'STRING'
+   Exclude_Credit_Limit.Flags = 'A-IU-'
+SELECT t.company                                company,
+       t.pay_term_id                            pay_term_id,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(t.company,
+                                                                   'ACCRUL',
+                                                                   'PaymentTerm',
+                                                                   t.PAY_TERM_ID), t.description)     description,
+       t.block_for_direct_debiting              block_for_direct_debiting,
+       t.consider_pay_vac_period                consider_pay_vac_period,
+       Vat_Distribution_API.Decode(t.vat_distribution) vat_distribution,
+       t.vat_distribution                       vat_distribution_db,
+       t.use_commercial_year                    use_commercial_year,
+       t.exclude_credit_limit                   exclude_credit_limit,
+       rowid                                   objid,
+       ltrim(lpad(to_char(rowversion),2000))                              objversion,
+       rowkey                                  objkey
+FROM   PAYMENT_TERM_tab t
+WHERE  1 = (SELECT  count(*)
+              FROM  PAYMENT_TERM_DETAILS_TAB c
+             WHERE  c.company     = t.company
+               AND  c.pay_term_id = t.pay_term_id
+               AND  c.day_from    = 1)
+AND EXISTS (SELECT  1
+              FROM  PAYMENT_TERM_DETAILS_TAB d
+             WHERE  d.company     = t.company
+               AND  d.pay_term_id = t.pay_term_id               
+               AND  nvl(discount_specified, 'FALSE') = 'FALSE'
+               AND  d.day_from    = 1);
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

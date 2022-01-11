@@ -1,0 +1,60 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: UserGroupFinance
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+
+VIEW Year_End_User_Group_Lov IS
+   Prompt = 'Year End User Group'
+   Userid.Flags = 'P----'
+   Userid.Datatype = 'STRING(30)/UPPERCASE'
+   Userid.Prompt = 'User Id'
+   Userid.Ref = 'UserFinance(company)/NOCHECK'
+   User_Group.Datatype = 'STRING(27)'
+   Description.Datatype = 'STRING(35)'
+SELECT a.company                                  company,
+       b.userid                                   userid,
+       a.user_group                               user_group,
+       a.description                              description,
+       b.rowkey                                    objkey
+FROM   user_group_finance_tab a,user_group_member_finance_tab b
+WHERE  EXISTS (SELECT 1 FROM company_finance_auth1 c WHERE a.company = c.company
+AND    b.company=c.company)
+AND    a.allowed_accounting_period = '2'
+AND    a.user_group=b.user_group;
+
+
+VIEW User_Group_Finance_Adm IS
+   Prompt = 'User Group Finance'
+   User_Group.Datatype = 'STRING(27)'
+   Description.Datatype = 'STRING(35)'
+   Allowed_Accounting_Period.Datatype = 'STRING(25)'
+SELECT a.company                                company,
+       user_group                               user_group,
+       nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(a.company, 'ACCRUL', 'UserGroupFinance', user_group), a.description)
+                                                description,
+       allowed_accounting_periods_api.Decode(a.allowed_accounting_period)
+                                                allowed_accounting_period,
+       a.allowed_accounting_period              allowed_accounting_period_db,
+       a.rowid                                 objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                              objversion,
+       rowkey                                  objkey
+FROM   user_group_finance_tab a
+WHERE  EXISTS (SELECT 1 FROM company_finance_adm c WHERE a.company = c.company);
+

@@ -1,0 +1,35 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: TaxLiabilityDateCtrl
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Tax_Liability_Date_Ctrl_Av IS
+   Prompt = 'Tax Liability Date Ctrl (Audit)'
+   Company.Flags = 'K----'
+   Supplier_Liability_Date.Flags = 'A----'
+   Supplier_Liability_Date.Prompt = 'Supplier Invoices'
+   Customer_Liability_Date.Flags = 'A----'
+   Customer_Liability_Date.Prompt = 'Customer Invoices'
+   Payments_Liability_Date.Flags = 'A----'
+   Payments_Liability_Date.Prompt = 'Payments'
+SELECT company                        company,
+       Tax_Liability_Date_API.Decode(supplier_liability_date) supplier_liability_date,
+       Tax_Liability_Date_API.Decode(customer_liability_date) customer_liability_date,
+       Tax_Liability_Date_API.Decode(payments_liability_date) payments_liability_date
+FROM   tax_liability_date_ctrl_tab;
+

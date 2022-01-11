@@ -1,0 +1,37 @@
+
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200703  SatGlk  LMM2020R1-280, Implemented.
+-----------------------------------------------------------------------------
+client MaintenanceLocation;
+component ADCOM;
+layer Core;
+projection MaintenanceLocationHandling;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry MainLocationsNavEntry parent AdcomNavigator.BasicData at index 160 {
+      label = "Maintenance Locations";
+      page MaintLocationDetails home AvMaintenanceLocation;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page MaintLocationDetails using MaintenanceLocationSet {
+   label = "Maintenance Locations";
+   list MaintLocationList;
+}
+
+----------------------------------- LISTS -----------------------------------
+list MaintLocationList for AvMaintenanceLocation {
+   lov AirportRef with ReferenceAvAirportSelector {
+      label = "Airport";
+      description = AirportRef.AirportName;
+      hidekey = [true];
+   }
+   lov MaintLocationRef with ReferenceAvMaintLocationTypeSelector {
+      label = "Location Type Code";
+   }
+   field LocationCode;
+   field LocationName;
+}

@@ -1,0 +1,71 @@
+projection ReportingPeriodsHandling;
+component ACCRUL;
+layer Core;
+description "Reporting Period";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset RpdYearSet for RpdYear;
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity RpdYear {
+   attribute RpdId Text {
+      label = "Definition ID";
+   }
+   attribute RpdYear Number {
+      label = "Reporting Year";
+      format = uppercase;
+   }
+
+   reference RpdIdRef(RpdId) to RpdIdentity(RpdId) {
+      label = "Definition ID";
+   }
+
+   array RpdPeriodsArray(RpdId, RpdYear) to RpdPeriod(RpdId, RpdYear);
+}
+
+@Override
+entity RpdPeriod {
+   attribute RpdPeriod Number {
+      label = "Reporting Period";
+   }
+   attribute YearPeriodNum Number {
+      label = "Reporting Year Period";
+      required = [false];
+   }
+   attribute YearPeriodStr Number {
+      required = [false];
+   }
+
+   reference RpdYearRef(RpdId, RpdYear) to RpdYear(RpdId, RpdYear) {
+      label = "Reporting Year";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

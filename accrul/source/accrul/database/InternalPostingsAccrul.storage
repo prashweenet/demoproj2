@@ -1,0 +1,27 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: InternalPostingsAccrul
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+
+
+INDEX internal_postings_accrul_ix1 IS internal_postings_accrul_tab (company, accounting_year, voucher_type, voucher_no);
+
+
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------

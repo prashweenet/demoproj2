@@ -1,0 +1,164 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  Account
+--  Component:  ACCRUL
+--  LU:         DimAccount
+--
+--  File     :  DimAccountOl.apv
+--  Purpose  :  Create ON LINE dimension view DIM_ACCOUNT_OL
+--  Note     :  NOTE that NULL identity handling is not required for OL views
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_ACCOUNT
+DEFINE VIEW       = DIM_ACCOUNT_OL
+DEFINE TAB        = ACCOUNTING_CODE_PART_VALUE_TAB
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimAccount
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.company||'^'||a.code_part_value                                  id,
+      a.company                                                           company,
+      a.code_part_value                                                   code,
+      SUBSTR(NVL( (SELECT SUBSTR(d.current_translation,1,100)
+      FROM KEY_LU_TRANSLATION_TAB d
+      WHERE d.key_value       = a.company
+      AND   d.attribute_key   = a.code_part_value
+      AND   d.lu              = 'Account'
+      AND d.module            = '&MODULE'
+      AND d.key_name          = 'CompanyKeyLu'
+      AND d.rowtype           = 'CompanyKeyLuTranslation'
+      AND   d.language_code   =
+      (SELECT language
+      FROM fnd_session
+      )
+      ), a.description),1,100)                                            description,
+      a.accnt_group                                                       account_group,
+      SUBSTR(Account_Group_API.Get_Description(
+      a.company, a.accnt_group ),1,100)                                   account_group_desc,
+      a.accnt_type                                                        account_type,
+      SUBSTR(Account_Type_API.Get_Description(
+      a.company,a.accnt_type ),1,100)                                     account_type_desc,
+      a.valid_from                                                        valid_from,
+      a.valid_until                                                       valid_until,
+       a.logical_account_type                                             logical_account_type,
+       SUBSTR(Account_Type_Value_API.Decode(logical_account_type),1,100)  logical_account_type_desc,
+       a.ledg_flag                                                        ledger_account,
+       SUBSTR(Accounting_Ledg_Flag_API.Decode(a.ledg_flag),1,100)         ledger_account_desc,
+       a.curr_balance                                                     currency_balance,
+       SUBSTR(Acc_Currency_Balance_Flag_API.Decode(a.curr_balance),1,100) currency_balance_desc,
+       a.bud_account                                                      budget_account_only,
+       SUBSTR(Budget_Account_Flag_API.Decode(a.bud_account),1,100)        budget_account_only_desc,
+       a.tax_flag                                                         tax_account,
+       SUBSTR(Tax_Account_Flag_API.Decode(a.tax_flag),1,100)              tax_account_desc,
+       a.tax_handling_value                                               tax_handling,
+       SUBSTR(Tax_Handling_Value_API.Decode(a.tax_handling_value),1,100)  tax_handling_desc,
+       a.exclude_from_curr_trans                                          exclude_from_curr_trans,
+       SUBSTR(Fnd_Boolean_API.Decode(a.exclude_from_curr_trans),1,100)    exclude_from_curr_trans_desc,
+       a.keep_rep_currency                                                keep_rep_currency,
+       SUBSTR(Fnd_Boolean_API.Decode(a.keep_rep_currency),1,100)          keep_rep_currency_desc,
+       a.keep_reporting_entity                                            keep_reporting_entity,
+       SUBSTR(Fnd_Boolean_API.Decode(a.keep_reporting_entity),1,100)      keep_reporting_entity_desc,
+      a.master_com_code_part_value                                        master_company_account,
+       a.sat_account_type                                                 sat_account_type,
+       SUBSTR(Sat_Account_Type_API.Decode(a.sat_account_type),1,100)      sat_account_type_desc,
+      a.sat_account_group                                                 sat_account_group,
+      SUBSTR(Sat_Account_Group_API.Get_Description(
+      a.company,a.sat_account_group ),1,100)                              sat_account_group_desc,
+       a.sat_level                                                        sat_level,
+       SUBSTR(Sat_Level_API.Decode(a.sat_level),1,100)                    sat_level_desc,
+      a.sat_parent_account                                                sat_parent_account
+FROM &TAB a
+WHERE a.code_part   = 'A'
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Account^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Account^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Account Description^';
+COMMENT ON COLUMN &VIEW..ACCOUNT_GROUP
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(20)^PROMPT=Account Group^';
+COMMENT ON COLUMN &VIEW..ACCOUNT_GROUP_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Account Group Description^';
+COMMENT ON COLUMN &VIEW..ACCOUNT_TYPE
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(20)^PROMPT=Account Type^';
+COMMENT ON COLUMN &VIEW..ACCOUNT_TYPE_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Account Type Description^';
+COMMENT ON COLUMN &VIEW..VALID_FROM
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Valid From^';
+COMMENT ON COLUMN &VIEW..VALID_UNTIL
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Valid Until^';
+COMMENT ON COLUMN &VIEW..LOGICAL_ACCOUNT_TYPE
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Logical Account Type^';
+COMMENT ON COLUMN &VIEW..LOGICAL_ACCOUNT_TYPE_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Logical Account Type Description^';
+COMMENT ON COLUMN &VIEW..LEDGER_ACCOUNT
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Ledger Account^';
+COMMENT ON COLUMN &VIEW..LEDGER_ACCOUNT_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Ledger Account Description^';
+COMMENT ON COLUMN &VIEW..CURRENCY_BALANCE
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Currency Balance^';
+COMMENT ON COLUMN &VIEW..CURRENCY_BALANCE_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Currency Balance Description^';
+COMMENT ON COLUMN &VIEW..BUDGET_ACCOUNT_ONLY
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Budget Account Only^';
+COMMENT ON COLUMN &VIEW..BUDGET_ACCOUNT_ONLY_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Budget Account Only Description^';
+COMMENT ON COLUMN &VIEW..TAX_ACCOUNT
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Account^';
+COMMENT ON COLUMN &VIEW..TAX_ACCOUNT_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Account Description^';
+COMMENT ON COLUMN &VIEW..TAX_HANDLING
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Handling^';
+COMMENT ON COLUMN &VIEW..TAX_HANDLING_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Handling Description^';
+COMMENT ON COLUMN &VIEW..EXCLUDE_FROM_CURR_TRANS
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=Exclude From Curr Translation^';
+COMMENT ON COLUMN &VIEW..EXCLUDE_FROM_CURR_TRANS_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=Exclude From Curr Translation Description^';
+COMMENT ON COLUMN &VIEW..KEEP_REP_CURRENCY
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=Keep Reported Currency as Currency Balance^';
+COMMENT ON COLUMN &VIEW..KEEP_REP_CURRENCY_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=Keep Reported Currency as Currency Balance Description^';
+COMMENT ON COLUMN &VIEW..KEEP_REPORTING_ENTITY
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=Keep Balances Seperated by Reporting Entity^';
+COMMENT ON COLUMN &VIEW..KEEP_REPORTING_ENTITY_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=Keep Balances Seperated by Reporting Entity Description^';
+COMMENT ON COLUMN &VIEW..MASTER_COMPANY_ACCOUNT
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(20)^PROMPT=Group Account^';
+COMMENT ON COLUMN &VIEW..SAT_ACCOUNT_TYPE
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=SAT Account Type^';
+COMMENT ON COLUMN &VIEW..SAT_ACCOUNT_TYPE_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=SAT Account Type Description^';
+COMMENT ON COLUMN &VIEW..SAT_ACCOUNT_GROUP
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(20)^PROMPT=SAT Account Group^';
+COMMENT ON COLUMN &VIEW..SAT_ACCOUNT_GROUP_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(100)^PROMPT=SAT Account Group Description^';
+COMMENT ON COLUMN &VIEW..SAT_LEVEL
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=SAT Level^';
+COMMENT ON COLUMN &VIEW..SAT_LEVEL_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=SAT Level Description^';
+COMMENT ON COLUMN &VIEW..SAT_PARENT_ACCOUNT
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(20)^PROMPT=SAT Parent Account^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE TAB
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

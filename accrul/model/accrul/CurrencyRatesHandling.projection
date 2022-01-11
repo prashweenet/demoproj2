@@ -1,0 +1,121 @@
+projection CurrencyRatesHandling;
+component ACCRUL;
+layer Core;
+description "Currency Rates";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CurrencyTypeSet for CurrencyType {
+   context Company(Company);
+}
+
+entityset CurrencyRateSet for CurrencyRate {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CurrencyType {
+   keys = Company, CurrencyType;
+   from = "CURRENCY_TYPE3";
+
+   attribute CurrencyType Text {
+      label = "Currency Rate Type";
+   }
+   attribute CurrencyRateType Text {
+      fetch = "currency_type || ' - ' || description";
+   }
+   attribute Description Text {
+      label = "Currency Rate Type Description";
+   }
+   attribute Inverted Boolean("TRUE", "FALSE") {
+      required = [true];
+      fetch = "Currency_Code_API.Get_Inverted(company, Ref_Currency_Code)";
+   }
+
+   reference CurrencyCodeRef(Company, RefCurrencyCode) to CurrencyCode(Company, CurrencyCode) {
+      label = "Currency Code";
+   }
+}
+
+@Override
+entity CurrencyRate {
+   attribute CurrencyRate Number {
+      label = "Rate";
+   }
+   attribute ConvFactor Number {
+      label = "Conversion Factor";
+   }
+   attribute RefCurrencyCode Text {
+      format = uppercase;
+   }
+   attribute ValidFrom Date {
+      default = "SYSDATE";
+   }
+   attribute DirectCurrencyRate Number {
+      required = [false];
+   }
+   attribute DirectCurrencyRateRound Number {
+      required = [false];
+   }
+
+   reference CurrencyCodeRef(Company, CurrencyCode) to CurrencyCode(Company, CurrencyCode) {
+      label = "Currency Code";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetCurrCodeAttributes Number {
+   parameter Company Text;
+   parameter CurrencyCode Text;
+}
+
+function CurrancyRateDetails List<Entity(CurrencyRate)> {
+   parameter Company Text;
+   parameter CurrencyType Text;
+   parameter ShowOnlyValidRates Boolean;
+   basedon CurrencyRateSet;
+
+   where = " :ShowOnlyValidRates = 'TRUE'
+   AND currency_rate.company = :Company
+   AND currency_rate.currency_type = :CurrencyType
+   AND currency_rate.valid_from = (SELECT MAX(b.valid_from)
+                       FROM currency_rate b
+                       WHERE currency_rate.company = b.company
+                       AND currency_rate.currency_type = b.currency_type
+                       AND currency_rate.currency_code = b.currency_code
+                       AND b.valid_from   <= SYSDATE )
+   OR :ShowOnlyValidRates != 'TRUE' AND currency_rate.company = :Company AND currency_rate.currency_type = :CurrencyType";
+}
+
+function GetPageSearchContextDefaults Structure(ShowOnlyValidRatesStructure);
+
+
+-------------------------------- STRUCTURES ---------------------------------
+structure ShowOnlyValidRatesStructure {
+   attribute ShowOnlyValidRates Boolean("TRUE", "FALSE") {
+      required = [true];
+   }
+}
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

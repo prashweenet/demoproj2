@@ -1,0 +1,201 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: Voucher
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  141115  DipeLK   PRFI-3492,Paralell curency columnsimplemented in Approval Voucher window.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+COLUMN Sum_Credit_Amount IS
+   Flags      = 'A-IU-'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Sum Credit Amount';
+   
+COLUMN Sum_Debit_Amount IS
+   Flags      = 'A-IU-'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Sum Debet Amount';   
+   
+COLUMN Sum_Third_Curr_Debit_Amount IS
+   Flags      = 'A----'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Sum Third Curr Debit Amount';   
+   
+COLUMN Sum_Third_Curr_Credit_Amount IS
+   Flags      = 'A----'
+   Datatype   = 'NUMBER'
+   Prompt     = 'Sum Third Curr Credit Amount';      
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Voucher_Approval IS
+   Prompt = 'Voucher'
+   Userid.Prompt = 'User Id'
+   Voucher_Text2.Flags = 'A-IU-'
+   Interim_Voucher.Datatype = 'STRING(200)'
+   Free_Text.Flags = 'A--U-'
+   Multi_Company_Id.Prompt = 'Multi Company Id'
+SELECT a.voucher_no                                voucher_no,
+       a.company                                   company,
+       a.accounting_year                           accounting_year,
+       a.voucher_type                              voucher_type,
+       a.voucher_date                              voucher_date,
+       d.user_group                                user_group,
+       a.accounting_period                         accounting_period,
+       voucher_api.Get_Sum(a.company,a.accounting_year,a.voucher_type,a.voucher_no,'debit')               sum_debit_amount,
+       voucher_api.Get_Sum(a.company,a.accounting_year,a.voucher_type,a.voucher_no, 'credit')             sum_credit_amount,
+       voucher_api.Get_Sum_Third_Curr (a.company,a.accounting_year,a.voucher_type,a.voucher_no,'debit')   sum_third_curr_debit_amount,
+       voucher_api.Get_Sum_Third_Curr (a.company,a.accounting_year,a.voucher_type,a.voucher_no, 'credit') sum_third_curr_credit_amount,
+       date_reg                                    date_reg,
+       userid                                      userid,
+       voucher_text                                voucher_text,
+       voucher_text2                               voucher_text2,
+       interim_voucher                             interim_voucher,
+       Voucher_Status_API.Decode(rowstate)        voucher_status,
+       decode(voucher_text,NULL,'FALSE','TRUE')                                                    free_text,
+       entered_by_user_group                       entered_by_user_group,
+       a.multi_company_id                          multi_company_id,
+       a.rowid                                     objid,
+       ltrim(lpad(to_char(a.rowversion,'YYYYMMDDHH24MISS'),2000))                                  objversion,
+       a.rowstate                                 objstate,
+       substr(VOUCHER_API.Finite_State_Events__(rowstate),1,253)                                  objevents,
+       substr(VOUCHER_API.Finite_State_Decode__(rowstate),1,253)                                      state,
+       a.rowkey                                   objkey
+FROM   voucher_tab a,
+       voucher_type_user_group_tab d
+WHERE  a.company            = d.company
+AND    a.accounting_year    = d.accounting_year
+AND    a.voucher_type       = d.voucher_type
+AND    a.function_group     = d.function_group
+AND    a.simulation_voucher = 'FALSE'
+AND   (d.authorize_level    = 'Approved' OR d.authorize_level = 'ApproveOnly')
+AND    a.ROWSTATE IN ('Error','AwaitingApproval','PartiallyApproved')
+AND EXISTS (SELECT 1
+              FROM voucher_row_tab vr
+             WHERE a.company         = vr.company
+               AND a.accounting_year = vr.accounting_year
+               AND a.voucher_no      = vr.voucher_no
+               AND a.voucher_type    = vr.voucher_type);
+
+VIEW Multi_Company_Voucher1 IS
+   Prompt = 'Multi Company Voucher'
+   Company.Flags = 'P----'
+   Company.Datatype = 'STRING(20)'
+   Voucher_Type.Flags = 'P----'
+   Voucher_Type.Datatype = 'STRING(3)'
+   Voucher_No.Flags = 'K----'
+   Voucher_No.Datatype = 'NUMBER(10)'
+   Accounting_Year.Flags = 'K----'
+   Accounting_Year.Datatype = 'NUMBER(4)'
+   Voucher_Date.Column = 'v.voucher_date'
+   Date_Reg.Column = 'v.date_reg'
+   Userid.Column = 'v.userid'
+   Accounting_Text_Id.Column = 'v.accounting_text_id'
+   Voucher_Text.Column = 'v.voucher_text2'
+   Update_Error.Column = 'v.update_error'
+   Internal_Seq_Number.Column = 'v.internal_seq_number'
+   Transfer_Id.Column = 'v.transfer_id'
+   Currency_Type.Column = 'Currency_Type_API.Get_Default_Type(v.company)'  
+   Currency_Code.Column = 'Company_Finance_API.Get_Currency_Code(v.company)'
+   Free_Text.Column = 'decode(v.voucher_text, NULL, ''FALSE'', ''TRUE'')'
+   Desc_Voucher_Type.Column = 'Voucher_Type_API.Get_Description(v.company, v.voucher_type)'
+   Currency_Rate.Column = 'Currency_Rate_API.Get_Currency_Rate(v.company, Company_Finance_API.Get_Currency_Code(v.company), Currency_Type_API.Get_Default_Type(v.company), v.voucher_date)'
+   Convertion_Factor.Column = 'NVL(Currency_Rate_API.Get_Conv_Factor(v.company, Company_Finance_API.Get_Currency_Code(v.company), Currency_Type_API.Get_Default_Type(v.company), v.voucher_date), 1)'
+   Decimals_In_Amount.Column = 'NVL(Currency_Code_API.Get_Currency_Rounding(v.company, Company_Finance_API.Get_Currency_Code(v.company)), 0)'
+   Decimals_In_Rate.Column = 'nvl(Currency_Code_API.Get_No_Of_Decimals_In_Rate(v.company, Company_Finance_API.Get_Currency_Code(v.company)), 0)'
+   Text_Row.Column = 'v.voucher_text'   
+   User_Group.Column = 'v.user_group'
+   Accounting_Period.Column = 'v.accounting_period'
+   Function_Group.Column = 'v.function_group'
+   Row_Group_Validation.Column = 'Voucher_Type_API.Is_Row_Group_Validated(v.company, v.voucher_type)'
+SELECT v.company                                        company,
+       v.voucher_type                                   voucher_type,
+       v.voucher_no                                     voucher_no,
+       v.accounting_year                                accounting_year,
+       v.voucher_date                                   voucher_date,
+       v.date_reg                                       date_reg,
+       v.userid                                         userid,
+       v.accounting_text_id                             accounting_text_id,
+       v.voucher_text2                                  voucher_text,
+       v.update_error                                   update_error,
+       v.internal_seq_number                            internal_seq_number,
+       v.transfer_id                                    transfer_id,
+       Currency_Type_API.Get_Default_Type(v.company)    currency_type,      
+       Company_Finance_API.Get_Currency_Code(v.company) currency_code,
+       decode(v.voucher_text, NULL, 'FALSE', 'TRUE') free_text,
+       Voucher_Type_API.Get_Description(v.company, v.voucher_type) desc_voucher_type,
+       Currency_Rate_API.Get_Currency_Rate(v.company, Company_Finance_API.Get_Currency_Code(v.company),
+          Currency_Type_API.Get_Default_Type(v.company), v.voucher_date) currency_rate,
+       NVL(Currency_Rate_API.Get_Conv_Factor(v.company, Company_Finance_API.Get_Currency_Code(v.company),
+          Currency_Type_API.Get_Default_Type(v.company), v.voucher_date), 1) convertion_factor,
+       NVL(Currency_Code_API.Get_Currency_Rounding(v.company, Company_Finance_API.Get_Currency_Code(v.company)), 0) decimals_in_amount,
+       nvl(Currency_Code_API.Get_No_Of_Decimals_In_Rate(v.company, Company_Finance_API.Get_Currency_Code(v.company)), 0) decimals_in_rate,
+       lpad(' ', 20)                  text_id,
+       v.voucher_text                 text_row,
+       null              row_no,
+       v.user_group                   user_group,
+       v.accounting_period            accounting_period,
+       v.function_group               function_group,
+       Voucher_Type_API.Is_Row_Group_Validated(v.company, v.voucher_type) row_group_validation,
+       v.rowid||'#'||v.company||'#'                    objid,
+       ltrim(lpad(to_char(v.rowversion,'YYYYMMDDHH24MISS'),2000))
+                                                       objversion,
+       v.rowkey                                        objkey
+FROM   voucher_tab v
+WHERE  v.multi_company_id IS NOT NULL
+AND    v.multi_company_id = company
+AND    v.voucher_updated = 'N'
+AND    EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE v.company = company)
+AND    NOT (v.voucher_no <0 AND v.multi_company_id IS NOT NULL AND v.function_group = 'D' AND v.rowstate ='Awaiting')
+$IF Component_Genled_SYS.INSTALLED $THEN
+UNION ALL
+SELECT  gv.company                                        company,
+        gv.voucher_type                                   voucher_type,
+        gv.voucher_no                                     voucher_no,
+        gv.accounting_year                                accounting_year,
+        gv.voucher_date                                   voucher_date,
+        gv.date_reg                                       date_reg,
+        gv.userid                                         userid,
+        gv.accounting_text_id                             accounting_text_id,                
+        gv.voucher_text2                                  voucher_text,
+        NULL                                              update_error,
+        gv.internal_seq_number                            internal_seq_number,
+        gv.transfer_id                                    transfer_id,
+        Currency_Type_API.Get_Default_Type(gv.company)    currency_type,      
+        Company_Finance_API.Get_Currency_Code(gv.company) currency_code,
+        decode(gv.voucher_text, NULL, 'FALSE', 'TRUE')    free_text,
+        Voucher_Type_API.Get_Description(gv.company, gv.voucher_type) desc_voucher_type,        Currency_Rate_API.Get_Currency_Rate(gv.company, Company_Finance_API.Get_Currency_Code(gv.company),
+          Currency_Type_API.Get_Default_Type(gv.company), gv.voucher_date) currency_rate,
+        NVL(Currency_Rate_API.Get_Conv_Factor(gv.company, Company_Finance_API.Get_Currency_Code(gv.company),
+          Currency_Type_API.Get_Default_Type(gv.company), gv.voucher_date), 1) convertion_factor,
+        NVL(Currency_Code_API.Get_Currency_Rounding(gv.company, Company_Finance_API.Get_Currency_Code(gv.company)), 0) decimals_in_amount,
+        nvl(Currency_Code_API.Get_No_Of_Decimals_In_Rate(gv.company, Company_Finance_API.Get_Currency_Code(gv.company)), 0) decimals_in_rate,
+        lpad(' ', 20)                                     text_id,
+        gv.voucher_text                                   text_row,
+        null row_no,
+        gv.user_group                                     user_group,
+        gv.accounting_period                              accounting_period,
+        gv.function_group                                 function_group,
+        Voucher_Type_API.Is_Row_Group_Validated(gv.company, gv.voucher_type) row_group_validation,
+        gv.rowid||'#'||gv.company||'#'                     objid,
+        ltrim(lpad(to_char(gv.rowversion,'YYYYMMDDHH24MISS'),2000))
+                                                          objversion,
+        gv.rowkey                                         objkey
+FROM    gen_led_voucher_tab gv
+WHERE   gv.multi_company_id IS NOT NULL
+AND     gv.multi_company_id = gv.company
+AND     EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE gv.company = company)
+$END
+;

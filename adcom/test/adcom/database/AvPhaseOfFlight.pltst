@@ -1,0 +1,59 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvPhaseOfFlight
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200810  TAJALK  LMM2020R1-662 - Created
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should correct attr depending on existance of the record" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @Mock
+   FUNCTION Check_Exist___ (
+      phase_of_flight_code_ IN     VARCHAR2 ) RETURN BOOLEAN
+   IS
+   BEGIN
+      IF phase_of_flight_code_ = 'CR' THEN
+         RETURN TRUE;
+      ELSE
+         RETURN FALSE;
+      END IF;
+   END Check_Exist___;
+IS
+   --Insert your test variables here
+   expected1_  VARCHAR2(2000);
+   output1_ VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'PHASE_OF_FLIGHT_CODE'||chr(31)||'CR'||chr(30)||'PHASE_OF_FLIGHT_DESC'||chr(31)||'CR Phase'|
+      | 'PHASE_OF_FLIGHT_CODE'||chr(31)||'FLP'||chr(30)||'PHASE_OF_FLIGHT_DESC'||chr(31)||'Flight Planning'|
+   LOOP
+      --Insert your test code here
+      output1_    := attr_;
+      expected1_  := 'PHASE_OF_FLIGHT_DESC'||chr(31)||'CR Phase';
+
+      Pre_Sync_Action(attr_);
+      --Insert your assertions here
+      IF attr_ LIKE '%CR Phase%' THEN
+         ASSERT attr_ = expected1_ MESSAGE 'Expected '||expected1_||' but  was '||attr_;
+      ELSE
+         ASSERT attr_ = output1_ MESSAGE 'Expected '||output1_||' but  was '||attr_;
+      END IF;
+   END LOOP;
+END UNITTEST;
+
+
+
+

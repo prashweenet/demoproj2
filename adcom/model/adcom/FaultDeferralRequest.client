@@ -1,0 +1,96 @@
+--  Date    Sign    History
+--  ------  ------  --------------------------------------------------------
+--  200808  DILDLK  LMM2020R1-516, Modified navigation.
+--  200702  DILDLK  LMM2020R1-260, Modified navigation.
+--  200629  ARUFLK  LMM2020R1-116, Created.
+----------------------------------------------------------------------------
+
+client FaultDeferralRequest;
+component ADCOM;
+layer Core;
+projection FaultDeferralRequestHandling;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry FaultDeferralRequestEntry parent AdcomNavigator.AviationMaintenance at index 700 {
+      label = "Fault Deferral Requests";
+      page List home AvFaultDeferralRequest;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AvFaultDeferralRequestSet {
+   label = "Deferral Requests";
+   list FaultDeferralRequestList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list FaultDeferralRequestList for AvFaultDeferralRequest {
+   static DeferralRequestId {
+      label = "Deferral Request ID";
+   }
+   lov FaultIdRef with ReferenceAvFaultSelector {
+      label = "Fault";
+      description = FaultIdRef.Description;
+      hidekey = [true];
+
+   }
+   lov DeferralReferenceIdRef with ReferenceAvDeferralReferenceSelector {
+      label = "Deferral Reference";
+      description = DeferralReferenceIdRef.DeferralReferenceName;
+      hidekey = [true];
+
+   }
+   lov DeferralReqReasonCodeRef with ReferenceAvDeferralReqReasonSelector {
+      label = "Deferral Reason";
+      description = DeferralReqReasonCodeRef.DeferralReqReasonDesc;
+   }
+   field RequestedDate;
+   field ApprovedBy;
+   field ApprovedDate;
+   badge Objstate {
+      label = "Status";
+      style = TextOnly;
+      emphasis Info = [Objstate = "Requested"];
+      emphasis Complementary9 = [Objstate = "Approved"];
+      emphasis Alert = [Objstate = "Rejected"];
+   }
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

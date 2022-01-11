@@ -1,0 +1,82 @@
+--  Date        Sign    History
+--  ----------  ------  -----------------------------------------------------
+--  201129      KAWJLK  LMM2020R1-1444, Make AirportRef required = [true].
+--  200930      KAWJLK  LMM2020R1-1288, Create User - Airport Connection
+-----------------------------------------------------------------------------
+client AvAirportForUser;
+component ADCOM;
+layer Core;
+projection AvAirportForUserHandling;
+description "User Airport Details will be handled from this";
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry NavAirportSitesNavEntry parent AdcomNavigator.BasicData at index 110 {
+      label = "Airport for User";
+      page AirportUserDetails;
+   }
+}
+-------------------------------- MAIN PAGES ---------------------------------
+page AirportUserDetails using AvAirportForUserSet {
+   label = "Airport for User";
+   list UserAirportList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AvAirportNewSelector for AvAirport {
+   label = "${IataCode}";
+   static IataCode;
+}
+
+selector FndNewUserSelector for FndUser {
+   label = "${Identity}";
+   static Identity;
+}
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list UserAirportList for AvAirportForUser {
+   lov UserRef with FndNewUserSelector {
+      label = "User";
+   }
+   lov AirportRef with AvAirportNewSelector {
+      label = "Airport";
+      description = AirportRef.IataCode;
+      hidekey = [true];
+      required = [true];
+   }
+
+}
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

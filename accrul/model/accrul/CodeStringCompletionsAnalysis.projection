@@ -1,0 +1,77 @@
+projection CodeStringCompletionsAnalysis;
+component ACCRUL;
+layer Core;
+description "Code String Completions Analysis";
+category Users;
+include fragment AccountingCodePartsUsed2Selector;
+include fragment AccountingCodePartValueLovSelector;
+include fragment CodePartValAndProcessCodeSelector;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountingCodestrComplSet for AccountingCodestrCompl {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AccountingCodestrCompl {
+   crud = Read, Update;
+   ludependencies = AccountingCodestrCompl;
+
+   attribute CodePart2 Text {
+      fetch = "Enterp_Comp_Connect_V170_API.Get_Company_Translation(COMPANY, 'ACCRUL', 'AccountingCodeParts', CODE_PART)";
+      label = "Code Part";
+      maxlength = 10;
+   }
+   attribute CodefillCodepartName Text {
+      label = "Code Fill Name";
+      fetch = "Accounting_Codestr_Compl_API.Get_Translated_Code_Fill_Name(COMPANY, 'ACCRUL', 'AccountingCodeParts', CODEFILL_CODE_PART)";
+   }
+   attribute CodefillValue Text {
+      label = "String Value";
+      format = uppercase;
+   }
+   attribute CodefillValueName Text {
+      label = "Code Part Value Description";
+   }
+   attribute CodefillCodePartBlocked Text {
+      fetch = "Accounting_Codestr_Compl_API.Get_Code_Part_Block_Info(COMPANY, CODE_PART, CODE_PART_VALUE, CODEFILL_CODE_PART)";
+   }
+   reference CodePartValueRef(Company, CodePart, CodePartValue) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Code Part Value";
+   }
+   reference CodefillValueRef(Company, CodefillCodePart, CodefillValue) to CodePartValAndProcessCode(Company, CodePart, CodePartValue) {
+      label = "String Value";
+   }
+   reference CodePart2Ref(Company, CodePart2) to AccountingCodePartsUsed2(Company, CodeName) {
+      label = "Code Part";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

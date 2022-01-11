@@ -1,0 +1,43 @@
+fragment TaxCalcStructureActiveSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view tax_calc_structure_active";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceTaxCalcStructureActiveSelector for TaxCalcStructureActive {
+   static TaxCalcStructureId;
+   static Description;
+}
+
+card TaxCalcStructureActiveCard for TaxCalcStructureActive {
+   label = "";
+   fieldranking TaxCalcStructureId;
+   field TaxCalcStructureId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query TaxCalcStructureActive {
+   from = "tax_calc_structure_active";
+   lu = TaxCalcStructure;
+   keys = Company, TaxCalcStructureId;
+   ludependencies = TaxCalcStructure;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute TaxCalcStructureId Text {
+      label = "Structure";
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

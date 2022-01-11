@@ -1,0 +1,121 @@
+client ReportingAccountingPeriodConnection;
+component ACCRUL;
+layer Core;
+projection ReportingAccountingPeriodConnectionHandling;
+
+include fragment AccountingYearPeriodSelector;
+include fragment AccountingYearSelector;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry BIRepAccPeriodConnectionNavEntry parent AccrulNavigator.BIReportingPeriodsMenu at index 400 {
+      label = "Reporting/Accounting Period Connection";
+      page Form home RpdCompanyPeriod;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using RpdCompanySet {
+   label = "Reporting/Accounting Period Connection";
+   searchcontext PageSearchContext {
+      defaults = GetPageSearchContextDefaults();
+   }
+   selector RpdCompanyNewSelector;
+   group RepDefCompanyGroup;
+   list RpdCompanyPeriodList(RpdCompanyPeriodArray) bind RpdCompanyNewSelector {
+      filter = [RpdYear = PageSearchContext.RpdYear];
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+searchcontext PageSearchContext for PageSearchContextStructure {
+   label = "";
+   field RpdYear {
+      label = "Reporting Year";
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector RpdCompanyNewSelector for RpdCompany {
+   orderby = RpdId;
+   label = "${RpdId} - ${RpdIdRef.Description}";
+   field RpdId {
+      label = "Definition ID";
+   }
+   field RpdIdRef.Description;
+   field Company;
+   field Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group RepDefCompanyGroup for RpdCompany {
+   label = "";
+
+   lov RpdIdRef with RpdIdentitySelector {
+      search = RpdId, Description;
+      description = RpdIdRef.Description;
+   }
+   lov CompanyRef with CompanyFinanceSelector {
+      search = Company, Name;
+      description = Description;
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list RpdCompanyPeriodList for RpdCompanyPeriod {
+   label = "Reporting Period Definition";
+
+   lov RpdYearRef with ReferenceRpdYearSelector;
+   lov RpdPeriodRef with ReferenceRpdPeriodSelector;
+   daterangefield {
+      startdate  RpdPeriodRef.FromDate;
+      enddate RpdPeriodRef.UntilDate;
+      label = "Reporting Period Valid";
+   }
+   lov AccountingYearRef with ReferenceAccountingYearSelector;
+   lov AccountingPeriodRef with ReferenceAccountingYearPeriodSelector;
+   daterangefield {
+      startdate  AccountingPeriodRef.DateFrom;
+      enddate AccountingPeriodRef.DateUntil;
+      label = "Accounting Period Valid";
+      editable = [false];
+   }
+   field SplitAccountingPeriod;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

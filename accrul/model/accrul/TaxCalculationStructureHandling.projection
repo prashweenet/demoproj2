@@ -1,0 +1,115 @@
+projection TaxCalculationStructureHandling;
+component ACCRUL;
+layer Core;
+description "Tax Calculation Structure Handling.";
+category Users;
+
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset TaxCalcStructureSet for TaxCalcStructure {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity TaxCalcStructure {
+   attribute TaxCalcStructureId Text {
+      label = "Structure";
+   }
+   attribute Objstate Enumeration(TaxCalcStructureState) {
+      label = "Status";
+   }
+
+   array TaxStructureItemArray(Company, TaxCalcStructureId) to TaxStructureItem(Company, TaxCalcStructureId);
+}
+
+@Override
+entity TaxStructureItem {
+   ludependencies = TaxCalcStructure, TaxStructureItemRef, TaxStructureItem;
+
+   attribute Tax Number {
+      label = "Tax%";
+      editable = [false];
+      fetch = "Statutory_Fee_API.Get_Fee_Rate(company,tax_code)";
+   }
+   attribute InclPriceInTaxBase Boolean("TRUE", "FALSE") {
+      label = "Include Price in Tax Base";
+      editable = [true];
+   }
+   -- gelr:extend_tax_code_and_tax_struct, begin
+   attribute TaxInTaxBase Boolean("TRUE", "FALSE") {
+      label = "Tax in Tax Base";
+      editable = [false];
+      fetch = "Statutory_Fee_API.Get_Tax_In_Tax_Base_Db(company,tax_code)";
+   }
+   -- gelr:extend_tax_code_and_tax_struct, end
+   reference TaxCodeRef(Company, TaxCode) to StatutoryFee(Company, FeeCode) {
+      label = "Tax Code";
+   }
+   reference TaxStructureRef(Company, TaxCalcStructureId) to TaxCalcStructure(Company, TaxCalcStructureId);
+
+   array TaxStructureItemRefArray(Company, TaxCalcStructureId, ItemId) to TaxStructureItemRef(Company, TaxCalcStructureId, ItemId);
+}
+
+@Override
+entity TaxStructureItemRef {
+   ludependencies = TaxStructureItemRef;
+
+   attribute DefaultOrderBy Number {
+      fetch = "Tax_Structure_Item_API.Get_Calculation_Order(COMPANY, TAX_CALC_STRUCTURE_ID, ITEM_ID_REF)";
+   }
+
+   reference ItemIdRefRef(Company, TaxCalcStructureId, ItemIdRef) to TaxStructureItem(Company, TaxCalcStructureId, ItemId) {
+      label = "Structure Item Reference";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function FilterItem List<Entity(TaxStructureItem)> {
+   parameter Company Text;
+   parameter TaxCalcStructureId Text;
+   parameter ItemId Text;
+
+   where = "calculation_order < Tax_Structure_Item_API.Get_Calculation_Order(:Company, :TaxCalcStructureId, :ItemId)";
+}
+
+function GetTaxCodeUserwhere List<Entity(StatutoryFee)> {
+   where = "fee_type_db = 'TAX' AND vat_received_db = '1' AND vat_disbursed_db = '1' AND (TRUNC(SYSDATE) BETWEEN valid_from AND valid_until)";
+}
+
+function FetchTaxCodeInfo Structure(TaxCodeInfoStructure) {
+   parameter Company Text;
+   parameter TaxCode Text;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+structure TaxCodeInfoStructure {
+   attribute Tax Number;
+   -- gelr: extend_tax_code_and_tax_struct, begin
+   attribute TaxInTaxBase Boolean;
+   -- gelr: extend_tax_code_and_tax_struct, end
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

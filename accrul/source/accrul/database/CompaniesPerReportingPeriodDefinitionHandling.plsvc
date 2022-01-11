@@ -1,0 +1,31 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CompaniesPerReportingPeriodDefinitionHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Get_Map_Acc_Period_Count___ (
+   rpd_id_           IN VARCHAR2,
+   company_          IN VARCHAR2,
+   acc_year_from_    IN NUMBER,
+   acc_year_to_      IN NUMBER,
+   include_year_end_ IN BOOLEAN) RETURN NUMBER
+IS
+   no_period_count_ NUMBER;
+   is_include_year_end_ VARCHAR2(5);
+BEGIN
+   IF include_year_end_ THEN
+      is_include_year_end_ := 'TRUE';
+   ELSE
+      is_include_year_end_ := 'FALSE';
+   END IF;
+   Rpd_Company_API.Map_Accounting_Periods(no_period_count_, rpd_id_, company_, acc_year_from_, acc_year_to_, is_include_year_end_);
+   RETURN no_period_count_;
+END Get_Map_Acc_Period_Count___;

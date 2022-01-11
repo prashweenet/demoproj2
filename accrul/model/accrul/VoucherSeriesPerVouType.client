@@ -1,0 +1,257 @@
+client VoucherSeriesPerVouType;
+component ACCRUL;
+layer Core;
+projection UserRelatedVoucherData;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+navigator {
+   entry VoucherSeriesPerVoucherTypeMenu parent AccrulNavigator.UserRelatedDataMenu at index 600 {
+      label = "Voucher Series per Voucher Type";
+      page VoucherSeriesPerVoucherType;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+page VoucherSeriesPerVoucherType using VoucherTypeSet {
+   label = "Voucher Series per Voucher Type";
+
+   selector VoucherTypeSelector;
+   list VoucherNoSerialList(VoucherNoSerialArray) bind VoucherTypeSelector;
+
+   command TranslationCmd bind VoucherTypeSelector;
+}
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+------------------- VOUCHERSERIESPERVOUCHERTYPE COMMANDS --------------------
+
+command TranslationCmd for VoucherType {
+   label = "Translation";
+   execute {
+      navigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'VoucherType' and AttributeKey eq $[VoucherType]";
+   }
+}
+
+command UserGroupPerVoucherSeriesCmd for VoucherNoSerial {
+   label = "User Group per Voucher Series";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/UserGroupPerVoucherSeries/Form?$contexts=Company:$[Company]&$filter=VoucherType eq $[VoucherType] and AccountingYear eq $[AccountingYear] and Period eq $[Period]";
+   }
+}
+
+command CreateUserGroupsPerVoucherTypeCmd for VoucherNoSerial {
+   label = "Create User Groups per Voucher Type";
+   mode = SelectedRecords;
+
+   variable VarVoucherKeys {
+      type = Structure(VoucherKeysStruct);
+   }
+
+   bulkexecute {
+      bulkpin(VoucherNoSerials, keyref);
+      call GetKeysFromSelection(Selection) into VarVoucherKeys;
+
+      dialog CreateUserGroupsPerVoucherTypesDlg(VarVoucherKeys.Company, VarVoucherKeys.VoucherType, true, Selection) {
+         when OK {
+            success("User Group added successfully");
+            exit;
+         }
+      }
+   }
+}
+
+command Ok for UserGroupInfoStruct {
+   label = "OK";
+   enabled = [UserGroup != null and AuthorizationLevel != null];
+
+   variable VarResult {
+      type = Structure(ResultAllowedYearStruct);
+   }
+
+   execute {
+      call GetSameUserGroupExists(Selection, UserGroup, FunctionGroup, SingleFunctionGroup) into VarResult;
+      set AllowedYears = VarResult.AllowedYears;
+      if [VarResult.UserGroupExists = "TRUE" and VarResult.UserGroupNotExists = "TRUE"] {
+         confirm("For the selected Voucher Type some of the selected years are already connected to the selected User Group. Do you want to connect the other years to the selected User Group?") {
+            when CANCEL {
+               set StrOkToCreate = "FALSE";
+            }
+         }
+      }
+      if [VarResult.UserGroupExists = "TRUE" and VarResult.UserGroupNotExists != "TRUE"] {
+         set StrOkToCreate = "FALSE";
+         error("Voucher Type for User Group already Exists");
+      }
+      if [StrOkToCreate != "FALSE"] {
+         call DoCreateUserGroupForVoucherType(Company, VoucherType, AllowedYears, UserGroup, AuthorizationLevel, DefaultType, FunctionGroup);
+         exit OK;
+      }
+      else {
+         exit;
+      }
+   }
+}
+
+-------------------- USERGROUPPERVOUCHERSERIES COMMANDS ---------------------
+
+command TranslationCmd for VoucherNoSerialYrQuery {
+   label = "Translation";
+   execute {
+      navigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'VoucherType' and AttributeKey eq $[VoucherType]";
+   }
+}
+
+command SetDefaultCmd for VoucherTypeUserGroup {
+   label = "Set Default Type";
+
+   execute {
+      call DoSetDefault();
+   }
+}
+
+--------------- VOUCHERSERIESPERVOUCHERTYPE VISUAL COMPONENTS ---------------
+
+-------------------- VOUCHERSERIESPERVOUCHERTYPE GROUPS ---------------------
+
+group UserGroupInformationGroup for UserGroupInfoStruct {
+   label = "";
+
+   lov UserGroupRef with ReferenceUserGroupFinanceSelector {
+      search = UserGroup, Description;
+      description = UserGroupRef.Description;
+   }
+   field AuthorizationLevel;
+   field DefaultType;
+   field SingleFunctionGroup {
+      validate command {
+         execute {
+            if [not SingleFunctionGroup] {
+               set FunctionGroup = null;
+            }
+         }
+      }
+   }
+
+   lov FunctionGroupRef with RefVoucherTypeDetailSelector {
+      editable = [SingleFunctionGroup];
+      size = Small;
+   }
+}
+
+--------------------- VOUCHERSERIESPERVOUCHERTYPE LISTS ---------------------
+
+list VoucherNoSerialList for VoucherNoSerial {
+   lov AccountingYearRef with ReferenceAccountingYearSelector {
+      size = Small;
+   }
+   lov PeriodRef with ReferenceAccountingPeriodSelector {
+      columnexclude = [parent.CompanyFinanceRef.UseVouNoPeriod != "TRUE"];
+      columnvisible = [parent.CompanyFinanceRef.UseVouNoPeriod = "TRUE"];
+      size = Small;
+   }
+   field SerieFrom {
+      maxlength = 10;
+      validate command {
+         execute {
+            if [SerieFrom < 0] {
+               error("From Number must be larger than 0");
+            }
+            else {
+               set CurrentNumber = SerieFrom;
+            }
+         }
+      }
+   }
+   field SerieUntil {
+      maxlength = 10;
+      validate command {
+         execute {
+            if [SerieUntil < 0] {
+               error("Until Number must be larger than 0");
+            }
+         }
+      }
+   }
+   field CurrentNumber;
+
+   command UserGroupPerVoucherSeriesCmd;
+   command CreateUserGroupsPerVoucherTypeCmd;
+
+}
+
+@Override
+list VoucherTypeDetailLovQueryLovList for VoucherTypeDetailLovQuery {
+   static Company {
+      columnexclude = [true];
+   }
+   static VoucherType {
+      columnexclude = [true];
+   }
+}
+
+------------------- VOUCHERSERIESPERVOUCHERTYPE SELECTORS -------------------
+
+@Override
+selector VoucherTypeSelector for VoucherType {
+   label = "${VoucherType} - ${Description}";
+   static Company {
+      visible = [false];
+      searchable = false;
+   }
+   static VoucherType;
+   static Description;
+}
+
+@Override
+selector ReferenceUserGroupFinanceSelector for UserGroupFinance {
+   static AllowedAccountingPeriod {
+      visible = [false];
+   }
+}
+@Override
+selector RefVoucherTypeDetailSelector for VoucherTypeDetail {
+   label = "";
+   static FunctionGroup;
+}
+
+
+
+--------------------- VOUCHERSERIESPERVOUCHERTYPE CARDS ---------------------
+
+-------------------- VOUCHERSERIESPERVOUCHERTYPE DIALOGS --------------------
+
+dialog CreateUserGroupsPerVoucherTypesDlg for UserGroupInfoStruct {
+   label = "Create User Groups per Voucher Type";
+   input(Company, VoucherType, SingleFunctionGroup, Selection);
+
+   group UserGroupInformationGroup;
+
+   command Ok;
+   command Cancel;
+}
+
+@Override
+list VoucherTypeDetailLovList for VoucherTypeDetail {
+   label = "";
+   static FunctionGroup;
+   static AutomaticVouBalance {
+      columnvisible = [false];
+      searchable = false;
+   }
+   static StoreOriginal {
+      columnvisible = [false];
+      searchable = false;
+   }
+   static AutomaticAllot {
+      columnvisible = [false];
+      searchable = false;
+   }
+   static SingleFunctionGroup {
+      columnvisible = [false];
+      searchable = false;
+   }
+}

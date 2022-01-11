@@ -1,0 +1,33 @@
+-----------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  ------------------------------------------------------
+-- 2020-07-01  SatGlk  LMM2020R1-187, Added AircraftLov query to show aircraft_desc and reg_code in one column
+-----------------------------------------------------------------------------
+
+fragment AircraftLovSelector;
+component ADCOM;
+layer Core;
+description "List of values fragment defining view aircraft_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+@Overtake
+selector ReferenceAircraftLovSelector for AircraftLov {
+   static AircraftId;
+   static Aircraft;
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+query AircraftLov {
+   from = "aircraft_lov";
+   lu = Aircraft;
+   keys = AircraftId;
+   ludependencies = Aircraft;
+   attribute AircraftId Number {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Aircraft Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+}

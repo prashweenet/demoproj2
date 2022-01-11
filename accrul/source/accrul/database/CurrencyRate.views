@@ -1,0 +1,161 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CurrencyRate
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Currency_Rate1 IS
+   Prompt = 'Currency Rate'
+   Company.Datatype = 'STRING(20)'
+   Currency_Type.Flags = 'KMI--'
+   Currency_Type.Datatype = 'STRING(10)'
+   Currency_Type.Ref = 'CurrencyType(COMPANY)'
+   Currency_Code.Flags = 'KMI-L'
+   Currency_Code.Datatype = 'STRING(3)'
+   Valid_From.Flags = 'AMI-L'
+   Currency_Rate.Flags = 'AMIUL'
+   Currency_Rate.Datatype = 'NUMBER()'
+   Conv_Factor.Datatype = 'NUMBER()'
+SELECT a.company                                company,
+       currency_type                            currency_type,
+       a.currency_code                          currency_code,
+       a.valid_from                             valid_from,
+       currency_rate                            currency_rate,
+       conv_factor                              conv_factor,
+       a.rowid                                 objid,
+       rtrim(rpad(ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000)),2000))            objversion,
+       rowkey                                  objkey
+FROM   currency_rate_tab a;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Currency_Rate2 IS
+   Prompt = 'Currency Rate'
+   Company.Datatype = 'STRING(20)'
+   Currency_Code.Flags = 'KMI--'
+   Currency_Code.Datatype = 'STRING(3)'
+   Currency_Type.Flags = 'KMI-L'
+   Currency_Type.Datatype = 'STRING(10)'
+   Currency_Type.Ref = 'CurrencyType(COMPANY)'
+   Valid_From.Flags = 'AMI-L'
+   Currency_Rate.Flags = 'AMIUL'
+   Currency_Rate.Datatype = 'NUMBER()'
+   Conv_Factor.Datatype = 'NUMBER()'
+SELECT a.company                                company,
+       a.currency_code                          currency_code,
+       currency_type                            currency_type,
+       a.valid_from                             valid_from,
+       currency_rate                            currency_rate,
+       conv_factor                              conv_factor,
+       a.rowid                                 objid,
+       rtrim(rpad(ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000)),2000))            objversion,
+       a.rowkey                                objkey
+FROM   currency_rate_tab a, company_finance b
+WHERE  a.company           = b.company
+AND    a.ref_currency_code = b.currency_code;
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Latest_Currency_Rates IS
+   Prompt = 'Currency Rate'
+SELECT a.company                                                    company,
+       currency_type                                                currency_type,
+       a.currency_code                                              currency_code,
+       a.valid_from                                                 valid_from,
+       currency_rate                                                currency_rate,
+       conv_factor                                                  conv_factor,
+       ref_currency_code                                            ref_currency_code,
+       a.rowid                                                     objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                                                  objversion,
+       rowkey                                                      objkey
+FROM   currency_rate_tab a
+WHERE  a.valid_from = (SELECT MAX(b.valid_from)
+                       FROM currency_rate_tab b
+                       WHERE a.company= b.COMPANY
+                       AND a.currency_type = b.currency_type
+                       AND a.currency_code = b.currency_code
+                       AND b.valid_from   <= SYSDATE );
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW All_Currency_Rates_Web IS
+   Prompt = 'Currency Rate'
+SELECT a.company                 company,
+       a.currency_type           currency_type,
+       a.currency_code           currency_code,
+       a.valid_from              valid_from,
+       Currency_Rate_Api.Currency_Rate_Base_Disp(a.company, a.currency_code, company_Finance_Api.Get_Currency_Code(a.company), a.currency_type , sysdate)   currency_rate,
+       Currency_Rate_Api.Get_Conv_Factor(a.company, a.currency_code, a.currency_type, sysdate) conv_factor,
+       a.rowid                  objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))               objversion,
+       rowkey                   objkey
+FROM   currency_rate_tab a
+WHERE  a.valid_from = ( SELECT MAX(b.valid_from)
+                        FROM currency_rate_tab b
+                        WHERE a.company= b.COMPANY
+                        AND a.currency_type = b.currency_type
+                        AND a.currency_code = b.currency_code
+                        AND b.valid_from   <= SYSDATE );
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Currency_Rates_Per_Rate_Type IS
+   Prompt = 'Currency Rate'
+   Currency_Code.Flags = 'KMI-L'
+   Valid_From.Flags = 'AMI-L'
+SELECT a.company                                                    company,
+       currency_type                                                currency_type,
+       a.currency_code                                              currency_code,
+       a.valid_from                                                 valid_from,
+       currency_rate                                                currency_rate,
+       conv_factor                                                  conv_factor,
+       ref_currency_code                                            ref_currency_code,
+       a.rowid                                                     objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                                                  objversion,
+       rowkey                                                      objkey
+FROM   currency_rate_tab a;
+
+VIEW Currency_Rate_Mv_Hlp IS
+   Prompt = 'BI CURRENCY RATES'
+SELECT cr.company                                               company_key,
+       cr.valid_from                                            valid_from_key,
+       cr.currency_type                                         currency_rate_type_key,
+       cr.currency_code                                         currency_code_key,
+       cr.currency_rate                                         currency_rate,
+       cr.valid_from                                            valid_from,
+       cr.direct_currency_rate                                  direct_currency_rate,
+       cr.direct_currency_rate_round                            direct_currency_rate_round,       
+       CASE (SELECT MAX(cr2.valid_from) 
+              FROM currency_rate_tab cr2
+              WHERE cr2.company       = cr.company
+              AND   cr2.currency_type = cr.currency_type
+              AND   cr2.currency_code = cr.currency_code)
+           WHEN cr.valid_from THEN 'TRUE'
+           ELSE 'FALSE'
+        END                                                     is_max_valid_from, 
+        (SELECT DECODE(MIN(valid_from)-1, 
+                       NULL, TO_DATE('2099-12-31','YYYY-MM-DD'),
+                       MIN(valid_from)-1)
+              FROM currency_rate_tab cr3
+              WHERE cr3.valid_from > cr.valid_from
+              AND   cr3.company       =  cr.company
+              AND   cr3.currency_type = cr.currency_type
+              AND   cr3.currency_code = cr.currency_code)       valid_until,
+        cr.company                                              dim_company_id,
+        cr.company ||'^'|| cr.currency_code                     dim_currency_code_id,
+        cr.company ||'^'|| cr.currency_type                     dim_currency_rate_type_id,
+        cr.currency_code                                        currency_code,
+        cr.currency_type                                        currency_type
+FROM currency_rate_tab cr;
+

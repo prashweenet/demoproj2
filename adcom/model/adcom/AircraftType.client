@@ -1,0 +1,253 @@
+--  Date        Sign    History
+--  ----------  ------  -----------------------------------------------------
+--  201015      MADGLK  AD2020R1-792, AD2020R1-764 related aurena correction
+--  200820      SWiclk  LMM2020R1-870, Replaced AircraftTypeId by AircraftTypeCode due to key change.
+--  200709      KAWJLK  LMM2020R1-302, Introduce a Tree navigator for Aircraft Systems and Subsystems
+--  200630      TAJALK  LMM2020R1-191, Converted to a form
+--  200623      DILDLK  LMM2020R1-80, UI Changes.
+--  200618      SURBLK  LMM2020R1-78, Created.
+-----------------------------------------------------------------------------
+
+client AircraftType;
+component ADCOM;
+layer Core;
+projection AircraftTypeHandling;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AircraftTypeDetailsNavEntry parent  AdcomNavigator.AircraftBasicData at index 200 {
+      label = "Aircraft Type Details";
+      tree AircraftTypeTree;
+   }
+
+   entry AircraftTypeNavEntry parent  AdcomNavigator.AircraftBasicData at index 100 {
+      label = "Aircraft Type";
+      page AircraftType home AircraftType;
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AircraftTypeSet {
+   label = "Aircraft Type Details";
+   selector AircraftTypeSelector;
+   group AircraftTypeGroup;
+   group AvAircraftImageGroup;
+   list AircraftSystemList(AircraftSystemArray);
+   command NewAircraftTypeCommand;
+}
+
+page AircraftTypeDeail using AvAircraftSystemSet {
+   label = "Aircraft Systems";
+   selector AircraftTypeSelector;
+   group AircraftSystemGroup using AvAircraftSystemSet;
+   list AircraftSubSystemList(AvAircraftSubSystemArray);
+}
+
+page AircraftSubSystems using AvAircraftSubSystemSet {
+   label = "Aircraft Subsystems";
+   selector AvAircraftSubSystemSelector;
+   group AircraftSubSystemGroup;
+}
+
+page AircraftType using AircraftTypeSet {
+   label = "Aircraft Type";
+   selector AircraftTypeSelector;
+   group AircraftTypeGroup;
+   group AvAircraftImageGroup;
+}
+--------------------------------- COMMANDS ----------------------------------
+command NewAircraftTypeCommand for AvAircraftType {
+   label = "New";
+   enabled = [true];
+   mode = Global;
+   execute {
+      navigate "page/AircraftType/AircraftType";
+   }
+}
+
+--------------------------------- SELECTORS ---------------------------------
+selector AircraftTypeSelector for AvAircraftType {
+   label = "${AircraftTypeCode} - ${AircraftTypeName}";
+
+   static AircraftTypeCode {
+      label = "Type Code";
+   }
+   static AircraftTypeName {
+      label = "Type Name";
+   }
+}
+
+selector AircraftSystemNewSelector for AvAircraftSystem {
+   label = "${SystemCode} - ${SystemName}";
+   static SystemName;
+   static SystemCode;
+}
+---------------------------------- GROUPS -----------------------------------
+group AircraftTypeGroup for AvAircraftType {
+   label = "Aircraft Type";
+   field AircraftTypeCode {
+      label = "Type Code";
+   }
+   field AircraftTypeName {
+      label = "Type Name";
+   }
+}
+group AvAircraftImageGroup for AvAircraftType {
+   label = "Aircraft Image";
+   imagefield {
+      imagedata AircraftTypeImage;
+      showlabel = false;
+      size = FullWidth;
+   }
+
+}
+
+group AircraftSystemGroup for AvAircraftSystem {
+   label = "Aircraft System";
+   lov AircraftTypeRef with AircraftTypeSelector {
+      label = "Aircraft Type";
+      hidekey = [true];
+      description = AircraftTypeRef.AircraftTypeName;
+   }
+   field SystemCode;
+   field SystemName;
+}
+
+group AircraftSubSystemGroup for AvAircraftSubSystem {
+   label = "Aircraft Sub Systems";
+   lov AvAircraftSystemRef with AircraftSystemNewSelector {
+      label = "Aircraft System";
+      description = AvAircraftSystemRef.SubSystemName;
+      hidekey = [true];
+      editable = [false];
+   }
+   lov AvAircraftTypeRef with ReferenceAvAircraftTypeSelector {
+      label = "Aircraft Type";
+      hidekey = [true];
+      description = AvAircraftTypeRef.AircraftTypeName;
+   }
+   field SubSystemCode {
+      label = "Subsystem Code";
+   }
+   field SubSystemName {
+      label = "Sub System Name";
+   }
+}
+----------------------------------- LISTS -----------------------------------
+list AircraftSystemList for AvAircraftSystem {
+   label = "Aircraft Systems";
+   lov AircraftTypeRef with AircraftTypeSelector {
+      label = "Aircraft Type";
+      hidekey = [true];
+      description = AircraftTypeRef.AircraftTypeName;
+      editable = [false];
+
+   }
+   field SystemCode;
+   field SystemName;
+}
+
+list AircraftSubSystemList for AvAircraftSubSystem {
+   label = "Aircraft Sub Systems";
+   lov AvAircraftSystemRef with AircraftSystemNewSelector {
+      label = "Aircraft System";
+      description = AvAircraftSystemRef.SubSystemName;
+      hidekey = [true];
+      editable = [false];
+      validate command {
+
+         execute {
+            set AircraftTypeName = AvAircraftTypeRef.AircraftTypeName;
+
+         }
+
+      }
+   }
+   field AircraftTypeName {
+      label = "Aircraft Type";
+   }
+
+   field SubSystemCode {
+      label = "Sub System Code";
+   }
+   field SubSystemName {
+      label = "Sub System Name";
+   }
+}
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+tree AircraftTypeTree using AircraftTypeSet {
+   label = "Aircraft Type";
+   selector AircraftTypeSelector;
+   rootnode AircraftTypeNode {
+      label = "${AircraftTypeCode} - ${AircraftTypeName}";
+      navigate {
+         page Form {
+            filter(AircraftTypeCode, AircraftTypeCode);
+         }
+      }
+      iconset {
+         icon "account-groups";
+      }
+      connections {
+         node AircraftSystemFirstNode(AircraftSystemArray) {
+            defaultfilter = [AircraftTypeCode = AircraftTypeCode];
+         }
+      }
+   }
+   node AircraftSystemFirstNode for AvAircraftSystem {
+      label = "${SystemCode} - ${SystemName}";
+      navigate {
+         page AircraftTypeDeail {
+            filter(SystemCode, SystemCode);
+         }
+      }
+      iconset {
+         icon "bullet-list";
+      }
+      connections {
+         node AircraftSystemChildNode(AvAircraftSubSystemArray) {
+            defaultfilter = [SystemCode = SystemCode];
+         }
+
+      }
+   }
+
+   node AircraftSystemChildNode for AvAircraftSystem {
+      label = "${SystemCode} - ${SystemName}";
+      navigate {
+         page AircraftSubSystems {
+            filter(SubSystemCode, SubSystemCode);
+         }
+      }
+      iconset {
+         icon "circle-solid";
+      }
+   }
+}
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

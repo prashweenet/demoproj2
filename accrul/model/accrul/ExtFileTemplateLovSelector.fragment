@@ -1,0 +1,66 @@
+fragment ExtFileTemplateLovSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ext_file_template_lov";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceExtFileTemplateLovSelector for ExtFileTemplateLov {
+   static FileTemplateId;
+   static Description;
+}
+
+card ExtFileTemplateLovCard for ExtFileTemplateLov {
+   label = "";
+   fieldranking FileTemplateId;
+   field FileTemplateId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query ExtFileTemplateLov {
+   from = "ext_file_template_lov";
+   lu = ExtFileTemplate;
+   keys = FileTemplateId;
+   ludependencies = ExtFileTemplate;
+   attribute FileTemplateId Text {
+      label = "File Template ID";
+      lovcolumn = [true];
+   }
+   attribute FileType Text {
+      lovcolumn = [false];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute FileFormat Enumeration(ExtFileFormat) {
+      lovcolumn = [true];
+      fetch = "file_format_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------
+
+query ExtFileTemplateBudLov {
+   lu = ExtFileTemplate;
+   from = "ext_file_template_lov";
+   keys = FileType, FileTemplateId;
+   ludependencies = ExtFileTemplate;
+   attribute FileTemplateId Text {
+      label = "File Template ID";
+      lovcolumn = [true];
+   }
+   attribute FileType Text {
+      lovcolumn = [false];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute FileFormat Enumeration(ExtFileFormat) {
+      lovcolumn = [true];
+      fetch = "file_format_db";
+   }
+}

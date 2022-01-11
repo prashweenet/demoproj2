@@ -1,0 +1,98 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: UserGroupMemberFinance
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  151118  Bhhilk   STRFI-39, Modified DefaultGroup enumeration to FinanceYesNo.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW User_Group_Member_Finance2 IS
+   Prompt = 'User Group Member Finance'
+   Userid.Ref = 'UserFinance(COMPANY)/NOCHECK'
+   User_Group.Flags = 'KMI-L'
+   Default_Group.Flags = 'A-IU-'
+SELECT company                                  company,
+       userid                                   userid,
+       user_group                               user_group,
+       Finance_Yes_No_API.Decode(default_group) default_group,
+       default_group                            default_group_db,
+       rowid                                   objid,
+       rtrim(rpad(ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000)),2000))            objversion,
+       rowkey                                  objkey
+FROM   user_group_member_finance_tab;
+
+VIEW User_Group_Member_Finance3 IS
+   Prompt = 'User Group Member Finance'
+   Userid.Flags = 'PMIUL'
+   Userid.Ref = 'UserFinance(COMPANY)/NOCHECK'
+   User_Group.Flags = 'KMI-L'
+   Default_Group.Flags = 'A-IU-'
+SELECT company                                  company,
+       userid                                   userid,
+       user_group                               user_group,
+       Finance_Yes_No_API.Decode(default_group) default_group,
+       default_group                            default_group_db,
+       rowid                                   objid,
+       rtrim(rpad(ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000)),2000))            objversion,
+       rowkey                                  objkey
+FROM   user_group_member_finance_tab;
+
+VIEW User_Group_Member_Finance4 IS
+   Prompt = 'User Group Member Finance'
+   Userid.Ref = 'UserFinance(COMPANY)/NOCHECK'
+   User_Group.Flags = 'KMI-L'
+   Description.Flags = 'AMIUL'
+   Description.Datatype = 'STRING(100)'
+   Description.Prompt = 'User Group Description'
+   Default_Group.Flags = 'A-IU-'
+   Allowed_Acc_Period.Flags = 'AMIU-'
+   Allowed_Acc_Period.Datatype = 'STRING(200)'
+   Allowed_Acc_Period.Enumeration = 'AllowedAccountingPeriods'
+   Allowed_Acc_Period.Prompt = 'Allowed Accounting Period'
+   Allowed_Acc_Period_Db.Flags = 'A----'
+   Allowed_Acc_Period_Db.Datatype = 'STRING(1)'
+   Allowed_Acc_Period_Db.Prompt = 'Allowed Accounting Period'
+SELECT a.company                                  company,
+       a.userid                                   userid,
+       a.user_group                               user_group,
+       b.description                              description,
+       Finance_Yes_No_API.Decode(a.default_group) default_group,
+       a.default_group                            default_group_db,
+       b.allowed_accounting_period                allowed_acc_period,
+       b.allowed_accounting_period_db             allowed_acc_period_db,
+       a.rowid                                   objid,
+       rtrim(rpad(ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000)),2000))              objversion,
+       a.rowkey                                    objkey
+FROM   user_group_member_finance_tab a,
+       user_group_finance b
+WHERE  a.company=b.company AND
+       a.user_group=b.user_group;
+
+VIEW User_Group_Member_Finance_Adm IS
+   Prompt = 'User Group Member Finance'
+   Default_Group.Flags = 'A-IUL'
+   Default_Group_Db.Datatype = 'STRING(20)'
+SELECT a.company                                company,
+       user_group                               user_group,
+       userid                                   userid,
+       Finance_Yes_No_API.Decode(default_group) default_group,
+       default_group                            default_group_db,
+       a.rowid                                 objid,
+       ltrim(lpad(to_char(rowversion,'YYYYMMDDHH24MISS'),2000))                              objversion,
+       rowkey                                  objkey
+FROM   user_group_member_finance_tab a
+WHERE  EXISTS (SELECT * FROM company_finance_adm c WHERE a.company = c.company);
+

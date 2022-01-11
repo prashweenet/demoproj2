@@ -1,0 +1,19 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: RpdPeriodDetail
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+UNIQUE CONSTRAINT rpd_period_detail_uc1 IS rpd_period_detail_tab (rpd_id, reporting_date);
+-------------------- OTHER DEFINITIONS --------------------------------------
+

@@ -1,0 +1,313 @@
+client VoucherType;
+component ACCRUL;
+layer Core;
+projection VoucherTypeHandling;
+warningsenabled = VoucherType, VoucherTypeDetail;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry VoucherTypeNavEntry parent AccrulNavigator.UserRelatedDataMenu at index 500 {
+      label = "Voucher Type";
+      page Form home VoucherType;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using VoucherTypes {
+   label = "Voucher Type";
+   editmode = MultiField;
+   selector VoucherTypeRecordSelector;
+
+   arrange {
+      arrange {
+         group VoucherTypeGroup bind VoucherTypeRecordSelector;
+         group LedgerSelectionGroup bind VoucherTypeRecordSelector;
+      }
+      group VoucherSelectionGroup bind VoucherTypeRecordSelector;
+   }
+
+   list VoucherTypeDetailList(DetailVoucherTypeDetails) bind VoucherTypeRecordSelector;
+
+   commandgroup NewVoucherTypeCmdGroup {
+      label = "Create New Voucher Type";
+      command NewVoucherTypeCommand;
+   }
+
+   commandgroup VoucherSeriesCmdGroup {
+      label = "Voucher Series";
+      command VoucherSeriesCommand;
+   }
+
+   commandgroup ExcludedFromILCmdGroup {
+      label = "Excluded From IL";
+      @DynamicComponentDependency INTLED
+      command ExcludedFromILCommand;
+   }
+
+   commandgroup TranslationCmdGroup {
+      label = "Translation";
+      command TranslationCommand;
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command VoucherSeriesCommand for VoucherType {
+   label = "Voucher Series";
+   enabled = [true];
+   execute {
+      navigate "page/VoucherSeriesPerVouType/VoucherSeriesPerVoucherType?contexts=Company:$[context.Company]&$filter=VoucherType eq $[VoucherType]";
+   }
+}
+
+
+command NewVoucherTypeCommand for VoucherType {
+   label = "New Voucher Type";
+   enabled = [true];
+   execute {
+      navigate "/assistant/NewVoucherTypeAssistant/Assistant?$action=init{Company:$[Company]}";
+   }
+}
+
+
+@DynamicComponentDependency INTLED
+command ExcludedFromILCommand for VoucherType {
+   label = "Excluded From IL";
+   enabled = [LedgerId = "*"];
+   variable IsExcludedStr {
+      type = Text;
+   }
+   execute {
+      call IsExcluded(Company, VoucherType) into IsExcludedStr;
+      if[IsExcludedStr = "FALSE"] {
+         error("Voucher Type is not excluded from any Internal Ledger.");
+      }
+      else {
+         navigate "page/ExcludedFromIL/Form?contexts=Company:$[context.Company]&$filter=VoucherType eq $[VoucherType]";
+      }
+   }
+}
+
+
+command TranslationCommand for VoucherType {
+   label = "Translation";
+   execute {
+      navigate "page/CompanyAttrTransOverview/List?$filter=KeyValue eq $[Company] and Module eq 'ACCRUL' and Lu eq 'VoucherType' and AttributeKey eq $[VoucherType]";
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@Override
+selector VoucherTypeSelector for VoucherType {
+   label = "${VoucherType} - ${Description}";
+   static Company {
+      visible = [false];
+      searchable = false;
+   }
+   static VoucherType;
+}
+
+
+selector VoucherTypeRecordSelector for VoucherType {
+   label = "${VoucherType} - ${Description}";
+   static VoucherType;
+   static Description;
+}
+
+
+@DynamicComponentDependency INTLED
+selector LedgerIdRefSelector for InternalLedgerCurrent {
+   static Company {
+      visible = [false];
+   }
+   static LedgerId;
+   static Description;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group VoucherTypeGroup for VoucherType {
+   label = "";
+   field VoucherType;
+   field Description {
+      size = Large;
+   }
+}
+
+group LedgerSelectionGroup for VoucherType {
+   label = "Ledger Selection";
+
+   field Ledger {
+      size = Small;
+      validate command {
+         execute {
+            if[Ledger != "InternalLedger"] {
+               if[Ledger = "GeneralLedger"] {
+                  set LedgerId = "00";
+                  set UseManual = false;
+               }
+               else {
+                  set LedgerId = "*";
+               }
+               set Balance = true;
+            }
+            else {
+               set LedgerId = "";
+            }
+         }
+      }
+   }
+   @DynamicComponentDependency INTLED
+   lov LedgerIdRef with LedgerIdRefSelector {
+      editable = [IntledActiveNum = 1 and Ledger = "InternalLedger"];
+   }
+
+   field Balance {
+      size = Small;
+      editable = [IntledActiveNum = 1 and Ledger = "InternalLedger"];
+   }
+   field UseManual {
+      editable = [(Ledger != "GeneralLedger") and(IntledActiveNum = 1 and Ledger != "InternalLedger")];
+   }
+}
+
+group VoucherSelectionGroup for VoucherType {
+   label = "Parameter Selection";
+
+   field AutomaticAllotDb {
+      editable = [FunctionGroupCount != 0];
+   }
+   field SingleFunctionGroup {
+      editable = [FunctionGroupCount != 0];
+   }
+   field SimulationVoucher {
+      editable = [FunctionGroupCount != 0];
+   }
+   field SeparateUserApproval {
+      editable = [FunctionGroupCount != 0 and VoucherPrivilege = "TRUE"];
+   }
+   field UseApprovalWorkflow {
+      editable = [FunctionGroupCount != 0 and VoucherApproval = "TRUE"];
+   }
+}
+
+----------------------------------- LISTS -----------------------------------
+list VoucherTypeDetailList for VoucherTypeDetail {
+   label = "Function Group Information";
+
+   orderby = FunctionGroup;
+   crudactions {
+      new {
+         enabled = [(parent.SingleFunctionGroup != true) or(parent.SingleFunctionGroup = true and parent.FunctionGroupCount = 0)];
+      }
+   }
+
+   lov FunctionGroupRef with ReferenceFunctionGroupSelector using RetrieveFunctionGroups(parent.Ledger) {
+      search = FunctionGroup, Description;
+      description = FunctionGroupRef.Description;
+      required = [true];
+      validate command {
+         variable DummyVar {
+            type = Text;
+         }
+         execute {
+            call CheckFunctionGroup(FunctionGroup) into DummyVar;
+            if[FunctionGroup != null] {
+
+               if[FunctionGroupRef.StoreOriginalMandatory = true] {
+                  set StoreOriginalDb = true;
+               }
+               else {
+                  set StoreOriginalDb = false;
+               }
+
+               if[FunctionGroupRef.VouRowGrpValAllowed != true] {
+                  set RowGroupValidation = false;
+               }
+
+               if[FunctionGroupRef.RefMandatoryAllowed != true] {
+                  set ReferenceMandatory = false;
+               }
+
+               if[FunctionGroupRef.AutomaticAllotmentReq = true] {
+                  set AutomaticAllotDb = true;
+               }
+               else {
+                  set AutomaticAllotDb = false;
+               }
+
+               if[FunctionGroupRef.SingleFunctionRequired = false] {
+                  set SingleFunctionGroup = false;
+               }
+               else {
+                  set SingleFunctionGroup = true;
+               }
+            }
+         }
+      }
+   }
+
+   field AutomaticVouBalance;
+   field StoreOriginalDb {
+      editable = [FunctionGroupRef.StoreOriginalMandatory != true];
+   }
+   field RowGroupValidation {
+      editable = [FunctionGroupRef.VouRowGrpValAllowed = true and parent.Ledger != "InternalLedger"];
+      validate command {
+         variable RowGroupIdExistBool {
+            type = Boolean;
+         }
+         execute {
+            if[RowGroupValidation = false] {
+               call IsVoucherWithRowGroupIdExist(Company, VoucherType) into RowGroupIdExistBool;
+
+               if[RowGroupIdExistBool = true] {
+                  confirm("REMOVEROWGRPID: There are vouchers of this type with Row Group ID in the Hold table. The Row Group ID will be removed. Do you want to continue?") {
+                     when CANCEL {
+                        set RowGroupValidation = true;
+                        exit;
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+   field ReferenceMandatory {
+      editable = [FunctionGroupRef.RefMandatoryAllowed = true];
+   }
+   field AutomaticAllotDb;
+   field SingleFunctionGroup;
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

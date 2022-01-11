@@ -1,0 +1,115 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CodeJ
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- COMMON COLUMN DEFINITIONS ------------------------------
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+-- used in GROCON for getting reporting company code part values without considering company security.
+VIEW Code_J_All IS
+   Prompt = 'Accounting code part value'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+SELECT a.company                      company,
+       code_part_value                code_j,
+       nvl(Text_Field_Translation_API.Get_Text ( a.company,'CODEJ',code_part_value), description) description,
+       a.valid_from                   valid_from,
+       valid_until                    valid_until,
+       sort_value                     sort_value,
+       Budget_Account_Flag_API.Decode(bud_account) budget_value,
+       bud_account                    budget_value_db
+FROM   accounting_code_part_value_tab a
+WHERE  code_part = 'J';
+
+VIEW Accounting_Codepart_J IS
+   Prompt = 'Accounting Code J'
+   Sort = 'SORT_VALUE'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Code_J.Flags = 'KMI-L'
+   Code_J.Datatype = 'STRING(20)/UPPERCASE'
+   Code_J.Prompt = 'Code J'
+   Description.Flags = 'AMIUL'
+   Description.Datatype = 'STRING(100)'
+   Description.Prompt = 'Description'
+   Sort_Value.Flags = 'A-I--'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Sort_Value.Prompt = 'Sort Value'
+   Valid_From.Flags = 'A-I-L'
+   Valid_From.Datatype = 'DATE/DATE'
+   Valid_From.Prompt = 'Valid From'
+   Valid_Until.Flags = 'A-I-L'
+   Valid_Until.Datatype = 'DATE/DATE'
+   Valid_Until.Prompt = 'Valid Until'
+SELECT COMPANY                                  COMPANY,
+       CODE_PART_VALUE                          CODE_J,
+       nvl(rtrim(rpad(text_field_translation_api.get_text( COMPANY, 'CODE'||'J', CODE_PART_VALUE), 100)), description)
+                                                DESCRIPTION,
+       sort_value                               SORT_VALUE,
+       valid_from                               VALID_FROM,
+       valid_until                              VALID_UNTIL,
+       Budget_Account_Flag_API.Decode(bud_account) BUDGET_VALUE,
+       bud_account                              BUDGET_VALUE_DB,
+       ROWID                                   OBJID,
+       to_char(rowversion,'YYYYMMDDHH24MISS')                              OBJVERSION,
+       rowkey                                  objkey
+FROM   accounting_code_part_value_tab
+WHERE  code_part = 'J';
+
+VIEW Mc_Accounting_Codepart_J IS
+   Prompt = 'Accounting Code J'
+   Sort = 'SORT_VALUE'
+   Company.Flags = 'PMI--'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Code_J.Flags = 'KMI-L'
+   Code_J.Datatype = 'STRING(20)/UPPERCASE'
+   Code_J.Prompt = 'Code J'
+   Description.Flags = 'AMIUL'
+   Description.Datatype = 'STRING(35)'
+   Description.Prompt = 'Description'
+   Sort_Value.Flags = 'A-I--'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+   Sort_Value.Prompt = 'Sort Value'
+SELECT a.COMPANY                                COMPANY,
+       CODE_PART_VALUE                          CODE_J,
+       rtrim(rpad(text_field_translation_api.get_text
+                ( a.COMPANY,
+                  'CODE'||'J',
+                  CODE_PART_VALUE), 35))        DESCRIPTION,
+       sort_value                               SORT_VALUE, 
+       a.ROWID                                 OBJID,
+       to_char(rowversion,'YYYYMMDDHH24MISS')                              OBJVERSION,
+       a.rowkey                                objkey
+FROM   accounting_code_part_value_tab a, company_finance_auth c
+WHERE  a.company = c.company
+AND    code_part = 'J';
+
+
+@SecurityCheck Company.UserAuthorized(a.company)
+VIEW Code_J_Mc_Lov IS
+   Prompt = 'Code J'
+   Sort = 'SORT_VALUE'
+   code_j.Flags = 'KMI-L'
+   Sort_Value.Datatype = 'STRING(20)/UPPERCASE'
+SELECT DISTINCT
+       code_part_value                             code_j,
+       substr(nvl(Enterp_Comp_Connect_V170_API.Get_Company_Translation(company, 'ACCRUL', 'CodeJ',
+          code_part_value), description), 1, 100) description,
+       sort_value                                  sort_value,
+       Budget_Account_Flag_API.Decode(bud_account) budget_value,
+       bud_account                                 budget_value_db
+FROM   accounting_code_part_value_tab a
+WHERE  code_part = 'J';

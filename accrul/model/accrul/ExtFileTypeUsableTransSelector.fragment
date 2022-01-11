@@ -1,0 +1,40 @@
+fragment ExtFileTypeUsableTransSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view ext_file_type_usable";
+// NOTE: Created by PKURLK for External File Transactions functionality using ExtFileTypeUsableSelector fragment file
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceExtFileTypeUsableSelector for ExtFileTypeUsable {
+   orderby = FileType;
+
+   static FileType;
+   static Description;
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query ExtFileTypeUsable {
+   from = "ext_file_type_usable";
+   lu = ExtFileType;
+   keys = FileType, FileTypex;
+   ludependencies = ExtFileType;
+   attribute FileType Text {
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+   attribute Component Text {
+      lovcolumn = [true];
+   }
+   attribute SystemDefined Text {
+      lovcolumn = [true];
+   }
+   attribute FileTypex Text {
+      label = "File Type X";
+   }
+}
+

@@ -1,0 +1,68 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AvAircraftType
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------------
+--  2008310  SWiclk  LMM2020R1-916, Created and added Unittest for Pre_Sync_Action().
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+
+UNITTEST "Pre_Sync_Action should return correct attr depending on existance of the Aircraft Type Code" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockPackage Av_Aircraft_Type_API
+   FUNCTION Check_Exist___ (
+      aircraft_type_code_ IN     VARCHAR2 ) RETURN BOOLEAN
+   IS
+   BEGIN
+      IF (aircraft_type_code_ = 'C17') THEN
+         RETURN TRUE;
+      ELSE
+         RETURN FALSE;
+      END IF;
+
+   END Check_Exist___;
+
+   @MockTable av_aircraft_type_tab
+   VALUES
+      | aircraft_type_code | aircraft_type_name   |
+      | 'C17'              | 'Aircraft type name' |
+   END VALUES;
+IS
+   --Insert your test variables here
+   output1_    VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+BEGIN
+   FOR
+      | attr_ |
+      | 'AIRCRAFT_TYPE_CODE'||chr(31)||'C17'||chr(30)|| 'AIRCRAFT_TYPE_NAME'||chr(31)||'Aircraft type name 17'||chr(30) |
+      | 'AIRCRAFT_TYPE_CODE'||chr(31)||'C18'||chr(30)|| 'AIRCRAFT_TYPE_NAME'||chr(31)||'Aircraft type name 18'||chr(30) |
+   LOOP
+      --Insert your test code here
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+      expected1_ := 'AIRCRAFT_TYPE_NAME'||chr(31)||'Aircraft type name 17'||chr(30);
+
+      -- When Aircraft type code does not exist
+      IF (output1_ LIKE 'AIRCRAFT_TYPE_CODE%') THEN
+         ASSERT output1_ = attr_ MESSAGE 'Assert1: Expected '||expected1_||' but  was '||output1_;
+
+      ELSE  -- When Aircraft type code exists
+         ASSERT output1_ = expected1_ MESSAGE ' Assert2: Expected '||attr_  ||' but  was '||output1_;
+      END IF;
+
+   END LOOP;
+END UNITTEST;
+
+
+

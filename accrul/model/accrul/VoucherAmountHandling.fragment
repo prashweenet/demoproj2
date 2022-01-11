@@ -1,0 +1,1678 @@
+fragment VoucherAmountHandling;
+component ACCRUL;
+layer Core;
+description "Used to Handle Voucher Amount calculations";
+include fragment VoucherCalculations;
+
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+//fieldset VoucherRowAmountsDummy for VoucherPosting {
+//   field OptionalCode;
+//
+//   field CurrencyCode {
+//      size = Small;
+//      validate command ValidateCurrencyCodeRef;
+//   }
+//
+//   field CurrencyType {
+//      size = Small;
+//      editable = [true];
+//      validate command ValidateCurrencyTypeRef;
+//   }
+//
+//   field Correction {
+//      size = Small;
+//      editable = [false];
+//
+//   }
+//   field CurrencyDebetAmount {
+//      editable = [CurrencyCreditAmount = null];
+//      validate command ValidateCurrencyDebetAmount;
+//   }
+//
+//   field CurrencyCreditAmount {
+//      editable = [CurrencyDebetAmount = null];
+//      validate command ValidateCurrencyCreditAmount;
+//   }
+//
+//   field CurrencyAmount {
+//      validate command ValidateCurrencyAmount;
+//   }
+//
+//   field CurrencyTaxAmount {
+//      editable = [OptionalCode != "" and OptionalCodeRef.FeeType != "NOTAX"];
+//      validate command ValidateCurrencyTaxAmount;
+//   }
+//
+//
+//   field CurrencyRate {
+//      editable = [not(TransCode != "MANUAL" or CurrencyCode = BaseCurrencyCode or IsValidEmuCurrency = "TRUE" or(IsBaseEmu = "TRUE" and CurrencyCode = "EUR"))];
+//      validate command ValidateCurrencyRate;
+//   }
+//   field ConversionFactor;
+//
+//   field DebetAmount {
+//      editable = [CreditAmount = null];
+//      validate command ValidateDebetAmount;
+//   }
+//   field CreditAmount {
+//      editable = [DebetAmount = null];
+//      validate command ValidateCreditAmount;
+//   }
+//
+//   field Amount {
+//      validate command ValidateAmount;
+//   }
+//
+//   field TaxAmount {
+//      editable = [OptionalCode != "" and OptionalCodeRef.FeeType != "NOTAX"];
+//      validate command ValidateTaxAmount;
+//
+//   }
+//   field ParallelCurrRateType {
+//      size = Small;
+//      editable = [ParallelCurrency != null];
+//      validate command ValidateParallelCurrRateTypeRef;
+//
+//   }
+//
+//   field ParallelCurrRateType {
+//      size = Small;
+//      editable = [ParallelCurrency != null];
+//      validate command ValidateParallelCurrRateTypeRef;
+//
+//   }
+//
+//   field ParallelCurrencyRate {
+//
+//      editable = [ParallelCurrency != null and ParallelCurrency != CurrencyCode];
+//      validate command ValidateParallelCurrencyRate;
+//
+//   }
+//   field ParallelConversionFactor;
+//   field ParallelCurrency {
+//      size = Small;
+//   }
+//   field ThirdCurrencyDebitAmount {
+//      editable = [ThirdCurrencyCreditAmount = null and ParallelCurrency != null];
+//
+//      validate command ValidateThirdCurrencyDebitAmount;
+//
+//   }
+//   field ThirdCurrencyCreditAmount {
+//      editable = [ThirdCurrencyDebitAmount = null and ParallelCurrency != null];
+//      format = ifscurrency;
+//      validate command ValidateThirdCurrencyCreditAmount;
+//
+//   }
+//   field ThirdCurrencyAmount {
+//      format = ifscurrency;
+//      editable = [ParallelCurrency != null];
+//      validate command ValidateThirdCurrencyAmount;
+//   }
+//
+//   field ParallelCurrTaxAmount {
+//      editable = [ParallelCurrency != null and OptionalCode != "" and OptionalCodeRef.FeeType != "NOTAX"];
+//      validate command ValidateParallelTaxAmount;
+//   }
+//
+//}
+
+
+fieldset VoucherRowTaxCodes for VoucherPosting {
+
+   lov OptionalCodeRef with ReferenceTaxCodeRestrictedSelector using TaxCodeLov(Company, parent.VoucherDate) {
+      size = Small;
+      validate command {
+         variable TaxValues {
+            type = Structure(TaxValuesStructure);
+         }
+         variable CurrencyAmountStruct {
+            type = Structure(CurrencyAmountStructure);
+         }
+         execute {
+
+
+            set IsCredit = false;
+            if [not(CurrencyCreditAmount = null)] {
+               set IsCredit = true;
+            }
+            if [OptionalCodeRef = null] {
+               set TaxDirection = null;
+               set TaxPercentage = null;
+               set TaxType = null;
+
+            }
+            else {
+               if [OptionalCodeRef != null] {
+                  if [FunctionGroup = "Q"] {
+                     info("No automatic tax transaction will be created on a voucher of function group Q");
+
+                  }
+               }
+            }
+
+            call FetchValidateTaxCodeVoucher(Company, Account, OptionalCode) into TaxValues;
+
+            copy TaxValues into this;
+            if[CurrencyCreditAmount = null and CurrencyDebetAmount = null] {
+               set CurrencyAmount = null;
+            }
+
+            if[DebetAmount = null and CreditAmount = null] {
+               set Amount = null;
+            }
+
+            if[ThirdCurrencyDebitAmount = null and ThirdCurrencyCreditAmount = null] {
+               set ThirdCurrencyAmount = null;
+            }
+
+            call ValidateTaxCodeVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+            CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+            CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount,
+            OptionalCode, TaxPercentage, TaxDirection, parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+            copy CurrencyAmountStruct into this;
+
+//            set Amount = CurrencyAmountStruct.Amount;
+//            set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//            set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//            set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//            set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//            set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//            set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//            set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//            set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//            set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//            set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//            set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//            set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//            set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//            set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//            set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//            set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//            set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//            set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//            set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+
+         }
+      }
+   }
+   field TaxPercentage;
+   field TaxDirection {
+      size = Small;
+      editable = [OptionalCode != "" and OptionalCodeRef.FeeType != "NoTax"];
+      when [OptionalCodeRef.FeeType != "NoTax"] use subset ExcludeNoTax;
+   }
+}
+fieldset VoucherRowAmountsFieldSet for VoucherPosting {
+   field CurrencyCodeRef {
+      size = Small;
+      validate command ValidateCurrencyCodeRef;
+   }
+
+   lov CurrencyTypeRef with ReferenceCurrencyRate2Selector using CurrencyTypeLov(Company, CurrencyCode) {
+      size = Small;
+      editable = [true];
+      validate command ValidateCurrencyTypeRef;
+   }
+
+   field Correction {
+      size = Small;
+      editable = [false];
+
+   }
+   field CurrencyDebetAmount {
+      editable = [CurrencyCreditAmount = null];
+      preserveprecision = [true];
+      validate command ValidateCurrencyDebetAmount;
+   }
+
+   field CurrencyCreditAmount {
+      editable = [CurrencyDebetAmount = null];
+      preserveprecision = [true];
+      validate command ValidateCurrencyCreditAmount;
+   }
+
+   field CurrencyAmount {
+      preserveprecision = [true];
+      validate command ValidateCurrencyAmount;
+   }
+
+   field CurrencyTaxAmount {
+      preserveprecision = [true];
+      editable = [OptionalCode != "" and OptionalCodeRef.FeeType != "NOTAX"];
+      validate command ValidateCurrencyTaxAmount;
+   }
+
+
+   field CurrencyRate {
+      editable = [not(TransCode != "MANUAL" or CurrencyCode = BaseCurrencyCode or IsValidEmuCurrency = "TRUE" or(IsBaseEmu = "TRUE" and CurrencyCode = "EUR"))];
+      validate command ValidateCurrencyRate;
+   }
+   field ConversionFactor;
+
+   field DebetAmount {
+      preserveprecision = [true];
+      editable = [CreditAmount = null];
+      validate command ValidateDebetAmount;
+   }
+   field CreditAmount {
+      preserveprecision = [true];
+      editable = [DebetAmount = null];
+      validate command ValidateCreditAmount;
+   }
+
+   field Amount {
+      preserveprecision = [true];
+      validate command ValidateAmount;
+   }
+
+   field TaxAmount {
+      preserveprecision = [true];
+      editable = [OptionalCode != "" and OptionalCodeRef.FeeType != "NOTAX"];
+      validate command ValidateTaxAmount;
+
+   }
+   lov ParallelCurrRateTypeRef with ReferenceCurrencyType3Selector using ParallelCurrencyTypeLov(Company) {
+      size = Small;
+      editable = [ParallelCurrency != null];
+      validate command ValidateParallelCurrRateTypeRef;
+
+   }
+   field ParallelCurrencyRate {
+
+      editable = [ParallelCurrency != null and ParallelCurrency != CurrencyCode];
+      validate command ValidateParallelCurrencyRate;
+
+   }
+   field ParallelConversionFactor;
+   field ParallelCurrency {
+      size = Small;
+   }
+   field ThirdCurrencyDebitAmount {
+      preserveprecision = [true];
+      editable = [ThirdCurrencyCreditAmount = null and ParallelCurrency != null];
+
+      validate command ValidateThirdCurrencyDebitAmount;
+
+   }
+   field ThirdCurrencyCreditAmount {
+      preserveprecision = [true];
+      editable = [ThirdCurrencyDebitAmount = null and ParallelCurrency != null];
+      format = ifscurrency;
+      validate command ValidateThirdCurrencyCreditAmount;
+
+   }
+   field ThirdCurrencyAmount {
+      preserveprecision = [true];
+      editable = [ParallelCurrency != null];
+      validate command ValidateThirdCurrencyAmount;
+   }
+
+   field ParallelCurrTaxAmount {
+      preserveprecision = [true];
+      editable = [ParallelCurrency != null and OptionalCode != "" and OptionalCodeRef.FeeType != "NOTAX"];
+      validate command ValidateParallelTaxAmount;
+   }
+}
+
+
+--------------------------------- COMMANDS ----------------------------------
+
+command ValidateCurrencyCodeRef {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   variable OldCurrencyRate {
+      type = Number;
+   }
+   variable OldCurrencyType {
+      type = Text;
+   }
+   variable IsCredit {
+      type = Boolean;
+   }
+
+
+   execute {
+      set OldCurrencyRate = original.CurrencyRate;
+      set IsCredit = false;
+      if [not(CurrencyCreditAmount = null)] {
+         set IsCredit = true;
+      }
+      if[CurrencyCreditAmount = null and CurrencyDebetAmount = null] {
+         set CurrencyAmount = null;
+      }
+
+      if[DebetAmount = null and CreditAmount = null] {
+         set Amount = null;
+      }
+
+      if[ThirdCurrencyDebitAmount = null and ThirdCurrencyCreditAmount = null] {
+         set ThirdCurrencyAmount = null;
+      }
+
+      call GetValidEmu(Company, CurrencyCode, parent.VoucherDate) into IsEmu;
+
+      call ValidateCurrencyCodeVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount,
+      OptionalCode, TaxPercentage, TaxDirection, parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrCovFact = CurrencyAmountStruct.ParallelConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set ParallelConversionFactor = CurrencyAmountStruct.ParallelConversionFactor;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+   }
+
+}
+
+command  ValidateCurrencyTypeRef {
+
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+
+   execute {
+      set IsCredit = false;
+      if [not(CurrencyCreditAmount = null)] {
+         set IsCredit = true;
+      }
+      if [CurrencyType = null] {
+         error("A Currency Rate Type must be specified in the voucher postings line.");
+      }
+      else {
+         if[CurrencyCreditAmount = null and CurrencyDebetAmount = null] {
+            set CurrencyAmount = null;
+         }
+
+         if[DebetAmount = null and CreditAmount = null] {
+            set Amount = null;
+         }
+
+         if[ThirdCurrencyDebitAmount = null and ThirdCurrencyCreditAmount = null] {
+            set ThirdCurrencyAmount = null;
+         }
+         call ValidateCurrencyTypeVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+         CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+         CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount,
+         OptionalCode, TaxPercentage, TaxDirection, parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+      }
+      copy CurrencyAmountStruct into this;
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+   }
+}
+
+command ValidateCurrencyDebetAmount {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+
+   execute {
+      set IsCredit = false;
+
+      if [CurrencyDebetAmount != null and CurrencyDebetAmount > 0 and Correction] {
+         set CurrencyDebetAmount = "#{-1 * CurrencyDebetAmount}";
+      }
+      else {
+         if [CurrencyDebetAmount != null and CurrencyDebetAmount < 0 and not(Correction)] {
+            set CurrencyDebetAmount = "#{-1 * CurrencyDebetAmount}";
+         }
+      }
+
+      if [CurrencyDebetAmount = null] {
+         set CurrencyAmount = null;
+      }
+      else {
+         set CurrencyAmount = "#{CurrencyDebetAmount - CurrencyCreditAmount}";
+
+      }
+
+
+      call ValidateCurrencyAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection,
+      parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+      set IntManualAdded = false;
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+   }
+
+}
+
+command ValidateCurrencyCreditAmount {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+
+      set IsCredit = true;
+      if [CurrencyCreditAmount != null and CurrencyCreditAmount > 0 and Correction] {
+         set CurrencyCreditAmount = "#{-1 * CurrencyCreditAmount}";
+      }
+      else {
+         if [CurrencyCreditAmount != null and CurrencyCreditAmount < 0 and not(Correction)] {
+            set CurrencyCreditAmount = "#{-1 * CurrencyCreditAmount}";
+         }
+      }
+
+      if [CurrencyCreditAmount = null] {
+         set CurrencyAmount = null;
+      }
+      else {
+         set CurrencyAmount = "#{CurrencyDebetAmount - CurrencyCreditAmount}";
+      }
+
+      call ValidateCurrencyAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection,
+      parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+      copy CurrencyAmountStruct into this;
+      set IntManualAdded = false;
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+
+   }
+  -- }
+}
+
+command ValidateCurrencyAmount {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+
+      if [Correction] {
+         if [CurrencyAmount != null and CurrencyAmount > 0] {
+            set CurrencyCreditAmount = "#{-1 * CurrencyAmount}";
+            set CurrencyDebetAmount = null;
+            set IsCredit = true;
+         }
+         else {
+            if [CurrencyAmount != null and CurrencyAmount <= 0] {
+               set CurrencyDebetAmount = CurrencyAmount;
+               set CurrencyCreditAmount = null;
+               set IsCredit = false;
+            }
+         }
+      }
+      else {
+         if [CurrencyAmount != null and CurrencyAmount >= 0] {
+            set CurrencyDebetAmount = CurrencyAmount;
+            set CurrencyCreditAmount = null;
+            set IsCredit = false;
+         }
+         else {
+            if [CurrencyAmount != null and CurrencyAmount < 0] {
+               set CurrencyCreditAmount = "#{-1 * CurrencyAmount}";
+               set CurrencyDebetAmount = null;
+               set IsCredit = true;
+            }
+         }
+      }
+
+      call ValidateCurrencyAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection,
+      parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+      set IntManualAdded = false;
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+
+   }
+}
+
+command ValidateCurrencyTaxAmount {
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+
+   execute {
+      set IsCredit = false;
+      if [not(CurrencyCreditAmount = null)] {
+         set IsCredit = true;
+      }
+      call ValidateCurrencyTaxAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection,
+      parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+   }
+
+}
+
+command ValidateCurrencyRate {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+      set IsCredit = false;
+      if [not(CurrencyCreditAmount = null)] {
+         set IsCredit = true;
+      }
+
+      if[CurrencyCreditAmount = null and CurrencyDebetAmount = null] {
+         set CurrencyAmount = null;
+      }
+
+      if[DebetAmount = null and CreditAmount = null] {
+         set Amount = null;
+      }
+
+      if[ThirdCurrencyDebitAmount = null and ThirdCurrencyCreditAmount = null] {
+         set ThirdCurrencyAmount = null;
+      }
+
+
+      call ValidateCurrencyRateVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection,
+      parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+
+   }
+
+}
+
+command ValidateDebetAmount {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+      set IsCredit = false;
+      if [DebetAmount != null and DebetAmount > 0 and Correction] {
+         set DebetAmount = "#{-1 * DebetAmount}";
+      }
+      else {
+         if [DebetAmount != null and DebetAmount < 0 and not(Correction)] {
+            set DebetAmount = "#{-1 * DebetAmount}";
+         }
+      }
+      if [DebetAmount = null] {
+         set Amount = null;
+      }
+      else {
+         set Amount = "#{DebetAmount - CreditAmount}";
+      }
+      call ValidateAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection,
+      parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+      set IntManualAdded = false;
+
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+
+   }
+
+}
+
+command ValidateCreditAmount {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+      set IsCredit = true;
+      if [CreditAmount != null and CreditAmount > 0 and Correction] {
+         set CreditAmount = "#{-1 * CreditAmount}";
+      }
+      else {
+         if [CreditAmount != null and CreditAmount < 0 and not(Correction)] {
+            set CreditAmount = "#{-1 * CreditAmount}";
+         }
+      }
+      if [CreditAmount = null] {
+         set Amount = null;
+      }
+      else {
+         set Amount = "#{DebetAmount - CreditAmount}";
+      }
+      call ValidateAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection, parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+      set IntManualAdded = false;
+
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+   }
+
+}
+
+command ValidateAmount {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+      set IsCredit = false;
+      if [Correction] {
+         if [Amount != null and Amount > 0] {
+            set CreditAmount = "#{-1 * CreditAmount}";
+            set IsCredit = true;
+         }
+         else {
+            if [Amount != null and Amount <= 0] {
+               set DebetAmount = Amount;
+            }
+         }
+      }
+      else {
+         if [Amount != null and Amount >= 0] {
+            set DebetAmount = Amount;
+         }
+         else {
+            if [Amount != null and Amount < 0] {
+               set DebetAmount = Amount;
+               set IsCredit = true;
+            }
+         }
+      }
+      call ValidateAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection,
+      parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+      set IntManualAdded = false;
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+   }
+
+}
+
+command ValidateTaxAmount {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+
+
+      set IsCredit = false;
+      if [not(CreditAmount = null)] {
+         set IsCredit = true;
+      }
+
+      call ValidateTaxAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection, parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+   }
+
+}
+
+command ValidateParallelCurrRateTypeRef {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+      set IsCredit = false;
+      if [not(CurrencyCreditAmount = null)] {
+         set IsCredit = true;
+      }
+
+      if[CurrencyCreditAmount = null and CurrencyDebetAmount = null] {
+         set CurrencyAmount = null;
+      }
+
+      if[DebetAmount = null and CreditAmount = null] {
+         set Amount = null;
+      }
+
+      if[ThirdCurrencyDebitAmount = null and ThirdCurrencyCreditAmount = null] {
+         set ThirdCurrencyAmount = null;
+      }
+
+      call ValidateParallelCurrencyRateTypeVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection, parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+   }
+
+}
+
+command ValidateParallelCurrencyRate {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+      set IsCredit = false;
+      if [not(CurrencyCreditAmount = null)] {
+         set IsCredit = true;
+      }
+      call ValidateParallelCurrencyRateVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection, parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+
+
+   }
+
+}
+
+command ValidateThirdCurrencyDebitAmount {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+      set IsCredit = false;
+
+      if [ThirdCurrencyDebitAmount != null and ThirdCurrencyDebitAmount > 0 and Correction] {
+         set ThirdCurrencyDebitAmount = "#{-1 * ThirdCurrencyDebitAmount}";
+      }
+      else {
+         if [ThirdCurrencyDebitAmount != null and ThirdCurrencyDebitAmount < 0 and not(Correction)] {
+            set ThirdCurrencyDebitAmount = "#{-1 * ThirdCurrencyDebitAmount}";
+         }
+      }
+      set ThirdCurrencyAmount = "#{ThirdCurrencyDebitAmount - ThirdCurrencyCreditAmount}";
+      call ValidateThirdCurrencyAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection,
+      parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+   }
+
+}
+
+command ValidateThirdCurrencyCreditAmount {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+      set IsCredit = true;
+
+      if [ThirdCurrencyCreditAmount != null and ThirdCurrencyCreditAmount > 0 and Correction] {
+         set ThirdCurrencyCreditAmount = "#{-1 * CurrencyCreditAmount}";
+      }
+      else {
+         if [ThirdCurrencyCreditAmount != null and ThirdCurrencyCreditAmount < 0 and not(Correction)] {
+            set ThirdCurrencyCreditAmount = "#{-1 * ThirdCurrencyCreditAmount}";
+         }
+      }
+      set ThirdCurrencyAmount = "#{ThirdCurrencyDebitAmount - ThirdCurrencyCreditAmount}";
+
+      call ValidateThirdCurrencyAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection,
+      parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+   }
+
+}
+
+command ValidateThirdCurrencyAmount {
+
+   variable CurrencyAmountStruct {
+      type = Structure(CurrencyAmountStructure);
+   }
+   execute {
+      set IsCredit = false;
+//            if [not(CurrencyCreditAmount = null)] {
+//               set IsCredit = true;
+//            }
+      if [Correction] {
+         if [ThirdCurrencyAmount != null and ThirdCurrencyAmount > 0] {
+            set ThirdCurrencyCreditAmount = "#{-1 * ThirdCurrencyAmount}";
+            set ThirdCurrencyDebetAmount = null;
+            set IsCredit = true;
+         }
+         else {
+            if [ThirdCurrencyAmount != null and ThirdCurrencyAmount <= 0] {
+               set ThirdCurrencyDebetAmount = ThirdCurrencyAmount;
+               set ThirdCurrencyCreditAmount = null;
+            }
+         }
+      }
+      else {
+         if [ThirdCurrencyAmount != null and ThirdCurrencyAmount >= 0] {
+            set ThirdCurrencyDebetAmount = ThirdCurrencyAmount;
+            set ThirdCurrencyCreditAmount = null;
+         }
+         else {
+            if [ThirdCurrencyAmount != null and ThirdCurrencyAmount < 0] {
+               set ThirdCurrencyCreditAmount = "#{-1 * ThirdCurrencyAmount}";
+               set IsCredit = true;
+               set ThirdCurrencyDebetAmount = null;
+            }
+         }
+      }
+      call ValidateThirdCurrencyAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection,
+      parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+      copy CurrencyAmountStruct into this;
+
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+
+   }
+
+}
+
+command ValidateParallelTaxAmount {
+
+   variable CurrencyAmountStruct Structure(CurrencyAmountStructure);
+    
+   execute {
+      set IsCredit = false;
+      if [not(CurrencyCreditAmount = null)] {
+         set IsCredit = true;
+      }
+      call ValidateParallelTaxAmountVoucher(parent.Company, parent.VoucherType, parent.VoucherDate, Company, VoucherType, CurrencyCode, Correction, Amount, CurrencyAmount, ThirdCurrencyAmount,
+      CurrencyRate, CurrencyRate, ConversionFactor, ParallelCurrencyRate, ParallelConversionFactor,
+      CurrencyType, ParallelCurrRateType, TaxBaseAmount, CurrencyTaxBaseAmount, ParallelCurrTaxBaseAmount, TaxAmount, CurrencyTaxAmount, ParallelCurrTaxAmount, OptionalCode, TaxPercentage, TaxDirection,
+      parent.AmountMethod, parent.FunctionGroup, IsCredit) into CurrencyAmountStruct;
+
+
+      copy CurrencyAmountStruct into this;
+
+//      set Amount = CurrencyAmountStruct.Amount;
+//      set DebetAmount = CurrencyAmountStruct.DebitAmount;
+//      set CreditAmount = CurrencyAmountStruct.CreditAmount;
+//      set CurrencyAmount = CurrencyAmountStruct.CurrencyAmount;
+//      set CurrencyDebetAmount = CurrencyAmountStruct.CurrencyDebitAmount;
+//      set CurrencyCreditAmount = CurrencyAmountStruct.CurrencyCreditAmount;
+//      set ThirdCurrencyAmount = CurrencyAmountStruct.ParallelCurrencyAmount;
+//      set ThirdCurrencyDebitAmount = CurrencyAmountStruct.ParallelCurrencyDebitAmount;
+//      set ThirdCurrencyCreditAmount = CurrencyAmountStruct.ParallelCurrencyCreditAmount;
+//      set TaxBaseAmount = CurrencyAmountStruct.TaxBaseAmount;
+//      set CurrencyTaxBaseAmount = CurrencyAmountStruct.CurrencyTaxBaseAmount;
+//      set ParallelCurrTaxBaseAmount = CurrencyAmountStruct.ParallelCurrencyTaxBaseAmount;
+//      set CurrencyTaxAmount = CurrencyAmountStruct.CurrencyTaxAmount;
+//      set TaxAmount = CurrencyAmountStruct.TaxAmount;
+//      set ParallelCurrTaxAmount = CurrencyAmountStruct.ParallelCurrencyTaxAmount;
+//      set CurrencyRate = CurrencyAmountStruct.CurrencyRate;
+//      set ConversionFactor = CurrencyAmountStruct.ConversionFactor;
+//      set ParallelCurrencyRate = CurrencyAmountStruct.ParallelCurrencyRate;
+//      set CurrencyType = CurrencyAmountStruct.CurrencyRateType;
+//      set ParallelCurrRateType = CurrencyAmountStruct.ParallelCurrencyRateType;
+
+   }
+
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+-------------------------------- STRUCTURES ---------------------------------
+
+structure TaxValuesStructure {
+   attribute TaxCode Text;
+   attribute TaxDirection Enumeration(TaxDirection);
+   attribute TaxType Text;
+   attribute TaxPercentage Number;
+}
+
+
+
+---------------------------------- ACTIONS ----------------------------------
+--------------------------------- FUNCTIONS ---------------------------------
+
+function ValidateCurrencyCodeVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId Text;
+   parameter MultiCompanyVoucherType Text;
+   parameter VoucherDate Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+function ValidateCurrencyAmountVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId Text;
+   parameter MultiCompanyVoucherType Text;
+   parameter VoucherDate Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+
+}
+
+function ValidateAmountVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId Text;
+   parameter MultiCompanyVoucherType Text;
+   parameter VoucherDate Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+function ValidateCurrencyRateVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId Text;
+   parameter MultiCompanyVoucherType Text;
+   parameter VoucherDate Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+function FetchValidateTaxCodeVoucher Structure(TaxValuesStructure) {
+   parameter Company Text;
+   parameter Account Text;
+   parameter TaxCode Text;
+
+}
+
+function ValidateTaxCodeVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId Text;
+   parameter MultiCompanyVoucherType Text;
+   parameter VoucherDate Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+function ValidateCurrencyTypeVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId            Text;
+   parameter MultiCompanyVoucherType   Text;
+   parameter VoucherDate               Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+function ValidateParallelCurrencyRateTypeVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId            Text;
+   parameter MultiCompanyVoucherType   Text;
+   parameter VoucherDate               Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+function ValidateParallelCurrencyRateVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId            Text;
+   parameter MultiCompanyVoucherType   Text;
+   parameter VoucherDate               Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+
+function ValidateThirdCurrencyAmountVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId            Text;
+   parameter MultiCompanyVoucherType   Text;
+   parameter VoucherDate               Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+function ValidateParallelTaxAmountVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId            Text;
+   parameter MultiCompanyVoucherType   Text;
+   parameter VoucherDate               Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+
+function ValidateCurrencyTaxAmountVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId            Text;
+   parameter MultiCompanyVoucherType   Text;
+   parameter VoucherDate               Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+function ValidateTaxAmountVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId            Text;
+   parameter MultiCompanyVoucherType   Text;
+   parameter VoucherDate               Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+function ResetTaxAmountVoucher  Structure(CurrencyAmountStructure) {
+   parameter MultiCompanyId            Text;
+   parameter MultiCompanyVoucherType   Text;
+   parameter VoucherDate               Date;
+   parameter Company Text;
+   parameter VoucherType Text;
+   parameter CurrencyCode Text;
+   parameter Correction Boolean;
+   parameter Amount Number;
+   parameter CurrencyAmount Number;
+   parameter ParallelCurrencyAmount Number;
+   parameter CurrencyRate Number;
+   parameter OldCurrencyRate Number;
+   parameter ConversionFactor Number;
+   parameter ParallelCurrencyRate Number;
+   parameter ParallelConversionFactor Number;
+   parameter CurrencyRateType Text;
+   parameter ParallelCurrencyRateType Text;
+   parameter TaxBaseAmount Number;
+   parameter CurrencyTaxBaseAmount Number;
+   parameter ParallelCurrencyTaxBaseAmount Number;
+   parameter TaxAmount Number;
+   parameter CurrencyTaxAmount Number;
+   parameter ParallelCurrencyTaxAmount Number;
+   parameter TaxCode Text;
+   parameter TaxPercentage Number;
+   parameter TaxDirection Enumeration(TaxDirection);
+   parameter AmountMethod Enumeration(DefAmountMethod);
+   parameter FunctionGroup Text;
+   parameter IsCredit Boolean;
+}
+
+function CurrencyTypeLov List < Entity(CurrencyRate2) > {
+   parameter Company Text;
+   parameter CurrencyCode Text;
+
+   where = "Company = :Company AND Currency_Code = :CurrencyCode AND Currency_Type_API.Get_Rate_Type_Category_Db(COMPANY,CURRENCY_TYPE) != 'PARALLEL_CURRENCY'";
+}
+
+
+function ParallelCurrencyTypeLov List < Entity(CurrencyType3) > {
+   parameter Company Text;
+
+   where = "Company = :Company AND (Company_Finance_API.Get_Parallel_Base_Db(COMPANY) = 'TRANSACTION_CURRENCY' AND RATE_TYPE_CATEGORY_DB = 'PARALLEL_CURRENCY') OR (Company_Finance_API.Get_Parallel_Base_Db(COMPANY) = 'ACCOUNTING_CURRENCY' AND REF_CURRENCY_CODE = Company_Finance_API.Get_Currency_Code(COMPANY) AND RATE_TYPE_CATEGORY_DB != 'PROJECT')";
+}
+
+
+function TaxCodeLov List < Entity(TaxCodeRestricted) > {
+   parameter Company Text;
+   parameter VoucherDate Date;
+   where = "COMPANY = :Company AND (VALID_FROM <= :VoucherDate AND VALID_UNTIL >= :VoucherDate)";
+}
+
+
+
+
+

@@ -1,0 +1,144 @@
+projection PostingControlCombinationDetailsHandling;
+component ACCRUL;
+layer Core;
+description "Posting Control combination details handling";
+category Users;
+
+include fragment AccountingCodePartsUsed2Selector;
+include fragment AccountingCodePartsUsedSelector;
+include fragment AccountingCodePartValueLovSelector;
+include fragment AllowedControlTypeSelector;
+include fragment CopyToCompaniesAssistant;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PostingCtrlSet for PostingCtrl {
+   context Company(Company);
+}
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity PostingCtrl {
+   crud = Read;
+   from = "posting_ctrl_master";
+   exec = "POSTING_CTRL_API";
+   where = "COMPANY = Company AND CTRL_TYPE_CATEGORY_DB = 'COMBINATION'";
+   keys = Company, PostingType, CodePart, PcValidFrom {
+      where = "COMPANY = :Company and POSTING_TYPE = :PostingType and CODE_PART = :CodePart and PC_VALID_FROM = :PcValidFrom";
+   }
+   supportwarnings = [true];
+
+   attribute PostingType Text;
+   attribute CodePart Text;
+   attribute CodeName Text {
+      label = "Code Part Name";
+   }
+   attribute ControlType Text;
+   attribute PcValidFrom Date {
+      label = "Valid From";
+      required = [true];
+   }
+   attribute DefaultValue Text {
+      label = "Default Value No Details";
+   }
+   attribute DefaultValueNoCt Text {
+      label = "Default Value No CT Value";
+   }
+   attribute ControlType1 Text {
+      fetch = "Comb_Control_Type_API.Get_Control_Type(Company,Posting_Type,Control_Type,1)";
+   }
+   attribute ControlType2 Text {
+      fetch = "Comb_Control_Type_API.Get_Control_Type(Company,Posting_Type,Control_Type,2)";
+   }
+   attribute ControlType1Name Text {
+      fetch = "Comb_Control_Type_API.Get_Control_Type1_Desc(Company,Posting_Type,Control_Type)";
+   }
+   attribute ControlType2Name Text {
+      fetch = "Comb_Control_Type_API.Get_Control_Type2_Desc(Company,Posting_Type,Control_Type)";
+   }
+   attribute Module1 Text {
+      fetch = "Comb_Control_Type_API.Get_Spec_Module(Company,Posting_Type,Control_Type,1)";
+   }
+   attribute Module2 Text {
+      fetch = "Comb_Control_Type_API.Get_Spec_Module(Company,Posting_Type,Control_Type,2)";
+   }
+
+   reference PostingTypeRef(PostingType) to PostingCtrlPostingType(PostingType) {
+      label = "Posting Type";
+   }
+   reference CodeNameRef(Company, CodeName) to AccountingCodePartsUsed(Company, CodeName) {
+      label = "Code Part Name";
+   }
+
+   array PostCtrlCombDetArray(Company, PostingType, CodePart, PcValidFrom) to PostingCtrlCombDetail(Company, PostingType, CodePart, PcValidFrom);
+}
+
+
+@Override
+entity PostingCtrlCombDetail {
+   crud = Create, Read, Update, Delete;
+   from = "posting_ctrl_comb_detail";
+   exec = "POSTING_CTRL_COMB_DETAIL_API";
+   keys = Company, PostingType, CodePart, PcValidFrom, CombControlType, ControlType1, ControlType2, ControlType1Value, ControlType2Value, ValidFrom {
+      where = "COMPANY = :Company and POSTING_TYPE = :PostingType and CODE_PART = :CodePart and PC_VALID_FROM = :PcValidFrom and COMB_CONTROL_TYPE = :CombControlType and CONTROL_TYPE1 = :ControlType1 and CONTROL_TYPE2 = :ControlType2 and CONTROL_TYPE1_VALUE = :ControlType1Value and CONTROL_TYPE2_VALUE = :ControlType2Value and VALID_FROM = :ValidFrom";
+   }
+   attribute NoCodePartValue Boolean("TRUE", "FALSE") {
+      label = "No Code Part Value";
+      required = [true];
+   }
+   attribute ControlType1ValueDesc Text {
+      label = "Description";
+      fetch = "Posting_Ctrl_Control_Type_API.Get_Control_Type_Value_Desc(company, control_type1, control_type1_value, module1, valid_from)";
+      required = [false];
+      editable = [false];
+   }
+   attribute ControlType1Value Text {
+      insertable = [true];
+      updatable = [false];
+      editable = [ETag = null];
+   }
+   attribute ControlType2Value Text {
+      insertable = [true];
+      updatable = [false];
+      editable = [ETag = null];
+   }
+   attribute ValidFrom Date {
+      editable = [false];
+      updatable = [false];
+   }
+   attribute ControlType2ValueDesc Text {
+      label = "Description";
+      fetch = "Posting_Ctrl_Control_Type_API.Get_Control_Type_Value_Desc(company, control_type2, control_type2_value, module2, valid_from)";
+      required = [false];
+      editable = [false];
+   }
+   attribute CodePartValue Text;
+
+   reference ControlType1ValueRef(ControlType1Value) dynamic(ControlType1);
+   reference ControlType2ValueRef(ControlType2Value) dynamic(ControlType2);
+   reference CodePartNameRef(Company, CodePartName) to AccountingCodePartsUsed2(Company, CodeName) {
+      label = "Code Part Name";
+   }
+   reference CodePartValueRef(Company, CodePart, CodePartValue) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Code Part Value";
+   }
+}
+
+--------------------------------- FUNCTIONS ---------------------------------
+function FetchPageSearchContextDefaults Structure(PageSearchContextStructure) {
+   parameter ControlTypeValue Text;
+}
+
+
+function GetControlTypeDescription Text {
+   parameter Company Text;
+   parameter ControlType Text;
+   parameter ControlTypeValue Text;
+   parameter Module Text;
+   parameter ValidFrom Date;
+}
+-------------------------------- STRUCTURES ---------------------------------
+
+structure PageSearchContextStructure {
+   attribute ControlTypeValue Text;
+
+}

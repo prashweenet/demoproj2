@@ -1,0 +1,42 @@
+fragment VoucherTypeForFSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view voucher_type_for_f";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceVoucherTypeForFSelector for VoucherTypeForF {
+   static VoucherType;
+   static Description;
+}
+
+card VoucherTypeForFCard for VoucherTypeForF {
+   label = "";
+   fieldranking VoucherType;
+   field VoucherType;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query VoucherTypeForF {
+   from = "voucher_type_for_f";
+   lu = VoucherType;
+   keys = Company, VoucherType;
+   ludependencies = VoucherType;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute VoucherType Text {
+      format = uppercase;
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

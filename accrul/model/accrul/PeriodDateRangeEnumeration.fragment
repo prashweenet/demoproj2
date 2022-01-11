@@ -1,0 +1,21 @@
+fragment PeriodDateRangeEnumeration;
+component ACCRUL;
+layer Core;
+description "Manage Enumeration Period or Date used in reports.";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+------------------------------- ENUMERATIONS --------------------------------
+enumeration PeriodDateRangeEnum {
+   value = "PERIOD" {
+      identifier = "PERIOD";
+      label = "Period";
+   }
+   value = "DATE" {
+      identifier = "DATE";
+      label = "Date";
+   }
+}

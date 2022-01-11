@@ -1,0 +1,43 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: UserGroupPeriod
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+VIEW User_Group_Period_Lov IS
+   Prompt = 'User Group Period'
+   User_Group.Flags = 'KM--L'
+   Ledger_Id.Flags = 'A---L'
+SELECT
+       company                        company,
+       accounting_year                accounting_year,
+       accounting_period              accounting_period,
+       user_group                     user_group,
+       ledger_id                      ledger_id
+FROM   user_group_period_tab;
+
+
+VIEW User_Group_Period_Lov2 IS
+   Prompt = 'User Group Period'
+   User_Group.Flags = 'KM--L'
+   Accounting_Period.Flags = 'AM--L'
+   Ledger_Id.Flags = 'A---L'
+SELECT
+   company                        company,
+   accounting_year                accounting_year,
+   accounting_period              accounting_period,
+   user_group                     user_group,
+   ledger_id                      ledger_id
+FROM   user_group_period_tab; 
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

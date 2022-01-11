@@ -1,0 +1,61 @@
+projection TaxLiabilityDateControlHandling;
+component ACCRUL;
+layer Core;
+description "Tax Liability Data Control";
+category Users;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset TaxLiabilityDateCtrlSet for TaxLiabilityDateCtrl {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity TaxLiabilityDateCtrl {
+   crud = Create, Read, Update;
+
+   attribute CustomerLiabilityDate Enumeration(TaxLiabilityDate.CustomerInvoice);
+   attribute PaymentsLiabilityDate Enumeration(TaxLiabilityDate.Payments);
+   attribute SupplierLiabilityDate Enumeration(TaxLiabilityDate.SupplierInvoice);
+
+   array TaxLiabltyDateExceptionArray(Company) to TaxLiabltyDateException(Company);
+}
+
+@Override
+entity TaxLiabltyDateException {
+   attribute CustomerCrdtLiabltyDate Enumeration(TaxLiabilityDate.CustLiabDate);
+   attribute CustomerLiabilityDate Enumeration(TaxLiabilityDate.CustLiabDate);
+   attribute SupplierLiabilityDate Enumeration(TaxLiabilityDate.SubLiabDate);
+
+   reference FeeCodeRef(Company, FeeCode) to StatutoryFee(Company, FeeCode) {
+      label = "Tax Code";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

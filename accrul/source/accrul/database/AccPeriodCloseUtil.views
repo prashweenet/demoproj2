@@ -1,0 +1,134 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccPeriodCloseUtil
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140812  Samllk  PRFI-229,  Added view Acc_Per_Ext_Trans_Type_Lobby
+--  150916  Samllk  AFT-4960,  Added view Acc_Per_Trans_Type_Lobby
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+VIEW Acc_Per_Ext_Trans_Type_Lobby IS
+   Prompt = 'Accounting Period External Transaction Types'
+SELECT REGEXP_SUBSTR(REPLACE(Acc_Period_Close_Util_API.Get_Ext_Trans_Types_Db(), '^', ','),'[^,]+', 1, LEVEL) 
+                                               ext_trans_type_db,
+       REGEXP_SUBSTR(REPLACE(Acc_Period_Close_Util_API.Get_Ext_Trans_Types(), '^', ','),'[^,]+', 1, LEVEL) 
+                                               ext_trans_type                                        
+FROM DUAL
+CONNECT BY REGEXP_SUBSTR(REPLACE(Acc_Period_Close_Util_API.Get_Ext_Trans_Types_Db(), '^', ','), '[^,]+', 1, LEVEL) IS NOT NULL;
+
+VIEW Acc_Per_Trans_Type_Lobby IS
+   Prompt = 'Accounting Period Transaction Types'
+SELECT REGEXP_SUBSTR(REPLACE(Acc_Period_Close_Util_API.Get_GL_Trans_Types_Db(), '^', ','),'[^,]+', 1, LEVEL) 
+                                               trans_type_db,
+       REGEXP_SUBSTR(REPLACE(Acc_Period_Close_Util_API.Get_GL_Trans_Types(), '^', ','),'[^,]+', 1, LEVEL) 
+                                               trans_type                                        
+FROM DUAL
+CONNECT BY REGEXP_SUBSTR(REPLACE(Acc_Period_Close_Util_API.Get_GL_Trans_Types_Db(), '^', ','), '[^,]+', 1, LEVEL) IS NOT NULL;
+
+
+VIEW Voucher_Lobby IS   
+   SELECT ROWID                           objid,
+          TO_CHAR(ROWVERSION,'YYYYMMDDHH24MISS') 
+                                          objversion,          
+          company,
+          Voucher_Status_API.Decode(rowstate)   
+                                          voucher_status,
+          rowstate                        voucher_status_db,
+          voucher_type,
+          function_group,
+          voucher_no,
+          voucher_date,
+          accounting_year,
+          accounting_period,
+          date_reg,
+          entered_by_user_group,
+          approved_by_userid,
+          userid,
+          approval_date,
+          second_approver_id,
+          approved_by_user_group,
+          second_approval_date,
+          second_approver_user_group,
+          voucher_text2,
+          update_error,
+          transfer_id,
+          Voucher_Note_API.Check_Note_Exist(company,
+                                            accounting_year,
+                                            voucher_type,
+                                            voucher_no) 
+                                          note_exist,
+          interim_voucher,
+          Voucher_API.Is_Multi_Company_Voucher(company,
+                                               voucher_type,
+                                               accounting_year,
+                                               voucher_no)  
+                                          is_multi_company_voucher,
+          multi_company_id,
+          voucher_type_reference,
+          voucher_no_reference,
+          accounting_year_reference,
+          '00'                           ledger_id
+   FROM  voucher_tab     
+   WHERE voucher_updated = 'N'
+   AND   voucher_no > 0 
+   AND   EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE user_finance_auth_pub.company = voucher_tab.company)
+   $IF Component_Intled_SYS.INSTALLED $THEN
+   UNION ALL
+   SELECT objid,
+      objversion,
+      company,
+      Internal_Voucher_Status_API.Decode(internal_voucher_status_db) 
+                                               voucher_status,
+      internal_voucher_status_db               voucher_status_db,
+      voucher_type,
+      Voucher_Type_Detail_API.Get_Function_Group(company, voucher_type) 
+                                               function_group,
+      voucher_no,
+      voucher_date,
+      accounting_year,
+      accounting_period,
+      date_reg,
+      entered_by_user_group,
+      approved_by_userid,
+      userid,
+      approval_date,
+      second_approver_id,
+      approved_by_user_group,
+      second_approval_date,
+      second_approver_user_group,
+      voucher_text2,
+      update_error,
+      transfer_id,
+      Voucher_Note_API.Check_Note_Exist(company,
+                                        accounting_year,
+                                        voucher_type,
+                                        voucher_no) 
+                                            note_exist,
+      interim_voucher,
+      Voucher_API.Is_Multi_Company_Voucher(company,
+                                          voucher_type,
+                                          accounting_year,
+                                          voucher_no) 
+                                           is_multi_company_voucher,
+      multi_company_id,
+      voucher_type_reference,
+      voucher_no_reference,
+      accounting_year_reference,
+      ledger_id                            ledger_id
+   FROM  internal_hold_voucher_pub
+   WHERE voucher_updated = 'N'
+   AND   voucher_no > 0    
+   $END
+;
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+

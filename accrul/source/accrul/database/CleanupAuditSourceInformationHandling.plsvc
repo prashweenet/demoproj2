@@ -1,0 +1,45 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CleanupAuditSourceInformationHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  181204  RAKUSE  Created. (FIUXX-1705)
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override
+FUNCTION Get_Parameters___ RETURN Parameters_Structure_Rec
+IS
+   method_name_   VARCHAR2(200) := 'AUDIT_STORAGE_API.CLEANUP_AUDIT_STORAGE';
+   rec_           Parameters_Structure_Rec := super();
+   msg_           VARCHAR2(32000);   
+BEGIN
+   rec_.SCHEDULE_METHOD_ID := Batch_Schedule_Method_API.Get_Schedule_Method_Id(method_name_);
+   rec_.DESCRIPTION := Batch_Schedule_Method_API.Get_Description(rec_.SCHEDULE_METHOD_ID);
+   
+   Batch_Schedule_Method_Par_API.Get_Default_Values__(msg_, rec_.SCHEDULE_METHOD_ID);
+   Message_SYS.Get_Attribute(msg_, 'DAYS_CHECKED', rec_.DAYS_CHECKED);
+   Message_SYS.Get_Attribute(msg_, 'NUMBER_OF_DAYS', rec_.NUMBER_OF_DAYS);
+   Message_SYS.Get_Attribute(msg_, 'BEFORE_DATE', rec_.BEFORE_DATE);
+   IF (rec_.BEFORE_DATE IS NULL) THEN
+      rec_.BEFORE_DATE := TO_DATE(EXTRACT(YEAR FROM sysdate)||'-'||EXTRACT(MONTH FROM trunc(add_months(sysdate, -1),'MM'))||'-'||EXTRACT(DAY FROM sysdate),'YYYY-MM-DD');
+   END IF;
+   
+   RETURN rec_;
+END Get_Parameters___;
+
+FUNCTION Construct_Param_Attr___ (
+   virt_rec_ IN OUT Task_Virtual_Rec ) RETURN VARCHAR2
+IS
+   msg_ VARCHAR2(32000) := Message_SYS.Construct('');
+BEGIN
+   Message_SYS.Add_Attribute(msg_, 'DAYS_CHECKED', virt_rec_.DAYS_CHECKED);
+   Message_SYS.Add_Attribute(msg_, 'NUMBER_OF_DAYS', virt_rec_.NUMBER_OF_DAYS);
+   Message_SYS.Add_Attribute(msg_, 'BEFORE_DATE', virt_rec_.BEFORE_DATE);
+   RETURN msg_;
+END Construct_Param_Attr___;

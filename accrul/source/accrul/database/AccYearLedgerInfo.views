@@ -1,0 +1,49 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AccYearLedgerInfo
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200701  Jadulk  FISPRING20-6694 , Removed conacc related logic.
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+COLUMN Ledger_Id IS
+   Flags      = 'KMI-L'
+   Datatype   = 'STRING(10)'
+   Prompt     = 'Ledger Id'
+   Ref        = 'AllLedger(company)/CASCADE';
+VIEW Acc_Year_Ledger IS
+   Prompt = 'Accounting Year Ledger'
+SELECT
+   y.company                        company,
+   y.accounting_year                accounting_year,
+   Ledger_API.Get_Ledger(l.ledger_id) ledger_type,
+   Ledger_API.Get_Ledger_Db(l.ledger_id) ledger_type_db,
+   --Ledger_API.Get_Ledger(l.ledger_id) ledger_type,
+   l.ledger_id                      ledger_id,   
+   All_Ledger_API.Get_Description(l.company, l.ledger_id) ledger_desc,   
+   Acc_Year_Op_Bal_API.Decode(l.opening_balances) opening_balances,
+   l.opening_balances               opening_balances_db,
+   Acc_Year_Cl_Bal_API.Decode(l.closing_balances) closing_balances,
+   l.closing_balances               closing_balances_db,
+   Acc_Year_Per_Status_API.Decode(l.year_status) year_status,
+   l.year_status                    year_status_db,
+   y.rowkey                         objkey,
+   to_char(l.rowversion,'YYYYMMDDHH24MISS') objversion,
+   l.rowid                          objid,
+   y.rowid                          objid_year,
+   to_char(y.rowversion,'YYYYMMDDHH24MISS') objversion_year   
+   FROM   Accounting_Year_Tab y, Acc_Year_Ledger_Info_Tab l
+   WHERE y.company = l.company
+   AND y.accounting_year = l.accounting_year
+AND EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE y.company = user_finance_auth_pub.company);
+

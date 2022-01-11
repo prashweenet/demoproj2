@@ -1,0 +1,67 @@
+-------------------------------------------------------------------
+-- Component:  ACCRUL
+-- File     :  FactCurrencyRatesDm.apv
+-- Purpose  :  Create DATA MART fact view FACT_CURRENCY_RATES_DM
+-------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   ------------------------------------------------
+--  110810  Anwese Created
+--  110927 Anwese Updated with new light items
+--  150513 Umdolk Reverse Engineering.
+------------------------------------------------
+-------------------------------------------------------------------
+DEFINE FACT          = FACT_CURRENCY_RATES
+DEFINE VIEW          = FACT_CURRENCY_RATES_DM
+DEFINE VIEW_OPT_DM   = ""
+DEFINE VIEW_ALT_DM   = ""
+DEFINE MV            = CURRENCY_RATE_MV
+DEFINE MODULE        = ACCRUL
+DEFINE LU            = FctCurrencyRates
+
+-------------------------------------------------------------------
+PROMPT ********* Component &MODULE definition begins ***********
+
+
+
+PROMPT Create fact view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT cr.id                         id,
+       cr.company_key                company_key,
+       cr.valid_from_key             valid_from_key,
+       cr.currency_rate_type_key     currency_rate_type_key,
+       cr.currency_code_key          currency_code_key,
+       cr.currency_rate              currency_rate,
+       cr.direct_currency_rate       direct_currency_rate,
+       cr.direct_currency_rate_round direct_currency_rate_round,
+       cr.valid_from                 valid_from,
+       cr.valid_until                valid_until,
+       cr.is_max_valid_from          is_max_valid_from,
+       cr.dim_company_id             dim_company_id,
+       cr.dim_currency_code_id       dim_currency_code_id,
+       cr.dim_currency_rate_type_id  dim_currency_rate_type_id,
+       cr.currency_code              currency_code,
+       cr.currency_type              currency_type
+FROM &MV cr 
+WHERE ( ('TRUE' = (SELECT Xlr_Fact_Full_Access_API.Has_Full_Fact_Access('FACT_CURRENCY_RATES') FROM DUAL))
+         OR
+        (EXISTS ( SELECT 1
+                FROM USER_FINANCE_AUTH_PUB C
+   WHERE C.COMPANY = CR.COMPANY_KEY))
+      )
+WITH READ ONLY
+;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Currency Rates^MODULE=&MODULE^';
+
+PROMPT ********* Component &MODULE, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE FACT
+UNDEFINE VIEW
+UNDEFINE VIEW_OPT_DM
+UNDEFINE VIEW_ALT_DM
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

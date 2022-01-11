@@ -1,0 +1,567 @@
+client AccountingPeriods;
+component ACCRUL;
+layer Core;
+projection AccountingPeriodsHandling;
+warningsenabled = AccountingYear, AccountingPeriod;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AccountingPeriodsNavEntry parent AccrulNavigator.UserRelatedDataMenu at index 800 {
+      label = "Accounting Periods";
+      page Form;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AccountingYearSet {
+   label = "Accounting Periods";
+   selector AccountingYearMainSelector;
+   group AccountingYearGroup;
+   tabs {
+      tab {
+         label = "Accounting Periods Per Ledger";
+         list AccPerList(AccYearDetailArray);
+         list AccPerDetailList(AccPerDetailArray) bind AccPerList;
+      }
+      tab {
+         label = "Accounting Periods";
+         list AccountingPeriodList(AccountingPeriodDetailArray);
+      }
+   }
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+assistant ValidateTransactionsInProgressAssistant using TransInProgressHeaderVirtualSet {
+   label = "Validation Transaction in Progress";
+   input(LedgerId, Description, Selection, AllLedger, Action);
+   singlestep {
+      list TransactionsInProgressList(TransactionsInProgressArray);
+   }
+   command ClosePeriodCommand;
+   command ClosePeriodFinallyCommand;
+   command Cancel;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+@DynamicComponentDependency GENLED
+command OpenupClosedAccountingYearCommand for AccYearLedgerInfo {
+   label = "Open up Closed Accounting Year";
+   enabled = [YearStatus = "Closed" and ClosingBalances in("FinalVoucherCreated", "FinalBalanceTransferred")];
+
+   variable FinallyClosedVar {
+      type = Boolean;
+   }
+   variable YearEndVouVar {
+      type = Structure(YearEndVoucherInfoStructure);
+   }
+   variable RollbackVoucherInfoVar {
+      type = Structure(RollbackVoucherInfoStructure);
+   }
+
+   execute {
+      call PeriodFinallyClosed(Company, AccountingYear, LedgerId) into FinallyClosedVar;
+      confirm("You are just about to open up an already closed accounting year. Periods must be opened manually after the year has been opened. The Final Year End execution will be rolled back and must be executed again after changes has been made.") {
+         when OK {
+            if[ClosingBalances = "FinalBalanceTransferred"] {
+               call OpenUpClosed(Company, AccountingYear, LedgerId);
+            }
+            if[ClosingBalances = "FinalVoucherCreated"] {
+               call GetInfoYearEndVou(Company, AccountingYear, LedgerId) into YearEndVouVar;
+
+               dialog RollbackFinalYearEndDialog(Company, LedgerId, YearEndVouVar.VouYearOrCl, YearEndVouVar.VouPeriodOrCl, YearEndVouVar.VouTypeOrCl, YearEndVouVar.UserGroupOrCl,
+               YearEndVouVar.VouYearOrOp, YearEndVouVar.VouPeriodOrOp, YearEndVouVar.VouTypeOrOp, YearEndVouVar.UserGroupOrOp, YearEndVouVar.UserId) {
+                  when OK {
+                     call RollbackYearEnd(Company, YearEndVouVar.VouYearOrCl, YearEndVouVar.VouPeriodOrCl, LedgerId, YearEndVouVar.VouYearOrCl, YearEndVouVar.VouYearOrOp) into RollbackVoucherInfoVar;
+
+                     dialog RollbackVoucherCreatedDialog(RollbackVoucherInfoVar.YearPeriodCl, YearEndVouVar.VouTypeOrCl, RollbackVoucherInfoVar.CloseVouNo, RollbackVoucherInfoVar.YearPeriodOp, YearEndVouVar.VouTypeOrCl, RollbackVoucherInfoVar.OpenVouNo) {
+                        when OK {
+                           if[LedgerId = "00"] {
+                              success("Year end vouchers are created successfully. Update the vouchers to the general ledger to change the year Closing/Opening Balance status.");
+                           }
+                           else {
+                              success("Year end vouchers are created successfully. Update the vouchers to the internal ledger to change the year Closing/Opening Balance status.");
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+            if[not(ClosingBalances in("FinalBalanceTransferred", "FinalVoucherCreated"))] {
+               warning("There are transactions in the wait table that belongs to this year.");
+            }
+         }
+      }
+   }
+}
+
+
+command UserGroupsperPeriodCommand for AccPeriodLedgerInfo {
+   label = "User Groups per Period";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/UserGroupPerPeriod/Form?contexts=Company:$[Company]&$filter=AccountingYear eq $[AccountingYear] and AccountingPeriod eq $[AccountingPeriod]&searchcontext=Company:$[Company],Ledger:$[Ledger],LedgerId:$[LedgerId], LedgerDescription:$[LedgerDescription], PeriodStatus:$[LedgerPeriodStatus]";
+   }
+}
+
+command CreatePeriodsforUserGroupsCommand for AccPeriodLedgerInfo {
+   label = "Create Periods for User Groups";
+   mode = SelectedRecords;
+
+   variable UserGroupVar {
+      type = Text;
+   }
+   variable CreateAllLedgersVar {
+      type = Boolean;
+   }
+   variable StatusVar {
+      type = Boolean;
+   }
+   variable UserGroupPeriodStatusVar {
+      type = Text;
+   }
+   bulkexecute {
+      ifall [PeriodStatus = "Closed" or PeriodStatus = "FinallyClosed"] {
+         set StatusVar = false;
+      }
+      else {
+         set StatusVar = true;
+      }
+
+      if [StatusVar] {
+         set UserGroupPeriodStatusVar = "Open";
+      }
+      else {
+         set UserGroupPeriodStatusVar = "Closed";
+      }
+
+      dialog CreatePeriodsForUserGroupsDialog(parent.Company, UserGroupPeriodStatusVar, UserGroupPeriodStatusVar) into(UserGroupVar, CreateAllLedgersVar, UserGroupPeriodStatusVar) {
+         when OK {
+            call CreatePeriodsForUserGroups(Selection, UserGroupVar, CreateAllLedgersVar, UserGroupPeriodStatusVar);
+            success("User Group added successfully.");
+            exit;
+         }
+         when CANCEL {
+            exit;
+         }
+      }
+   }
+}
+
+
+command ValidateTransactionsInProgressCommand for AccPeriodLedgerInfo {
+   label = "Validate Transactions in Progress";
+   mode = SelectedRecords;
+   enabled = [parent.YearStatus = "Open" and PeriodStatus in("Open", "Closed")];
+
+   bulkexecute {
+      assistant ValidateTransactionsInProgressAssistant(LedgerId, Description, Selection, "FALSE", "VALIDATE") {
+         when CANCEL {
+            refresh;
+         }
+         when OK {
+            refresh;
+         }
+      }
+   }
+}
+
+
+command CloseGLPeriodCommand for AccPeriodLedgerInfo {
+   label = "Close Period";
+   enabled = [PeriodStatus = "Open"];
+   mode = SelectedRecords;
+
+   bulkexecute {
+      assistant ValidateTransactionsInProgressAssistant(LedgerId, Description, Selection, "FALSE", "CLOSE") {
+         when CANCEL {
+            refresh;
+         }
+         when OK {
+            refresh;
+         }
+      }
+   }
+}
+
+
+command OpenAccountingPeriodCommand for AccPeriodLedgerInfo {
+   label = "Open Period";
+   mode = SelectedRecords;
+   enabled = [PeriodStatus = "Closed"];
+
+   execute {
+      call OpenAccountingPeriod();
+   }
+}
+
+
+command CloseAccPeriodFinallyCommand for AccPeriodLedgerInfo {
+   label = "Close Period Finally";
+   enabled = [PeriodStatus = "Closed" and parent.CompanyRef.PeriodClosingMethod = "NotReversible"];
+   mode = SingleRecord;
+
+   execute {
+      assistant ValidateTransactionsInProgressAssistant(LedgerId, Description, keyref, "FALSE", "CLOSE_FIN") {
+         when CANCEL {
+            refresh;
+         }
+         when OK {
+            refresh;
+         }
+      }
+   }
+}
+
+
+command CloseAllILPeriodCommand for AccPeriodLedgerInfo {
+   label = "Close Period for All ILs";
+   enabled = [IlAvailable = "BOTH" or IlAvailable = "CLOSE"];
+   mode = SelectedRecords;
+
+   bulkexecute {
+      assistant ValidateTransactionsInProgressAssistant(LedgerId, Description, Selection, "TRUE", "CLOSE") {
+         when CANCEL {
+            refresh;
+         }
+         when OK {
+            refresh;
+         }
+      }
+   }
+}
+
+command OpenALLILPeriodCommand for AccPeriodLedgerInfo {
+   label = "Open Period for All ILs";
+   enabled = [IlAvailable = "BOTH" or IlAvailable = "OPEN"];
+   mode = SelectedRecords;
+
+   execute {
+      call OpenAllIlPeriods();
+   }
+}
+
+
+command ClosePeriodCommand for TransactionsInProgressVirtual {
+   label = "Close Period";
+   enabled = [Action = "CLOSE" and ErrorExist = "FALSE"];
+   mode = Global;
+
+   execute {
+      call ModifyPeriodStatusAll(Objkey);
+      exit OK;
+   }
+}
+
+
+command ClosePeriodFinallyCommand for TransactionsInProgressVirtual {
+   label = "Close Period Finally";
+   enabled = [Action = "CLOSE_FIN" and ErrorExist = "FALSE"];
+   mode = Global;
+
+   execute {
+      if [LedgerId = "00"] {
+         confirm("Status of GL Period ${Description} will be set to Finally Closed and it will not be possible to reopen the period and post any accounting transactions. Do you want to continue?") {
+            when OK {
+               call ModifyPeriodStatusAll(Objkey);
+            }
+         }
+      }
+      else {
+         confirm("Status of IL ${LedgerId} Period ${Description} will be set to Finally Closed and it will not be possible to reopen the period and post any accounting transactions. Do you want to continue?") {
+            when OK {
+               call ModifyPeriodStatusAll(Objkey);
+            }
+         }
+      }
+      exit OK;
+   }
+}
+
+command ConfirmSave for AccountingPeriod {
+   variable TempVariable Text;
+
+   execute {
+      if[CrudOperation = "create" or CrudOperation = "update"] {
+         call ManualUpdateAction(Company, AccountingYear, AccountingPeriod, DateFrom, DateUntil) into TempVariable;
+
+         if[TempVariable != null] {
+            info("${TempVariable}");
+         }
+      }
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+selector AccountingYearMainSelector for AccountingYear {
+   orderby = Company, AccountingYear;
+   label = "${AccountingYear}";
+   static AccountingYear;
+}
+
+
+---------------------------------- GROUPS -----------------------------------
+group AccountingYearGroup for AccountingYear {
+   label = "Accounting Year";
+   visible = [isNew];
+
+   field AccountingYear {
+      showlabel = false;
+   }
+}
+
+
+group OriginalVoucherClosingBalanceGroup for YearEndVoucherInfoStructure {
+   label = "Original Voucher Closing Balance";
+
+   field VouYearOrCl;
+   field VouPeriodOrCl;
+   field VouTypeOrCl;
+   field UserGroupOrCl;
+}
+
+group OriginalVoucherOpeningBalanceGroup for YearEndVoucherInfoStructure {
+   label = "Original Voucher Opening Balance";
+
+   field VouYearOrOp;
+   field VouPeriodOrOp;
+   field VouTypeOrOp;
+   field UserGroupOrOp;
+}
+
+group RollbackVoucherClosingBalanceGroup for YearEndVoucherInfoStructure {
+   label = "Rollback Voucher Closing Balance";
+
+   field VouYearOrCl;
+   field VouPeriodOrCl;
+   field VouTypeOrCl;
+   field UserGroupOrCl;
+}
+
+
+group RollbackVoucherOpeningBalanceGroup for YearEndVoucherInfoStructure {
+   label = "Rollback Voucher Opening Balance";
+
+   field VouYearOrOp;
+   field VouPeriodOrOp;
+   field VouTypeOrOp;
+   field UserGroupOrOp;
+}
+
+
+group ClosingBalanceGroup for RollbackVoucherCreatedStructure {
+   label = "Closing Balance";
+
+   field AccYearPeriodCl;
+   field VoucherTypeCl;
+   field VoucherNoCl;
+}
+
+group OpeningBalanceGroup for RollbackVoucherCreatedStructure {
+   label = "Opening Balance";
+
+   field AccYearPeriodOp;
+   field VoucherTypeOp;
+   field VoucherNoOp;
+}
+
+
+group CreatePeriodGroup for CreatePeriodsForUserGroupsStructure {
+   label = "";
+   lov UserGroupRef with ReferenceUserGroupFinanceSelector {
+      search = UserGroup, Description;
+      description = UserGroupRef.Description;
+   }
+   field CreateForAllLedgers;
+   field UserGroupPeriodStatus {
+      editable = [Status = "Open"];
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list AccountingPeriodList for AccountingPeriod {
+   label = "Accounting Year: ${parent.AccountingYear}";
+   orderby = AccountingPeriod;
+   crudactions {
+      after command ConfirmSave;
+   }
+
+   field AccountingPeriod {
+      size = Small;
+      validate command {
+         execute {
+            if [AccountingPeriod = 0] {
+               set YearEndPeriod = "YearOpening";
+            }
+         }
+      }
+   }
+   field Description {
+      editable = [parent.YearStatusDb != "C"];
+   }
+   daterangefield {
+      startdate DateFrom;
+      enddate DateUntil;
+      editable = [parent.YearStatusDb != "C"];
+      label = "Valid";
+   }
+   field YearEndPeriod {
+      size = Small;
+      editable = [parent.YearStatusDb != "C"];
+   }
+   daterangefield {
+      startdate ReportFromDate;
+      enddate ReportUntilDate;
+      label = "Report Date";
+   }
+   field AttributeOne {
+      size = Small;
+   }
+   field AttributeTwo {
+      size = Small;
+   }
+   field AttributeThree {
+      size = Small;
+   }
+   field AttributeFour {
+      size = Small;
+   }
+   field AttributeFive {
+      size = Small;
+   }
+}
+
+
+list AccPerList for AccYearLedgerInfo {
+   label = "Accounting Year per Ledger";
+   multiselect = [false];
+   orderby = AccountingYear, LedgerId;
+
+   field AccountingYear {
+      size = Small;
+   }
+   field LedgerType;
+   lov LedgerIdRef with ReferenceAllLedgerSelector using GlIlLedgerLov(Company) {
+      description = LedgerDesc;
+   }
+   field OpeningBalances;
+   field ClosingBalances;
+   field YearStatus;
+   field CompanyRef.PeriodClosingMethod {
+      columnexclude = [true];
+   }
+
+   @DynamicComponentDependency GENLED
+   command OpenupClosedAccountingYearCommand;
+}
+
+
+list AccPerDetailList for AccPeriodLedgerInfo {
+   label = "Accounting Period per Ledger";
+   orderby = AccountingPeriod;
+
+   field AccountingPeriod {
+      size = Small;
+   }
+   field Description;
+   daterangefield {
+      startdate DateFrom;
+      enddate DateUntil;
+      label = "Valid";
+   }
+   field YearEndPeriod {
+      size = Small;
+   }
+   field PeriodStatus {
+      size = Small;
+   }
+
+   commandgroup UserGroupCmdGroup {
+
+      command UserGroupsperPeriodCommand;
+      command CreatePeriodsforUserGroupsCommand;
+   }
+
+   commandgroup PeriodCmdGroup {
+
+      command ValidateTransactionsInProgressCommand;
+      command CloseGLPeriodCommand;
+      command OpenAccountingPeriodCommand;
+      command CloseAccPeriodFinallyCommand;
+   }
+
+   @DynamicComponentDependency INTLED
+   commandgroup AllILPeriodCmdGroup {
+
+      command CloseAllILPeriodCommand;
+      command OpenALLILPeriodCommand;
+   }
+}
+
+
+list TransactionsInProgressList for TransactionsInProgressVirtual {
+   multiselect = [false];
+   orderby = InfoTypeDb asc, TransactionsExist desc;
+
+   field InfoType {
+      size = Small;
+   }
+   field InformationMessage {
+      size = Large;
+   }
+   badge TransactionsExist {
+      emphasis Alert = [TransactionsExist = true and InfoTypeDb = "ERROR"];
+      emphasis Warning = [TransactionsExist = true and InfoTypeDb = "WARNING"];
+      emphasis Success = [TransactionsExist = false];
+      style = TextOnly;
+      size = Small;
+   }
+   field LedgerId {
+      columnvisible = [parent.AllLedger = "TRUE"];
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+dialog RollbackFinalYearEndDialog for YearEndVoucherInfoStructure {
+   label = "Rollback Final Year End Vouchers";
+   input(Company, LedgerId, VouYearOrCl, VouPeriodOrCl, VouTypeOrCl, UserGroupOrCl,
+   VouYearOrOp, VouPeriodOrOp, VouTypeOrOp, UserGroupOrOp, UserId);
+
+   group OriginalVoucherClosingBalanceGroup;
+   group OriginalVoucherOpeningBalanceGroup;
+   group RollbackVoucherClosingBalanceGroup;
+   group RollbackVoucherOpeningBalanceGroup;
+
+   command Ok;
+   command Cancel;
+}
+
+dialog RollbackVoucherCreatedDialog for RollbackVoucherCreatedStructure {
+   label = "Voucher Information";
+   input(AccYearPeriodCl, VoucherTypeCl, VoucherNoCl, AccYearPeriodOp, VoucherTypeOp, VoucherNoOp);
+
+   group ClosingBalanceGroup;
+   group OpeningBalanceGroup;
+
+   command Ok;
+}
+
+
+dialog CreatePeriodsForUserGroupsDialog for CreatePeriodsForUserGroupsStructure {
+   label = "Create Periods for User Groups";
+   input(Company, Status, UserGroupPeriodStatus);
+   output(UserGroup, CreateForAllLedgers, UserGroupPeriodStatus);
+
+   group CreatePeriodGroup;
+
+   command Ok;
+   command Cancel;
+}

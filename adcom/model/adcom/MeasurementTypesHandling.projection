@@ -1,0 +1,45 @@
+--  Date        Sign    History
+--  ----------  ------  -----------------------------------------------------
+--  2020-07-28  TAJALK  LMM2020R1-95, Created.
+-----------------------------------------------------------------------------
+projection MeasurementTypesHandling;
+component ADCOM;
+layer Core;
+description "Measurement Types";
+category Users;
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AvMeasurementTypeSet for AvMeasurementType;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvMeasurementType {
+
+   reference EngineeringUnitRef(EngineeringUnitCode) to AvEngineeringUnit(EngineeringUnitCode);
+   reference MeasurementCategoryRef(MeasurementCategoryCode) to AvMeasurementCategory(MeasurementCategoryCode);
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------

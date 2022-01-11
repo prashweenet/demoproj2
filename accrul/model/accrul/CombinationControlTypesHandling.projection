@@ -1,0 +1,88 @@
+projection CombinationControlTypesHandling;
+component ACCRUL;
+layer Core;
+description "Combination Control Types";
+category Users;
+include fragment AllowedControlTypeSelector;
+include fragment CopyToCompaniesAssistant;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CombControlTypeSet for CombControlType {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CombControlType {
+   attribute CombModule Text {
+      editable = [false];
+      required = [false];
+   }
+   attribute Module1 Text {
+      required = [false];
+   }
+   attribute Module2 Text {
+      required = [false];
+   }
+   attribute CombControlType Text {
+      label = "Combination Control Type";
+      format = uppercase;
+   }
+   attribute CombControlTypeDesc Text {
+      label = "Combination Control Type Description";
+   }
+   reference PostingTypeRef(PostingType) to PostingCtrlPostingType(PostingType) {
+      label = "Posting Type";
+
+      copy Module to CombModule;
+   }
+   reference ControlType1Ref(Company, PostingType, ControlType1) to AllowedControlType(Company, PostingType, ControlType) {
+      label = "Control Type 1";
+      copy Module to Module1;
+   }
+   reference ControlType2Ref(Company, PostingType, ControlType2) to AllowedControlType(Company, PostingType, ControlType) {
+      label = "Control Type 2";
+      copy Module to Module2;
+   }
+}
+
+@Override
+entity PostingCtrlPostingType {
+   where = "cct_enabled = 'TRUE'";
+   attribute LedgFlag Text {
+      label = "Ledger Account";
+   }
+   attribute TaxFlag Text {
+      label = "Tax Account";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetCctEnabled Text {
+   parameter PostingType Text;
+}
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

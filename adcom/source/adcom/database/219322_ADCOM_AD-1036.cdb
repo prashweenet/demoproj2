@@ -1,0 +1,31 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 219322_ADCOM_AD-1036.cdb.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210322   majslk  Created.
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','210322_ADCOM_AD-1036.cdb','Timestamp_1');
+PROMPT Adding COLUMN LOGBOOK_REFERENCE COLUMN TO AV_FAULT_TAB
+
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_FAULT_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   IF NOT(Database_Sys.Column_Exist(table_name_, 'LOGBOOK_REFERENCE')) THEN
+      column_ := Database_SYS.Set_Column_Values('LOGBOOK_REFERENCE', 'VARCHAR2(80)', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'A', column_ , TRUE );
+   END IF;
+END;
+/
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','210322_ADCOM_AD-1036.cdb','Done');
+
+SET SERVEROUTPUT OFF

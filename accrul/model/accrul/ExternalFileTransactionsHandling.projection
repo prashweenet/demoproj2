@@ -1,0 +1,1445 @@
+projection ExternalFileTransactionsHandling;
+component ACCRUL;
+layer Core;
+description "External File Transactions";
+category Users;
+
+include fragment ExtFileTemplateLov2Selector;
+include fragment ExtFileTypeUsableTransSelector;
+
+include fragment ExternalFileParametersAssistant;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+
+entityset ExtFileLoadSet for ExtFileLoad {
+   defaultwhere = "Load_Date >= SYSDATE -(365)";
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+
+@Override
+entity ExtFileLoad {
+   supportwarnings = [true];
+   crud = Read, Update, Delete;
+   -- Note: Where clause was added to support solution sets. Inactive component data should not be shown.
+   where = "exists (select 1
+                    from ext_file_type
+                    where ext_file_type.file_type = ext_file_load.file_type)";
+
+   attribute State Enumeration(ExtFileState) {
+      label = "Status";
+   }
+   attribute StateDb Text;
+   attribute LoadDate Date {
+      editable = [ETag = null];
+   }
+   attribute SetId Text {
+      required = [true];
+   }
+   attribute FileTemplateId Text {
+      label = "File Template";
+      editable = [false];
+   }
+   attribute FileDirection Enumeration(FileDirection) {
+      editable = [false];
+      updatable = [false];
+   }
+   attribute FileName Text {
+      editable = [false];
+      updatable = [false];
+   }
+   attribute FileDirectionDb Text;
+   attribute UserId Text {
+      editable = [false];
+      updatable = [false];
+   }
+   attribute ExtTransLineFound Text {
+      default = "'FALSE'";
+      fetch = "Ext_File_Trans_API.Check_Exist_File_Trans2(load_file_id)";
+   }
+   attribute ApiToCall Text {
+      fetch = "Ext_File_Template_Dir_API.Get_Api_To_Call(file_template_id, file_direction)";
+   }
+   attribute ViewName Text {
+      fetch = "Ext_File_Type_API.Get_View_Name(file_type)";
+   }
+
+   reference FileTypeRef(FileType) to ExtFileTypeUsable(FileType) {
+      label = "File Type";
+   }
+   reference ExtFileTypeRef(FileType) to ExtFileType(FileType);
+   reference ExtTypeParamSetRef(FileType, SetId) to ExtTypeParamSet(FileType, SetId) {
+      label = "Parameter Set ID";
+   }
+   reference FileTemplateRef(FileType, FileTemplateId) to ExtFileTemplateLov2(FileType, FileTemplateId) {
+      label = "File Template";
+   }
+   reference ExtFileTemplateRef(FileTemplateId) to ExtFileTemplate(FileTemplateId);
+
+   array ExtFileTransArray(LoadFileId) to ExtFileTrans(LoadFileId);
+
+
+   action RemoveFileTrans {
+      ludependencies = ExtFileLoad, ExtFileTrans, ExtFileTransColumn;
+   }
+
+   action StartApiToCall {
+      ludependencies = ExtFileLoad, ExtFileTrans, ExtFileTransColumn;
+      supportwarnings = [true];
+   }
+   action UnpackExtLine {
+      ludependencies = ExtFileLoad, ExtFileTrans, ExtFileTransColumn;
+      parameter FileType Text;
+      parameter FileTemplateId Text;
+      parameter Company Text;
+   }
+}
+
+
+@Override
+entity ExtFileTrans {
+   crud = Read, Update, Delete;
+
+   attribute FileLine Text {
+      required = [true];
+   }
+   attribute RowState Enumeration(ExtFileRowState) {
+      label = "Row Status";
+      editable = [false];
+   }
+   attribute RecordSetNo Number {
+      label = "Record Set Sequence Number";
+      required = [true];
+   }
+   attribute RecordTypeId Text {
+      editable = [false];
+      updatable = [false];
+   }
+   attribute ErrorText Text {
+      editable = [false];
+      updatable = [false];
+   }
+   attribute C0 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C0')";
+   }
+   attribute C1 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C1')";
+   }
+   attribute C2 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C2')";
+   }
+   attribute C3 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C3')";
+   }
+   attribute C4 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C4')";
+   }
+   attribute C5 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C5')";
+   }
+   attribute C6 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C6')";
+   }
+   attribute C7 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C7')";
+   }
+   attribute C8 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C8')";
+   }
+   attribute C9 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C9')";
+   }
+   attribute C10 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C10')";
+   }
+   attribute C11 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C11')";
+   }
+   attribute C12 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C12')";
+   }
+   attribute C13 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C13')";
+   }
+   attribute C14 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C14')";
+   }
+   attribute C15 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C15')";
+   }
+   attribute C16 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C16')";
+   }
+   attribute C17 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C17')";
+   }
+   attribute C18 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C18')";
+   }
+   attribute C19 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C19')";
+   }
+   attribute C20 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C20')";
+   }
+   attribute C21 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C21')";
+   }
+   attribute C22 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C22')";
+   }
+   attribute C23 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C23')";
+   }
+   attribute C24 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C24')";
+   }
+   attribute C25 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C25')";
+   }
+   attribute C26 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C26')";
+   }
+   attribute C27 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C27')";
+   }
+   attribute C28 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C28')";
+   }
+   attribute C29 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C29')";
+   }
+   attribute C30 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C30')";
+   }
+   attribute C31 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C31')";
+   }
+   attribute C32 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C32')";
+   }
+   attribute C33 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C33')";
+   }
+   attribute C34 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C34')";
+   }
+   attribute C35 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C35')";
+   }
+   attribute C36 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C36')";
+   }
+   attribute C37 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C37')";
+   }
+   attribute C38 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C38')";
+   }
+   attribute C39 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C39')";
+   }
+   attribute C40 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C40')";
+   }
+   attribute C41 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C41')";
+   }
+   attribute C42 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C42')";
+   }
+   attribute C43 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C43')";
+   }
+   attribute C44 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C44')";
+   }
+   attribute C45 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C45')";
+   }
+   attribute C46 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C46')";
+   }
+   attribute C47 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C47')";
+   }
+   attribute C48 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C48')";
+   }
+   attribute C49 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C49')";
+   }
+   attribute C50 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C50')";
+   }
+   attribute C51 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C51')";
+   }
+   attribute C52 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C52')";
+   }
+   attribute C53 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C53')";
+   }
+   attribute C54 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C54')";
+   }
+   attribute C55 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C55')";
+   }
+   attribute C56 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C56')";
+   }
+   attribute C57 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C57')";
+   }
+   attribute C58 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C58')";
+   }
+   attribute C59 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C59')";
+   }
+   attribute C60 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C60')";
+   }
+   attribute C61 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C61')";
+   }
+   attribute C62 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C62')";
+   }
+   attribute C63 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C63')";
+   }
+   attribute C64 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C64')";
+   }
+   attribute C65 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C65')";
+   }
+   attribute C66 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C66')";
+   }
+   attribute C67 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C67')";
+   }
+   attribute C68 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C68')";
+   }
+   attribute C69 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C69')";
+   }
+   attribute C70 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C70')";
+   }
+   attribute C71 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C71')";
+   }
+   attribute C72 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C72')";
+   }
+   attribute C73 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C73')";
+   }
+   attribute C74 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C74')";
+   }
+   attribute C75 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C75')";
+   }
+   attribute C76 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C76')";
+   }
+   attribute C77 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C77')";
+   }
+   attribute C78 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C78')";
+   }
+   attribute C79 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C79')";
+   }
+   attribute C80 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C80')";
+   }
+   attribute C81 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C81')";
+   }
+   attribute C82 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C82')";
+   }
+   attribute C83 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C83')";
+   }
+   attribute C84 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C84')";
+   }
+   attribute C85 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C85')";
+   }
+   attribute C86 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C86')";
+   }
+   attribute C87 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C87')";
+   }
+   attribute C88 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C88')";
+   }
+   attribute C89 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C89')";
+   }
+   attribute C90 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C90')";
+   }
+   attribute C91 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C91')";
+   }
+   attribute C92 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C92')";
+   }
+   attribute C93 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C93')";
+   }
+   attribute C94 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C94')";
+   }
+   attribute C95 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C95')";
+   }
+   attribute C96 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C96')";
+   }
+   attribute C97 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C97')";
+   }
+   attribute C98 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C98')";
+   }
+   attribute C99 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C99')";
+   }
+   attribute C100 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C100')";
+   }
+   attribute C101 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C101')";
+   }
+   attribute C102 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C102')";
+   }
+   attribute C103 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C103')";
+   }
+   attribute C104 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C104')";
+   }
+   attribute C105 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C105')";
+   }
+   attribute C106 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C106')";
+   }
+   attribute C107 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C107')";
+   }
+   attribute C108 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C108')";
+   }
+   attribute C109 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C109')";
+   }
+   attribute C110 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C110')";
+   }
+   attribute C111 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C111')";
+   }
+   attribute C112 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C112')";
+   }
+   attribute C113 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C113')";
+   }
+   attribute C114 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C114')";
+   }
+   attribute C115 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C115')";
+   }
+   attribute C116 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C116')";
+   }
+   attribute C117 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C117')";
+   }
+   attribute C118 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C118')";
+   }
+   attribute C119 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C119')";
+   }
+   attribute C120 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C120')";
+   }
+   attribute C121 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C121')";
+   }
+   attribute C122 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C122')";
+   }
+   attribute C123 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C123')";
+   }
+   attribute C124 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C124')";
+   }
+   attribute C125 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C125')";
+   }
+   attribute C126 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C126')";
+   }
+   attribute C127 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C127')";
+   }
+   attribute C128 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C128')";
+   }
+   attribute C129 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C129')";
+   }
+   attribute C130 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C130')";
+   }
+   attribute C131 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C131')";
+   }
+   attribute C132 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C132')";
+   }
+   attribute C133 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C133')";
+   }
+   attribute C134 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C134')";
+   }
+   attribute C135 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C135')";
+   }
+   attribute C136 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C136')";
+   }
+   attribute C137 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C137')";
+   }
+   attribute C138 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C138')";
+   }
+   attribute C139 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C139')";
+   }
+   attribute C140 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C140')";
+   }
+   attribute C141 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C141')";
+   }
+   attribute C142 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C142')";
+   }
+   attribute C143 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C143')";
+   }
+   attribute C144 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C144')";
+   }
+   attribute C145 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C145')";
+   }
+   attribute C146 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C146')";
+   }
+   attribute C147 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C147')";
+   }
+   attribute C148 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C148')";
+   }
+   attribute C149 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C149')";
+   }
+   attribute C150 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C150')";
+   }
+   attribute C151 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C151')";
+   }
+   attribute C152 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C152')";
+   }
+   attribute C153 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C153')";
+   }
+   attribute C154 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C154')";
+   }
+   attribute C155 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C155')";
+   }
+   attribute C156 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C156')";
+   }
+   attribute C157 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C157')";
+   }
+   attribute C158 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C158')";
+   }
+   attribute C159 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C159')";
+   }
+   attribute C160 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C160')";
+   }
+   attribute C161 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C161')";
+   }
+   attribute C162 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C162')";
+   }
+   attribute C163 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C163')";
+   }
+   attribute C164 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C164')";
+   }
+   attribute C165 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C165')";
+   }
+   attribute C166 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C166')";
+   }
+   attribute C167 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C167')";
+   }
+   attribute C168 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C168')";
+   }
+   attribute C169 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C169')";
+   }
+   attribute C170 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C170')";
+   }
+   attribute C171 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C171')";
+   }
+   attribute C172 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C172')";
+   }
+   attribute C173 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C173')";
+   }
+   attribute C174 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C174')";
+   }
+   attribute C175 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C175')";
+   }
+   attribute C176 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C176')";
+   }
+   attribute C177 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C177')";
+   }
+   attribute C178 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C178')";
+   }
+   attribute C179 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C179')";
+   }
+   attribute C180 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C180')";
+   }
+   attribute C181 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C181')";
+   }
+   attribute C182 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C182')";
+   }
+   attribute C183 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C183')";
+   }
+   attribute C184 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C184')";
+   }
+   attribute C185 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C185')";
+   }
+   attribute C186 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C186')";
+   }
+   attribute C187 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C187')";
+   }
+   attribute C188 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C188')";
+   }
+   attribute C189 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C189')";
+   }
+   attribute C190 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C190')";
+   }
+   attribute C191 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C191')";
+   }
+   attribute C192 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C192')";
+   }
+   attribute C193 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C193')";
+   }
+   attribute C194 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C194')";
+   }
+   attribute C195 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C195')";
+   }
+   attribute C196 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C196')";
+   }
+   attribute C197 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C197')";
+   }
+   attribute C198 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C198')";
+   }
+   attribute C199 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'C199')";
+   }
+   attribute N0 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N0')";
+   }
+   attribute N1 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N1')";
+   }
+   attribute N2 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N2')";
+   }
+   attribute N3 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N3')";
+   }
+   attribute N4 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N4')";
+   }
+   attribute N5 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N5')";
+   }
+   attribute N6 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N6')";
+   }
+   attribute N7 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N7')";
+   }
+   attribute N8 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N8')";
+   }
+   attribute N9 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N9')";
+   }
+   attribute N10 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N10')";
+   }
+   attribute N11 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N11')";
+   }
+   attribute N12 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N12')";
+   }
+   attribute N13 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N13')";
+   }
+   attribute N14 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N14')";
+   }
+   attribute N15 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N15')";
+   }
+   attribute N16 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N16')";
+   }
+   attribute N17 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N17')";
+   }
+   attribute N18 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N18')";
+   }
+   attribute N19 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N19')";
+   }
+   attribute N20 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N20')";
+   }
+   attribute N21 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N21')";
+   }
+   attribute N22 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N22')";
+   }
+   attribute N23 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N23')";
+   }
+   attribute N24 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N24')";
+   }
+   attribute N25 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N25')";
+   }
+   attribute N26 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N26')";
+   }
+   attribute N27 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N27')";
+   }
+   attribute N28 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N28')";
+   }
+   attribute N29 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N29')";
+   }
+   attribute N30 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N30')";
+   }
+   attribute N31 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N31')";
+   }
+   attribute N32 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N32')";
+   }
+   attribute N33 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N33')";
+   }
+   attribute N34 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N34')";
+   }
+   attribute N35 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N35')";
+   }
+   attribute N36 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N36')";
+   }
+   attribute N37 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N37')";
+   }
+   attribute N38 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N38')";
+   }
+   attribute N39 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N39')";
+   }
+   attribute N40 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N40')";
+   }
+   attribute N41 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N41')";
+   }
+   attribute N42 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N42')";
+   }
+   attribute N43 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N43')";
+   }
+   attribute N44 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N44')";
+   }
+   attribute N45 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N45')";
+   }
+   attribute N46 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N46')";
+   }
+   attribute N47 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N47')";
+   }
+   attribute N48 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N48')";
+   }
+   attribute N49 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N49')";
+   }
+   attribute N50 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N50')";
+   }
+   attribute N51 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N51')";
+   }
+   attribute N52 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N52')";
+   }
+   attribute N53 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N53')";
+   }
+   attribute N54 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N54')";
+   }
+   attribute N55 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N55')";
+   }
+   attribute N56 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N56')";
+   }
+   attribute N57 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N57')";
+   }
+   attribute N58 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N58')";
+   }
+   attribute N59 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N59')";
+   }
+   attribute N60 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N60')";
+   }
+   attribute N61 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N61')";
+   }
+   attribute N62 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N62')";
+   }
+   attribute N63 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N63')";
+   }
+   attribute N64 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N64')";
+   }
+   attribute N65 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N65')";
+   }
+   attribute N66 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N66')";
+   }
+   attribute N67 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N67')";
+   }
+   attribute N68 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N68')";
+   }
+   attribute N69 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N69')";
+   }
+   attribute N70 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N70')";
+   }
+   attribute N71 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N71')";
+   }
+   attribute N72 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N72')";
+   }
+   attribute N73 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N73')";
+   }
+   attribute N74 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N74')";
+   }
+   attribute N75 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N75')";
+   }
+   attribute N76 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N76')";
+   }
+   attribute N77 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N77')";
+   }
+   attribute N78 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N78')";
+   }
+   attribute N79 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N79')";
+   }
+   attribute N80 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N80')";
+   }
+   attribute N81 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N81')";
+   }
+   attribute N82 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N82')";
+   }
+   attribute N83 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N83')";
+   }
+   attribute N84 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N84')";
+   }
+   attribute N85 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N85')";
+   }
+   attribute N86 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N86')";
+   }
+   attribute N87 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N87')";
+   }
+   attribute N88 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N88')";
+   }
+   attribute N89 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N89')";
+   }
+   attribute N90 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N90')";
+   }
+   attribute N91 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N91')";
+   }
+   attribute N92 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N92')";
+   }
+   attribute N93 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N93')";
+   }
+   attribute N94 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N94')";
+   }
+   attribute N95 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N95')";
+   }
+   attribute N96 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N96')";
+   }
+   attribute N97 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N97')";
+   }
+   attribute N98 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N98')";
+   }
+   attribute N99 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'N99')";
+   }
+   attribute D1 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D1')";
+   }
+   attribute D2 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D2')";
+   }
+   attribute D3 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D3')";
+   }
+   attribute D4 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D4')";
+   }
+   attribute D5 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D5')";
+   }
+   attribute D6 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D6')";
+   }
+   attribute D7 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D7')";
+   }
+   attribute D8 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D8')";
+   }
+   attribute D9 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D9')";
+   }
+   attribute D10 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D10')";
+   }
+   attribute D11 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D11')";
+   }
+   attribute D12 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D12')";
+   }
+   attribute D13 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D13')";
+   }
+   attribute D14 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D14')";
+   }
+   attribute D15 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D15')";
+   }
+   attribute D16 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D16')";
+   }
+   attribute D17 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D17')";
+   }
+   attribute D18 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D18')";
+   }
+   attribute D19 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D19')";
+   }
+   attribute D20 Text {
+      fetch = "Ext_File_Trans_API.Get_Column_Name(Ext_File_Load_API.Get_File_Template_Id(load_file_id),record_type_id,'D20')";
+   }
+   array ExtFileTransColumnArray(LoadFileId, RowNo) to ExtFileTransColumn(LoadFileId, RowNo);
+}
+
+
+@Override
+entity ExtFileTransColumn using ExtFileTrans {
+   crud = Read;
+   keys = LoadFileId, RowNo;
+
+   attribute RecordTypeId Text {
+      maxlength = 200;
+      editable = [ETag = null];
+   }
+   attribute C0 Text;
+   attribute C1 Text;
+   attribute C2 Text;
+   attribute C3 Text;
+   attribute C4 Text;
+   attribute C5 Text;
+   attribute C6 Text;
+   attribute C7 Text;
+   attribute C8 Text;
+   attribute C9 Text;
+   attribute C10 Text;
+   attribute C11 Text;
+   attribute C12 Text;
+   attribute C13 Text;
+   attribute C14 Text;
+   attribute C15 Text;
+   attribute C16 Text;
+   attribute C17 Text;
+   attribute C18 Text;
+   attribute C19 Text;
+   attribute C20 Text;
+   attribute C21 Text;
+   attribute C22 Text;
+   attribute C23 Text;
+   attribute C24 Text;
+   attribute C25 Text;
+   attribute C26 Text;
+   attribute C27 Text;
+   attribute C28 Text;
+   attribute C29 Text;
+   attribute C30 Text;
+   attribute C31 Text;
+   attribute C32 Text;
+   attribute C33 Text;
+   attribute C34 Text;
+   attribute C35 Text;
+   attribute C36 Text;
+   attribute C37 Text;
+   attribute C38 Text;
+   attribute C39 Text;
+   attribute C40 Text;
+   attribute C41 Text;
+   attribute C42 Text;
+   attribute C43 Text;
+   attribute C44 Text;
+   attribute C45 Text;
+   attribute C46 Text;
+   attribute C47 Text;
+   attribute C48 Text;
+   attribute C49 Text;
+   attribute C50 Text;
+   attribute C51 Text;
+   attribute C52 Text;
+   attribute C53 Text;
+   attribute C54 Text;
+   attribute C55 Text;
+   attribute C56 Text;
+   attribute C57 Text;
+   attribute C58 Text;
+   attribute C59 Text;
+   attribute C60 Text;
+   attribute C61 Text;
+   attribute C62 Text;
+   attribute C63 Text;
+   attribute C64 Text;
+   attribute C65 Text;
+   attribute C66 Text;
+   attribute C67 Text;
+   attribute C68 Text;
+   attribute C69 Text;
+   attribute C70 Text;
+   attribute C71 Text;
+   attribute C72 Text;
+   attribute C73 Text;
+   attribute C74 Text;
+   attribute C75 Text;
+   attribute C76 Text;
+   attribute C77 Text;
+   attribute C78 Text;
+   attribute C79 Text;
+   attribute C80 Text;
+   attribute C81 Text;
+   attribute C82 Text;
+   attribute C83 Text;
+   attribute C84 Text;
+   attribute C85 Text;
+   attribute C86 Text;
+   attribute C87 Text;
+   attribute C88 Text;
+   attribute C89 Text;
+   attribute C90 Text;
+   attribute C91 Text;
+   attribute C92 Text;
+   attribute C93 Text;
+   attribute C94 Text;
+   attribute C95 Text;
+   attribute C96 Text;
+   attribute C97 Text;
+   attribute C98 Text;
+   attribute C99 Text;
+   attribute C100 Text;
+   attribute C101 Text;
+   attribute C102 Text;
+   attribute C103 Text;
+   attribute C104 Text;
+   attribute C105 Text;
+   attribute C106 Text;
+   attribute C107 Text;
+   attribute C108 Text;
+   attribute C109 Text;
+   attribute C110 Text;
+   attribute C111 Text;
+   attribute C112 Text;
+   attribute C113 Text;
+   attribute C114 Text;
+   attribute C115 Text;
+   attribute C116 Text;
+   attribute C117 Text;
+   attribute C118 Text;
+   attribute C119 Text;
+   attribute C120 Text;
+   attribute C121 Text;
+   attribute C122 Text;
+   attribute C123 Text;
+   attribute C124 Text;
+   attribute C125 Text;
+   attribute C126 Text;
+   attribute C127 Text;
+   attribute C128 Text;
+   attribute C129 Text;
+   attribute C130 Text;
+   attribute C131 Text;
+   attribute C132 Text;
+   attribute C133 Text;
+   attribute C134 Text;
+   attribute C135 Text;
+   attribute C136 Text;
+   attribute C137 Text;
+   attribute C138 Text;
+   attribute C139 Text;
+   attribute C140 Text;
+   attribute C141 Text;
+   attribute C142 Text;
+   attribute C143 Text;
+   attribute C144 Text;
+   attribute C145 Text;
+   attribute C146 Text;
+   attribute C147 Text;
+   attribute C148 Text;
+   attribute C149 Text;
+   attribute C150 Text;
+   attribute C151 Text;
+   attribute C152 Text;
+   attribute C153 Text;
+   attribute C154 Text;
+   attribute C155 Text;
+   attribute C156 Text;
+   attribute C157 Text;
+   attribute C158 Text;
+   attribute C159 Text;
+   attribute C160 Text;
+   attribute C161 Text;
+   attribute C162 Text;
+   attribute C163 Text;
+   attribute C164 Text;
+   attribute C165 Text;
+   attribute C166 Text;
+   attribute C167 Text;
+   attribute C168 Text;
+   attribute C169 Text;
+   attribute C170 Text;
+   attribute C171 Text;
+   attribute C172 Text;
+   attribute C173 Text;
+   attribute C174 Text;
+   attribute C175 Text;
+   attribute C176 Text;
+   attribute C177 Text;
+   attribute C178 Text;
+   attribute C179 Text;
+   attribute C180 Text;
+   attribute C181 Text;
+   attribute C182 Text;
+   attribute C183 Text;
+   attribute C184 Text;
+   attribute C185 Text;
+   attribute C186 Text;
+   attribute C187 Text;
+   attribute C188 Text;
+   attribute C189 Text;
+   attribute C190 Text;
+   attribute C191 Text;
+   attribute C192 Text;
+   attribute C193 Text;
+   attribute C194 Text;
+   attribute C195 Text;
+   attribute C196 Text;
+   attribute C197 Text;
+   attribute C198 Text;
+   attribute C199 Text;
+   attribute N0 Number;
+   attribute N1 Number;
+   attribute N2 Number;
+   attribute N3 Number;
+   attribute N4 Number;
+   attribute N5 Number;
+   attribute N6 Number;
+   attribute N7 Number;
+   attribute N8 Number;
+   attribute N9 Number;
+   attribute N10 Number;
+   attribute N11 Number;
+   attribute N12 Number;
+   attribute N13 Number;
+   attribute N14 Number;
+   attribute N15 Number;
+   attribute N16 Number;
+   attribute N17 Number;
+   attribute N18 Number;
+   attribute N19 Number;
+   attribute N20 Number;
+   attribute N21 Number;
+   attribute N22 Number;
+   attribute N23 Number;
+   attribute N24 Number;
+   attribute N25 Number;
+   attribute N26 Number;
+   attribute N27 Number;
+   attribute N28 Number;
+   attribute N29 Number;
+   attribute N30 Number;
+   attribute N31 Number;
+   attribute N32 Number;
+   attribute N33 Number;
+   attribute N34 Number;
+   attribute N35 Number;
+   attribute N36 Number;
+   attribute N37 Number;
+   attribute N38 Number;
+   attribute N39 Number;
+   attribute N40 Number;
+   attribute N41 Number;
+   attribute N42 Number;
+   attribute N43 Number;
+   attribute N44 Number;
+   attribute N45 Number;
+   attribute N46 Number;
+   attribute N47 Number;
+   attribute N48 Number;
+   attribute N49 Number;
+   attribute N50 Number;
+   attribute N51 Number;
+   attribute N52 Number;
+   attribute N53 Number;
+   attribute N54 Number;
+   attribute N55 Number;
+   attribute N56 Number;
+   attribute N57 Number;
+   attribute N58 Number;
+   attribute N59 Number;
+   attribute N60 Number;
+   attribute N61 Number;
+   attribute N62 Number;
+   attribute N63 Number;
+   attribute N64 Number;
+   attribute N65 Number;
+   attribute N66 Number;
+   attribute N67 Number;
+   attribute N68 Number;
+   attribute N69 Number;
+   attribute N70 Number;
+   attribute N71 Number;
+   attribute N72 Number;
+   attribute N73 Number;
+   attribute N74 Number;
+   attribute N75 Number;
+   attribute N76 Number;
+   attribute N77 Number;
+   attribute N78 Number;
+   attribute N79 Number;
+   attribute N80 Number;
+   attribute N81 Number;
+   attribute N82 Number;
+   attribute N83 Number;
+   attribute N84 Number;
+   attribute N85 Number;
+   attribute N86 Number;
+   attribute N87 Number;
+   attribute N88 Number;
+   attribute N89 Number;
+   attribute N90 Number;
+   attribute N91 Number;
+   attribute N92 Number;
+   attribute N93 Number;
+   attribute N94 Number;
+   attribute N95 Number;
+   attribute N96 Number;
+   attribute N97 Number;
+   attribute N98 Number;
+   attribute N99 Number;
+   attribute D1 Date;
+   attribute D2 Date;
+   attribute D3 Date;
+   attribute D4 Date;
+   attribute D5 Date;
+   attribute D6 Date;
+   attribute D7 Date;
+   attribute D8 Date;
+   attribute D9 Date;
+   attribute D10 Date;
+   attribute D11 Date;
+   attribute D12 Date;
+   attribute D13 Date;
+   attribute D14 Date;
+   attribute D15 Date;
+   attribute D16 Date;
+   attribute D17 Date;
+   attribute D18 Date;
+   attribute D19 Date;
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+function ExtFileLoadViewName Text {
+   parameter FileType Text;
+}
+
+function ExtTypeParamSetVouTypes List<Entity(ExtTypeParamSet)> {
+   parameter FileType Text;
+   where = "(file_type = :FileType)";
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

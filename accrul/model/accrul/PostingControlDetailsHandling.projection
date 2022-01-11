@@ -1,0 +1,174 @@
+projection PostingControlDetailsHandling;
+component ACCRUL;
+layer Core;
+description "Posting Control Details Handling";
+category Users;
+
+include fragment CopyDetailsSetup;
+include fragment CopyToCompaniesAssistant;
+include fragment AccountingCodePartsUsed2Selector;
+include fragment AccountingCodePartValueLovSelector;
+include fragment CtrlTypeAllowedValueSelector;
+
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset PostingCtrlSet for PostingCtrl {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity PostingCtrl {
+   crud = Read;
+   from = "posting_ctrl_master";
+   attribute PcValidFrom Date;
+   attribute DefaultValue Text {
+      label = "Default Value No Details";
+      editable = [false];
+   }
+   attribute DefaultValueNoCt Text {
+      editable = [false];
+   }
+   attribute CtrlTypeCategoryDb Text {
+      fetch = "CTRL_TYPE_CATEGORY_DB";
+      editable = [false];
+   }
+   attribute AllowPrepostDetDb Text {
+      fetch = "ALLOW_PREPOST_DET_DB";
+      maxlength = 20;
+      editable = [false];
+      format = uppercase;
+   }
+   attribute ControlTypeCategory Text {
+      fetch = "Posting_Ctrl_Control_Type_API.Get_Ctrl_Type_Category(Control_Type,Module)";
+   }
+   attribute ControlTypeDescription Text {
+      fetch = "Posting_Ctrl_Control_Type_API.Get_Description(Control_Type,Module,Company)";
+   }
+   attribute PkgName Text {
+      fetch = "Posting_Ctrl_Control_Type_API.Get_Pkg_Name__(Control_Type,Module,Company)";
+   }
+   attribute ViewName Text {
+      fetch = "Posting_Ctrl_Control_Type_API.Get_View__(Control_Type,Module,Company)";
+   }
+   attribute SCctEnabled Text {
+      fetch = "Posting_Ctrl_Posting_Type_API.Cct_Enabled(Posting_Type)";
+   }
+   reference PostingTypeRef(PostingType) to PostingCtrlPostingType(PostingType) {
+      label = "Posting Type";
+   }
+   reference CodeNameRef(Company, CodeName) to AccountingCodePartsUsed2(Company, CodeName) {
+      label = "Code Part Name";
+   }
+   array PostingCtrlDetailArray(Company, PostingType, CodePart, PcValidFrom, ControlType, Module) to PostingCtrlDetail(Company, PostingType, CodePart, PcValidFrom, ControlType, Module);
+}
+
+@Override
+entity PostingCtrlDetail {
+   attribute ControlTypeValueDesc Text {
+      label = "Description";
+      fetch = "Posting_Ctrl_Control_Type_API.Get_Control_Type_Value_Desc( company, control_type, control_type_value, module, valid_from)";
+      editable = [false];
+      required = [false];
+   }
+   attribute PcValidFrom Date {
+      label = "PC Valid From";
+   }
+   attribute NoCodePartValue Boolean("TRUE", "FALSE") {
+      fetch = "NO_CODE_PART_VALUE_DB";
+      label = "No Code Part Value";
+      required = [true];
+   }
+   attribute SpecControlType Text {
+      label = "Specification Control Type";
+   }
+   attribute SpecDefaultValue Text {
+      maxlength = 20;
+   }
+   attribute ValidFrom Date {
+      editable = [ETag = null];
+   }
+   attribute Module Text {
+      label = "LU Name";
+   }
+   attribute ControlType Text {
+      required = [false];
+   }
+//   reference ControlTypeValue2Ref(Company, ControlTypeValue) to StatutoryFee(Company, FeeCode);
+   reference ControlTypeValueRef(ControlTypeValue) dynamic(ControlType) parent(Company);
+
+   reference CodePartValueRef(Company, CodePart, CodePartValue) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Code Part Value";
+   }
+   reference SpecControlTypeRef(Company, PostingType, CodePart, SpecControlType) to CtrlTypeAllowedValue(Company, PostingType, CodePart, ControlType) {
+      label = "Specification Control Type";
+      copy CtrlTypeCategory to SpecCtrlTypeCategory;
+   }
+   reference SpecDefaultValueRef(Company, CodePart, SpecDefaultValue) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Specification Default Value No Details";
+   }
+   reference SpecDefaultValueNoCtRef(Company, CodePart, SpecDefaultValueNoCt) to AccountingCodePartValueLov(Company, CodePart, CodePartValue) {
+      label = "Specification Default Value No CT Value";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+---------------------------------- QUERIES ----------------------------------
+
+---------------------------------- ACTIONS ----------------------------------
+
+--------------------------------- FUNCTIONS ---------------------------------
+function GetSpecControlType List<Entity(CtrlTypeAllowedValue)> {
+   where = "(CTRL_TYPE_CATEGORY_DB IN ( 'ORDINARY', 'SYSTEM_DEFINED', 'COMBINATION' ) OR (CTRL_TYPE_CATEGORY_DB = 'PREPOSTING' AND ALLOW_PREPOST_DET_DB = 'TRUE'))";
+}
+
+function GetControlTypeDescription Text {
+   parameter Company Text;
+   parameter ControlType Text;
+   parameter ControlTypeValue Text;
+   parameter Module Text;
+   parameter ValidFrom Date;
+}
+
+function GetCtrlTypeAllowedValue  Structure(CtrlTypeAllowedValueStruct) {
+   parameter Company Text;
+   parameter CodePart Text;
+   parameter PostingType Text;
+   parameter SpecControlType Text;
+   parameter SpecCtrlTypeCategory Enumeration(CtrlTypeCategory);
+}
+
+function FetchPageSearchContextDefaults Structure(PageSearchContextStructure) {
+   parameter ControlTypeValue Text;
+}
+
+-------------------------------- STRUCTURES ---------------------------------
+structure CtrlTypeAllowedValueStruct {
+   attribute Module Text;
+   attribute SpecCtrlTypeCategory Enumeration(CtrlTypeCategory);
+   attribute SpecControlTypeDesc Text;
+}
+
+structure PageSearchContextStructure {
+   attribute ControlTypeValue Text;
+}
+
+--------------------------------- VIRTUALS ----------------------------------
+
+--------------------------------- SUMMARIES ---------------------------------
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+
+
+
+
+
+
+
+
+

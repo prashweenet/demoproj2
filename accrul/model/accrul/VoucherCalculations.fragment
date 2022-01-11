@@ -1,0 +1,40 @@
+fragment VoucherCalculations;
+component ACCRUL;
+layer Core;
+description "Contains common amount calculations for Manual Voucher Entry.";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+structure CurrencyAmountStructure {
+   attribute Amount Number;
+   attribute DebetAmount Number;
+   attribute CreditAmount Number;
+   attribute CurrencyAmount Number;
+   attribute CurrencyDebetAmount Number;
+   attribute CurrencyCreditAmount Number;
+   attribute ThirdCurrencyAmount Number;
+   attribute ThirdCurrencyDebitAmount Number;
+   attribute ThirdCurrencyCreditAmount Number;
+   attribute TaxBaseAmount Number;
+   attribute CurrencyTaxBaseAmount Number;
+   attribute ParallelCurrTaxBaseAmount Number;
+   attribute CurrencyTaxAmount Number;
+   attribute TaxAmount Number;
+   attribute ParallelCurrTaxAmount Number;
+   attribute CurrencyRate Number;
+   attribute ConversionFactor Number;
+   attribute ParallelConversionFactor Number;
+   attribute ParallelCurrencyRate Number;
+   attribute CurrencyType Text;
+   attribute ParallelCurrRateType Text;
+   attribute CurrencyCode Text;
+}
+
+
+function GetValidEmu  Text {
+   parameter Company       Text;
+   parameter CurrencyCode  Text;
+   parameter VoucherDate   Date;
+}

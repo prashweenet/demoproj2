@@ -1,0 +1,19 @@
+
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200703  SatGlk  LMM2020R1-283, Implemented.
+-----------------------------------------------------------------------------
+projection MaintLocationTypeHandling;
+component ADCOM;
+layer Core;
+description "Use this API to handle maintenance location type information";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset MaintLocationTypeSet for AvMaintLocationType;
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity AvMaintLocationType {
+   crud = Create, Read, Update, Delete;
+}

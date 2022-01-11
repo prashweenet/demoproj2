@@ -1,0 +1,46 @@
+fragment UserGroupMemberFinance3Selector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view user_group_member_finance3";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceUserGroupMemberFinance3Selector for UserGroupMemberFinance3 {
+   static Userid;
+   static UserGroup;
+}
+
+card UserGroupMemberFinance3Card for UserGroupMemberFinance3 {
+   label = "";
+   fieldranking Userid;
+   field Userid;
+   field UserGroup;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query UserGroupMemberFinance3 {
+   from = "user_group_member_finance3";
+   lu = UserGroupMemberFinance;
+   keys = Company, Userid, UserGroup;
+   ludependencies = UserGroupMemberFinance;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute Userid Text {
+      label = "User ID";
+      lovcolumn = [true];
+   }
+   attribute UserGroup Text {
+      lovcolumn = [true];
+   }
+   attribute DefaultGroup Enumeration(FinanceYesNo) {
+      lovcolumn = [false];
+      fetch = "default_group_db";
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

@@ -1,0 +1,23 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CostRevenueBreakdownStructureLevelsHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override
+PROCEDURE CRUD_Default_Copy___ (
+   rec_ IN OUT Cost_Structure_Level_Rec )
+IS
+BEGIN
+   super(rec_);
+   rec_.level_above := '';
+END CRUD_Default_Copy___;
+
+

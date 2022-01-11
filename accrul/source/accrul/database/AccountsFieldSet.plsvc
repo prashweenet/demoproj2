@@ -1,0 +1,45 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     Accounts
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+FUNCTION Default_Code_Part_Demands___(
+   company_      IN VARCHAR2,
+   account_type_ IN VARCHAR2 ) RETURN Code_Part_Demands_Structure_Rec
+IS
+   code_part_demands_structure_rec_  Code_Part_Demands_Structure_Rec;   
+BEGIN
+   Account_Type_API.Get_Default_Codepart_Demands_(
+      code_part_demands_structure_rec_.req_code_b_default,
+      code_part_demands_structure_rec_.req_code_c_default,
+      code_part_demands_structure_rec_.req_code_d_default,
+      code_part_demands_structure_rec_.req_code_e_default,
+      code_part_demands_structure_rec_.req_code_f_default,
+      code_part_demands_structure_rec_.req_code_g_default,
+      code_part_demands_structure_rec_.req_code_h_default,
+      code_part_demands_structure_rec_.req_code_i_default,
+      code_part_demands_structure_rec_.req_code_j_default,
+      code_part_demands_structure_rec_.req_quantity_default,
+      code_part_demands_structure_rec_.text_default,
+      code_part_demands_structure_rec_.process_code_default,
+      code_part_demands_structure_rec_.req_bud_code_b_default,
+      code_part_demands_structure_rec_.req_bud_code_c_default,
+      code_part_demands_structure_rec_.req_bud_code_d_default,
+      code_part_demands_structure_rec_.req_bud_code_e_default,
+      code_part_demands_structure_rec_.req_bud_code_f_default,
+      code_part_demands_structure_rec_.req_bud_code_g_default,
+      code_part_demands_structure_rec_.req_bud_code_h_default,
+      code_part_demands_structure_rec_.req_bud_code_i_default,
+      code_part_demands_structure_rec_.req_bud_code_j_default,
+      code_part_demands_structure_rec_.req_bud_quantity_default,
+      company_,
+      account_type_);
+   RETURN code_part_demands_structure_rec_;
+END Default_Code_Part_Demands___;   

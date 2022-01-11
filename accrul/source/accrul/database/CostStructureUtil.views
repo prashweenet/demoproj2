@@ -1,0 +1,69 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: CostStructureUtil
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+-------------------- PUBLIC VIEW DEFINITIONS --------------------------------
+
+
+-------------------- PRIVATE VIEW DEFINITIONS -------------------------------
+
+VIEW Cost_Structure_Det IS
+   Prompt = 'Structure Util'
+   Table = 'COST_STRUCTURE_DET_TAB'
+   Company.Flags = 'PMI-L'
+   Company.Datatype = 'STRING(20)/UPPERCASE'
+   Company.Prompt = 'Company'
+   Company.Ref = 'CompanyFinance/CUSTOMLIST=(,Cascade_Company_Finance__)'
+   cost_structure_id.Flags = 'PMI-L'
+   cost_structure_id.Datatype = 'STRING(20)/UPPERCASE'
+   cost_structure_id.Prompt = 'Cost Structure Id'
+   cost_structure_id.Ref = 'CostStructure(company)/NOCHECK'
+   Level_Id.Flags = 'KMI--'
+   Level_Id.Datatype = 'STRING(20)/UPPERCASE'
+   Level_Id.Prompt = 'Level Id'
+   Structure_Node.Flags = 'KMI--'
+   Structure_Node.Datatype = 'STRING(100)/UPPERCASE'
+   Structure_Node.Prompt = 'Structure Node'
+   project_cost_element.Flags = 'KMI--'
+   project_cost_element.Datatype = 'STRING(100)/UPPERCASE'
+   project_cost_element.Prompt = 'Project Cost Element'
+   Structure_Node_Desc.Flags = 'A-IU-'
+   Structure_Node_Desc.Datatype = 'STRING(200)'
+   Structure_Node_Desc.Prompt = 'Structure Node Description'
+   Item_Above.Flags = 'A-IU-'
+   Item_Above.Datatype = 'STRING(100)'
+   Item_Above.Prompt = 'Item Above'
+   Item_Below.Flags = 'A-IU-'
+   Item_Below.Datatype = 'STRING(100)'
+   Item_Below.Prompt = 'Item Below'
+   Item_Below_Desc.Flags = 'A-IU-'
+   Item_Below_Desc.Datatype = 'STRING(200)'
+   Item_Below_Desc.Prompt = 'Item Below Description'
+   Item_Below_Type.Flags = 'A-IU-'
+   Item_Below_Type.Datatype = 'STRING(20)'
+   Item_Below_Type.Prompt = 'Item Below Type'
+SELECT company                                company,
+       cost_structure_id                      cost_structure_id,
+       level_id                               level_id,
+       structure_node                         structure_node,
+       project_cost_element                   project_cost_element,
+       structure_node_desc                    structure_node_desc,
+       item_above                             item_above,
+       item_below                             item_below,
+              DECODE(item_below_type, 'COST_ELEMENT', 
+              Project_Cost_Element_API.Get_Description(company, project_cost_element), 
+              Cost_Structure_Item_API.Get_Description_Db (company, cost_structure_id, structure_node, 'NODE'))
+                                              Item_Below_Desc,
+       item_below_type                        item_below_type,
+       rowid                                  objid,
+       to_char(rowversion,'YYYYMMDDHH24MISS') objversion
+FROM   cost_structure_det_tab;

@@ -1,0 +1,42 @@
+fragment UserAccessLedgersSelector;
+component ACCRUL;
+layer Core;
+description "List of values fragment defining view user_access_ledgers";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+
+@Overtake Core
+selector ReferenceUserAccessLedgersSelector for UserAccessLedgers {
+   static LedgerId;
+   static Description;
+}
+
+card UserAccessLedgersCard for UserAccessLedgers {
+   label = "";
+   fieldranking LedgerId;
+   field LedgerId;
+   field Description;
+}
+---------------------- MANUALLY ADDED CLIENT FRAGMENTS ----------------------
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+
+query UserAccessLedgers {
+   from = "user_access_ledgers";
+   lu = AllLedger;
+   keys = Company, LedgerId;
+   ludependencies = AllLedger;
+   attribute Company Text {
+      format = uppercase;
+      lovcolumn = [false];
+   }
+   attribute LedgerId Text {
+      label = "Ledger ID";
+      lovcolumn = [true];
+   }
+   attribute Description Text {
+      lovcolumn = [true];
+   }
+}
+
+-------------------- MANUALLY ADDED PROJECTION FRAGMENTS --------------------

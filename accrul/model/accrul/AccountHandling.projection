@@ -1,0 +1,72 @@
+----------------------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  -----------------------------------------------------------------------------
+-- 200608      Sacnlk  GESPRING20-4734, Added SatAccountGroup and SatLevel for accounting_xml_data functionality.
+-- 201112      Sacnlk  GESPRING20-5995, Added SatParentAccount for accounting_xml_data functionality.
+----------------------------------------------------------------------------------------------------
+
+projection AccountHandling;
+component ACCRUL;
+layer Core;
+description "Manage chart of accounts.";
+category Users;
+include fragment AccountsConsolidationSelector;
+include fragment AccountCommonHandling;
+include fragment CopyToCompaniesAssistant;
+
+-- gelr:localization_control_center, begin
+include fragment LocalizationControlCenterHandler;
+-- gelr:localization_control_center, end
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset AccountSet for Account {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity Account {
+   attribute Value Text {
+      fetch = "account";
+   }
+   -- gelr:accounting_xml_data, begin
+   reference SatAccountGroupRef(Company, SatAccountGroup) to SatAccountGroup(Company, SatAccountGroup) {
+      label = "SAT Account Group";
+   }
+   reference SatParentAccountRef(Company, SatParentAccount) to Account(Company, Account) {
+      label = "SAT Parent Account";
+   }
+   -- gelr:accounting_xml_data, end
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+-- gelr:accounting_xml_data, begin
+function ValidateSatAccountGroup Text {
+   parameter Company Text;
+   parameter SatAccountGroup Text;
+}
+-- gelr:accounting_xml_data, end
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

@@ -1,0 +1,92 @@
+projection VoucherApproversHandling;
+component ACCRUL;
+layer Core;
+description "Voucher Approvers";
+category Users;
+
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset ApproverDetailSet for ApproverDetail {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity ApproverDetail {
+   attribute ApproverDetailId Text {
+      required = [false];
+   }
+   attribute ApproverId Text {
+      label = "Approver";
+   }
+   attribute ApproverGroupId Text {
+      label = "Approver Group";
+   }
+   attribute CombinationRuleId Text {
+      label = "Approval Combination Rule";
+   }
+   attribute Amount Number {
+      label = "Max Amount in Acc Curr";
+      format = ifscurrency;
+   }
+
+   reference ApproverIdRef(Company, ApproverId) to UserFinance(Company, Userid) {
+      label = "Approver";
+   }
+   reference ApproverGroupIdRef(Company, ApproverGroupId) to ApproverGroup(Company, ApproverGroupId) {
+      label = "Approver Group";
+   }
+   reference CombinationRuleIdRef(Company, CombinationRuleId) to ApproverCombRule(Company, CombinationRuleId) {
+      label = "Approval Combination Rule";
+   }
+}
+
+@Override
+entity UserFinance {
+   attribute Userid Text {
+      label = "User ID";
+   }
+}
+
+@Override
+entity ApproverGroup {
+   attribute ApproverGroupId Text {
+      label = "Approver Group ID";
+   }
+   attribute Description Text {
+      label = "Approver Group Description";
+   }
+}
+
+@Override
+entity ApproverCombRule {
+   attribute CombinationRuleId Text {
+      label = "Combination Rule";
+   }
+}
+
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+

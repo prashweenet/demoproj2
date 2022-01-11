@@ -1,0 +1,81 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: AuditFileBasicDataHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override
+PROCEDURE CRUD_Default___ (
+   key_  IN  Audit_Basic_Data_Master_Key,
+   attr_ IN OUT VARCHAR2,
+   info_ OUT VARCHAR2 )
+IS
+   company_       VARCHAR2(20);
+   country_db_    VARCHAR2(50);
+   curr_code_     VARCHAR2(3);
+   par_curr_code_ VARCHAR2(3);
+   
+BEGIN
+   company_    := Client_SYS.Get_Item_Value('COMPANY', attr_);
+   country_db_ := Client_SYS.Get_Item_Value('COUNTRY_DB', attr_);
+   Company_Finance_API.Get_Accounting_Currency(curr_code_, company_);
+   par_curr_code_ := Company_Finance_API.Get_Parallel_Acc_Currency(company_);
+   super(key_, attr_, info_);
+   Client_SYS.Set_Item_Value('AUDIT_FILE_COUNTRY', country_db_, attr_);
+   Client_SYS.Set_Item_Value('DEFAULT_CURRENCY_CODE', curr_code_, attr_);
+   Client_SYS.Add_To_Attr('PARALLEL_ACC_CURRENCY', par_curr_code_, attr_);
+END CRUD_Default___;
+
+@Override
+PROCEDURE CRUD_Update___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Standard_Audit_Tax_Codes_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+   objid_                  VARCHAR2(2000);
+   objversion_             VARCHAR2(2000);
+   standard_tax_id_        standard_audit_tax_codes2.standard_tax_id%TYPE;
+   tax_exemption_id_       standard_audit_tax_codes2.tax_exemption_reason_id%TYPE;
+BEGIN
+   standard_tax_id_  := Client_SYS.Get_Item_Value('STANDARD_TAX_ID', attr_); 
+   tax_exemption_id_ := Client_SYS.Get_Item_Value('TAX_EXEMPTION_REASON_ID', attr_); 
+   Get_Objid_Objversion___(objid_, objversion_, key_);
+   
+   IF (objid_ IS NULL AND (standard_tax_id_ IS NOT NULL OR tax_exemption_id_ IS NOT NULL)) THEN
+      Client_SYS.Add_To_Attr('COMPANY', key_.company, attr_);
+      Client_SYS.Add_To_Attr('COUNTRY_DB', key_.country, attr_);
+      Client_SYS.Add_To_Attr('REPORT_TYPE_DB', key_.report_type, attr_);
+      Client_SYS.Add_To_Attr('TAX_ID', key_.tax_id, attr_);
+      Client_SYS.Add_To_Attr('TAX_ID_DESCRIPTION', Statutory_Fee_API.Get_Description(key_.company, key_.tax_id), attr_);
+      Client_SYS.Add_To_Attr('STANDARD_TAX_ID', standard_tax_id_, attr_);
+      Client_SYS.Add_To_Attr('TAX_EXEMPTION_REASON_ID', tax_exemption_id_, attr_);
+      Standard_Audit_Tax_Codes_API.New__(info_, objid_, objversion_, attr_, action_);
+   ELSIF (objid_ IS NOT NULL AND key_.company IS NOT NULL) THEN 
+      super(etag_, key_, attr_, info_, action_);
+   ELSIF (objid_ IS NOT NULL AND key_.company IS NULL) THEN 
+      Standard_Audit_Tax_Codes_API.Remove__(info_, objid_, objversion_, action_);
+   END IF;
+END CRUD_Update___;
+
+
+
+FUNCTION Get_Acc_Currency_Code___(
+   company_ IN VARCHAR2 )  RETURN VARCHAR2
+IS
+   currency_code_ VARCHAR2(3);
+BEGIN
+   Company_Finance_API.Get_Accounting_Currency(currency_code_, company_);
+   RETURN currency_code_;
+END Get_Acc_Currency_Code___;
+
+
+

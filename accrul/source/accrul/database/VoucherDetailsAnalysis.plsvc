@@ -1,0 +1,32 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherDetailsAnalysis
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+FUNCTION Get_Multi_Company_Info___ (
+   company_            IN VARCHAR2,
+   accounting_year_    IN NUMBER,
+   voucher_type_       IN VARCHAR2,
+   voucher_no_         IN NUMBER) RETURN Multi_Company_Info_Structure_Rec
+IS
+   rec_ Multi_Company_Info_Structure_Rec;
+BEGIN
+   Voucher_Util_Pub_API.Get_Multi_Company_Info(
+      rec_.original_company,
+      rec_.original_acc_year,
+      rec_.original_voucher_type,
+      rec_.original_voucher_no,
+      company_,
+      accounting_year_,
+      voucher_type_,
+      voucher_no_);  
+   RETURN rec_;
+END Get_Multi_Company_Info___;

@@ -1,0 +1,63 @@
+
+-----------------------------------------------------------------------------
+--
+--  Filename      : AccrulCopyingInfo.ins
+--
+--  Module        : ACCRUL
+--
+--  Purpose       : Define basic data.
+--
+--  Localization  : No localization needed, and no translation support.
+--
+--  Description   : Number ranges for Product Groups.
+--                  Finance:0 - 499(ENTERP 0-24, ACCRUL 25-49, INVOIC 50-99, PAYLED 100-149)
+
+--  Description   : copy_for_category column
+--                  When copy customer functionality works, methods in the copying_info_tab 
+--                  should be called depending on the customer category.
+--                  The copy_for_category column define for which customer categories the corresponding method need to be called.
+--                  
+-----------------------------------------------------------------------------
+--  Date    Sign    History
+--  ------  ------  -----------------------------------------------------------
+--  161004  reanpl  FINHR-3451, Created.
+-----------------------------------------------------------------------------
+SET SERVEROUT ON
+
+PROMPT Inserting default data to copying_info_tab
+DECLARE
+   PROCEDURE Copying_Info_Row_ (
+      party_type_          IN VARCHAR2,
+      module_              IN VARCHAR2,
+      pkg_and_method_name_ IN VARCHAR2,
+      rowversion_          IN NUMBER,
+      exec_order_          IN NUMBER,
+      copy_for_category_   IN VARCHAR2,
+      copy_convert_option_ IN VARCHAR2 )
+   IS
+   BEGIN
+      INSERT INTO copying_info_tab(
+         party_type,
+         module,
+         pkg_and_method_name,
+         rowversion,
+         exec_order,
+         copy_for_category,
+         copy_convert_option)
+      VALUES (
+         party_type_,
+         module_,
+         pkg_and_method_name_,
+         rowversion_,
+         exec_order_,
+         copy_for_category_,
+         copy_convert_option_);
+      COMMIT;         
+   EXCEPTION
+      WHEN dup_val_on_index THEN
+         NULL;      
+   END Copying_Info_Row_;
+BEGIN    
+   Copying_Info_Row_('SUPPLIER', 'ACCRUL', 'Supplier_Tax_Info_API.Copy_Supplier', 1, 25, 'SUPPLIER^PROSPECT', 'COPY');  
+END;
+/

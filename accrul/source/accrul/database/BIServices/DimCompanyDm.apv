@@ -1,0 +1,87 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  Company
+--  Component:  ACCRUL
+--  LU:         DimCompanyFinance
+--
+--  File     :  DimCompanyDm.apv
+--  Purpose  :  Create DATA MART dimension view DIM_COMPANY_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+--  Date    Sign   History
+--  ------  ----   -------------------------------------------------
+--  090715  RORALK Created for 75 core version of IFS BA
+--  150508  Umdolk BOULDER-1470, Reverse Engineering.
+--------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_COMPANY
+DEFINE VIEW       = DIM_COMPANY_DM
+DEFINE MV         = COMPANY_FINANCE_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimCompanyFinance
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT cf.id                                                    id,
+       cf.code                                                  company,
+       cf.name                                                  name,
+       cf.country_code                                          country_code,
+       SUBSTR(Iso_Country_API.Decode(cf.country_code),1,100)    country_code_desc,
+       cf.association_no                                        association_no,
+       cf.currency_code                                         currency_code,
+       cf.parallel_currency_code                                parallel_currency_code,
+       cf.master_company                                        master_company,
+       SUBSTR(Fnd_Boolean_API.Decode(cf.master_company),1,100)  master_company_desc,
+       Company_Finance_API.Get_Tax_Id_Number(cf.code)           company_tax_id_number
+FROM &MV cf
+WHERE ( ('TRUE' = (SELECT Xlr_Dimension_Full_Access_API.Has_Full_Dim_Access('DIM_COMPANY') FROM DUAL))
+         OR
+        (EXISTS (
+   SELECT 1
+   FROM USER_FINANCE_TAB u
+   WHERE u.userid = (SELECT fnd_user FROM FND_SESSION)   
+   AND  u.company = cf.code
+   ))
+   )
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Company^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Company^';
+COMMENT ON COLUMN &VIEW..NAME
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Name^';
+   COMMENT ON COLUMN &VIEW..COUNTRY_CODE
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Country Code^';
+COMMENT ON COLUMN &VIEW..COUNTRY_CODE_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Country Code Description^';
+COMMENT ON COLUMN &VIEW..ASSOCIATION_NO
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(50)^PROMPT=Association Number^';
+   COMMENT ON COLUMN &VIEW..CURRENCY_CODE
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(3)^PROMPT=Accounting Currency Code^';
+   COMMENT ON COLUMN &VIEW..PARALLEL_CURRENCY_CODE
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(3)^PROMPT=Parallel Currency Code^';
+   COMMENT ON COLUMN &VIEW..MASTER_COMPANY
+IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=Master Company for Group Consolidation^';
+COMMENT ON COLUMN &VIEW..MASTER_COMPANY_DESC
+   IS 'FLAGS=A-IUL^DATATYPE=ENUMERATION^PROMPT=Master Company for Group Consolidation Description^';
+COMMENT ON COLUMN &VIEW..COMPANY_TAX_ID_NUMBER
+   IS 'FLAGS=A-IUL^DATATYPE=STRING(50)^PROMPT=Company Tax ID Number^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

@@ -1,0 +1,162 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: UserGroupPerPeriodHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  110418  jadulk  CRUD_Default___ was overridden to set defaults for company column and period status
+--  110418  jadulk  Added a function to retrieve user Group Description
+--  120418  jadulk  Added a function to retrieve Ledger Description
+--  120418  jadulk  Added a function to retrieve Ledger Period Status
+--  180418  jadulk  Added a procedure to update the User Group Period Status according to the change action
+--  260418  jadulk  Added a function Retrieve_Ledger_Data___ to retrieve both the ledger description and the ledger period status
+--  260418  jadulk  Changed the Change_Period___ procedure removing the Get_Key function call
+--  030518  jadulk  Added the function Is_Il_Exist___ to check if an IL exist
+--  090518  jadulk  CRUD_Create___ was overridden
+--  100518  jadulk  The overridden CRUD_Create___ was removed
+--  030919  jadulk  FIZ-3568 Updated default fetched value for ledger in Get_Page_Search_Context_Defaults___
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@Override
+PROCEDURE CRUD_Default___ (
+   key_  IN     User_Group_Period_Key,
+   attr_ IN OUT VARCHAR2,
+   info_ OUT    VARCHAR2 )
+IS
+   rec_  User_Group_Period_Rec;  
+BEGIN           
+   rec_.company := Client_SYS.Get_Item_Value('COMPANY', attr_);
+   rec_.accounting_year := Client_SYS.Get_Item_Value('ACCOUNTING_YEAR', attr_);
+   rec_.accounting_period := Client_SYS.Get_Item_Value('ACCOUNTING_PERIOD', attr_);
+   
+   super(key_, attr_, info_);     
+     
+   IF (rec_.company IS NULL) THEN  
+      rec_.company := User_Finance_API.Get_Default_Company_Func;
+      Client_SYS.Set_Item_Value('COMPANY', rec_.company, attr_);
+   END IF;
+    
+   IF (All_Ledger_API.Internal_Ledger_Used(rec_.company) = 'FALSE') THEN      
+      rec_.ledger_id := '00';
+      rec_.ledger := '00';
+      rec_.ledger_description := All_Ledger_API.Get_Description(rec_.company, rec_.ledger_id );
+      rec_.ledger_info_period_status := Acc_Period_Ledger_Info_API.Get_Period_Status(rec_.company, rec_.accounting_year, rec_.accounting_period, rec_.ledger_id);   
+   END IF;
+   
+   Add_To_Attr_From_Rec___(rec_, attr_);   
+END CRUD_Default___;
+
+
+PROCEDURE Change_Period___ (
+   key_           IN User_Group_Period_Key, 
+   change_action_ IN VARCHAR2
+)
+IS
+   objid_      user_group_period.objid%TYPE;
+   objversion_ user_group_period.objversion%TYPE;
+   info_       VARCHAR2(200);
+   attr_       VARCHAR2(100);
+   etag_       VARCHAR2(2000);
+   result_key_ User_Group_Period_Key; 
+BEGIN  
+   result_key_ := key_;    
+
+   Get_Objid_Objversion___(objid_, objversion_, key_);
+   IF (change_action_ = 'C') THEN
+      Client_SYS.Add_To_Attr('PERIOD_STATUS_DB', 'O', attr_);
+   ELSE
+      Client_SYS.Add_To_Attr('PERIOD_STATUS_DB', 'C', attr_);
+   END IF; 
+   etag_ := Get_Etag___(objid_, objversion_);
+   CRUD_Update___(etag_, result_key_, attr_, info_, 'DO');  
+END Change_Period___;
+
+
+@DynamicComponentDependency INTLED
+FUNCTION Is_Il_Exist___ (
+   company_   IN VARCHAR2,
+   ledger_id_ IN VARCHAR2 )RETURN BOOLEAN
+IS
+   temp_data_ PLS_INTEGER;
+   
+   CURSOR get_il_data IS
+      SELECT 1
+      FROM  internal_ledger_current
+      WHERE company = company_
+      AND ledger_id = ledger_id_;
+BEGIN
+   OPEN get_il_data;
+   FETCH get_il_data INTO temp_data_;
+   IF (get_il_data%NOTFOUND) THEN
+      RETURN FALSE;
+   END IF; 
+   CLOSE get_il_data;
+   RETURN TRUE;
+END Is_Il_Exist___;
+
+
+FUNCTION Retrieve_Ledger_Description___ (
+   company_   IN VARCHAR2,
+   ledger_id_ IN VARCHAR2 )RETURN VARCHAR2
+IS
+   result_ all_ledger.description%TYPE;
+BEGIN
+   result_ := All_Ledger_API.Get_Description(company_, ledger_id_);
+   RETURN result_;
+END Retrieve_Ledger_Description___;
+
+
+FUNCTION Retrieve_Ledger_Per_Status___ (
+   company_           IN VARCHAR2,
+   accounting_year_   IN NUMBER,
+   accounting_period_ IN NUMBER,
+   ledger_id_         IN VARCHAR2 )RETURN VARCHAR2
+IS
+   result_ acc_period_ledger_info.period_status%TYPE;
+BEGIN 
+   result_ := Acc_Period_Ledger_Info_API.Get_Period_Status(company_, accounting_year_, accounting_period_, ledger_id_);
+   RETURN result_;
+END Retrieve_Ledger_Per_Status___;
+
+
+FUNCTION Retrieve_Ledger_Data___(
+	company_           IN VARCHAR2,
+   accounting_year_   IN NUMBER,
+   accounting_period_ IN NUMBER,
+   ledger_id_         IN VARCHAR2)RETURN Ledger_Data_Structure_Rec
+IS 
+   ledger_data_structure_rec_   Ledger_Data_Structure_Rec;      
+BEGIN 
+   ledger_data_structure_rec_.ledger_description := Retrieve_Ledger_Description___(company_, ledger_id_);
+   ledger_data_structure_rec_.ledger_info_period_status := Retrieve_Ledger_Per_Status___(company_, accounting_year_, accounting_period_, ledger_id_);   
+   RETURN ledger_data_structure_rec_;
+END Retrieve_Ledger_Data___;   
+
+
+FUNCTION Get_Page_Search_Context_Defaults___(
+   company_           IN VARCHAR2,
+   accounting_year_   IN NUMBER,
+   accounting_period_ IN NUMBER) RETURN Page_Search_Context_Structure_Rec
+IS
+   page_search_context_struct_ Page_Search_Context_Structure_Rec;
+BEGIN
+   page_search_context_struct_.company := company_;
+   
+   IF (company_ IS NULL) THEN  
+      page_search_context_struct_.company := User_Finance_API.Get_Default_Company_Func;
+   END IF;
+    
+   IF (All_Ledger_API.Internal_Ledger_Used(page_search_context_struct_.company) = 'FALSE') THEN      
+      page_search_context_struct_.ledger_id := '00';
+      page_search_context_struct_.ledger := Ledger_API.Get_Ledger(page_search_context_struct_.ledger_id );
+      page_search_context_struct_.ledger_description := All_Ledger_API.Get_Description(page_search_context_struct_.company, page_search_context_struct_.ledger_id );
+      page_search_context_struct_.period_status := Acc_Period_Ledger_Info_API.Get_Period_Status(page_search_context_struct_.company, accounting_year_, accounting_period_, page_search_context_struct_.ledger_id);   
+   END IF;
+   
+   RETURN page_search_context_struct_;
+END Get_Page_Search_Context_Defaults___;

@@ -1,0 +1,66 @@
+--  Date     Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  200702  DILDLK  LMM2020R1-260, Modified navigation.
+--  200629  LAHNLK  LMM2020R1-181: created.
+-----------------------------------------------------------------------------
+client DeferralRequestReason;
+component ADCOM;
+layer Core;
+projection DeferralRequestReasonHandling;
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+entry DeferralReqReasonNavEntry parent AdcomNavigator.FaultDeferralBasicData  at index 200 {
+   label = "Deferral Reasons";
+   page List home AvDeferralReqReason;
+}
+-------------------------------- MAIN PAGES ---------------------------------
+page List using AvDeferralReqReasonSet {
+   label = "Deferral Reasons";
+   list DeferralReqReasonList;
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list DeferralReqReasonList for AvDeferralReqReason {
+   field DeferralReqReasonCode {
+      label = "Code";
+   }
+   field DeferralReqReasonDesc {
+      label = "Description";
+   }
+}
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

@@ -1,0 +1,60 @@
+-----------------------------------------------------------------------------
+--  Module : ACCRUL
+--
+--  Purpose: Inserting values to basic_data_window_tab
+--
+--  File   : AccrulBasicDataSyncLU.ins
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  151229   kanslk  created.
+--  180510   Bhhilk  Bug 141684, Added Pres_Object_Sec_ method.
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+SET SERVEROUT ON
+
+PROMPT Inserting default data to basic_data_window_tab
+DECLARE
+   date_ DATE := SYSDATE;
+   
+   PROCEDURE Attribute_Row_(
+      name_             IN basic_data_window_tab.logical_unit_name%TYPE, 
+      window_           IN basic_data_window_tab.window%TYPE)
+   IS
+      newrec_                basic_data_window_tab%ROWTYPE;
+   BEGIN
+      newrec_.logical_unit_name     := name_;
+      newrec_.window                := window_;
+      newrec_.rowversion            := sysdate;
+      Basic_Data_Window_API.Insert_Lu_Data_Rec(newrec_);
+   END Attribute_Row_;   
+BEGIN
+   Attribute_Row_('AccountGroup', 'Account Group');
+   Attribute_Row_('Account', 'Account');
+   Attribute_Row_('CodeB', 'Code B');
+   Attribute_Row_('CodeC', 'Code C');
+   Attribute_Row_('CodeD', 'Code D');
+   Attribute_Row_('CodeE', 'Code E');
+   Attribute_Row_('CodeF', 'Code F');
+   Attribute_Row_('CodeG', 'Code G');
+   Attribute_Row_('CodeH', 'Code H');
+   Attribute_Row_('CodeI', 'Code I');
+   Attribute_Row_('CodeJ', 'Code J');
+   Attribute_Row_('PostingCtrl', 'Posting Control');
+   Attribute_Row_('PostingCtrlDetail', 'Posting Control Detail');
+   Attribute_Row_('PostingCtrlCombDetail', 'Posting Control Combination Detail');
+   Attribute_Row_('PostingCtrlDetailSpec', 'Posting Control Details Specification');
+   Attribute_Row_('PostingCtrlCombDetSpec', 'Posting Control Combination Detail Specification');
+   Attribute_Row_('AccountingAttribute', 'Code Part Attributes');
+   Attribute_Row_('AccountingAttributeValue', 'Attribute Value');
+   Attribute_Row_('AccountingAttributeCon', 'Code Part Attribute Connection');
+   Attribute_Row_('CombControlType', 'Combination Control Types');
+   Attribute_Row_('AccountingCodestrComb', 'Combination Rules');
+   Attribute_Row_('PaymentTerm', 'Payment Terms');
+   Attribute_Row_('PaymentTermDetails', 'Payment Term');
+   Attribute_Row_('PaymentVacationPeriod', 'Payment Vacation Days');
+   Attribute_Row_('StatutoryFee', 'Tax Codes');   
+END;
+/

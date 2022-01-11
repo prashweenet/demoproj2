@@ -1,0 +1,31 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210219_ADCOM_LMM2020R1-1702.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210219   hasmlk  LMM2020R1-1702: New column added to AvInventory.
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+-- [IFS COMPLETE BLOCK DECLAREEND]
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_INVENTORY_TAB';
+   columns_    Database_SYS.ColumnTabType;
+   column_     Database_SYS.ColRec;
+BEGIN
+   IF NOT Database_SYS.Column_Exist(table_name_, 'ASSEMBLY_TYPE_CODE') THEN
+      Database_SYS.Reset_Column_Table(columns_);
+      Database_SYS.Set_Table_Column(columns_, 'ASSEMBLY_TYPE_CODE', 'VARCHAR2(8)', 'Y');
+      Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_DATA', NULL, TRUE);
+   END IF;
+END;
+-- [END IFS COMPLETE BLOCK]
+/
+
+SET SERVEROUTPUT OFF

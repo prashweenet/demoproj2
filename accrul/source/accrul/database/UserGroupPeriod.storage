@@ -1,0 +1,24 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: UserGroupPeriod
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+@Overtake Base
+PRIMARY KEY user_group_period_pk IS user_group_period_tab (company,
+                                                           user_group,
+                                                           accounting_year,
+                                                           accounting_period,
+                                                           ledger_id);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

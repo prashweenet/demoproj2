@@ -1,0 +1,28 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PeriodAllocation
+--  Component:    ACCRUL
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  140905  Ashelk  Created.
+-----------------------------------------------------------------------------
+
+
+
+
+layer Core;
+
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+
+
+@Overtake Base
+PRIMARY KEY period_allocation_pk IS period_allocation_tab (company, accounting_year, row_no, voucher_type, alloc_year, alloc_period, voucher_no);
+
+INDEX period_allocation_ix1 IS period_allocation_tab (alloc_line_id);
+
+
+
+
+-------------------- OTHER DEFINITIONS --------------------------------------

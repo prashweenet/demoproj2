@@ -1,0 +1,600 @@
+client NewVoucherTypeAssistant;
+component ACCRUL;
+layer Core;
+projection NewVoucherTypeAssistantHandling;
+@DynamicComponentDependency INTLED
+include fragment InternalLedgerCurrentSelector;
+
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+
+navigator {
+   entry NewVoucherTypeAssistantNavEntry parent AccrulNavigator.UserRelatedDataMenu at index 600 {
+      label = "New Voucher Type Assistant";
+      assistant Assistant;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+
+-------------------------------- ASSISTANTS ---------------------------------
+assistant Assistant using VoucherTypeVirtualSet {
+   label = "New Voucher Type Assistant";
+   savemode = OnLostFocus;
+
+   init command {
+      variable InitializedVoucherTypeStructure {
+         type = Structure(InitialVoucherTypeStructure);
+      }
+
+      execute {
+         call GetInitializedVoucherType(Company) into InitializedVoucherTypeStructure;
+         set IntledActive = InitializedVoucherTypeStructure.IntledActive;
+         set UseVouNoPeriod = InitializedVoucherTypeStructure.UseVouNoPeriod;
+
+         if [IntledActive = "TRUE"] {
+            set Ledger = "GLAffectIL";
+            set LedgerId = "*";
+            set Balance = true;
+         }
+         else
+            {
+            set Ledger = "GeneralLedger";
+            set LedgerId = "00";
+         }
+         set AuthorizationLevel = "EnterAndApprove";
+         set Balance = true;
+         set AutomaticAllot = true;
+         set SingleFunctionGroup = true;
+      }
+   }
+
+   steps {
+      step {
+         label = "Define Voucher Type";
+
+         group CompanyGroup;
+         group VoucherTypeGroup;
+         group LedgerSelectionGroup;
+
+         next command {
+            variable VoucherTypeExistBool {
+               type = Boolean;
+            }
+            enabled = [VoucherType != null and Description != null];
+            execute {
+               call IsVoucherTypeExist(Company, VoucherType) into VoucherTypeExistBool;
+               call CheckVoucherApprovalWorkflow(Objkey);
+               call VoucherApprovePrivilege(Objkey);
+               if[Ledger = "InternalLedger"] {
+                  call ResetRowGroupValidation(Objkey);
+               }
+            }
+         }
+      }
+      step {
+         label = "Voucher Type Details";
+         list VoucherTypeDetailList(VoucherTypeDetailVirtualArray);
+         group VoucherSelectionGroup;
+         group CopyDetailFromVouTypeGroup;
+         next command {
+            enabled = [GetVouDetailFromVouType = false and component.VoucherTypeDetailList.RowCount > 0];
+            execute {
+               call CheckVoucherApprovalWorkflow(Objkey);
+               call VoucherApprovePrivilege(Objkey);
+            }
+         }
+      }
+      step {
+         label = "Add Voucher Series";
+         list VoucherNumberSerialList(VoucherNumberSerialVirtualArray);
+         group UserGroupSelection;
+      }
+      final step {
+      }
+      cancelled step {
+
+      }
+   }
+   finish command {
+      enabled = [(CopyFromVoucherType != null and component.VoucherTypeDetailList.RowCount > 0) or(UserGroup != null and AuthorizationLevel != null and(SingleOrAllEnum = "All" or  FunctionGroupRef != null) and component.VoucherNumberSerialList.RowCount > 0)];
+      variable Return;
+
+      execute {
+         call CreateVouType(Objkey) into Return;
+         if [Return = "TRUE"] {
+            success("Voucher Type ${VoucherType} has been created.");
+            navigate "page/VoucherType/Form?contexts=Company:$[Company]&$filter=VoucherType eq $[VoucherType]";
+         }
+         else {
+            exit CANCEL;
+         }
+
+      }
+   }
+   cancel command {
+      execute {
+         navigate back;
+      }
+   }
+   restart command {
+      visible = [true];
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+command CloseCommand {
+   label = "Close";
+
+   execute {
+      navigate back;
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+@DynamicComponentDependency INTLED
+selector LedgerIdRefSelector for InternalLedgerCurrent {
+   static Company {
+      visible = [false];
+   }
+   static LedgerId {
+      label = "Ledger ID";
+   }
+   static Description;
+
+}
+
+
+@Override
+selector UserGroupFinanceSelector for UserGroupFinance {
+   label = "${Description}";
+   static Company {
+      visible = [false];
+   }
+   static UserGroup;
+   static Description;
+
+}
+
+@Override
+selector ReferenceVoucherTypeDetailVirtualSelector for VoucherTypeDetailVirtual {
+   label = "";
+   orderby = FunctionGroup;
+
+   static Objkey {
+      visible = [false];
+   }
+   static ParentObjkey {
+      visible = [false];
+   }
+   static Objmodified {
+      visible = [false];
+   }
+   static Company {
+      visible = [false];
+   }
+   static VoucherType {
+      visible = [false];
+   }
+   static FunctionGroup;
+
+}
+
+
+@Override
+selector AccountingYearSelector for AccountingYear {
+   label = "${AccountingYear}";
+   static Company {
+      visible = [false];
+   }
+   static AccountingYear;
+
+}
+
+
+@Override
+selector ReferenceVoucherTypeQuerySelector for VoucherTypeQuery {
+   static Company {
+      visible = [false];
+   }
+   static VoucherType;
+   static Description;
+   static SeparateUserApproval {
+      visible = [false];
+   }
+
+}
+
+
+@Override
+selector ReferenceVoucherTypeSelector for VoucherType {
+   static VoucherType;
+   static Description;
+   static SeparateUserApproval {
+      visible = [false];
+   }
+}
+
+
+@Override
+selector ReferenceAccountingPeriodSelector for AccountingPeriod {
+   label = "";
+
+   static AccountingPeriod {
+      showlabel = false;
+   }
+   static ReportFromDate {
+      visible = [false];
+   }
+   static ReportUntilDate {
+      visible = [false];
+   }
+
+}
+---------------------------------- GROUPS -----------------------------------
+group CompanyGroup for VoucherTypeVirtual {
+   label = "";
+
+   lov CompanyRef with ReferenceCompanyFinanceSelector {
+      search = Company, Description;
+      size = Large;
+      description = CompanyRef.Description;
+      editable = [true];
+
+      validate command {
+         execute {
+            call GetUseVouNoPeriod(Company) into UseVouNoPeriod;
+            set Ledger = Ledger;
+            set LedgerId = LedgerId;
+         }
+      }
+   }
+
+}
+
+
+group VoucherTypeGroup for VoucherTypeVirtual {
+   label = "New Voucher Type";
+
+   field VoucherType {
+      maxlength = 3;
+      editable = [true];
+      validate command {
+         variable VoucherTypeExistBool {
+            type = Boolean;
+         }
+         execute {
+            call IsVoucherTypeExist(Company, VoucherType) into VoucherTypeExistBool;
+         }
+      }
+   }
+   field Description {
+      maxlength = 100;
+   }
+
+}
+
+group LedgerSelectionGroup for VoucherTypeVirtual {
+   label = "Ledger Selection";
+
+   field Ledger {
+      size = Small;
+      editable = [true];
+      validate command {
+         execute {
+            if[Ledger != "InternalLedger"] {
+               if[Ledger = "GeneralLedger"] {
+                  set LedgerId = "00";
+                  set UseManual = false;
+               }
+               else {
+                  set LedgerId = "*";
+               }
+               set Balance = true;
+            }
+            else {
+               set LedgerId = "";
+            }
+         }
+      }
+   }
+   @DynamicComponentDependency INTLED
+   lov LedgerIdRef with LedgerIdRefSelector {
+      size = Small;
+      label = "Ledger ID";
+      editable = [IntledActive = "TRUE" and Ledger = "InternalLedger"];
+   }
+   field UseManual {
+      size = Small;
+      editable = [IntledActive = "TRUE" and Ledger = "GLAffectIL"];
+   }
+   field Balance {
+      size = Small;
+      editable = [IntledActive = "TRUE" and Ledger = "InternalLedger"];
+   }
+
+}
+
+
+group VoucherSelectionGroup for VoucherTypeVirtual {
+   label = "Parameter Selection";
+
+   field AutomaticAllot {
+      size = Small;
+      editable = [component.VoucherTypeDetailList.RowCount > 0];
+      validate command {
+         variable CheckAllotBool {
+            type = Boolean;
+         }
+         execute {
+            call CheckAutoAllotment(Objkey) into CheckAllotBool;
+            if[AutomaticAllot = false and CheckAllotBool = true] {
+               alert("Automatic Allotment is required");
+               set AutomaticAllot = true;
+            }
+         }
+      }
+   }
+   field SingleFunctionGroup {
+      size = Small;
+      editable = [component.VoucherTypeDetailList.RowCount > 0];
+      validate command {
+         variable SingleFunctionGroupBool {
+            type = Boolean;
+         }
+         execute {
+            call CheckSingleFunctionGroup(Objkey, SingleFunctionGroup, component.VoucherTypeDetailList.RowCount) into SingleFunctionGroupBool;
+            if[SingleFunctionGroupBool] {
+               alert("Single Function Group is required");
+               set SingleFunctionGroup = true;
+            }
+            if [component.VoucherTypeDetailList.RowCount > 1 and SingleFunctionGroup = true] {
+               alert("Single Function Group is not allowed when more than one Function Groups are connected to the Voucher Type");
+               set SingleFunctionGroup = false;
+            }
+         }
+      }
+   }
+   field SimulationVoucher {
+      size = Small;
+      editable = [component.VoucherTypeDetailList.RowCount > 0];
+   }
+   field UseApprovalWorkflow {
+      size = Small;
+      editable = [component.VoucherTypeDetailList.RowCount > 0 and VoucherApproval = "TRUE"];
+   }
+   field SeparateUserApproval {
+      size = Small;
+      editable = [component.VoucherTypeDetailList.RowCount > 0 and VoucherPrivilege = "TRUE"];
+   }
+}
+
+
+group CopyDetailFromVouTypeGroup for VoucherTypeVirtual {
+   label = "Copy From Existing Voucher Type";
+
+   field GetVouDetailFromVouType {
+      validate command {
+         execute {
+            if [GetVouDetailFromVouType = false] {
+               set CopyFromVoucherType = null;
+            }
+         }
+      }
+   }
+//   lov CopyFromVoucherTypeRef with ReferenceVoucherTypeQuerySelector {
+//      editable = [GetVouDetailFromVouType = true];
+//   }
+   lov VoucherTypeRef with ReferenceVoucherTypeSelector using RetrieveVoucherTypes(Company) {
+      editable = [GetVouDetailFromVouType = true];
+   }
+
+}
+
+
+group UserGroupSelection for VoucherTypeVirtual {
+
+   lov UserGroupRef with UserGroupFinanceSelector {
+      label = "User Group";
+      search = UserGroup, Description;
+      description = UserGroupRef.Description;
+   }
+   field AuthorizationLevel;
+   field DefaultType;
+   radiogroup SingleOrAllEnum {
+      showlabel = false;
+      size = FullWidth;
+      validate command {
+         execute {
+            if[SingleOrAllEnum != "SingleFunctionGroup"] {
+               set FunctionGroup = null;
+            }
+         }
+      }
+   }
+   lov FunctionGroupRef with ReferenceVoucherTypeDetailVirtualSelector {
+      label = "Function Group";
+      visible = [SingleOrAllEnum = "SingleFunctionGroup"];
+   }
+
+}
+
+
+----------------------------------- LISTS -----------------------------------
+list VoucherTypeQueryLovList for VoucherTypeQuery {
+   static Company {
+      columnexclude = [true];
+   }
+   static VoucherType;
+   static Description;
+   static SeparateUserApproval;
+
+}
+
+
+@Override
+@DynamicComponentDependency INTLED
+list InternalLedgerCurrentLovList for InternalLedgerCurrent {
+   label = "";
+   static LedgerId {
+      label = "Ledger ID";
+   }
+}
+
+
+list VoucherTypeDetailList for VoucherTypeDetailVirtual {
+   label = "Function Group Information";
+   orderby = FunctionGroup;
+   crudactions {
+      new {
+         enabled = [(parent.SingleFunctionGroup != true) or(parent.SingleFunctionGroup = true and component.VoucherTypeDetailList.RowCount = 0)];
+      }
+   }
+
+   lov FunctionGroupRef with ReferenceFunctionGroupSelector using RetrieveFunctionGroups(parent.Ledger) {
+      search = FunctionGroup, Description;
+      size = Medium;
+      format = uppercase;
+      description = FunctionGroupRef.Description;
+      required = [true];
+      validate command {
+         variable DummyVar Text;
+
+         execute {
+            if[FunctionGroup != null] {
+               call CheckFunctionGroup(FunctionGroup) into DummyVar;
+               if[FunctionGroupRef.StoreOriginalMandatory = true] {
+                  set StoreOriginal = true;
+               }
+               else {
+                  set StoreOriginal = false;
+               }
+
+               if[FunctionGroupRef.VouRowGrpValAllowed != true] {
+                  set RowGroupValidation = false;
+               }
+
+               if[FunctionGroupRef.RefMandatoryAllowed != true] {
+                  set ReferenceMandatory = false;
+               }
+
+               if[FunctionGroupRef.AutomaticAllotmentReq = true] {
+                  set AutomaticAllot = true;
+               }
+               else {
+                  set AutomaticAllot = false;
+               }
+
+               if[FunctionGroupRef.SingleFunctionRequired = false] {
+                  set SingleFunctionGroup = false;
+               }
+               else {
+                  set SingleFunctionGroup = true;
+               }
+
+               if[AutomaticAllot = true] {
+                  if[parent.AutomaticAllot = false] {
+                     call UpdateAutomaticAllotment(ParentObjkey, TRUE);
+                     alert("Automatic Allotment is required.");
+                  }
+               }
+
+               if[parent.SingleFunctionGroup = false and SingleFunctionGroup = true] {
+                  if[component.VoucherTypeDetailList.RowCount = 1] {
+                     call UpdateSingleFunctionGroup(ParentObjkey, TRUE);
+                     alert("Single Function Group is required");
+                  }
+                  else {
+                     alert("Only Function Groups B/G/M/N/U can be connected together.");
+                  }
+               }
+            }
+         }
+      }
+   }
+   field AutomaticVouBalance;
+   field StoreOriginal {
+      editable = [FunctionGroupRef.StoreOriginalMandatory != true];
+   }
+   field RowGroupValidation {
+      editable = [FunctionGroupRef.VouRowGrpValAllowed = true and parent.Ledger != "InternalLedger"];
+      validate command {
+         execute {
+            if[FunctionGroupRef.VouRowGrpValAllowed != true] {
+               set RowGroupValidation = false;
+            }
+
+         }
+      }
+   }
+   field ReferenceMandatory {
+      editable = [FunctionGroupRef.RefMandatoryAllowed = true];
+      validate command {
+         execute {
+            if[FunctionGroupRef.RefMandatoryAllowed != true] {
+               set ReferenceMandatory = false;
+            }
+         }
+      }
+   }
+
+}
+
+
+list VoucherNumberSerialList for VoucherNumberSerialVirtual {
+   label = "Voucher Number Series";
+
+   lov YearRef with ReferenceAccountingYearSelector {
+      maxlength = 4;
+      size = Medium;
+   }
+   lov PeriodRef with ReferenceAccountingPeriodSelector {
+      size = Medium;
+      columnexclude = [parent.UseVouNoPeriod = "FALSE"];
+   }
+   field FromNumber {
+      maxlength = 10;
+      validate command {
+         execute {
+            if[FromNumber < 0] {
+               alert("From Number must be larger than 0");
+            }
+            set NextNumber = FromNumber;
+         }
+      }
+   }
+   field UntilNumber {
+      maxlength = 10;
+   }
+   field NextNumber;
+
+}
+
+@Override
+list VoucherTypeDetailVirtualLovList for VoucherTypeDetailVirtual {
+   field FunctionGroup;
+   field Objkey {
+      columnvisible = [false];
+      columnexclude = [true];
+      searchable = false;
+   }
+}
+----------------------------------- CARDS -----------------------------------
+
+---------------------------------- DIALOGS ----------------------------------
+
+---------------------------------- CHARTS -----------------------------------
+
+--------------------------------- CALENDARS ---------------------------------
+
+---------------------------------- SHEETS -----------------------------------
+
+----------------------------- STATE INDICATORS ------------------------------
+
+----------------------------------- TREES -----------------------------------
+
+---------------------------------- PLUGINS ----------------------------------
+
+------------------------------- IMAGE VIEWERS -------------------------------

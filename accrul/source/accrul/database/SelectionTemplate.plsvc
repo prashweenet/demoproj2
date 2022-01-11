@@ -1,0 +1,152 @@
+-----------------------------------------------------------------------------
+--
+--  Fragment:     SelectionTemplate
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+PROCEDURE Get_ValueFromRef_Info_ (
+   attr_            IN OUT VARCHAR2)
+IS
+BEGIN
+   attr_ := Get_Lov_Reference_Attr___();
+END Get_ValueFromRef_Info_;
+
+PROCEDURE Get_ValueToRef_Info_ (
+   attr_            IN OUT VARCHAR2)
+IS
+BEGIN
+   attr_ := Get_Lov_Reference_Attr___();
+END Get_ValueToRef_Info_;
+
+PROCEDURE Get_ValueRef_Info_ (
+   attr_            IN OUT VARCHAR2)
+IS
+BEGIN
+   attr_ := Get_Lov_Reference_Attr___();
+END Get_ValueRef_Info_;
+
+FUNCTION Get_Lov_Reference_Attr___ RETURN VARCHAR2
+IS
+   attr_          VARCHAR2(2000);
+   CURSOR get_lov_views IS
+      SELECT selection_object_id, lov_reference
+      FROM FIN_SEL_OBJECT
+      WHERE lov_reference IS NOT NULL; 
+BEGIN
+   FOR rec_ IN get_lov_views LOOP
+      IF (rec_.selection_object_id = 'REMINDER_LEVEL') THEN
+         Client_SYS.Add_To_Attr('REMINDER_LEVEL', 'REMINDER_LEVEL_TEXT_LOV(COMPANY)', attr_);
+      ELSIF (rec_.selection_object_id = 'PROJ_ACTIVITY_SEQ_NO') THEN
+         Client_SYS.Add_To_Attr('PROJ_ACTIVITY_SEQ_NO', 'PROJ_ACTIVITY_SELTEMP_TEXT_LOV(COMPANY)', attr_);
+      ELSE
+         Client_SYS.Add_To_Attr(rec_.selection_object_id, rec_.lov_reference, attr_);
+      END IF;
+   END LOOP;
+   RETURN attr_;
+END Get_Lov_Reference_Attr___;
+
+@Override
+PROCEDURE CRUD_Delete___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Fin_Sel_Obj_Templ_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   Fin_Sel_Obj_Templ_API.Is_Valid_Template(key_.company, key_.object_group_id , key_.template_id);
+   super(etag_, key_, info_, action_);
+END CRUD_Delete___;
+
+PROCEDURE Set_Default___ (
+   key_       IN Fin_Sel_Obj_Templ_Key,
+   ownership_ IN VARCHAR2,
+   owner_     IN VARCHAR2,
+   info$_     OUT VARCHAR2) 
+IS
+   warning_ VARCHAR2(200);
+BEGIN
+   Fin_Sel_Obj_Templ_API.Check_Default_Template__(warning_, key_.company, key_.object_group_id , ownership_, owner_);
+   IF(warning_ IS NOT NULL) THEN
+      Client_SYS.Add_Warning(lu_name_,'SETDEFAULTTEMPLATE: :P1', warning_);
+   END IF;
+   Fin_Sel_Obj_Templ_API.Set_Default__(key_.company, key_.object_group_id , key_.template_id, ownership_, owner_);
+   info$_ :=  Client_SYS.Get_All_Info();
+END Set_Default___;
+
+PROCEDURE Set_Public_Default___ (
+  key_       IN Fin_Sel_Obj_Templ_Key,
+  ownership_ IN VARCHAR2,
+  owner_     IN VARCHAR2,
+  info$_     OUT VARCHAR2) 
+IS
+BEGIN
+    Set_Default___(key_, ownership_, owner_, info$_);
+END Set_Public_Default___;
+
+PROCEDURE Reset_Public_Default___ (
+   key_       IN Fin_Sel_Obj_Templ_Key) 
+IS
+BEGIN
+   Fin_Sel_Obj_Templ_API.Reset_Default__(key_.company, key_.object_group_id , key_.template_id);
+END Reset_Public_Default___;
+
+PROCEDURE Set_Private_Default___ (
+   key_       IN Fin_Sel_Obj_Templ_Key,
+   ownership_ IN VARCHAR2,
+   owner_     IN VARCHAR2,
+   info$_     OUT VARCHAR2) 
+IS
+BEGIN
+   Set_Default___(key_, ownership_, owner_, info$_);
+END Set_Private_Default___;
+
+PROCEDURE Reset_Private_Default___ (
+   key_       IN Fin_Sel_Obj_Templ_Key) 
+IS
+BEGIN
+   Fin_Sel_Obj_Templ_API.Reset_Default__(key_.company, key_.object_group_id , key_.template_id);
+END Reset_Private_Default___;
+
+@Override
+PROCEDURE CRUD_Create___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Fin_Sel_Obj_Templ_Det_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   Fin_Sel_Obj_Templ_API.Is_Valid_Template(Client_SYS.Get_Item_Value('COMPANY', attr_), Client_SYS.Get_Item_Value('OBJECT_GROUP_ID', attr_) , Client_SYS.Get_Item_Value('TEMPLATE_ID', attr_));
+   super(etag_, key_, attr_, info_, action_);
+END CRUD_Create___;
+
+@Override
+PROCEDURE CRUD_Delete___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Fin_Sel_Obj_Templ_Det_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   Fin_Sel_Obj_Templ_API.Is_Valid_Template(key_.company, key_.object_group_id , key_.template_id);
+   super(etag_, key_, info_, action_);
+END CRUD_Delete___;
+
+FUNCTION Validate_Sel_Obj_Value___(
+   selection_object_id_ IN VARCHAR2,
+   value_               IN VARCHAR2,
+   company_             IN VARCHAR2 )  RETURN Sel_Obj_Value_Info_Structure_Rec
+IS
+   rec_                    Sel_Obj_Value_Info_Structure_Rec;
+BEGIN
+   rec_.description  := Fin_Sel_Object_API.Get_Sel_Obj_Value_Description(selection_object_id_, value_, company_);
+   rec_.status       := Fin_Sel_Object_API.Get_Sel_Obj_Value_Status(selection_object_id_, value_, company_);
+   RETURN rec_;
+END Validate_Sel_Obj_Value___;

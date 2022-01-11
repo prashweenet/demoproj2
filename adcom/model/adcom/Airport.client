@@ -1,0 +1,99 @@
+--------------------------------------------------------------------------------------
+-- Date        Sign    History
+-- ----------  ------  ---------------------------------------------------------------
+-- 201125      LAHNLK  LMM2020R1-1441,label changes
+-- 200714      SURBLK  LMM2020R1-350, Created.
+--------------------------------------------------------------------------------------
+client Airport;
+component ADCOM;
+layer Core;
+projection AirportHandling;
+
+
+--------------------------------- FRAGMENTS ---------------------------------
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry AirportNavEntry parent AdcomNavigator.BasicData at index 90 {
+      label = "Airport";
+      page Form home AvAirport;
+
+   }
+}
+
+-------------------------------- MAIN PAGES ---------------------------------
+page Form using AirportSet {
+   label = "Airport";
+   selector AvAirportSelector;
+   group AirportGroup;
+
+   tabs {
+      tab {
+         label = "Airport Settings";
+         group GeneralGroup;
+      }
+   }
+}
+
+--------------------------------- COMMANDS ----------------------------------
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+group AirportGroup for AvAirport {
+   label = "";
+
+   field AirportName;
+   field IataCode {
+      label = "IATA Code";
+   }
+   field IcaoCode {
+      label = "ICAO Code";
+   }
+}
+
+group GeneralGroup for AvAirport {
+   label = "Airport Settings";
+
+   field ArrivalOffset {
+      label = "Show Inbound Turns for the Next(Hours)";
+   }
+   field DepartureOffset {
+      label = "Show All Turns for the last(Hours)";
+   }
+   field FaultsOffset {
+      label = "Show Closed Faults for the last(Months)";
+   }
+}
+
+
+----------------------------------- LISTS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+-------------------------------- SINGLETONS ---------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDERS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------

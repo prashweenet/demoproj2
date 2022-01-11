@@ -1,0 +1,29 @@
+-----------------------------------------------------------------------------
+--  Module : ADCOM
+--
+--  File   : 210205_ADCOM_DISO2020R1-564.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign    History
+--  ------   ------  --------------------------------------------------
+--  210205   waislk  DISO2020R1-564 Importing technical records fails if the aircraft has capabilities
+--  ------   ------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+
+EXEC Database_SYS.Log_Detail_Time_Stamp('ADCOM','210205_ADCOM_DISO2020R1-564.cdb','Timestamp_1');
+PROMPT REMOVING COLUMN MX_UNIQUE_KEY FROM AV_AIRCRAFT_CAPABILITY_TAB
+DECLARE
+   table_name_ VARCHAR2(30) := 'AV_AIRCRAFT_CAPABILITY_TAB';
+   column_     Database_SYS.ColRec;
+BEGIN
+   IF Database_SYS.Column_Exist(table_name_, 'MX_UNIQUE_KEY') THEN
+      column_ := Database_SYS.Set_Column_Values('MX_UNIQUE_KEY', 'VARCHAR2(100)', 'Y');
+      Database_SYS.Alter_Table_Column(table_name_, 'D', column_, TRUE);
+   END IF;
+END;
+/
+
+SET SERVEROUTPUT OFF

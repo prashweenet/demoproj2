@@ -1,0 +1,67 @@
+projection AdditionalCodePartsHandling;
+component ACCRUL;
+layer Core;
+description "Additional Code Parts";
+category Users;
+
+include fragment CodeK;
+include fragment CodeL;
+include fragment CodeN;
+include fragment CodeO;
+include fragment CodeP;
+include fragment CodeQ;
+include fragment CodeR;
+include fragment CodeS;
+include fragment CodeT;
+----------------------------- MAIN ENTRY POINTS -----------------------------
+entityset CompanyFinanceSet for CompanyFinance {
+   context Company(Company);
+}
+
+
+------------------------------ ENTITY DETAILS -------------------------------
+@Override
+entity CompanyFinance {
+
+   array CodeKArray(Company) to CounterPartOne(Company);
+   array CodeLArray(Company) to CounterPartTwo(Company);
+   array CodeNArray(Company) to CodeN(Company);
+   array CodeOArray(Company) to CodeO(Company);
+   array CodePArray(Company) to CodeP(Company);
+   array CodeQArray(Company) to CodeQ(Company);
+   array CodeRArray(Company) to CodeR(Company);
+   array CodeSArray(Company) to CodeS(Company);
+   array CodeTArray(Company) to CodeT(Company);
+}
+
+query AdditionalCodePartsQuery {
+   from = "additional_code_parts";
+   lu = AccountingCodeParts;
+   keys = Company, CodePart;
+
+   attribute Company Text;
+   attribute CodePart Text;
+   attribute CodeName Text;
+   attribute CodePartUsed Text;
+   reference CompanyRef(Company) to CompanyFinance(Company);
+}
+
+------------------------------- ENUMERATIONS --------------------------------
+
+
+---------------------------------- QUERIES ----------------------------------
+
+
+---------------------------------- ACTIONS ----------------------------------
+
+
+--------------------------------- FUNCTIONS ---------------------------------
+
+
+-------------------------------- STRUCTURES ---------------------------------
+
+
+--------------------------------- VIRTUALS ----------------------------------
+
+
+--------------------------------- SUMMARIES ---------------------------------

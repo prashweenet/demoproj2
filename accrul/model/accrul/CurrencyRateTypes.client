@@ -1,0 +1,114 @@
+client CurrencyRateTypes;
+component ACCRUL;
+layer Core;
+projection CurrencyRateTypesHandling;
+
+include fragment CompanyFinance1Selector;
+warningsenabled = CurrencyType;
+
+----------------------------- NAVIGATOR ENTRIES -----------------------------
+navigator {
+   entry CurrencyTypesNavEntry parent AccrulNavigator.CurrencyMenu at index 200 {
+      label = "Currency Rate Types";
+      page List home CurrencyType;
+   }
+}
+
+
+-------------------------------- MAIN PAGES ---------------------------------
+page List using CurrencyTypeSet {
+   label = "Currency Rate Types";
+   list CurrencyTypeList;
+}
+
+
+-------------------------------- ASSISTANTS ---------------------------------
+
+
+--------------------------------- COMMANDS ----------------------------------
+command CurrencyRatesCommand {
+   label = "Currency Rates";
+   mode = SelectedRecords;
+
+   bulkexecute {
+      bulknavigate "page/CurrencyRates/Form?$contexts=Company:$[Company]&$filter=CurrencyType eq $[CurrencyType]";
+   }
+}
+
+command SetDefaultTypeCommand for CurrencyType {
+   label = "Set Default";
+   enabled = [TypeDefault = "No"];
+   execute {
+      call DoSetDefaultType();
+   }
+}
+
+
+--------------------------------- SELECTORS ---------------------------------
+
+
+---------------------------------- GROUPS -----------------------------------
+
+
+----------------------------------- LISTS -----------------------------------
+list CurrencyTypeList for CurrencyType {
+   orderby = CurrencyType;
+
+   field CurrencyType {
+      size = Small;
+   }
+   field Description {
+      size = Large;
+   }
+   field RefCurrencyCode {
+      lovswitch {
+         when [RateTypeCategory = "Normal"] {
+            lov RefCurrencyCodeRef with ReferenceCompanyFinance1Selector;
+         }
+         when [RateTypeCategory != "Normal"] {
+            lov CurrencyCodeRef with ReferenceCurrencyCodeSelector;
+         }
+      }
+   }
+   field TypeDefault {
+      size = Small;
+      editable = [false];
+   }
+   field RateTypeCategory {
+      size = Large;
+   }
+
+   commandgroup CurrencyRateTypesCmdGroup {
+      command CurrencyRatesCommand;
+      command SetDefaultTypeCommand;
+   }
+}
+
+
+----------------------------------- CARDS -----------------------------------
+
+
+---------------------------------- DIALOGS ----------------------------------
+
+
+---------------------------------- CHARTS -----------------------------------
+
+
+--------------------------------- CALENDARS ---------------------------------
+
+
+---------------------------------- SHEETS -----------------------------------
+
+
+----------------------------- STATE INDICATORS ------------------------------
+
+
+----------------------------------- TREES -----------------------------------
+
+
+---------------------------------- PLUGINS ----------------------------------
+
+
+------------------------------- IMAGE VIEWERS -------------------------------
+
+

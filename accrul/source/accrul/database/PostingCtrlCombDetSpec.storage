@@ -1,0 +1,28 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: PostingCtrlCombDetSpec
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+
+layer Core;
+
+-------------------- TABLE DEFINITIONS --------------------------------------
+@Overtake Base
+PRIMARY KEY posting_ctrl_comb_det_spec_pk IS posting_ctrl_comb_det_spec_tab (company,
+                                                                             posting_type,
+                                                                             code_part, 
+                                                                             pc_valid_from,
+                                                                             control_type_value,
+                                                                             valid_from,
+                                                                             spec_comb_control_type,
+                                                                             spec_control_type1_value,
+                                                                             spec_control_type2_value);
+
+-------------------- OTHER DEFINITIONS --------------------------------------
+

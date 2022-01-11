@@ -1,0 +1,142 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: Aircraft
+--  Component:    ADCOM
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+--  201106  KAWJLK  LMM2020R1-1385, Added unit test for Check_Insert___
+--  201002  majslk  LMM2020R1-1299, Added Get_Aircraft_Id.
+--  200831  SWiclk  LMM2020R1-1000, Created and added unit test for Pre_Sync_Action().
+-----------------------------------------------------------------------------
+
+layer Core;
+
+
+-------------------- LU SPECIFIC IMPLEMENTATION METHODS ---------------------
+
+
+-------------------- LU SPECIFIC PUBLIC METHODS -----------------------------
+UNITTEST "Pre_Sync_Action should return attr after assigning correct country code" FOR
+   PROCEDURE Pre_Sync_Action(
+      attr_ IN OUT VARCHAR2);
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable av_inventory_tab
+   VALUES
+      | inventory_id |inventory_serial_no_oem|part_no_oem|manufacture_code|barcode|
+      | 1            |'serial001'            |'part001'  |'manufacture001'|'barcode001'|
+   END VALUES;
+
+   @MockPackage Iso_Country_API
+   FUNCTION Get_Country_Code_By_Code3 (
+      country_code3_ IN     VARCHAR2 )  RETURN  VARCHAR2
+   IS
+   BEGIN
+      IF (country_code3_ = 'USA') THEN
+         RETURN 'US';
+      ELSE
+         RETURN NULL;
+      END IF;
+   END Get_Country_Code_By_Code3;
+
+IS
+   output1_    VARCHAR2(2000);
+   expected1_  VARCHAR2(2000);
+   expected2_  VARCHAR2(2000);
+
+BEGIN
+   FOR
+      | attr_ |
+      | 'COUNTRY_CODE'||chr(31)|| 'USA'||chr(30)   |
+      | 'COUNTRY_CODE'||chr(31)|| 'US' ||chr(30)   |
+      | 'COUNTRY_CODE'||chr(31)|| NULL ||chr(30)   |
+      |'SERIAL_NUMBER'||chr(31)||'serial001'||chr(30)||'PART_NUMBER'||chr(31)||'part001' ||chr(30)||'MANUFACTURER'||chr(31)||'manufacture001'||chr(30)||'BARCODE'||chr(31)||'barcode001'||chr(30)||'WITH_INVENTORY_KEY'|
+   LOOP
+      output1_ := attr_;
+      Pre_Sync_Action(output1_);
+      expected1_ := 'COUNTRY_CODE'||chr(31)|| 'US' ||chr(30);
+      expected2_ := 'SERIAL_NUMBER'||chr(31)||'serial001'||chr(30)||'PART_NUMBER'||chr(31)||'part001' ||chr(30)||'MANUFACTURER'||chr(31)||'manufacture001'||chr(30)||'BARCODE'||chr(31)||'barcode001'||chr(30)||'WITH_INVENTORY_KEY'||'INVENTORY_ID'||chr(31)||'1'||chr(30);
+
+      IF (attr_ LIKE '%US%') THEN
+         ASSERT output1_ = expected1_ MESSAGE 'Assert1: Expected '||expected1_||' but was '||output1_;
+      ELSIF(attr_ LIKE '%WITH_INVENTORY_KEY%') THEN
+         ASSERT output1_ = expected2_ MESSAGE 'Expected '||expected2_||' but  was '||output1_;
+      ELSE
+         ASSERT output1_ = attr_ MESSAGE 'Assert2: Expected '||attr_||' but was '||output1_;
+      END IF;
+
+   END LOOP;
+END UNITTEST;
+
+
+UNITTEST "Get_Aircraft_Id should retrurn AircraftId when the Alt_Id is given" FOR
+   FUNCTION Get_Aircraft_Id(
+      aircraft_alt_id_ IN     VARCHAR2) RETURN NUMBER;
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable aircraft_tab
+   VALUES
+      | aircraft_id | alt_id   |
+      | 1           | 'ALT-01' |
+      | 2           | 'ALT-02' |
+      | 3           | 'ALT-03' |
+      | 4           | 'ALT-04' |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   return_   NUMBER;
+   expected_ NUMBER;
+BEGIN
+   FOR
+      | expected_ | aircraft_alt_id_ |
+      | 1         |  'ALT-01'        |
+      | 2         |  'ALT-02'        |
+      | 3         |  'ALT-03'        |
+      | 4         |  'ALT-04'        |
+   LOOP
+      --Insert your test code here
+      return_ := Get_Aircraft_Id(aircraft_alt_id_);
+      --Insert your assertions here
+      ASSERT return_ = expected_ MESSAGE 'Expected '||expected_||' but returned '||return_;
+   END LOOP;
+END UNITTEST;
+
+UNITTEST "Check_Insert___ should genarate next sequence number when new aircraft record added to aircraft_tab" FOR
+   PROCEDURE Check_Insert___ (
+      newrec_ IN OUT aircraft_tab%ROWTYPE,
+      indrec_ IN OUT Indicator_Rec,
+      attr_   IN OUT VARCHAR2 );
+USING
+   --Insert your mock directives and mock return variables here
+   @MockTable dual
+   VALUES
+      |dummy |
+      |1     |
+   END VALUES;
+
+IS
+   --Insert your test variables here
+   output1_  aircraft_tab%ROWTYPE;
+   output4_  aircraft_tab%ROWTYPE;
+   output2_  Indicator_Rec;
+BEGIN
+   output1_.aircraft_id := NULL;
+   output4_.aircraft_id := 5000;
+   output4_.aircraft_desc := 'Falcon 2000 - 790';
+   FOR
+      | newrec_ | indrec_ | attr_ |
+      | output1_| output2_| 'A'   |
+      | output4_| output2_| 'A'   |
+   LOOP
+      --Insert your test code here
+      IF newrec_.aircraft_id IS NULL THEN
+         newrec_.aircraft_id := AIRCRAFT_ID_SEQ.NEXTVAL;
+         --Insert your assertions here
+         ASSERT newrec_.aircraft_id IS NOT NULL MESSAGE 'Returned '||newrec_.aircraft_id;
+      END IF;
+   END LOOP;
+END UNITTEST;

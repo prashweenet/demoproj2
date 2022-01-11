@@ -1,0 +1,2172 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherEntryAssistantHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@ApproveGlobalVariable
+global_company_ VARCHAR2(20);
+@ApproveGlobalVariable
+global_parent_objkey_ VARCHAR2(50);
+
+TYPE New_Voucher_Row_Rec IS RECORD (
+   parent_objkey                  VARCHAR2(50),
+   objkey                         VARCHAR2(50),
+   objmodified                    DATE,
+   company                        VARCHAR2(20),   
+   voucher_type                   VARCHAR2(3),
+   accounting_year                NUMBER,
+   voucher_no                     NUMBER,
+   row_no                         NUMBER,
+   row_group_id                   voucher_row_tab.row_group_id%TYPE,
+   account                        VARCHAR2(20),
+   code_b                         VARCHAR2(20),
+   code_c                         VARCHAR2(20),
+   code_d                         VARCHAR2(20),
+   code_e                         VARCHAR2(20),
+   code_f                         VARCHAR2(20),
+   code_g                         VARCHAR2(20),
+   code_h                         VARCHAR2(20),
+   code_i                         VARCHAR2(20),
+   code_j                         VARCHAR2(20),
+   currency_debet_amount          NUMBER,
+   currency_credit_amount         NUMBER,
+   currency_amount                NUMBER,
+   debet_amount                   NUMBER,
+   credit_amount                  NUMBER,
+   amount                         NUMBER,
+   correction                     VARCHAR2(5),
+   currency_code                  VARCHAR2(3),
+   quantity                       NUMBER,
+   process_code                   VARCHAR2(10),
+   optional_code                  VARCHAR2(20),
+   tax_percentage                 NUMBER,   
+   tax_direction                  VARCHAR2(20),
+   project_activity_id            NUMBER,
+   text                           VARCHAR2(200),  
+   reference_serie                VARCHAR2(50),
+   reference_number               VARCHAR2(50),
+   trans_code                     VARCHAR2(100),  
+   currency_rate                  NUMBER,
+   third_currency_debit_amount    NUMBER,
+   third_currency_credit_amount   NUMBER,
+   third_currency_amount          NUMBER,
+   accounting_period              NUMBER,
+   conversion_factor              NUMBER,
+   auto_tax_vou_entry             VARCHAR2(20),
+   parallel_currency_rate         NUMBER,
+   parallel_conversion_factor     NUMBER,
+   deliv_type_id                  VARCHAR2(20),
+   period_allocation              VARCHAR2(5),
+   multi_company_id               VARCHAR2(20),
+   internal_seq_number            NUMBER,
+   currency_rate_type             VARCHAR2(20),
+   parallel_curr_rate_type        VARCHAR2(20),
+   decimals_in_amount             NUMBER,
+   acc_decimals_in_amount         NUMBER,
+   parallel_decimals_in_amount    NUMBER,
+   currency_tax_amount            NUMBER,
+   tax_amount                     NUMBER,
+   parallel_curr_tax_amount       NUMBER,
+   currency_tax_base_amount       NUMBER,
+   tax_base_amount                NUMBER,
+   parallel_curr_tax_base_amount  NUMBER,
+   add_internal                   VARCHAR2(50),
+   int_manual_added               VARCHAR2(50));
+  
+   TYPE New_Voucher_Row_Tab IS TABLE OF New_Voucher_Row_Rec INDEX BY PLS_INTEGER;     
+ 
+@Override
+PROCEDURE CRUD_Create___(
+   rec_ IN Voucher_Entry_Rec )
+IS
+   local_rec_          Voucher_Entry_Rec;     
+   temp_info_          VARCHAR2(4000);
+   temp_obj_id_        VARCHAR2(4000); 
+   temp_obj_version_   VARCHAR2(4000);
+   attr_               VARCHAR2(32000);
+   voucher_head_info_rec_  Voucher_Header_Info_Structure_Rec;
+BEGIN   
+   IF (rec_.openned_from = 'NEW_VOUCHER') THEN
+      local_rec_ := rec_;
+     
+      local_rec_.voucher_date := NVL(rec_.voucher_date,trim(sysdate));
+      Add_To_Attr_From_Rec___(local_rec_,attr_);
+      Voucher_API.New__(temp_info_,
+                        temp_obj_id_,
+                        temp_obj_version_,
+                        attr_,
+                        'PREPARE');
+                                                 
+      Add_To_Rec_From_Attr___(attr_,local_rec_);    
+      
+   ELSE
+      local_rec_ := rec_;
+      Copy_Hold_Voucher___(local_rec_);  
+   END IF;
+   voucher_head_info_rec_ := Voucher_Header_Info___ (local_rec_.company, local_rec_.accounting_year, local_rec_.user_group, local_rec_.voucher_type);
+   --  new_.automatic := voucher_head_info_rec_.automatic;
+   -- new_.function_group := voucher_head_info_rec_.function_group;
+   local_rec_.simulation_voucher := voucher_head_info_rec_.simulation_voucher;
+   -- new_.use_apporval_workflow := voucher_head_info_rec_.use_apporval_workflow;
+   -- new_.separate_user_approval := voucher_head_info_rec_.separate_user_approval;
+   super(local_rec_);
+   
+   IF (rec_.openned_from = 'COPY_VOUCHER') THEN
+      Copy_Hold_Voucher_Rows___(local_rec_);
+   END IF;   
+END CRUD_Create___;
+
+@Override
+PROCEDURE CRUD_Create___(
+   rec_ IN Voucher_Posting_Rec )
+IS
+  conversion_factor_    NUMBER;
+  currency_rate_        NUMBER;
+  inverted_             VARCHAR2(5);
+  company_rec_          Company_Finance_API.Public_Rec;
+  voucher_entry_rec_    Voucher_Entry_Rec;
+  voucher_entry_key_    Voucher_Entry_Key;
+  new_rec_              Voucher_Posting_Rec;
+BEGIN
+   new_rec_ := rec_;
+   voucher_entry_key_.objkey := rec_.parent_objkey;
+   voucher_entry_rec_ := Get_Record___(voucher_entry_key_);
+   company_rec_ := Company_Finance_API.Get(rec_.Company);
+   Currency_Rate_API.Fetch_Currency_Rate_Base( conversion_factor_, currency_rate_, inverted_,  rec_.company, rec_.currency_code, company_rec_.currency_code , rec_.currency_type, SYSDATE, 'DUMMY' );
+   new_rec_.accounting_year := voucher_entry_rec_.accounting_year;
+   new_rec_.accounting_period := voucher_entry_rec_.accounting_period;
+   new_rec_.voucher_date := voucher_entry_rec_.voucher_date;
+   new_rec_.voucher_type := voucher_entry_rec_.voucher_type;
+   new_rec_.trans_code := 'MANUAL';
+   super(new_rec_);
+   global_company_ := new_rec_.company;
+   global_parent_objkey_ := new_rec_.parent_objkey;
+   
+   -- Validate_Voucher_Rows___(rec_);
+   --Add post-processing code here
+END CRUD_Create___;
+
+@Override
+PROCEDURE CRUD_Update___(
+   old_ IN Voucher_Posting_Rec,
+   new_ IN Voucher_Posting_Rec )
+IS
+   conversion_factor_    NUMBER;
+   currency_rate_        NUMBER;
+   inverted_             VARCHAR2(5);
+   company_rec_          Company_Finance_API.Public_Rec;
+BEGIN
+   company_rec_ := Company_Finance_API.Get(new_.Company);
+   IF (old_.currency_code != new_.currency_code ) THEN
+      Currency_Rate_API.Fetch_Currency_Rate_Base( conversion_factor_, currency_rate_, inverted_,  new_.company, new_.currency_code, company_rec_.currency_code , new_.currency_type, SYSDATE, 'DUMMY' );
+   END IF;
+   
+   super(old_, new_);
+   --Add post-processing code here   
+   global_company_ := old_.company;
+   global_parent_objkey_ := old_.parent_objkey;
+   -- Validate_Voucher_Rows___(rec_);
+END CRUD_Update___;
+
+@Override
+PROCEDURE CRUD_Update___(
+   old_ IN OUT Voucher_Entry_Rec,
+   new_ IN OUT Voucher_Entry_Rec )
+IS
+   key_                    Voucher_Entry_Key;
+   old_posting_rec_        Voucher_Posting_Rec;
+   new_posting_rec_        Voucher_Posting_Rec;
+   voucher_posting_key_    Voucher_Posting_Key;
+   year_period_rec_        Accounting_Year_Period_Info_Struct_Rec;
+   voucher_head_info_rec_  Voucher_Header_Info_Structure_Rec;
+BEGIN
+  
+   IF (old_.voucher_date != new_.voucher_date ) THEN
+      year_period_rec_ := Acc_Year_Period_Info___(new_.company,new_.voucher_date,new_.user_group);
+      new_.accounting_year := year_period_rec_.accounting_year;
+      new_.accounting_period := year_period_rec_.accounting_period;
+      new_.accounting_period_description := year_period_rec_.acc_period_description;
+      
+      voucher_head_info_rec_ := Voucher_Header_Info___ (new_.company, new_.accounting_year, new_.user_group, new_.voucher_type);
+      new_.automatic := voucher_head_info_rec_.automatic;
+      new_.function_group := voucher_head_info_rec_.function_group;
+      new_.simulation_voucher := voucher_head_info_rec_.simulation_voucher;
+      new_.use_apporval_workflow := voucher_head_info_rec_.use_apporval_workflow;
+      new_.separate_user_approval := voucher_head_info_rec_.separate_user_approval;
+      --  new_.authorize_level := voucher_head_info_rec_.authorize_level;
+      IF (new_.use_apporval_workflow = 'TRUE' OR new_.separate_user_approval = 'TRUE') THEN
+         new_.voucher_status := Voucher_Status_API.DB_AWAITING_APPROVAL; -- "AwaitingApproval";      
+      ELSIF (voucher_head_info_rec_.authorize_level = Voucher_Status_API.DB_APPROVED) THEN
+         new_.voucher_status := Voucher_Status_API.DB_APPROVED;
+      ELSIF (voucher_head_info_rec_.authorize_level = Voucher_Status_API.DB_NOT_APPROVED) THEN
+         new_.voucher_status := Voucher_Status_API.DB_AWAITING_APPROVAL;
+      END IF;
+   ELSIF (old_.user_group != new_.user_group ) THEN
+      voucher_head_info_rec_ := Voucher_Header_Info___ (new_.company, new_.accounting_year, new_.user_group, new_.voucher_type);
+      new_.automatic := voucher_head_info_rec_.automatic;
+      new_.function_group := voucher_head_info_rec_.function_group;
+      new_.simulation_voucher := voucher_head_info_rec_.simulation_voucher;
+      new_.use_apporval_workflow := voucher_head_info_rec_.use_apporval_workflow;
+      new_.separate_user_approval := voucher_head_info_rec_.separate_user_approval;
+      -- new_.authorize_level := voucher_head_info_rec_.authorize_level;
+      IF (new_.use_apporval_workflow = 'TRUE' OR new_.separate_user_approval = 'TRUE') THEN
+         new_.voucher_status := Voucher_Status_API.DB_AWAITING_APPROVAL; -- "AwaitingApproval";      
+      ELSIF (voucher_head_info_rec_.authorize_level = Authorize_Level_API.DB_ENTER_AND_APPROVE) THEN
+         new_.voucher_status := Voucher_Status_API.DB_APPROVED;
+      ELSIF (voucher_head_info_rec_.authorize_level = Authorize_Level_API.DB_ENTER_ONLY) THEN
+         new_.voucher_status := Voucher_Status_API.DB_AWAITING_APPROVAL;
+      END IF;
+      IF (voucher_head_info_rec_.authorize_level = Authorize_Level_API.DB_APPROVE_ONLY) THEN        
+         new_.voucher_type := NULL;
+         Error_SYS.Record_General(lu_name_, 'APPONLYUSERGRP: Users included in a user group with Approve Only authorization level are not allowed to enter or modify vouchers.');         
+      END IF;
+   ELSIF (old_.voucher_type != new_.voucher_type ) THEN
+      voucher_head_info_rec_ := Voucher_Header_Info___ (new_.company, new_.accounting_year, new_.user_group, new_.voucher_type);
+      new_.automatic := voucher_head_info_rec_.automatic;
+      new_.function_group := voucher_head_info_rec_.function_group;
+      new_.simulation_voucher := voucher_head_info_rec_.simulation_voucher;
+      new_.use_apporval_workflow := voucher_head_info_rec_.use_apporval_workflow;
+      new_.separate_user_approval := voucher_head_info_rec_.separate_user_approval;
+     -- new_.authorize_level := voucher_head_info_rec_.authorize_level;
+      new_.voucher_no := 0;
+      IF (new_.use_apporval_workflow = 'TRUE' OR new_.separate_user_approval = 'TRUE') THEN
+         new_.voucher_status := Voucher_Status_API.DB_AWAITING_APPROVAL; -- "AwaitingApproval";      
+      ELSIF (voucher_head_info_rec_.authorize_level = Authorize_Level_API.DB_ENTER_AND_APPROVE) THEN
+         new_.voucher_status := Voucher_Status_API.DB_APPROVED;
+      ELSIF (voucher_head_info_rec_.authorize_level = Authorize_Level_API.DB_ENTER_ONLY) THEN
+         new_.voucher_status := Voucher_Status_API.DB_AWAITING_APPROVAL;
+      END IF;     
+   END IF;
+   
+   super(old_, new_);
+   key_.objkey  := new_.objkey;
+   IF ((old_.voucher_type != new_.voucher_type) OR 
+      (old_.voucher_date != new_.voucher_date) OR
+      (old_.accounting_year != new_.accounting_year) OR 
+      (old_.accounting_period != new_.accounting_period )) THEN
+      FOR rec_ IN Get_Voucher_Posting_Array___(key_) LOOP
+         voucher_posting_key_.objkey      := rec_.objkey;
+         old_posting_rec_     := Get_Record___(voucher_posting_key_);
+         new_posting_rec_     := old_posting_rec_;
+         new_posting_rec_.voucher_type    := new_.voucher_type;
+         new_posting_rec_.voucher_date    := new_.voucher_date;
+         new_posting_rec_.accounting_year := new_.accounting_year;
+         new_posting_rec_.accounting_period := new_.accounting_period;
+         -- THPELK:TODO
+         IF (new_.correction = 'Y') THEN
+            new_posting_rec_.correction := TRUE;
+         ELSE
+            new_posting_rec_.correction := FALSE;
+         END IF;
+         CRUD_Update___(old_posting_rec_, new_posting_rec_);
+      END LOOP;
+   END IF;
+   
+END CRUD_Update___;
+
+@Override
+PROCEDURE CRUD_Default___ (
+   rec_ IN OUT Voucher_Posting_Rec )
+IS
+   voucher_entry_rec_   Voucher_Entry_Rec;
+   voucher_entry_key_   Voucher_Entry_Key;
+   temp_info_           VARCHAR2(2000);
+   attr_                VARCHAR2(32000);
+BEGIN
+   voucher_entry_key_.objkey := rec_.parent_objkey;
+   voucher_entry_rec_ := Get_Record___(voucher_entry_key_);
+    
+   rec_.company            := voucher_entry_rec_.company;   
+   rec_.voucher_type       := voucher_entry_rec_.voucher_type;
+   rec_.voucher_no         := voucher_entry_rec_.voucher_no;
+   rec_.accounting_year    := voucher_entry_rec_.accounting_year;
+   rec_.voucher_date       := voucher_entry_rec_.voucher_date;
+   
+   Add_To_Attr_From_Rec___(rec_, attr_);
+   Client_SYS.Add_To_Attr('MANUAL_VOUCHER', 'TRUE', attr_);
+   
+   Voucher_Row_API.New__(temp_info_,
+                        temp_info_,
+                        temp_info_,
+                        attr_,
+                        'PREPARE');
+                  
+   Add_To_Rec_From_Attr___(attr_,rec_); 
+   
+   IF voucher_entry_rec_.use_correction_rows THEN
+      rec_.correction := TRUE;
+   ELSE
+      rec_.correction := FALSE;
+   END IF;
+   
+   rec_.company            := voucher_entry_rec_.company;   
+   rec_.voucher_type       := voucher_entry_rec_.voucher_type;
+   rec_.voucher_no         := voucher_entry_rec_.voucher_no;
+   rec_.accounting_year    := voucher_entry_rec_.accounting_year;
+   rec_.accounting_period  := voucher_entry_rec_.accounting_period;
+   rec_.base_currency_code := rec_.currency_code;
+   rec_.text               := voucher_entry_rec_.Voucher_Text2;
+   
+   super(rec_);
+END CRUD_Default___;
+
+
+FUNCTION Create_Voucher___ (
+	key_ IN Voucher_Entry_Key,
+	info$_ OUT VARCHAR2 ) RETURN NUMBER
+IS
+   in_voucher_entry_rec_   Voucher_Entry_Rec;
+   out_voucher_entry_rec_  Voucher_Entry_Rec;
+   voucher_posting_key_    Voucher_Posting_Key;
+   voucher_posting_rec_    Voucher_Posting_Rec;
+   attr_                   VARCHAR2(4000);
+   info_                   VARCHAR2(4000);
+   objid_                  VARCHAR2(4000);
+   objversion_             VARCHAR2(4000);
+   row_objid_              VARCHAR2(4000);
+   row_objversion_         VARCHAR2(4000);
+   is_negative_            VARCHAR2(5);
+   final_voucher_no_       NUMBER;
+   rows_with_null_reference_exists_    BOOLEAN;
+BEGIN
+   in_voucher_entry_rec_ := Get_Record___(key_);
+   Add_To_Attr_From_Rec___(in_voucher_entry_rec_,attr_);
+   
+   Voucher_API.New__(info_,objid_,objversion_,attr_,'DO');
+   Add_To_Rec_From_Attr___(attr_,out_voucher_entry_rec_);
+   
+   FOR rec_ IN Get_Voucher_Posting_Array___(key_) LOOP
+      voucher_posting_key_.objkey      := rec_.objkey;
+      voucher_posting_rec_             := Get_Record___(voucher_posting_key_);
+      voucher_posting_rec_.voucher_no  := out_voucher_entry_rec_.voucher_no;
+      voucher_posting_rec_.transfer_id := out_voucher_entry_rec_.transfer_id;
+      voucher_posting_rec_.accounting_period := in_voucher_entry_rec_.accounting_period;
+      attr_ := NULL;
+      
+      Add_To_Attr_From_Rec___(voucher_posting_rec_,attr_);
+      Voucher_Row_API.New__(info_,row_objid_,row_objversion_,attr_,'DO');
+      
+      Client_SYS.Merge_Info(info_); 
+      rows_with_null_reference_exists_ := TRUE;
+   END LOOP;
+   
+   info$_ := Client_SYS.Get_All_Info;
+  
+   IF (in_voucher_entry_rec_.Reference_Mandatory = 'Y' AND rows_with_null_reference_exists_ AND in_voucher_entry_rec_.voucher_status = 'Confirmed') THEN
+      Error_SYS.Record_General('Voucher', 'NULLREFROWEXISTS: Reference Series and Reference Number cannot be null when Reference Mandatory is checked for Voucher Type :P1', in_voucher_entry_rec_.voucher_type);
+   END IF;
+   IF (in_voucher_entry_rec_.Voucher_No = 0) THEN   
+      Voucher_API.Check_Double_Entry__( in_voucher_entry_rec_.company , in_voucher_entry_rec_.accounting_year , in_voucher_entry_rec_.Voucher_type , out_voucher_entry_rec_.voucher_no , in_voucher_entry_rec_.voucher_status );
+   END IF;
+   attr_ := NULL;
+   IF (in_voucher_entry_rec_.voucher_status = 'Confirmed') THEN 
+      Voucher_API.Ready_To_Update__( info_, objid_, objversion_, attr_, 'CHECK' );
+      Voucher_API.Ready_To_Update__( info_, objid_, objversion_, attr_, 'DO' );
+   END IF;
+   IF (in_voucher_entry_rec_.voucher_status = 'AwaitingApproval') THEN
+      Voucher_API.Ready_Approve__( info_, objid_, objversion_, attr_, 'CHECK' );
+      Voucher_API.Ready_Approve__( info_, objid_, objversion_, attr_, 'DO' );
+   ELSIF(in_voucher_entry_rec_.voucher_status = 'Waiting') THEN 
+      Voucher_API.Delay_Update__( info_, objid_, objversion_, attr_, 'CHECK' );
+      Voucher_API.Delay_Update__( info_, objid_, objversion_, attr_, 'DO' );
+   END IF;
+   -- Check MultiCompany
+   -- THPELK: TODO - check multi company voucher finalization
+   IF (in_voucher_entry_rec_.Voucher_No = 0) THEN
+      Voucher_API.Finalize_Manual_Voucher__( final_voucher_no_, in_voucher_entry_rec_.Company, in_voucher_entry_rec_.Voucher_type, out_voucher_entry_rec_.transfer_id, 'FALSE'/*MultiCompany*/);
+      IF (in_voucher_entry_rec_.voucher_status = 'Confirmed') THEN
+         is_negative_ := Voucher_API.Check_Negative_Amount( in_voucher_entry_rec_.Company, in_voucher_entry_rec_.Voucher_type, in_voucher_entry_rec_.accounting_year, final_voucher_no_);
+      END IF;
+   END IF;
+   IF (final_voucher_no_ >0) THEN
+      out_voucher_entry_rec_.voucher_no := final_voucher_no_;
+   END IF;
+   
+   --   Voucher_Row_API.Update_Vou_Row_Acc_Period__( in_voucher_entry_rec_.Company,
+   --                                                in_voucher_entry_rec_.Accounting_Year,
+   --                                                out_voucher_entry_rec_.voucher_no,
+   --                                                in_voucher_entry_rec_.Voucher_type,
+   --                                                in_voucher_entry_rec_.Accounting_period);
+                                                  
+   RETURN out_voucher_entry_rec_.voucher_no;
+END Create_Voucher___;
+   
+FUNCTION Is_Use_Approval_Workflow___(
+   company_                  IN VARCHAR2,
+   voucher_type_             IN VARCHAR2,
+   ignore_approve_workflow_  IN VARCHAR2) RETURN BOOLEAN
+IS   
+BEGIN
+   IF (ignore_approve_workflow_ = 'TRUE') THEN
+      RETURN FALSE;
+   ELSE
+      IF (Voucher_Type_API.Get_Use_Approval_Workflow(company_,
+                                                    voucher_type_) = 'TRUE') THEN
+         RETURN TRUE;
+      END IF;
+   END IF;
+   RETURN FALSE;
+END Is_Use_Approval_Workflow___;  
+
+PROCEDURE Set_Entry_And_App_To_Def_Values___(
+   newrec_ IN OUT Voucher_Entry_Rec)
+IS
+BEGIN   
+   newrec_.date_reg                      := sysdate;
+   newrec_.userid                        := User_Finance_API.User_Id;
+   User_Group_Member_Finance_API.Get_User_Group_(newrec_.user_group,
+                                                 newrec_.company,
+                                                 newrec_.userid);  
+   newrec_.entered_by_user_group         := newrec_.user_group;
+   newrec_.approved_by_userid            := NULL;
+   
+   newrec_.approval_date                 := NULL;
+   newrec_.approved_by_userid            := NULL;
+   newrec_.approved_by_user_group        := NULL;
+   
+   newrec_.second_approval_date          := NULL;
+   newrec_.second_approver_id            := NULL;
+   newrec_.second_approver_user_group    := NULL;
+     
+   IF (Is_Use_Approval_Workflow___(newrec_.company, newrec_.voucher_type, newrec_.ignore_approve_workflow)) THEN
+      newrec_.voucher_status := 'AwaitingApproval';
+   END IF;                            
+END Set_Entry_And_App_To_Def_Values___;
+                
+PROCEDURE Copy_Hold_Voucher___(
+   newrec_ IN OUT Voucher_Entry_Rec)   
+IS
+   company_rec_   Company_Finance_API.Public_Rec;
+   oldrec_        Voucher_Entry_Rec;
+   
+   CURSOR get_voucher IS
+      SELECT * 
+      FROM   voucher
+      WHERE  company         = newrec_.company_from
+      AND    accounting_year = newrec_.accounting_year_from
+      AND    voucher_type    = newrec_.voucher_type_from
+      AND    voucher_no      = newrec_.voucher_no_from;
+   
+   rec_voucher_    get_voucher%ROWTYPE;
+   voucher_group_  VARCHAR2(20);
+   auth_level_     VARCHAR2(20);
+   cancellation_voucher_ VARCHAR2(20);
+  
+BEGIN      
+   voucher_group_ := Voucher_Type_API.Get_Voucher_Group(newrec_.company_from, newrec_.voucher_type_from);
+   IF (voucher_group_ NOT IN ('M', 'K', 'Q')) THEN
+      Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERVOUTYPE: Copy voucher only allowed for voucher types M, K and Q.');
+   END IF;  
+   
+   oldrec_      := newrec_;
+   company_rec_ := Company_Finance_API.Get(newrec_.company_from);
+  
+   OPEN get_voucher;
+   FETCH get_voucher INTO rec_voucher_;   
+   IF (get_voucher%FOUND) THEN    
+      -- validation for copy voucher
+      IF (rec_voucher_.voucher_status_db = 'Cancelled') THEN
+         Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERVOUSTATUS: Copy voucher not allowed for voucher status :P1.', rec_voucher_.voucher_status);
+      END IF;
+      
+      IF (rec_voucher_.interim_voucher = 'TRUE' AND voucher_group_ != 'M') THEN
+         Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERNOTALLOWED: Copy voucher not allowed');
+      END IF;
+      
+      auth_level_ := Voucher_Type_User_Group_API.Get_Authorize_Level_Db(rec_voucher_.company, rec_voucher_.accounting_year, rec_voucher_.user_group, rec_voucher_.voucher_type);
+      IF (auth_level_ = 'ApproveOnly') THEN
+         Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERNOTALLOWEDAUTH: Copy voucher not allowed for Approve only users.');
+      END IF;
+      cancellation_voucher_ := Voucher_API.Is_Cancellation_Voucher__(rec_voucher_.company, rec_voucher_.voucher_type, rec_voucher_.accounting_year, rec_voucher_.voucher_no );
+   
+      IF (cancellation_voucher_ = 'TRUE') THEN
+         Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERNOTALLOWEDCANCEL: Copy voucher not allowed for cancellation vouchers.');
+      END IF;
+      
+      IF (voucher_group_ != 'M') THEN
+         IF (Voucher_Util_Pub_API.Non_Manual_Vou_Row_Exist( rec_voucher_.company, 
+                                                            rec_voucher_.accounting_year,
+                                                            rec_voucher_.voucher_type,
+                                                            rec_voucher_.voucher_no) = 'TRUE') THEN 
+            Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERNONONMANVOUROW: Copy voucher not allowed because non manual voucher row exist.');
+         END IF;                                                                                 
+      END IF;
+      
+      
+      newrec_.company                        := rec_voucher_.company;
+      newrec_.accounting_year                := rec_voucher_.accounting_year;
+      newrec_.voucher_type                   := rec_voucher_.voucher_type;
+      newrec_.voucher_no                     := 0;--rec_voucher_.voucher_no;
+      newrec_.voucher_date                   := rec_voucher_.voucher_date;
+      
+      newrec_.accounting_period              := rec_voucher_.accounting_period;
+      --newrec_.date_reg                     := SYSDATE;
+      --newrec_.userid                       := rec_voucher_.userid;
+      --rec_.accounting_text_id              := rec_voucher_.accounting_text_id;
+      --rec_.voucher_text                    := rec_voucher_.voucher_text;
+      --rec_.update_error                    := rec_voucher_.update_error;
+      -- rec_.internal_seq_number            := rec_voucher_.internal_seq_number;
+      newrec_.transfer_id                    := NULL;
+      newrec_.interim_voucher                := NULL;
+      newrec_.voucher_status                 := Voucher_Status_API.DB_APPROVED; -- rec_voucher_.voucher_status_db;
+      newrec_.voucher_type_reference         := NULL;
+      newrec_.accounting_year_reference      := NULL;
+      newrec_.voucher_no_reference           := NULL;
+      newrec_.currency_type                  := rec_voucher_.currency_type;
+      newrec_.currency_balance               := rec_voucher_.currency_balance;
+      newrec_.balance                        := rec_voucher_.balance;
+      newrec_.parallel_currency_balance      := rec_voucher_.parallel_currency_balance;
+      newrec_.automatic                      := rec_voucher_.automatic;
+      newrec_.currency_code                  := rec_voucher_.currency_code;
+      newrec_.free_text                      := rec_voucher_.free_text;
+      newrec_.desc_voucher_type              := rec_voucher_.desc_voucher_type;
+      newrec_.currency_rate                  := rec_voucher_.currency_rate;
+      newrec_.convertion_factor              := rec_voucher_.convertion_factor;
+      newrec_.decimals_in_amount             := rec_voucher_.decimals_in_amount;
+      newrec_.decimals_in_rate               := rec_voucher_.decimals_in_rate;
+      newrec_.text_row                       := rec_voucher_.text_row;
+      newrec_.row_no                         := rec_voucher_.row_no;
+      newrec_.voucher_updated                := rec_voucher_.voucher_updated_Db;
+      newrec_.voucher_text2                  := rec_voucher_.voucher_text2;
+      
+      
+      /*newrec_.approval_date                := rec_voucher_.approval_date;
+      newrec_.approved_by_userid             := rec_voucher_.approved_by_userid;
+      newrec_.approved_by_user_group         := rec_voucher_.approved_by_user_group;
+      newrec_.second_approval_date           := rec_voucher_.second_approval_date;
+      newrec_.second_approver_id             := rec_voucher_.second_approver_id;
+      newrec_.second_approver_user_group     := rec_voucher_.second_approver_user_group;*/
+      newrec_.multi_company_id               := NULL;
+      newrec_.function_group                 := rec_voucher_.function_group;
+      newrec_.amount_method                  := NVL(rec_voucher_.amount_method_db,company_rec_.def_amount_method) ;
+      newrec_.revenue_cost_clear_voucher     := rec_voucher_.revenue_cost_clear_voucher;
+      newrec_.simulation_voucher             := rec_voucher_.simulation_voucher;
+      newrec_.use_correction_rows            := CASE rec_voucher_.correction WHEN 'TRUE' THEN TRUE WHEN 'FALSE' THEN FALSE ELSE NULL END;
+      newrec_.row_group_validation           := rec_voucher_.row_group_validation;
+      newrec_.reference_mandatory            := rec_voucher_.reference_mandatory;
+      newrec_.current_row_number             := NULL;
+      newrec_.vou_text_udpdated              := rec_voucher_.vou_text_udpdated;
+      newrec_.proj_conn_created              := NULL;
+      newrec_.correction                     := rec_voucher_.correction;
+      newrec_.mc_current_row_no              := NULL;
+      newrec_.manual_balance                 := NULL;
+      newrec_.ledger_id                      := rec_voucher_.ledger_id;
+      newrec_.two_approver_required          := CASE rec_voucher_.two_approver_required WHEN 'TRUE' THEN TRUE WHEN 'FALSE' THEN FALSE ELSE NULL END;
+      newrec_.sequential_approval            := CASE rec_voucher_.sequential_approval WHEN 'TRUE' THEN TRUE WHEN 'FALSE' THEN FALSE ELSE NULL END;
+      newrec_.ignore_approve_workflow        := rec_voucher_.ignore_approve_workflow;
+     
+      Set_Entry_And_App_To_Def_Values___(newrec_);         
+   END IF;
+   CLOSE get_voucher;          
+END Copy_Hold_Voucher___;   
+   
+
+PROCEDURE Copy_Hold_Voucher_Rows___(
+   newrec_                  IN OUT Voucher_Entry_Rec)   
+IS   
+   --TYPE New_Voucher_Row_Tab IS TABLE OF New_Voucher_Row_Rec INDEX BY PLS_INTEGER; 
+   TYPE GetVoucherRows IS REF CURSOR; 
+   
+   curr_code_part_            VARCHAR2(1);     
+   stmt_                      VARCHAR2(32000); 
+   -- variables for bulk collect and ref cursors. 
+   max_rows_                  PLS_INTEGER := 1000;    
+   voucher_row_tab_           New_Voucher_Row_Tab;  
+   get_voucher_rows_          GetVoucherRows;   
+   new_internal_seq_number_   NUMBER;   
+   company_rec_               Company_Finance_API.Public_Rec;
+   user_id_                   ${PROJECTION}_voucher_posting_vrt.obj_created_by%TYPE;
+BEGIN
+   stmt_ := 'SELECT 
+             '''|| newrec_.objkey || ''' parent_objkey,
+            sys_guid() objkey,
+            sysdate objmodified,
+             '''|| newrec_.company || '''       company, 
+             '''|| newrec_.voucher_type || '''  voucher_type, 
+             '|| newrec_.accounting_year || '   accounting_year, 
+             '|| newrec_.voucher_no || '        voucher_no,
+             row_no,
+             row_group_id,
+             account,
+             DECODE( '''|| curr_code_part_|| ''' ,''B'', DECODE( CODE_B, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_B)) , CODE_B)  code_b, 
+             DECODE( '''|| curr_code_part_|| ''' ,''C'', DECODE( CODE_C, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_C)) , CODE_C)  code_c, 
+             DECODE( '''|| curr_code_part_|| ''' ,''D'', DECODE( CODE_D, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_D)) , CODE_D)  code_d, 
+             DECODE( '''|| curr_code_part_|| ''' ,''E'', DECODE( CODE_E, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_E)) , CODE_E)  code_e, 
+             DECODE( '''|| curr_code_part_|| ''' ,''F'', DECODE( CODE_F, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_F)) , CODE_F)  code_f, 
+             DECODE( '''|| curr_code_part_|| ''' ,''G'', DECODE( CODE_G, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_G)) , CODE_G)  code_g, 
+             DECODE( '''|| curr_code_part_|| ''' ,''H'', DECODE( CODE_H, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_H)) , CODE_H)  code_h, 
+             DECODE( '''|| curr_code_part_|| ''' ,''I'', DECODE( CODE_I, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_I)) , CODE_I)  code_i, 
+             DECODE( '''|| curr_code_part_|| ''' ,''J'', DECODE( CODE_J, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_J)) , CODE_J)  code_j,                 
+             currency_debet_amount, 
+             currency_credit_amount, 
+             currency_amount, 
+             debet_amount, 
+             credit_amount, 
+             amount,
+             correction, 
+             currency_code, 
+             quantity, 
+             process_code, 
+             optional_code,
+             tax_percentage,
+             tax_direction_db tax_direction,
+             project_activity_id, 
+             text, 
+             reference_serie, 
+             reference_number, 
+             trans_code, 
+             currency_rate, 
+             third_currency_debit_amount, 
+             third_currency_credit_amount, 
+             NVL(third_currency_debit_amount,0) - NVL(third_currency_credit_amount,0) third_currency_amount, 
+             '||newrec_.accounting_period ||'  accounting_period,
+             conversion_factor, 
+             auto_tax_vou_entry, 
+             parallel_currency_rate, 
+             parallel_conversion_factor, 
+             deliv_type_id,
+             period_allocation,
+             multi_company_id,
+             internal_seq_number,
+             currency_type,
+             parallel_curr_rate_type,      
+             decimals_in_amount,
+             acc_decimals_in_amount,
+             third_decimals_in_amount,
+             currency_tax_amount,
+             tax_amount,
+             parallel_curr_tax_amount,
+             currency_tax_base_amount,
+             tax_base_amount,
+             parallel_curr_tax_base_amount,
+             NULL add_internal,
+             NULL int_manual_added
+          FROM  voucher_row 
+          WHERE company = :company_ 
+          AND accounting_year = :accounting_year_ AND voucher_no = :voucher_no_  
+          AND voucher_type = :voucher_type_ 
+          AND auto_tax_vou_entry = ''FALSE'' 
+          AND multi_company_id IS NULL
+          ORDER BY row_no';
+         
+      @ApproveDynamicStatement(2018-10-28,umdolk)
+      OPEN get_voucher_rows_ FOR stmt_ USING newrec_.company, 
+                                             newrec_.accounting_year, 
+                                             newrec_.voucher_no_from,
+                                             newrec_.voucher_type;
+      LOOP
+         FETCH get_voucher_rows_ BULK COLLECT INTO voucher_row_tab_ LIMIT max_rows_;  
+         EXIT WHEN voucher_row_tab_.COUNT = 0;
+         FOR count_rows_ IN 1..voucher_row_tab_.COUNT LOOP 
+            IF (voucher_row_tab_(count_rows_).trans_code = 'EXTERNAL' AND voucher_row_tab_(count_rows_).optional_code IS NOT NULL AND voucher_row_tab_(count_rows_).tax_amount IS NOT NULL ) THEN               
+               IF (Voucher_Row_API.Is_Ext_Voucher_With_Tax( newrec_.company,
+                                                        newrec_.voucher_type,
+                                                        newrec_.accounting_year,
+                                                        newrec_.voucher_no_from) = 'TRUE') THEN            
+                  Error_SYS.Record_General(lu_name_, 'EXTERNALTRANSMESSAGE: This External Voucher contains tax transactions and can not be copied.');
+               END IF;
+            END IF;
+            
+            IF (voucher_row_tab_(count_rows_).optional_code IS NOT NULL ) THEN
+               voucher_row_tab_(count_rows_).tax_percentage := Source_Tax_Item_API.Get_Tax_Code_Percentage(newrec_.company, 'MANUAL_VOUCHER', TO_CHAR(newrec_.accounting_year), newrec_.voucher_type, TO_CHAR(newrec_.voucher_no_from), TO_CHAR(voucher_row_tab_(count_rows_).row_no), '*', voucher_row_tab_(count_rows_).optional_code);       
+            END IF;
+            /*IF (voucher_row_tab_(count_rows_).period_allocation = 'Y') THEN
+               period_allocation_exist_ := TRUE;              
+            END IF;*/ 
+                                   
+            voucher_row_tab_(count_rows_).add_internal := 'FALSE';
+            voucher_row_tab_(count_rows_).int_manual_added := 'FALSE';
+            Internal_Postings_Accrul_API.Copy_Internal_Posting(new_internal_seq_number_,
+                                                               voucher_row_tab_(count_rows_).company,
+                                                               voucher_row_tab_(count_rows_).account,
+                                                               voucher_row_tab_(count_rows_).internal_seq_number,
+                                                               NVL(newrec_.posting_method, 'NONE'),
+                                                               voucher_row_tab_(count_rows_).correction);
+            IF (Voucher_Row_API.Is_Manual_Added(voucher_row_tab_(count_rows_).company,
+                                               voucher_row_tab_(count_rows_).internal_seq_number,
+                                               voucher_row_tab_(count_rows_).account) = 'TRUE') THEN
+               voucher_row_tab_(count_rows_).internal_seq_number := new_internal_seq_number_;
+               voucher_row_tab_(count_rows_).add_internal := 'TRUE';
+               voucher_row_tab_(count_rows_).int_manual_added := 'TRUE';
+            END IF;   
+           -- voucher_row_tab_(count_rows_).currency_rate_type := newrec_.currency_type;
+            
+            company_rec_ := Company_Finance_API.Get(voucher_row_tab_(count_rows_).company);              
+            newrec_.parallel_currency_code := company_rec_.parallel_acc_currency;
+            voucher_row_tab_(count_rows_). parallel_decimals_in_amount   := Currency_Code_API.Get_Currency_Rounding(voucher_row_tab_(count_rows_).company, company_rec_.parallel_acc_currency);
+            voucher_row_tab_(count_rows_). decimals_in_amount      := Currency_Code_API.Get_Currency_Rounding(voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).currency_code);
+            voucher_row_tab_(count_rows_). acc_decimals_in_amount            := Currency_Code_API.Get_Currency_Rounding(voucher_row_tab_(count_rows_).company, company_rec_.currency_code);
+                             
+            voucher_row_tab_(count_rows_).trans_code := 'MANUAL';
+            IF (newrec_.posting_method = 'REVERSE') THEN
+               Reverse_Voucher___(newrec_, voucher_row_tab_(count_rows_));               
+            ELSIF (newrec_.posting_method = 'CORRECTION') THEN
+               Correction_Voucher___(newrec_, voucher_row_tab_(count_rows_)); 
+            ELSE
+               Posting_Method_None___(newrec_, voucher_row_tab_(count_rows_));
+            END IF;
+         END LOOP;
+         user_id_ := Fnd_Session_API.Get_Fnd_User();
+         Insert_To_Table___(voucher_row_tab_, newrec_.parallel_currency_code, user_id_);                  
+      END LOOP;
+      CLOSE get_voucher_rows_;
+END Copy_Hold_Voucher_Rows___;
+
+
+PROCEDURE Reverse_Voucher___(
+   newrec_        IN OUT Voucher_Entry_Rec,
+   voucher_row_   IN OUT New_Voucher_Row_Rec)
+IS
+BEGIN
+   IF voucher_row_.currency_amount IS NOT NULL THEN
+      voucher_row_.currency_amount := -1 * ROUND(voucher_row_.currency_amount,voucher_row_.decimals_in_amount);      
+   END IF;      
+   voucher_row_.amount := -1 * ROUND(voucher_row_.amount, voucher_row_.acc_decimals_in_amount);
+   voucher_row_.third_currency_amount := -1 * voucher_row_.third_currency_amount;
+   IF ((voucher_row_.amount < 0 AND voucher_row_.correction = 'N') OR (voucher_row_.amount > 0 AND voucher_row_.correction = 'Y')) THEN
+      voucher_row_.credit_amount := -1 * ROUND(voucher_row_.amount, voucher_row_.acc_decimals_in_amount);
+      voucher_row_.debet_amount := NULL;        
+      IF voucher_row_.currency_amount IS NOT NULL THEN
+         voucher_row_.currency_credit_amount := -1 * ROUND(voucher_row_.currency_amount,voucher_row_.decimals_in_amount);      
+      END IF;
+      voucher_row_.currency_debet_amount := NULL;     
+      IF (newrec_.parallel_currency_code IS NOT NULL) THEN      
+         voucher_row_.third_currency_credit_amount := -1 * voucher_row_.third_currency_amount;
+         voucher_row_.third_currency_debit_amount := NULL;
+      END IF;
+   ELSE     
+      voucher_row_.debet_amount := ROUND(voucher_row_.amount, voucher_row_.acc_decimals_in_amount);
+      voucher_row_.credit_amount := NULL;        
+      IF voucher_row_.currency_amount IS NOT NULL THEN
+         voucher_row_.currency_debet_amount := ROUND(voucher_row_.currency_amount,voucher_row_.decimals_in_amount);      
+      END IF;
+      
+      voucher_row_.currency_credit_amount := NULL;
+      IF (newrec_.parallel_currency_code IS NOT NULL) THEN
+         voucher_row_.third_currency_debit_amount := voucher_row_.third_currency_amount;
+         voucher_row_.third_currency_credit_amount := NULL;
+      END IF;
+   END IF;
+   
+   IF (voucher_row_.currency_tax_amount IS NOT NULL) THEN
+      voucher_row_.currency_tax_amount := -1 * voucher_row_.currency_tax_amount;
+   END IF;
+
+   IF (voucher_row_.tax_amount IS NOT NULL) THEN
+      voucher_row_.tax_amount := -1 * voucher_row_.tax_amount;
+   END IF;
+   
+   IF voucher_row_.parallel_curr_tax_amount IS NOT NULL THEN
+      voucher_row_.parallel_curr_tax_amount := -1 * voucher_row_.parallel_curr_tax_amount;
+   END IF;
+
+   voucher_row_.quantity := -1 * voucher_row_.quantity;
+   
+   IF (voucher_row_.optional_code IS NOT NULL) THEN
+      voucher_row_.currency_tax_base_amount := -1 * voucher_row_.currency_tax_base_amount;
+      voucher_row_.tax_base_amount := -1 * voucher_row_.tax_base_amount;
+      voucher_row_.parallel_curr_tax_base_amount := -1 * voucher_row_.parallel_curr_tax_base_amount;
+   END IF;   
+END Reverse_Voucher___;
+
+PROCEDURE Correction_Voucher___(
+   newrec_      IN OUT Voucher_Entry_Rec,
+   voucher_row_ IN OUT New_Voucher_Row_Rec)
+IS
+BEGIN
+   IF (voucher_row_.currency_amount IS NOT NULL) THEN
+      voucher_row_.currency_amount := -1 * ROUND(voucher_row_.currency_amount,voucher_row_.decimals_in_amount);      
+   END IF;      
+   voucher_row_.amount := -1 * ROUND(voucher_row_.amount, voucher_row_.acc_decimals_in_amount);
+   voucher_row_.third_currency_amount := -1 * voucher_row_.third_currency_amount;
+   
+   IF (NVL(voucher_row_.correction,'N') = 'Y') THEN
+      voucher_row_.correction := 'N';
+   ELSE
+      voucher_row_.correction := 'Y';
+   END IF;
+   
+   IF (voucher_row_.debet_amount IS NULL) THEN
+      voucher_row_.credit_amount := -1 * ROUND(voucher_row_.credit_amount, voucher_row_.acc_decimals_in_amount);
+      voucher_row_.third_currency_credit_amount := -1 * voucher_row_.third_currency_credit_amount;
+      IF voucher_row_.currency_credit_amount IS NOT NULL THEN
+         voucher_row_.currency_credit_amount := -1 * ROUND(voucher_row_.currency_amount,voucher_row_.decimals_in_amount);      
+      END IF;
+   ELSE
+      voucher_row_.debet_amount := -1 * ROUND(voucher_row_.debet_amount, voucher_row_.acc_decimals_in_amount);
+      voucher_row_.third_currency_debit_amount := -1 * voucher_row_.third_currency_debit_amount;
+      IF voucher_row_.currency_debet_amount IS NOT NULL THEN
+         voucher_row_.currency_debet_amount := ROUND(voucher_row_.currency_amount,voucher_row_.decimals_in_amount);      
+      END IF;
+   END IF;
+   
+   IF (voucher_row_.currency_tax_amount IS NOT NULL) THEN
+      voucher_row_.currency_tax_amount := -1 * voucher_row_.currency_tax_amount;
+   END IF;
+
+   IF (voucher_row_.tax_amount IS NOT NULL) THEN
+      voucher_row_.tax_amount := -1 * voucher_row_.tax_amount;
+   END IF;
+   
+   IF voucher_row_.parallel_curr_tax_amount IS NOT NULL THEN
+      voucher_row_.parallel_curr_tax_amount := -1 * voucher_row_.parallel_curr_tax_amount;
+   END IF;
+
+   voucher_row_.quantity := -1 * voucher_row_.quantity;
+   
+   IF (voucher_row_.optional_code IS NOT NULL) THEN
+      voucher_row_.currency_tax_base_amount := -1 * voucher_row_.currency_tax_base_amount;
+      voucher_row_.tax_base_amount := -1 * voucher_row_.tax_base_amount;
+      voucher_row_.parallel_curr_tax_base_amount := -1 * voucher_row_.parallel_curr_tax_base_amount;
+   END IF;                 
+END Correction_Voucher___;
+
+PROCEDURE Posting_Method_None___(
+   newrec_      IN OUT Voucher_Entry_Rec,
+   voucher_row_ IN OUT New_Voucher_Row_Rec)
+IS
+BEGIN
+   IF (voucher_row_.optional_code IS NOT NULL) THEN
+      voucher_row_.currency_tax_base_amount := voucher_row_.currency_tax_base_amount;
+      voucher_row_.tax_base_amount := voucher_row_.tax_base_amount;
+      voucher_row_.parallel_curr_tax_base_amount := voucher_row_.parallel_curr_tax_base_amount;
+   END IF;
+   
+   IF ((voucher_row_.amount < 0 AND voucher_row_.correction = 'N') OR (voucher_row_.amount > 0 AND voucher_row_.correction = 'Y')) THEN
+      voucher_row_.credit_amount := -1 * ROUND(voucher_row_.amount, voucher_row_.acc_decimals_in_amount);
+      voucher_row_.debet_amount := NULL;        
+      IF (newrec_.parallel_currency_code IS NOT NULL) THEN
+         voucher_row_.third_currency_credit_amount := -1 * voucher_row_.third_currency_amount;
+         voucher_row_.third_currency_debit_amount := NULL;
+      END IF;
+      IF (voucher_row_.currency_amount IS NOT NULL) THEN
+         voucher_row_.currency_credit_amount := -1 * ROUND(voucher_row_.currency_amount, voucher_row_.decimals_in_amount);
+      END IF;
+      voucher_row_.currency_debet_amount  := NULL;                        
+   ELSIF ((voucher_row_.amount = 0 AND voucher_row_.correction = 'N') AND voucher_row_.currency_amount != 0) THEN
+      voucher_row_.currency_debet_amount  := NULL;
+      voucher_row_.currency_credit_amount := NULL;                    
+      IF (newrec_.parallel_currency_code IS NOT NULL) THEN
+         IF (voucher_row_.third_currency_amount > 0 OR voucher_row_.third_currency_amount = 0) THEN         
+            voucher_row_.third_currency_debit_amount  := voucher_row_.third_currency_amount;
+            voucher_row_.third_currency_credit_amount := NULL;
+            voucher_row_.debet_amount  := 0;
+            voucher_row_.credit_amount := NULL;
+         ELSE
+            voucher_row_.third_currency_debit_amount  := NULL;
+            voucher_row_.third_currency_credit_amount := -1 * voucher_row_.third_currency_amount;
+            voucher_row_.debet_amount  := NULL;
+            voucher_row_.credit_amount := 0;
+         END IF;   
+      END IF;
+   ELSIF (voucher_row_.amount = 0 AND voucher_row_.correction = 'Y' AND voucher_row_.third_currency_amount != 0) THEN
+      voucher_row_.currency_debet_amount  := NULL;
+      voucher_row_.currency_credit_amount := NULL; 
+      IF (newrec_.parallel_currency_code IS NOT NULL) THEN
+         IF (voucher_row_.third_currency_amount > 0 OR voucher_row_.third_currency_amount = 0) THEN         
+            voucher_row_.third_currency_credit_amount  := -1 * voucher_row_.third_currency_amount;
+            voucher_row_.third_currency_debit_amount := NULL;
+            voucher_row_.credit_amount  := 0;
+            voucher_row_.debet_amount := NULL;
+         ELSE
+            voucher_row_.third_currency_debit_amount  := voucher_row_.third_currency_amount;
+            voucher_row_.third_currency_credit_amount := NULL;
+            voucher_row_.debet_amount  := 0;
+            voucher_row_.credit_amount := NULL;
+         END IF;
+      END IF;
+   ELSE
+      voucher_row_.debet_amount  := ROUND(voucher_row_.amount, voucher_row_.acc_decimals_in_amount);
+      voucher_row_.credit_amount := NULL;
+      IF (newrec_.parallel_currency_code IS NOT NULL) THEN
+         voucher_row_.third_currency_debit_amount  := voucher_row_.third_currency_amount;
+         voucher_row_.third_currency_credit_amount := NULL;
+      END IF;
+      IF (voucher_row_.currency_amount IS NOT NULL) THEN
+         voucher_row_.currency_debet_amount := ROUND(voucher_row_.currency_amount, voucher_row_.decimals_in_amount);
+      END IF;   
+      voucher_row_.currency_credit_amount := NULL;      
+   END IF;               
+END Posting_Method_None___;
+
+      
+PROCEDURE Copy_Genled_Voucher___ (
+   voucher_objkey_ IN  VARCHAR2,
+   objkey_         IN  VARCHAR2,
+   selection_      IN  VARCHAR2,
+   posting_method_ IN  VARCHAR2,
+   info$_          OUT VARCHAR2) 
+IS
+   curr_code_part_                VARCHAR2(1);     
+   stmt_                          VARCHAR2(32000);
+   voucher_entry_rec_             Voucher_Entry_Rec;
+   voucher_entry_key_             Voucher_Entry_Key;
+   period_allocation_exist_       VARCHAR2(5):= 'N';
+   summerized_voucher_            VARCHAR2(5):= 'N';
+   tax_handling_source_type_      VARCHAR2(20) := 'MANUAL_VOUCHER';
+   tax_percentage_                NUMBER;
+   temp_date_                     DATE;
+   temp_num_                      NUMBER;
+   temp_                          VARCHAR2(100);
+   tax_type_                      VARCHAR2(100);
+   currency_inverted_             VARCHAR2(5);
+   parallel_currency_inverted_    VARCHAR2(5);
+   company_currency_rec_         Currency_Amount_API.CompanyCurrencyRec;
+   TYPE GetGlVouchers IS REF CURSOR;   
+   
+   $IF Component_Genled_SYS.INSTALLED $THEN 
+      CURSOR get_tax_info(company_ IN VARCHAR2, accounting_year_ NUMBER, voucher_type_ VARCHAR2, voucher_no_ IN NUMBER, row_no_ IN NUMBER ) IS   
+         SELECT   currency_amount, 
+                  amount, 
+                  third_currency_amount, 
+                  Source_Tax_Item_Accrul_API.Get_Tax_Base_Curr_Amount(company, 
+                                                                     tax_handling_source_type_, 
+                                                                     accounting_year, 
+                                                                     voucher_type, 
+                                                                     voucher_no, 
+                                                                     reference_row_no, 
+                                                                     '*',
+                                                                     1),
+                  Source_Tax_Item_Accrul_API.Get_Tax_Base_Dom_Amount(company, 
+                                                                     tax_handling_source_type_, 
+                                                                     accounting_year, 
+                                                                     voucher_type, 
+                                                                     voucher_no, 
+                                                                     reference_row_no, 
+                                                                     '*',
+                                                                     1),                     
+                  Source_Tax_Item_Accrul_API.Get_Tax_Base_Parallel_Amount(company, 
+                                                                     tax_handling_source_type_, 
+                                                                     accounting_year, 
+                                                                     voucher_type, 
+                                                                     voucher_no, 
+                                                                     reference_row_no, 
+                                                                     '*',
+                                                                     1)
+         FROM gen_led_voucher_row2
+         WHERE company = company_ 
+         AND Voucher_Type_API.Get_Voucher_Group(company, voucher_type)  in ('M','Q') 
+         AND accounting_year = accounting_year_ 
+         AND voucher_no = voucher_no_ 
+         AND voucher_type = voucher_type_
+         AND reference_row_no = row_no_
+         AND trans_code in ('AP1', 'AP2', 'AP3', 'AP4'); 
+   $END
+   s_logical_account_type_       VARCHAR2(1);
+   -- variables for bulk collect and ref cursors. 
+   max_rows_                     PLS_INTEGER := 1000;    
+   voucher_row_tab_              New_Voucher_Row_Tab;
+   decimals_in_rate_             NUMBER;             
+   parallel_currency_rounding_   NUMBER;
+   trans_currency_rounding_      NUMBER;
+   acc_curr_rounding_            NUMBER;
+   
+   get_gl_vouchers_              GetGlVouchers;
+   return_rec_                   Currency_Amount_Structure_Rec;
+   voucher_row_rec_              voucher_row_info_rec;
+   gl_voucher_accounting_year_   NUMBER;
+   gl_voucher_voucher_type_      VARCHAR2(20);
+   gl_voucher_voucher_no_        NUMBER;
+   gl_voucher_company_           VARCHAR2(50);
+   voucher_head_rec_             Voucher_API.Public_Rec;
+   company_rec_                  Company_Finance_API.Public_Rec;
+   parallel_currency_            VARCHAR2(3);
+   correction_flag_              BOOLEAN := FALSE;
+   is_credit_                    BOOLEAN := FALSE;
+   ledger_ids_                   VARCHAR2(1000);
+   user_id_                   ${PROJECTION}_voucher_posting_vrt.obj_created_by%TYPE;
+BEGIN
+   -- assert sys validations   
+   Assert_SYS.Assert_Is_Alphanumeric(voucher_objkey_);         
+   
+   voucher_entry_key_.objkey := voucher_objkey_;
+   
+   voucher_entry_rec_ := Get_Record___(voucher_entry_key_);
+   
+   curr_code_part_ := Accounting_Code_Parts_API.Get_Codepart_Function_Db(voucher_entry_rec_.company, 'CURR');
+   
+   gl_voucher_company_         := Client_SYS.Get_Key_Reference_Value(selection_, 'COMPANY');
+   gl_voucher_accounting_year_ := to_number(Client_SYS.Get_Key_Reference_Value(selection_, 'ACCOUNTING_YEAR'));
+   gl_voucher_voucher_type_    := Client_SYS.Get_Key_Reference_Value(selection_, 'VOUCHER_TYPE');
+   gl_voucher_voucher_no_      := to_number(Client_SYS.Get_Key_Reference_Value(selection_, 'VOUCHER_NO'));   
+   
+   $IF (Component_Genled_SYS.INSTALLED) $THEN
+      period_allocation_exist_ := Gen_Led_Voucher_API.Exist_Period_Alloction(gl_voucher_company_,
+                                                                             gl_voucher_voucher_type_,
+                                                                             gl_voucher_accounting_year_,
+                                                                             gl_voucher_voucher_no_); 
+      
+      IF (NVL(period_allocation_exist_, 'N') = 'Y') THEN
+         Client_SYS.Clear_Info;
+         Client_SYS.Add_Info(lu_name_, 'ALLOCEXITS: Period Allocation information will not be copied to the destination voucher.');
+         info$_ := Client_SYS.Get_All_Info;
+      END IF;
+      
+      summerized_voucher_ := Gen_Led_Voucher_API.Is_Voucher_Summerized( gl_voucher_company_,
+                                                                        gl_voucher_voucher_type_,
+                                                                        gl_voucher_accounting_year_,
+                                                                        gl_voucher_voucher_no_);
+      
+      IF (NVL(summerized_voucher_, 'N') = 'Y') THEN
+         Error_SYS.Record_General(lu_name_, 'The selected voucher contains summarized voucher rows. Therefore, voucher rows cannot be copied.');
+      END IF;                  
+   $END 
+   
+   stmt_ := 'SELECT 
+             '''|| voucher_objkey_ || ''' parent_objkey,
+            sys_guid() objkey,
+            sysdate objmodified,
+             '''|| voucher_entry_rec_.company || '''       company, 
+             '''|| voucher_entry_rec_.voucher_type || '''  voucher_type, 
+             '|| voucher_entry_rec_.accounting_year || '   accounting_year, 
+             '|| voucher_entry_rec_.voucher_no || '        voucher_no,
+             row_no,
+             row_group_id,
+             account,
+             DECODE( '''|| curr_code_part_|| ''' ,''B'', DECODE( CODE_B, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_B)) , CODE_B)  code_b, 
+             DECODE( '''|| curr_code_part_|| ''' ,''C'', DECODE( CODE_C, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_C)) , CODE_C)  code_c, 
+             DECODE( '''|| curr_code_part_|| ''' ,''D'', DECODE( CODE_D, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_D)) , CODE_D)  code_d, 
+             DECODE( '''|| curr_code_part_|| ''' ,''E'', DECODE( CODE_E, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_E)) , CODE_E)  code_e, 
+             DECODE( '''|| curr_code_part_|| ''' ,''F'', DECODE( CODE_F, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_F)) , CODE_F)  code_f, 
+             DECODE( '''|| curr_code_part_|| ''' ,''G'', DECODE( CODE_G, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_G)) , CODE_G)  code_g, 
+             DECODE( '''|| curr_code_part_|| ''' ,''H'', DECODE( CODE_H, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_H)) , CODE_H)  code_h, 
+             DECODE( '''|| curr_code_part_|| ''' ,''I'', DECODE( CODE_I, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_I)) , CODE_I)  code_i, 
+             DECODE( '''|| curr_code_part_|| ''' ,''J'', DECODE( CODE_J, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_J)) , CODE_J)  code_j,                 
+             currency_debet_amount, 
+             currency_credit_amount, 
+             currency_amount, 
+             debet_amount,
+             credit_amount, 
+             amount,
+             correction, 
+             currency_code, 
+             quantity, 
+             process_code, 
+             optional_code,
+             null       tax_percentage,
+             null       tax_direction,
+             project_activity_id, 
+             text, 
+             reference_serie, 
+             reference_number, 
+             trans_code, 
+             currency_rate, 
+             third_currency_debit_amount, 
+             third_currency_credit_amount, 
+             NVL(third_currency_debit_amount,0) - NVL(third_currency_credit_amount,0) third_currency_amount, 
+             '||voucher_entry_rec_.accounting_period ||'  accounting_period,
+             conversion_factor, 
+             auto_tax_vou_entry, 
+             parallel_currency_rate, 
+             parallel_conversion_factor, 
+             deliv_type_id,
+             period_allocation,
+             multi_company_id,
+             internal_seq_number,
+             null           currency_rate_type,
+             null           parallel_curr_rate_type,            
+             0 decimals_in_amount,
+             0 acc_decimals_in_amount,
+             0 parallel_decimals_in_amount,
+             0 currency_tax_amount,
+             0 tax_amount,
+             0 parallel_curr_tax_amount,
+             0 currency_tax_base_amount,
+             0 tax_base_amount,
+             0  parallel_curr_tax_base_amount,
+             NULL add_internal,
+             NULL int_manual_added
+          FROM  gen_led_voucher_row2 
+          WHERE company = :company_ AND Voucher_Type_API.Get_Voucher_Group(company, voucher_type) in (''M'',''Q'') AND 
+                accounting_year = :accounting_year_ AND voucher_no = :voucher_no_  AND voucher_type = :voucher_type_ AND (TRANS_CODE IN (''MANUAL'', ''INTERIM'', ''EXTERNAL'', ''External'') OR
+                trans_code LIKE ''%MANUAL'' ) AND (AUTO_TAX_VOU_ENTRY = ''FALSE'' OR AUTO_TAX_VOU_ENTRY = ''EXT'' OR AUTO_TAX_VOU_ENTRY = ''TRUE'' OR (AUTO_TAX_VOU_ENTRY IS NULL AND TRANS_CODE IN (''MANUAL'')))
+          ORDER BY row_no';
+   
+   @ApproveDynamicStatement(2018-10-28,umdolk)
+   
+   OPEN  get_gl_vouchers_ FOR stmt_ USING  gl_voucher_company_, 
+                                              gl_voucher_accounting_year_, 
+                                              gl_voucher_voucher_no_,
+                                              gl_voucher_voucher_type_;
+   
+   LOOP
+      FETCH get_gl_vouchers_ BULK COLLECT INTO voucher_row_tab_ LIMIT max_rows_;  
+      EXIT WHEN voucher_row_tab_.COUNT = 0;
+      FOR count_rows_ IN 1..voucher_row_tab_.COUNT LOOP
+         --TODO: DO THE VALIDATIONS HERE.
+         $IF Component_Genled_SYS.INSTALLED $THEN
+            IF (voucher_row_tab_(count_rows_).trans_code = 'EXTERNAL' AND voucher_row_tab_(count_rows_).optional_code IS NOT NULL ) THEN
+
+               IF (Gen_Led_Voucher_API.Is_Ext_Voucher_With_Tax(gl_voucher_company_,
+                                                               gl_voucher_voucher_type_,
+                                                               gl_voucher_accounting_year_,
+                                                               gl_voucher_voucher_no_) = 'TRUE') THEN
+
+
+                  Error_SYS.Record_General(lu_name_, 'EXTERNALTRANSMESSAGE: This External Voucher contains tax transactions and can not be copied.');
+               END IF;
+            END IF;
+         $END
+         IF (voucher_row_tab_(count_rows_).auto_tax_vou_entry != 'TRUE')THEN             
+
+            company_currency_rec_ := Currency_Amount_API.Get_Currency_Rec(voucher_row_tab_(count_rows_).company);
+            parallel_currency_rounding_   := Currency_Code_API.Get_Currency_Rounding(voucher_row_tab_(count_rows_).company, company_currency_rec_.parallel_currency);
+            trans_currency_rounding_      := Currency_Code_API.Get_Currency_Rounding(voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).currency_code);
+            acc_curr_rounding_            := Currency_Code_API.Get_Currency_Rounding(voucher_row_tab_(count_rows_).company, company_currency_rec_.accounting_currency);
+
+            voucher_row_tab_(count_rows_).decimals_in_amount := trans_currency_rounding_;
+            voucher_row_tab_(count_rows_).acc_decimals_in_amount := acc_curr_rounding_;
+            voucher_row_tab_(count_rows_).parallel_decimals_in_amount := parallel_currency_rounding_;
+            voucher_row_tab_(count_rows_).trans_code := 'MANUAL';
+
+            IF (voucher_row_tab_(count_rows_).optional_code IS NOT NULL ) THEN
+               Statutory_Fee_API.Fetch_Validate_Tax_Code_Info(voucher_row_tab_(count_rows_).tax_percentage, --voucher_row_tab_(count_rows_).Tax_Percentage,
+                                                              temp_num_, 
+                                                              tax_type_, --voucher_row_tab_(count_rows_).Tax_Type,
+                                                              temp_,
+                                                              temp_,
+                                                              temp_,
+                                                              temp_,
+                                                              temp_,
+                                                              temp_,
+                                                              temp_date_,
+                                                              temp_date_,
+                                                              voucher_row_tab_(count_rows_).Company,
+                                                              voucher_row_tab_(count_rows_).Optional_Code,
+                                                              voucher_entry_rec_.Voucher_Date,
+                                                              'FALSE',
+                                                              'TRUE',
+                                                              'FETCH_AND_VALIDATE');                                                                                        
+
+               IF (tax_type_ = 'NOTAX') THEN                     
+                  voucher_row_tab_(count_rows_).Tax_Direction :='NOTAX';
+               ELSE                     
+                  s_logical_account_type_ := Account_API.Get_Logical_Account_Type_Db(voucher_row_tab_(count_rows_).Company,
+                                                                                     voucher_row_tab_(count_rows_).Account);
+                  IF ((s_logical_account_type_ = 'A') OR (s_logical_account_type_ = 'C'))THEN
+                     voucher_row_tab_(count_rows_).Tax_Direction := 'TAXRECEIVED';            
+                  ELSIF ((s_logical_account_type_ = 'L') OR (s_logical_account_type_ = 'R') OR (s_logical_account_type_ = 'S') OR (s_logical_account_type_ = 'O')) THEN
+                     voucher_row_tab_(count_rows_).Tax_Direction := 'TAXDISBURSED';
+                  END IF;
+               END IF;
+
+               IF (tax_type_ = 'TAX') THEN
+                  -- fetch tax information
+                  $IF Component_Genled_SYS.INSTALLED $THEN
+                     OPEN get_tax_info(gl_voucher_company_, gl_voucher_accounting_year_, gl_voucher_voucher_type_, gl_voucher_voucher_no_,voucher_row_tab_(count_rows_).row_no);
+                     FETCH get_tax_info INTO voucher_row_tab_(count_rows_).currency_tax_amount, 
+                                             voucher_row_tab_(count_rows_).tax_amount,
+                                             voucher_row_tab_(count_rows_).parallel_curr_tax_amount,
+                                             voucher_row_tab_(count_rows_).currency_tax_base_amount,
+                                             voucher_row_tab_(count_rows_).tax_base_amount,
+                                             voucher_row_tab_(count_rows_).parallel_curr_tax_base_amount;
+                     CLOSE get_tax_info;
+
+                  $END
+
+                  IF (voucher_row_tab_(count_rows_).correction = 'Y') THEN
+                     correction_flag_ := TRUE;
+                  ELSE
+                     correction_flag_ := FALSE;
+                  END IF;
+
+                  IF (voucher_entry_rec_.amount_method = 'GROSS') THEN                     
+                     voucher_row_tab_(count_rows_).Currency_Amount := voucher_row_tab_(count_rows_).Currency_Amount + voucher_row_tab_(count_rows_).Currency_Tax_Amount;
+
+                     voucher_row_tab_(count_rows_).currency_rate_type := Currency_Type_API.Get_Default_Type(voucher_row_tab_(count_rows_).company);
+                     voucher_row_tab_(count_rows_).parallel_curr_rate_type := company_currency_rec_.def_par_curr_rate_type;
+                     Currency_Rate_API.Fetch_Currency_Rate_Base( temp_num_ , temp_num_, currency_inverted_,  voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).currency_code, company_currency_rec_.accounting_currency,voucher_row_tab_(count_rows_).currency_rate_type, voucher_entry_rec_.Voucher_Date, 'DUMMY' );
+                     -- Currency_Rate_API.Fetch_Currency_Rate_Base( temp_num_ , temp_num_, parallel_currency_inverted_,  voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).currency_code, company_currency_rec_.parallel_currency,voucher_row_tab_(count_rows_).currency_rate_type, voucher_entry_rec_.Voucher_Date, 'DUMMY' );
+
+                     IF (company_currency_rec_.parallel_base IS NOT NULL ) THEN
+                        Currency_Rate_API.Get_Parallel_Currency_Rate(temp_num_, 
+                                                                     temp_num_,
+                                                                     parallel_currency_inverted_,
+                                                                     voucher_row_tab_(count_rows_).company,
+                                                                     voucher_row_tab_(count_rows_).currency_code,
+                                                                     voucher_entry_rec_.Voucher_Date,
+                                                                     voucher_row_tab_(count_rows_).parallel_curr_rate_type,
+                                                                     company_currency_rec_.parallel_base,
+                                                                     company_currency_rec_.accounting_currency,
+                                                                     company_currency_rec_.parallel_currency,
+                                                                     NULL,
+                                                                     NULL );      
+                        Currency_Code_API.Get_No_Of_Decimals_In_Rate_(decimals_in_rate_, voucher_row_tab_(count_rows_).company, company_currency_rec_.parallel_currency);
+                        voucher_row_tab_(count_rows_).parallel_currency_rate := ROUND(voucher_row_tab_(count_rows_).parallel_currency_rate,decimals_in_rate_);
+                     END IF;
+
+                     IF (voucher_row_tab_(count_rows_).currency_credit_amount IS NOT NULL ) THEN
+                        is_credit_ := TRUE;
+                     END IF;
+                     return_rec_ := Convert_to_currency_rec(voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).currency_code, correction_flag_, voucher_row_tab_(count_rows_).amount,voucher_row_tab_(count_rows_).currency_amount, voucher_row_tab_(count_rows_).third_currency_amount, voucher_row_tab_(count_rows_).tax_base_amount, voucher_row_tab_(count_rows_).currency_tax_base_amount, voucher_row_tab_(count_rows_).parallel_curr_tax_base_amount, voucher_row_tab_(count_rows_).currency_rate, voucher_row_tab_(count_rows_).parallel_currency_rate, voucher_row_tab_(count_rows_).conversion_factor, voucher_row_tab_(count_rows_).parallel_conversion_factor, voucher_row_tab_(count_rows_).currency_rate_type, voucher_row_tab_(count_rows_).parallel_curr_rate_type, voucher_row_tab_(count_rows_).tax_amount, voucher_row_tab_(count_rows_).currency_tax_amount, voucher_row_tab_(count_rows_).parallel_curr_tax_amount, is_credit_);
+
+                     voucher_row_rec_ := Convert_to_voucher_info_rec( voucher_entry_rec_.Voucher_Date, voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).voucher_type, voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).voucher_type, voucher_row_tab_(count_rows_).optional_code, tax_percentage_, voucher_row_tab_(count_rows_).tax_direction, voucher_row_tab_(count_rows_).currency_code, correction_flag_, is_credit_);
+                     -- sCalculateTax => FALSE
+                     return_rec_ := calc_based_on_currency_amount___(return_rec_, voucher_row_rec_, NULL , voucher_entry_rec_.amount_method, 'CURRENCY_AMOUNT', 'FALSE');
+                  ELSE
+                     IF (voucher_row_tab_(count_rows_).currency_credit_amount IS NOT NULL ) THEN
+                        is_credit_ := TRUE;
+                     END IF;
+                     -- Currency_Code_API.Get_No_Of_Decimals_In_Rate_(decimals_in_rate_, voucher_entry_rec_.company, company_currency_rec_.parallel_currency);                   
+
+                     return_rec_ := Convert_to_currency_rec(voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).currency_code, correction_flag_, voucher_row_tab_(count_rows_).amount,voucher_row_tab_(count_rows_).currency_amount, voucher_row_tab_(count_rows_).third_currency_amount, voucher_row_tab_(count_rows_).tax_base_amount, voucher_row_tab_(count_rows_).currency_tax_base_amount, voucher_row_tab_(count_rows_).parallel_curr_tax_base_amount, voucher_row_tab_(count_rows_).currency_rate, voucher_row_tab_(count_rows_).parallel_currency_rate, voucher_row_tab_(count_rows_).conversion_factor, voucher_row_tab_(count_rows_).parallel_conversion_factor, voucher_row_tab_(count_rows_).currency_rate_type, voucher_row_tab_(count_rows_).parallel_curr_rate_type, voucher_row_tab_(count_rows_).tax_amount, voucher_row_tab_(count_rows_).currency_tax_amount, voucher_row_tab_(count_rows_).parallel_curr_tax_amount, is_credit_);
+
+                     voucher_row_rec_ := Convert_to_voucher_info_rec( voucher_entry_rec_.Voucher_Date, voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).voucher_type, voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).voucher_type, voucher_row_tab_(count_rows_).optional_code, tax_percentage_, voucher_row_tab_(count_rows_).tax_direction, voucher_row_tab_(count_rows_).currency_code, correction_flag_, is_credit_);
+
+                  END IF;
+                  voucher_row_tab_(count_rows_).currency_rate_type := Currency_Type_API.Get_Default_Type(voucher_row_tab_(count_rows_).company);
+                  voucher_row_tab_(count_rows_).parallel_curr_rate_type := company_currency_rec_.def_par_curr_rate_type;
+
+                  company_rec_ := Company_Finance_API.Get(voucher_entry_rec_.company);              
+                  parallel_currency_ := company_rec_.parallel_acc_currency;
+                  voucher_head_rec_.amount_method := voucher_entry_rec_.amount_method;
+                  voucher_head_rec_.function_group := Voucher_Type_API.Get_Voucher_Group(voucher_entry_rec_.company, voucher_entry_rec_.voucher_type);
+                  voucher_head_rec_.voucher_date := voucher_entry_rec_.voucher_date; 
+
+                  IF (voucher_row_tab_(count_rows_).currency_tax_amount IS NULL) THEN
+                     return_rec_ := Reset_Tax_Amount( return_rec_, voucher_row_rec_, voucher_head_rec_, NULL , voucher_entry_rec_.correction);
+                     return_rec_ := Reset_Tax_Amount_From_Curr_Tax_Amount(return_rec_.currency_tax_amount, return_rec_.currency_tax_amount + 1,return_rec_, voucher_row_rec_,  company_rec_ , voucher_head_rec_);                                       
+
+                  END IF;
+                  IF (company_currency_rec_.parallel_base IS NOT NULL) THEN
+                     return_rec_ := Cal_Parallel_Curr_Tax_Value(return_rec_, company_rec_, voucher_row_rec_ , 'RATE', voucher_head_rec_);
+                  END IF;
+
+                  voucher_row_tab_(count_rows_).currency_amount := return_rec_.currency_amount;
+                  voucher_row_tab_(count_rows_).currency_debet_amount := return_rec_.currency_debet_amount;
+                  voucher_row_tab_(count_rows_).currency_credit_amount := return_rec_.currency_credit_amount;
+                  voucher_row_tab_(count_rows_).currency_tax_base_amount := return_rec_.currency_tax_base_amount;
+                  voucher_row_tab_(count_rows_).amount := return_rec_.amount;
+                  voucher_row_tab_(count_rows_).debet_amount := return_rec_.debet_amount;
+                  voucher_row_tab_(count_rows_).credit_amount := return_rec_.credit_amount;
+                  voucher_row_tab_(count_rows_).tax_base_amount := return_rec_.tax_base_amount;
+                  IF (company_currency_rec_.parallel_base IS NOT NULL ) THEN
+                     voucher_row_tab_(count_rows_).third_currency_amount := return_rec_.third_currency_amount;
+                     voucher_row_tab_(count_rows_).third_currency_debit_amount := return_rec_.third_currency_debit_amount;
+                     voucher_row_tab_(count_rows_).third_currency_credit_amount := return_rec_.third_currency_credit_amount;
+                     voucher_row_tab_(count_rows_).parallel_curr_tax_base_amount := return_rec_.parallel_curr_tax_base_amount;
+                  ELSE
+                     voucher_row_tab_(count_rows_).third_currency_amount := NULL;
+                     voucher_row_tab_(count_rows_).third_currency_debit_amount := NULL;
+                     voucher_row_tab_(count_rows_).third_currency_credit_amount := NULL;
+                     voucher_row_tab_(count_rows_).parallel_curr_tax_base_amount := NULL;
+                  END IF;
+               ELSE
+                  voucher_row_tab_(count_rows_).currency_tax_amount := 0;
+                  voucher_row_tab_(count_rows_).tax_amount := 0;
+               END IF;
+            ELSE                 
+               IF (voucher_row_tab_(count_rows_).amount IS NOT NULL AND voucher_row_tab_(count_rows_).amount != 0) THEN
+                  voucher_row_tab_(count_rows_).currency_tax_amount := 0;
+                  voucher_row_tab_(count_rows_).tax_amount := 0;
+               END IF;
+            END IF;                     
+            IF (parallel_currency_ IS NULL ) THEN
+               parallel_currency_ := Company_Finance_API.Get_Parallel_Acc_Currency(voucher_entry_rec_.company);
+            END IF;
+
+            voucher_entry_rec_.parallel_currency_code := company_currency_rec_.parallel_currency;
+
+            voucher_row_tab_(count_rows_).currency_rate_type := Currency_Type_API.Get_Default_Type(voucher_row_tab_(count_rows_).company);
+            voucher_row_tab_(count_rows_).parallel_curr_rate_type := company_currency_rec_.def_par_curr_rate_type;
+            voucher_row_tab_(count_rows_).add_internal := 'FALSE';
+            voucher_row_tab_(count_rows_).int_manual_added := 'FALSE';
+            $IF (Component_Intled_SYS.INSTALLED) $THEN
+               IF (Voucher_Type_API.Get_Use_Manual(voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).voucher_type) = 'TRUE') THEN
+                  ledger_ids_ := Internal_Voucher_Util_Pub_API.Check_If_Not_Excluded_Manual(voucher_row_tab_(count_rows_).company,
+                                                                                            voucher_row_tab_(count_rows_).account,
+                                                                                            voucher_entry_rec_.voucher_date,
+                                                                                            voucher_row_tab_(count_rows_).voucher_type);
+                  IF (ledger_ids_ IS NOT NULL) THEN
+                     voucher_row_tab_(count_rows_).internal_seq_number := Internal_Ledger_Util_Pub_API.Get_Next_Int_Manual_Post_Seq;
+                     voucher_row_tab_(count_rows_).add_internal := 'TRUE';
+                  END IF;
+               END IF;
+            $END
+            IF (posting_method_ = 'REVERSE') THEN
+               Reverse_Voucher___(voucher_entry_rec_, voucher_row_tab_(count_rows_));               
+            ELSIF (posting_method_ = 'CORRECTION') THEN            
+               Correction_Voucher___(voucher_entry_rec_, voucher_row_tab_(count_rows_)); 
+            ELSE
+               Posting_Method_None___(voucher_entry_rec_, voucher_row_tab_(count_rows_));            
+            END IF;           
+         END IF;
+      END LOOP;
+      user_id_ := Fnd_Session_API.Get_Fnd_User();
+      Insert_To_Table___(voucher_row_tab_, parallel_currency_, user_id_);
+      -- insert directly to voucher assistant
+   END LOOP;
+   CLOSE get_gl_vouchers_;
+END Copy_Genled_Voucher___;
+
+PROCEDURE Remove_Temp_Voucher___ (
+   key_ IN Voucher_Entry_Key ) 
+IS
+   voucher_entry_rec_    Voucher_Entry_Rec;
+BEGIN
+   voucher_entry_rec_.objkey := key_.objkey;
+   CRUD_Delete___(voucher_entry_rec_); 
+   DELETE FROM ${PROJECTION}_VOUCHER_POSTING_VRT WHERE parent_objkey = key_.objkey;
+END Remove_Temp_Voucher___;
+
+
+PROCEDURE Copy_Template_Rows___ (
+   voucher_objkey_   IN VARCHAR2,
+   voucher_date_     IN DATE,
+   full_selection_   IN VARCHAR2 ) 
+IS
+   template_list_    VARCHAR2(32000);
+   company_          Voucher_Template_Tab.company%TYPE;
+BEGIN
+   Get_Template_List___(company_, template_list_, voucher_date_, full_selection_);
+   Do_Copy_Template_Rows___(voucher_objkey_, company_, template_list_);
+END Copy_Template_Rows___;
+
+
+PROCEDURE Get_Template_List___(
+   company_        OUT VARCHAR2,
+   template_list_  OUT VARCHAR2,
+   voucher_date_   IN  DATE,
+   full_selection_ IN  VARCHAR2 )
+IS
+   selection_              VARCHAR2(2000) := CONCAT(full_selection_, ';');
+   current_selection_      VARCHAR2(200);
+   template_               Voucher_Template_Tab.template%TYPE;
+   rowcount_               NUMBER := 0;
+BEGIN
+   WHILE (INSTR(selection_, ';') > 0) LOOP
+      rowcount_ := rowcount_ + 1;
+      current_selection_  := substr(selection_, 0, INSTR(selection_, ';'));
+      template_           := Client_SYS.Get_Key_Reference_Value(current_selection_, 'TEMPLATE');
+      company_            := Client_SYS.Get_Key_Reference_Value(current_selection_, 'COMPANY');
+      Validate_Template_Valid_Date___(company_, template_, voucher_date_);
+      
+      IF rowcount_ = 1 THEN
+         template_list_ := CHR(39)|| template_ || CHR(39);
+      ELSE
+         template_list_ := template_list_||', '|| CHR(39)||template_||CHR(39);
+      END IF;
+      selection_ := substr(selection_, INSTR(selection_, ';')+1);
+   END LOOP;   
+END Get_Template_List___;
+
+
+PROCEDURE Validate_Template_Valid_Date___(
+   company_           IN VARCHAR2,
+   template_          IN VARCHAR2,
+   voucher_date_      IN DATE) 
+IS 
+   CURSOR get_template_info IS
+      SELECT valid_from, valid_until
+      FROM Voucher_Template_Tab
+      WHERE company =  company_
+      AND template  = template_;
+   
+   valid_from_    DATE;
+   valid_until_   DATE;
+BEGIN
+   OPEN get_template_info;
+   FETCH get_template_info INTO valid_from_, valid_until_;
+   IF get_template_info%NOTFOUND THEN
+      CLOSE get_template_info;
+      Error_SYS.Record_General(lu_name_, 'TEMPLATENOTEXIST: Voucher Template :P1 doesnot exist.', template_);
+   ELSE   
+      CLOSE get_template_info;
+   END IF;
+   IF valid_from_ > voucher_date_ OR valid_until_ < voucher_date_ THEN
+      Error_SYS.Record_General(lu_name_, 'VOUTEMPLATEEXPIREDDATE: Voucher date does not match the valid date interval of the :P1 template', template_);
+   END IF;
+END Validate_Template_Valid_Date___;
+
+
+FUNCTION Get_Use_Voucher_Template_Select_Stmt___(
+   voucher_objkey_   IN VARCHAR2,
+   template_list_    IN VARCHAR2 ) RETURN VARCHAR2
+IS
+   stmt_                VARCHAR2(32000);
+   voucher_entry_rec_   Voucher_Entry_Rec;
+   voucher_entry_key_   Voucher_Entry_Key;
+   curr_code_part_      VARCHAR2(1); 
+   
+BEGIN
+   Assert_SYS.Assert_Is_Alphanumeric(voucher_objkey_);
+   voucher_entry_key_.objkey := voucher_objkey_;
+   voucher_entry_rec_ := Get_Record___(voucher_entry_key_);
+   curr_code_part_ := Accounting_Code_Parts_API.Get_Codepart_Function_Db(voucher_entry_rec_.company, 'CURR');
+  
+      
+   stmt_ := 'SELECT 
+             '''|| voucher_objkey_ || ''' parent_objkey,
+            sys_guid() objkey,
+            sysdate objmodified,
+             '''|| voucher_entry_rec_.company || '''       company, 
+             '''|| voucher_entry_rec_.voucher_type || '''  voucher_type, 
+             '|| voucher_entry_rec_.accounting_year || '   accounting_year, 
+             '|| voucher_entry_rec_.voucher_no || '        voucher_no,
+             NULL row_no,
+             NULL row_group_id,
+             account,
+             DECODE( '''|| curr_code_part_|| ''' ,''B'', DECODE( CODE_B, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_B)) , CODE_B)  code_b, 
+             DECODE( '''|| curr_code_part_|| ''' ,''C'', DECODE( CODE_C, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_C)) , CODE_C)  code_c, 
+             DECODE( '''|| curr_code_part_|| ''' ,''D'', DECODE( CODE_D, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_D)) , CODE_D)  code_d, 
+             DECODE( '''|| curr_code_part_|| ''' ,''E'', DECODE( CODE_E, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_E)) , CODE_E)  code_e, 
+             DECODE( '''|| curr_code_part_|| ''' ,''F'', DECODE( CODE_F, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_F)) , CODE_F)  code_f, 
+             DECODE( '''|| curr_code_part_|| ''' ,''G'', DECODE( CODE_G, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_G)) , CODE_G)  code_g, 
+             DECODE( '''|| curr_code_part_|| ''' ,''H'', DECODE( CODE_H, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_H)) , CODE_H)  code_h, 
+             DECODE( '''|| curr_code_part_|| ''' ,''I'', DECODE( CODE_I, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_I)) , CODE_I)  code_i, 
+             DECODE( '''|| curr_code_part_|| ''' ,''J'', DECODE( CODE_J, NULL,NULL, DECODE(Account_API.Get_Currency_Balance(COMPANY, ACCOUNT), ''Y'', NULL, CODE_J)) , CODE_J)  code_j,                 
+             debit_currency_amount currency_debet_amount, 
+             credit_currency_amount currency_credit_amount, 
+             currency_amount currency_amount, 
+             null debet_amount, -- Currency_Amount_API.Calculate_Dom_Amount(voucher_company, currency_code, '''|| voucher_entry_rec_.voucher_date || ''', debit_currency_amount) debet_amount, 
+             null credit_amount, -- Currency_Amount_API.Calculate_Dom_Amount(voucher_company, currency_code, '''|| voucher_entry_rec_.voucher_date || ''', credit_currency_amount)  credit_amount, 
+             null amount, -- NVL(Currency_Amount_API.Calculate_Dom_Amount(voucher_company, currency_code, '''|| voucher_entry_rec_.voucher_date || ''', currency_amount),0)  amount,
+             Voucher_Template_row_API.Get_Correction__(voucher_company, template, NVL(debit_currency_amount,credit_currency_amount)) correction, 
+             currency_code, 
+             quantity, 
+             process_code, 
+             optional_code,
+             null       tax_percentage,
+             null       tax_direction,
+             project_activity_id, 
+             text, 
+             NULL reference_serie, 
+             NULL reference_number, 
+             trans_code, 
+             null currency_rate, -- Currency_Rate_API.Get_Currency_Rate(voucher_company, currency_code, Currency_Type_API.Get_Default_Type(voucher_company), '''|| voucher_entry_rec_.voucher_date || ''' ) currency_rate, 
+             null third_currency_debit_amount, --Currency_Amount_API.Calculate_Third_Curr_Amount(voucher_company, currency_code, '''|| voucher_entry_rec_.voucher_date || ''', debit_currency_amount ) third_currency_debit_amount, 
+             null credit_currency_amount, -- Currency_Amount_API.Calculate_Third_Curr_Amount(voucher_company, currency_code, '''|| voucher_entry_rec_.voucher_date || ''', credit_currency_amount ) third_currency_credit_amount, 
+             null third_currency_amount, -- Currency_Amount_API.Calculate_Third_Curr_Amount(voucher_company, currency_code, '''|| voucher_entry_rec_.voucher_date || ''', currency_amount )  third_currency_amount, 
+             '||voucher_entry_rec_.accounting_period ||'  accounting_period,
+             null conversion_factor, --Currency_Rate_API.Get_Conv_Factor(voucher_company, currency_code, Currency_Type_API.Get_Default_Type(voucher_company), '''|| voucher_entry_rec_.voucher_date || ''' ) conversion_factor, 
+             NULL auto_tax_vou_entry, 
+             NULL parallel_currency_rate, 
+             NULL parallel_conversion_factor, 
+             deliv_type_id,
+             NULL  period_allocation,
+             voucher_company multi_company_id,
+             NULL internal_seq_number,
+             null currency_rate_type, --Currency_Type_API.Get_Default_Type(voucher_company)            currency_rate_type,
+             null           parallel_curr_rate_type,    
+             null decimals_in_amount, -- Currency_Code_API.Get_Currency_Rounding(voucher_company, currency_code) decimals_in_amount,
+             null acc_decimals_in_amount, --Currency_Code_API.Get_Currency_Rounding(voucher_company, Company_Finance_API.Get_Currency_Code(voucher_company)) acc_decimals_in_amount,
+             0 parallel_decimals_in_amount,
+             0 currency_tax_amount,
+             0 tax_amount,
+             0 parallel_curr_tax_amount,
+             0 currency_tax_base_amount,
+             0 tax_base_amount,
+             0 parallel_curr_tax_base_amount,
+             NULL add_internal,
+             NULL int_manual_added
+         FROM Voucher_Template_Row
+         WHERE company = :company_
+         AND template IN ('||template_list_ ||')
+         ORDER BY row_no ';
+   Trace_Stmnt(stmt_);
+  
+   RETURN stmt_;
+END Get_Use_Voucher_Template_Select_Stmt___;
+
+PROCEDURE Do_Copy_Template_Rows___(
+   voucher_objkey_   IN VARCHAR2,
+   company_          IN VARCHAR2,
+   template_list_    IN VARCHAR2 )
+IS
+   stmt_                         VARCHAR2(32000);
+   TYPE GetTempalteRows IS REF CURSOR; 
+   max_rows_                     PLS_INTEGER := 1000;    
+   voucher_row_tab_              New_Voucher_Row_Tab;  
+   get_template_rows_            GetTempalteRows;
+     
+   calculate_tax_                VARCHAR2(5);
+   parallel_currency_rounding_   NUMBER;
+   trans_currency_rounding_      NUMBER;
+   acc_curr_rounding_            NUMBER;
+   temp_num_                     NUMBER;
+   temp_                         VARCHAR2(100);
+   tax_type_                     VARCHAR2(100);
+   currency_inverted_            VARCHAR2(5);
+   parallel_currency_inverted_   VARCHAR2(5);   
+   s_logical_account_type_       VARCHAR2(1);
+   temp_date_                    DATE;
+   correction_flag_              BOOLEAN := FALSE;
+   is_credit_                    BOOLEAN := FALSE;
+   voucher_entry_rec_            Voucher_Entry_Rec;
+   voucher_entry_key_            Voucher_Entry_Key;
+   return_rec_                   Currency_Amount_Structure_Rec;
+   voucher_row_rec_              voucher_row_info_rec;
+   voucher_head_rec_             Voucher_API.Public_Rec;
+   company_currency_rec_         Currency_Amount_API.CompanyCurrencyRec;
+   decimals_in_rate_             NUMBER;
+   row_group_validation_         VARCHAR2(1);
+   row_group_id_                 NUMBER;
+   row_group_balance_            NUMBER := 0;
+   row_group_curr_row_amount_    NUMBER;
+   ledger_ids_                   VARCHAR2(1000);
+   user_id_                      ${PROJECTION}_voucher_posting_vrt.obj_created_by%TYPE;
+   CURSOR get_max_row_group_id IS
+      SELECT NVL(MAX(row_group_id),0)+1
+      FROM ${PROJECTION}_voucher_posting_vrt
+      WHERE parent_objkey = voucher_objkey_;
+BEGIN
+   stmt_                      := Get_Use_Voucher_Template_Select_Stmt___(voucher_objkey_, template_list_);
+   voucher_entry_key_.objkey  := voucher_objkey_;
+   voucher_entry_rec_         := Get_Record___(voucher_entry_key_);
+   row_group_validation_      := NVL(Voucher_Type_Detail_API.Get_Row_Group_Validation(company_, voucher_entry_rec_.voucher_type, voucher_entry_rec_.function_group),'N');
+   user_id_                   := Fnd_Session_API.Get_Fnd_User();
+   IF row_group_validation_ = 'Y' THEN 
+      OPEN get_max_row_group_id;
+      FETCH get_max_row_group_id INTO row_group_id_;
+      CLOSE get_max_row_group_id;
+   END IF;
+   
+   @ApproveDynamicStatement(2019-01-24,nudilk)
+   OPEN get_template_rows_ FOR stmt_ USING company_; 
+   LOOP
+      FETCH get_template_rows_ BULK COLLECT INTO voucher_row_tab_ LIMIT max_rows_;
+      EXIT WHEN voucher_row_tab_.COUNT = 0;
+            
+      FOR count_rows_ IN voucher_row_tab_.FIRST..voucher_row_tab_.LAST LOOP                 
+         IF (voucher_row_tab_(count_rows_).optional_code IS NOT NULL ) THEN
+            Statutory_Fee_API.Fetch_Validate_Tax_Code_Info(voucher_row_tab_(count_rows_).tax_percentage, --voucher_row_tab_(count_rows_).Tax_Percentage,
+                                                                            temp_num_, 
+                                                                            tax_type_, --voucher_row_tab_(count_rows_).Tax_Type,
+                                                                            temp_,
+                                                                            temp_,
+                                                                            temp_,
+                                                                            temp_,
+                                                                            temp_,
+                                                                            temp_,
+                                                                            temp_date_,
+                                                                            temp_date_,
+                                                                            voucher_row_tab_(count_rows_).Company,
+                                                                            voucher_row_tab_(count_rows_).Optional_Code,
+                                                                            voucher_entry_rec_.Voucher_Date,
+                                                                            'FALSE',
+                                                                            'TRUE',
+                                                                            'FETCH_AND_VALIDATE');                                                                                        
+
+            IF (tax_type_ = 'NOTAX') THEN                     
+               voucher_row_tab_(count_rows_).Tax_Direction :='NOTAX';
+            ELSE                     
+               s_logical_account_type_ := Account_API.Get_Logical_Account_Type_Db(voucher_row_tab_(count_rows_).Company,
+                                       voucher_row_tab_(count_rows_).Account);
+               IF ((s_logical_account_type_ = 'A') OR (s_logical_account_type_ = 'C'))THEN
+                   voucher_row_tab_(count_rows_).Tax_Direction := 'TAXRECEIVED';            
+               ELSIF ((s_logical_account_type_ = 'L') OR (s_logical_account_type_ = 'R') OR (s_logical_account_type_ = 'S') OR (s_logical_account_type_ = 'O')) THEN
+                   voucher_row_tab_(count_rows_).Tax_Direction := 'TAXDISBURSED';
+               END IF;
+            END IF;
+            calculate_tax_ := 'TRUE';
+         ELSE
+            calculate_tax_ := 'FALSE';
+         END IF;
+         company_currency_rec_ := Currency_Amount_API.Get_Currency_Rec(voucher_row_tab_(count_rows_).company);
+         voucher_row_tab_(count_rows_).currency_rate_type := Currency_Type_API.Get_Default_Type(voucher_row_tab_(count_rows_).company);
+         voucher_row_tab_(count_rows_).parallel_curr_rate_type := company_currency_rec_.def_par_curr_rate_type;
+       --  IF (voucher_row_tab_(count_rows_).currency_amount IS NOT NULL OR  voucher_row_tab_(count_rows_).currency_debet_amount IS NOT NULL OR voucher_row_tab_(count_rows_).currency_credit_amount IS NOT NULL ) THEN
+           -- company_rec_ := Company_Finance_API.Get(company_);
+            parallel_currency_rounding_   := Currency_Code_API.Get_Currency_Rounding(voucher_row_tab_(count_rows_).company, company_currency_rec_.parallel_currency);
+            trans_currency_rounding_      := Currency_Code_API.Get_Currency_Rounding(voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).currency_code);
+            acc_curr_rounding_            := Currency_Code_API.Get_Currency_Rounding(voucher_row_tab_(count_rows_).company, company_currency_rec_.accounting_currency);
+
+          --  voucher_row_tab_(count_rows_).currency_rate_type := Currency_Type_API.Get_Default_Type(voucher_row_tab_(count_rows_).company);
+          --  voucher_row_tab_(count_rows_).parallel_curr_rate_type := company_currency_rec_.def_par_curr_rate_type;
+            Currency_Rate_API.Fetch_Currency_Rate_Base( voucher_row_tab_(count_rows_).conversion_factor , voucher_row_tab_(count_rows_).currency_rate, currency_inverted_,  voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).currency_code, company_currency_rec_.accounting_currency,voucher_row_tab_(count_rows_).currency_rate_type, voucher_entry_rec_.Voucher_Date, 'DUMMY' );
+            IF (company_currency_rec_.parallel_base IS NOT NULL ) THEN
+               Currency_Rate_API.Get_Parallel_Currency_Rate(voucher_row_tab_(count_rows_).parallel_currency_rate, 
+                                                            voucher_row_tab_(count_rows_).parallel_conversion_factor,
+                                                            parallel_currency_inverted_,
+                                                            voucher_row_tab_(count_rows_).company,
+                                                            voucher_row_tab_(count_rows_).currency_code,                                                            
+                                                            voucher_entry_rec_.Voucher_Date,
+                                                            voucher_row_tab_(count_rows_).parallel_curr_rate_type,
+                                                            company_currency_rec_.parallel_base,
+                                                            company_currency_rec_.accounting_currency,
+                                                            company_currency_rec_.parallel_currency,
+                                                            NULL,
+                                                            NULL );      
+               Currency_Code_API.Get_No_Of_Decimals_In_Rate_(decimals_in_rate_, voucher_row_tab_(count_rows_).company, company_currency_rec_.parallel_currency);
+               voucher_row_tab_(count_rows_).parallel_currency_rate := ROUND(voucher_row_tab_(count_rows_).parallel_currency_rate,decimals_in_rate_);
+            END IF;
+            IF (voucher_row_tab_(count_rows_).correction = 'Y') THEN
+               correction_flag_ := TRUE;
+            ELSE
+               correction_flag_ := FALSE;
+            END IF;
+            IF (voucher_row_tab_(count_rows_).currency_credit_amount IS NOT NULL ) THEN
+               is_credit_ := TRUE;
+            END IF;
+            return_rec_ := Convert_to_currency_rec(voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).currency_code, correction_flag_, voucher_row_tab_(count_rows_).amount,voucher_row_tab_(count_rows_).currency_amount, voucher_row_tab_(count_rows_).third_currency_amount, voucher_row_tab_(count_rows_).tax_base_amount, voucher_row_tab_(count_rows_).currency_tax_base_amount, voucher_row_tab_(count_rows_).parallel_curr_tax_base_amount, voucher_row_tab_(count_rows_).currency_rate, voucher_row_tab_(count_rows_).parallel_currency_rate, voucher_row_tab_(count_rows_).conversion_factor, voucher_row_tab_(count_rows_).parallel_conversion_factor, voucher_row_tab_(count_rows_).currency_rate_type, voucher_row_tab_(count_rows_).parallel_curr_rate_type, voucher_row_tab_(count_rows_).tax_amount, voucher_row_tab_(count_rows_).currency_tax_amount, voucher_row_tab_(count_rows_).parallel_curr_tax_amount, is_credit_);
+
+            voucher_row_rec_ := Convert_to_voucher_info_rec( voucher_entry_rec_.Voucher_Date, voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).voucher_type, voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).voucher_type, voucher_row_tab_(count_rows_).optional_code, voucher_row_tab_(count_rows_).tax_percentage, voucher_row_tab_(count_rows_).tax_direction, voucher_row_tab_(count_rows_).currency_code, correction_flag_, is_credit_);
+
+            voucher_row_tab_(count_rows_).decimals_in_amount := trans_currency_rounding_;
+            voucher_row_tab_(count_rows_).acc_decimals_in_amount := acc_curr_rounding_;
+            voucher_row_tab_(count_rows_).parallel_decimals_in_amount := parallel_currency_rounding_;
+
+         --   return_rec_ := calc_based_on_currency_amount___(return_rec_, voucher_row_rec_, prev_amount_, voucher_head_rec_.amount_method, 'CURRENCY_AMOUNT', calculate_tax_);
+          --  return_rec_ := Set_Currency_Values___(return_rec_, voucher_row_rec_, voucher_head_rec_, NULL, voucher_row_tab_(count_rows_).correction);
+
+            return_rec_ := calc_based_on_currency_amount___(return_rec_, voucher_row_rec_, NULL , voucher_entry_rec_.amount_method, 'CURRENCY_AMOUNT', calculate_tax_);
+            IF (voucher_row_tab_(count_rows_).optional_code IS NOT NULL  AND return_rec_.Currency_Tax_Amount IS NOT NULL ) THEN
+               return_rec_ := Calculate_Based_on_Currency_tax_Value(return_rec_, voucher_row_rec_);
+            END IF;
+
+            voucher_head_rec_.amount_method := voucher_entry_rec_.amount_method;
+            voucher_head_rec_.function_group := voucher_entry_rec_.function_group;
+            voucher_head_rec_.voucher_date := voucher_entry_rec_.voucher_date;
+            IF (company_currency_rec_.parallel_base IS NOT NULL ) THEN
+               
+               return_rec_ := Set_Parallel_currency_amounts(voucher_row_rec_.company, return_rec_ , voucher_row_rec_, voucher_head_rec_);
+               
+               return_rec_ := Adjust_Currency_Values___(voucher_row_tab_(count_rows_).company, return_rec_, voucher_row_rec_.correction, is_credit_);
+               
+            END IF;
+            
+            voucher_row_tab_(count_rows_).currency_amount := return_rec_.currency_amount;
+            voucher_row_tab_(count_rows_).currency_debet_amount := return_rec_.currency_debet_amount;
+            voucher_row_tab_(count_rows_).currency_credit_amount := return_rec_.currency_credit_amount;
+            voucher_row_tab_(count_rows_).currency_tax_base_amount := return_rec_.currency_tax_base_amount;
+            voucher_row_tab_(count_rows_).currency_tax_amount := return_rec_.currency_tax_amount;
+            voucher_row_tab_(count_rows_).amount := return_rec_.amount;
+            voucher_row_tab_(count_rows_).debet_amount := return_rec_.debet_amount;
+            voucher_row_tab_(count_rows_).credit_amount := return_rec_.credit_amount;
+            voucher_row_tab_(count_rows_).tax_base_amount := return_rec_.tax_base_amount;
+            voucher_row_tab_(count_rows_).tax_amount := return_rec_.tax_amount;
+            voucher_row_tab_(count_rows_).currency_rate := return_rec_.currency_rate;
+            IF (company_currency_rec_.parallel_base IS NOT NULL )THEN
+               voucher_row_tab_(count_rows_).third_currency_amount := return_rec_.third_currency_amount;
+               voucher_row_tab_(count_rows_).third_currency_debit_amount := return_rec_.third_currency_debit_amount;
+               voucher_row_tab_(count_rows_).third_currency_credit_amount := return_rec_.third_currency_credit_amount;
+               voucher_row_tab_(count_rows_).parallel_curr_tax_base_amount := return_rec_.parallel_curr_tax_base_amount;
+               voucher_row_tab_(count_rows_).parallel_curr_tax_amount := return_rec_.parallel_curr_tax_amount;            
+               voucher_row_tab_(count_rows_).parallel_currency_rate := return_rec_.parallel_currency_rate;
+            ELSE
+               voucher_row_tab_(count_rows_).third_currency_amount := NULL;
+               voucher_row_tab_(count_rows_).third_currency_debit_amount := NULL;
+               voucher_row_tab_(count_rows_).third_currency_credit_amount := NULL;
+               voucher_row_tab_(count_rows_).parallel_curr_tax_base_amount := NULL;
+               voucher_row_tab_(count_rows_).parallel_curr_tax_amount := NULL;            
+               voucher_row_tab_(count_rows_).parallel_currency_rate := NULL;            
+            END IF;
+       --  END IF;               
+
+         voucher_entry_rec_.parallel_currency_code := company_currency_rec_.parallel_currency; 
+         
+         -- Handle row group id.
+         IF row_group_validation_ = 'Y' THEN
+            voucher_row_tab_(count_rows_).row_group_id := row_group_id_;
+            row_group_curr_row_amount_ := voucher_row_tab_(count_rows_).currency_amount + NVL(voucher_row_tab_(count_rows_).currency_tax_amount, 0);
+            row_group_balance_         := row_group_balance_ + row_group_curr_row_amount_;
+            IF row_group_balance_ = 0 AND row_group_curr_row_amount_ != 0 THEN
+               row_group_id_ := row_group_id_ +1;
+            END IF;
+         ELSE
+            voucher_row_tab_(count_rows_).row_group_id := NULL;
+         END IF;
+         
+         IF (voucher_entry_rec_.use_correction_rows) THEN
+            Correction_Voucher___(voucher_entry_rec_, voucher_row_tab_(count_rows_)); 
+         END IF;
+         voucher_row_tab_(count_rows_).add_internal := 'FALSE';
+         voucher_row_tab_(count_rows_).int_manual_added := 'FALSE';
+         $IF (Component_Intled_SYS.INSTALLED) $THEN
+         IF (Voucher_Type_API.Get_Use_Manual(voucher_row_tab_(count_rows_).company, voucher_row_tab_(count_rows_).voucher_type) = 'TRUE') THEN
+            ledger_ids_ := Internal_Voucher_Util_Pub_API.Check_If_Not_Excluded_Manual(voucher_row_tab_(count_rows_).company,
+                                                                                       voucher_row_tab_(count_rows_).account,
+                                                                                       voucher_head_rec_.voucher_date,
+                                                                                       voucher_row_tab_(count_rows_).voucher_type);
+
+            IF (ledger_ids_ IS NOT NULL) THEN
+               voucher_row_tab_(count_rows_).internal_seq_number := Internal_Ledger_Util_Pub_API.Get_Next_Int_Manual_Post_Seq;
+               voucher_row_tab_(count_rows_).add_internal := 'TRUE';
+            END IF;
+         END IF;
+         $END
+      END LOOP; 
+      
+      Insert_To_Table___(voucher_row_tab_, company_currency_rec_.parallel_currency, user_id_);
+   END LOOP;
+   CLOSE get_template_rows_;
+   
+  
+END Do_Copy_Template_Rows___;
+
+
+PROCEDURE Insert_To_Table___ (
+   voucher_row_tab_     IN New_Voucher_Row_Tab,
+   parallel_currency_   IN Company_Finance_Tab.parallel_acc_currency%TYPE,
+   user_id_             IN VARCHAR2 )
+IS 
+BEGIN
+  FORALL i_ IN voucher_row_tab_.FIRST..voucher_row_tab_.LAST 
+      INSERT INTO ${PROJECTION}_voucher_posting_vrt(
+         parent_objkey,
+         objkey,
+         objmodified,
+         obj_created_by,
+         company, 
+         voucher_type,   
+         accounting_year, 
+         voucher_no,
+         row_group_id,
+         account,
+         code_b, 
+         code_c, 
+         code_d, 
+         code_e, 
+         code_f, 
+         code_g, 
+         code_h, 
+         code_i, 
+         code_j,
+         currency_debet_amount, 
+         currency_credit_amount, 
+         currency_amount, 
+         debet_amount, 
+         credit_amount, 
+         amount, 
+         correction, 
+         currency_code,
+         currency_type,
+         parallel_curr_rate_type,
+         quantity, 
+         process_code, 
+         optional_code, 
+         tax_percentage,
+         tax_direction,
+         project_activity_id, 
+         text, 
+         reference_serie, 
+         reference_number, 
+         trans_code, 
+         currency_rate,                       
+         third_currency_debit_amount, 
+         third_currency_credit_amount, 
+         third_currency_amount, 
+         accounting_period, 
+         conversion_factor, 
+         auto_tax_vou_entry, 
+         parallel_currency_rate, 
+         parallel_conversion_factor, 
+         deliv_type_id,
+         currency_tax_amount, 
+         tax_amount,
+         parallel_curr_tax_amount,
+         currency_tax_base_amount,
+         tax_base_amount,
+         parallel_curr_tax_base_amount,
+         parallel_currency,
+         internal_seq_number,
+         add_internal,
+         int_manual_added)
+      VALUES( 
+         voucher_row_tab_(i_).parent_objkey,
+         voucher_row_tab_(i_).objkey,
+         voucher_row_tab_(i_).objmodified,
+         user_id_,
+         voucher_row_tab_(i_).company, 
+         voucher_row_tab_(i_).voucher_type, 
+         voucher_row_tab_(i_).accounting_year, 
+         voucher_row_tab_(i_).voucher_no,
+         voucher_row_tab_(i_).row_group_id,
+         voucher_row_tab_(i_).account,
+         voucher_row_tab_(i_).code_b, 
+         voucher_row_tab_(i_).code_c, 
+         voucher_row_tab_(i_).code_d, 
+         voucher_row_tab_(i_).code_e, 
+         voucher_row_tab_(i_).code_f, 
+         voucher_row_tab_(i_).code_g, 
+         voucher_row_tab_(i_).code_h, 
+         voucher_row_tab_(i_).code_i, 
+         voucher_row_tab_(i_).code_j,
+         voucher_row_tab_(i_).currency_debet_amount, 
+         voucher_row_tab_(i_).currency_credit_amount, 
+         voucher_row_tab_(i_).currency_amount, 
+         voucher_row_tab_(i_).debet_amount, 
+         voucher_row_tab_(i_).credit_amount, 
+         voucher_row_tab_(i_).amount,
+         voucher_row_tab_(i_).correction, 
+         voucher_row_tab_(i_).currency_code,
+         voucher_row_tab_(i_).currency_rate_type,
+         voucher_row_tab_(i_).parallel_curr_rate_type,
+         voucher_row_tab_(i_).quantity, 
+         voucher_row_tab_(i_).process_code, 
+         voucher_row_tab_(i_).optional_code,
+         voucher_row_tab_(i_).tax_percentage,
+         voucher_row_tab_(i_).tax_direction,
+         voucher_row_tab_(i_).project_activity_id, 
+         voucher_row_tab_(i_).text, 
+         voucher_row_tab_(i_).reference_serie, 
+         voucher_row_tab_(i_).reference_number, 
+         voucher_row_tab_(i_).trans_code, 
+         voucher_row_tab_(i_).currency_rate, 
+         voucher_row_tab_(i_).third_currency_debit_amount, 
+         voucher_row_tab_(i_).third_currency_credit_amount, 
+         voucher_row_tab_(i_).third_currency_amount, 
+         voucher_row_tab_(i_).accounting_period, 
+         voucher_row_tab_(i_).conversion_factor, 
+         'FALSE', --voucher_row_tab_(i_).auto_tax_vou_entry, 
+         voucher_row_tab_(i_).parallel_currency_rate, 
+         voucher_row_tab_(i_).parallel_conversion_factor, 
+         voucher_row_tab_(i_).deliv_type_id,
+         voucher_row_tab_(i_).currency_tax_amount, 
+         voucher_row_tab_(i_).tax_amount,
+         voucher_row_tab_(i_).parallel_curr_tax_amount,
+         voucher_row_tab_(i_).currency_tax_base_amount,
+         voucher_row_tab_(i_).tax_base_amount,
+         voucher_row_tab_(i_).parallel_curr_tax_base_amount,
+         parallel_currency_,
+         voucher_row_tab_(i_).internal_seq_number,
+         voucher_row_tab_(i_).add_internal,
+         voucher_row_tab_(i_).int_manual_added);   
+END Insert_To_Table___;
+
+
+PROCEDURE Trace_Stmnt (
+   stmnt_        IN VARCHAR2 )
+IS
+   stmntx_          VARCHAR2(32000);
+   stmnty_          VARCHAR2(32000);
+   instr_           NUMBER;
+   line_sign_       VARCHAR2(1)  := CHR(10);
+BEGIN
+   stmntx_ := stmnt_;
+   stmntx_ := REPLACE(stmntx_,' FROM ',' '||line_sign_||'FROM ');
+   stmntx_ := REPLACE(stmntx_,' WHERE ',' '||line_sign_||'WHERE ');
+   stmntx_ := REPLACE(stmntx_,' ORDER BY ',' '||line_sign_||'ORDER BY ');
+   Trace_SYS.Message ('***** Start: The dynamic SQL statement look like this *****');
+   LOOP
+      IF (LENGTH(stmntx_) <= 200) THEN
+         Trace_SYS.Message (stmntx_);
+         EXIT;
+      END IF;
+      instr_  := INSTR(stmntx_,line_sign_);
+      IF (instr_ > 200 OR NVL(instr_,0) = 0) THEN
+         instr_ := 200;
+      END IF;
+      stmnty_ := SUBSTR(stmntx_,1,instr_);
+      stmnty_ := REPLACE(stmnty_,line_sign_,' ');
+      stmntx_ := SUBSTR(stmntx_,instr_+1);
+      Trace_SYS.Message (stmnty_);
+   END LOOP;
+   Trace_SYS.Message ('***** End: The dynamic SQL statement look like this *****');   
+END Trace_Stmnt;
+
+
+PROCEDURE Validate_Voucher_Posting___ (
+	init_ IN BOOLEAN)
+IS
+   tax_percentage_                     NUMBER;
+   dummy_                              NUMBER;
+   total_amount_                       NUMBER := 0;
+   total_tax_amount_                   NUMBER := 0;
+   total_currency_amount_              NUMBER:= 0;
+   total_currency_tax_amount_          NUMBER:= 0;
+   total_parallel_currency_amount_     NUMBER := 0;
+   total_parallel_currency_tax_amount_ NUMBER := 0;
+   null_amount_key_                    VARCHAR2(50);
+   voucher_entry_rec_                  Voucher_Entry_Rec;
+   voucher_entry_key_                  Voucher_Entry_Key;
+   voucher_posting_rec_                Voucher_posting_Rec;
+   voucher_posting_key_                Voucher_posting_Key;
+   new_voucher_posting_rec_            Voucher_posting_Rec;
+   base_currency_code_                 voucher_row_tab.currency_code%TYPE;
+   
+   company_rec_ Company_Finance_API.Public_rec;
+   CURSOR get_sum_amounts IS
+   SELECT objkey,
+          parent_objkey,
+          currency_code,
+          company,
+          account,
+          optional_code,
+          (nvl(debet_amount,0) - nvl(credit_amount,0)) sum_amount,
+          (nvl(tax_amount,0)) sum_tax_amount,
+          (nvl(currency_debet_amount,0) - nvl(currency_credit_amount,0)) sum_currency_amount,
+          (nvl(currency_tax_amount,0) ) sum_currency_tax_amount,
+          (nvl(third_currency_debit_amount,0) - nvl(third_currency_credit_amount,0)) sum_third_currency_amount,
+          (nvl(parallel_curr_tax_amount,0)) sum_third_currency_tax_amount     
+      FROM ${PROJECTION}_voucher_posting_vrt
+      WHERE parent_objkey = global_parent_objkey_;
+BEGIN
+   IF (init_) THEN
+      global_parent_objkey_ := NULL;
+   ELSE
+      IF (global_parent_objkey_ IS NOT NULL ) THEN
+         voucher_entry_key_.objkey := global_parent_objkey_;
+         voucher_entry_rec_ := Get_Record___(voucher_entry_key_);
+         IF (Voucher_Type_Detail_API.Get_Automatic_Vou_Balance(
+                        voucher_entry_rec_.company,
+                        voucher_entry_rec_.voucher_type,
+                        voucher_entry_rec_.function_group)= 'Y') THEN
+      
+            company_rec_ := Company_Finance_API.Get(global_company_);
+            base_currency_code_ := company_rec_.currency_code;
+            FOR rec_ IN get_sum_amounts LOOP      
+               IF (base_currency_code_ != rec_.currency_code) THEN
+                  RETURN;      
+               END IF;
+               IF (NVL(Account_API.Get_Stat_Account_Db(rec_.company, rec_.account),'N') = 'N') THEN         
+                  total_amount_ := total_amount_ + rec_.sum_amount;
+                  total_tax_amount_ := total_tax_amount_ + rec_.sum_tax_amount;
+                  total_currency_amount_ := total_currency_amount_ + rec_.sum_currency_amount;
+                  total_currency_tax_amount_ := total_currency_tax_amount_ + rec_.sum_currency_tax_amount;
+                  total_parallel_currency_amount_ := total_parallel_currency_amount_ + rec_.sum_third_currency_amount;
+                  total_parallel_currency_tax_amount_ := total_parallel_currency_tax_amount_ + rec_.sum_third_currency_tax_amount;
+               END IF;
+               IF (rec_.sum_amount = 0) THEN
+                  null_amount_key_ := rec_.objkey;
+               END IF;
+            END LOOP;
+
+            IF (voucher_entry_rec_.amount_method = 'GROSS') THEN     
+               total_tax_amount_                   := 0;
+               total_currency_tax_amount_          := 0;
+               total_parallel_currency_tax_amount_ := 0;
+            END IF;
+            IF (total_amount_ != 0 AND null_amount_key_ IS NOT NULL ) THEN      
+               voucher_posting_key_.objkey := null_amount_key_;
+               voucher_posting_rec_ := Get_Record___(voucher_posting_key_);
+               new_voucher_posting_rec_ := voucher_posting_rec_;
+               tax_percentage_ := Statutory_Fee_API.Get_Tax_Percentage(new_voucher_posting_rec_.company, new_voucher_posting_rec_.optional_code);
+              
+               new_voucher_posting_rec_.amount                 := -1 * (total_amount_ + total_tax_amount_);
+               new_voucher_posting_rec_.currency_amount        := -1 * (total_currency_amount_ + total_currency_tax_amount_);
+               new_voucher_posting_rec_.third_currency_amount  := -1 * (total_parallel_currency_amount_ + total_parallel_currency_tax_amount_);
+
+               
+               IF (voucher_posting_rec_.optional_code IS NOT NULL ) THEN
+                  new_voucher_posting_rec_.tax_base_amount               := new_voucher_posting_rec_.amount;
+                  new_voucher_posting_rec_.currency_tax_base_amount      := new_voucher_posting_rec_.currency_amount;
+                  new_voucher_posting_rec_.parallel_curr_tax_base_amount := new_voucher_posting_rec_.third_currency_amount;
+         
+                  Tax_Handling_Accrul_Util_API.Calculate_Tax_Amounts(new_voucher_posting_rec_.currency_tax_amount ,
+                                                                     dummy_,
+                                                                     dummy_,
+                                                                     new_voucher_posting_rec_.company,
+                                                                     new_voucher_posting_rec_.Currency_Code,
+                                                                     new_voucher_posting_rec_.optional_code,
+                                                                     tax_percentage_,                                                                                              
+                                                                     'FALSE',                                                                                            
+                                                                     new_voucher_posting_rec_.amount,
+                                                                     'GROSS',
+                                                                     Currency_Code_API.Get_Currency_Rounding(new_voucher_posting_rec_.company, new_voucher_posting_rec_.Currency_Code),
+                                                                     Tax_Handling_Util_API.Get_Tax_Rounding_Method_Db(new_voucher_posting_rec_.company, NULL ,NULL , NULL ),
+                                                                     voucher_entry_rec_.voucher_date );
+
+
+                  new_voucher_posting_rec_.parallel_curr_tax_amount := Execute_Parallel_Currency_Calculation___ ( 
+                                                                        new_voucher_posting_rec_.company,
+                                                                        company_rec_.parallel_acc_currency,              
+                                                                        new_voucher_posting_rec_.tax_amount,
+                                                                        new_voucher_posting_rec_.currency_tax_amount,
+                                                                        company_rec_.parallel_base,
+                                                                        new_voucher_posting_rec_.parallel_currency_rate,  
+                                                                        Currency_Rate_API.Is_Parallel_Curr_Rate_Inverted(new_voucher_posting_rec_.company, new_voucher_posting_rec_.currency_code),
+                                                                        new_voucher_posting_rec_.parallel_conversion_factor );
+
+
+                  new_voucher_posting_rec_.tax_amount := new_voucher_posting_rec_.currency_tax_amount;
+                  new_voucher_posting_rec_.parallel_curr_tax_amount := NVL(new_voucher_posting_rec_.parallel_curr_tax_amount,0);
+                  IF (voucher_entry_rec_.amount_method = 'NET') THEN
+                     new_voucher_posting_rec_.currency_amount        := new_voucher_posting_rec_.currency_amount - NVL(new_voucher_posting_rec_.currency_tax_amount,0);
+                     new_voucher_posting_rec_.amount                 := new_voucher_posting_rec_.amount - NVL(new_voucher_posting_rec_.tax_amount,0);
+                     new_voucher_posting_rec_.third_currency_amount  := new_voucher_posting_rec_.third_currency_amount - NVL(new_voucher_posting_rec_.parallel_curr_tax_amount,0);
+
+                  END IF;
+               END IF;
+               IF (new_voucher_posting_rec_.currency_amount > 0 ) THEN
+                  new_voucher_posting_rec_.debet_amount := new_voucher_posting_rec_.amount;
+                  new_voucher_posting_rec_.currency_debet_amount := new_voucher_posting_rec_.currency_amount;
+                  new_voucher_posting_rec_.third_currency_debit_amount := new_voucher_posting_rec_.third_currency_amount;
+                  new_voucher_posting_rec_.credit_amount := NULL;
+                  new_voucher_posting_rec_.currency_credit_amount := NULL;
+                  new_voucher_posting_rec_.third_currency_credit_amount := NULL;
+               ELSE
+                  new_voucher_posting_rec_.credit_amount := -1 * new_voucher_posting_rec_.amount;
+                  new_voucher_posting_rec_.currency_credit_amount := -1 * new_voucher_posting_rec_.currency_amount;
+                  new_voucher_posting_rec_.third_currency_credit_amount := -1 * new_voucher_posting_rec_.third_currency_amount;
+                  new_voucher_posting_rec_.debet_amount := NULL;
+                  new_voucher_posting_rec_.currency_debet_amount := NULL;
+                  new_voucher_posting_rec_.third_currency_debit_amount := NULL;  
+               END IF;
+               CRUD_Update___(voucher_posting_rec_, new_voucher_posting_rec_);
+            END IF;
+         END IF;
+      END IF;
+	END IF;
+END Validate_Voucher_Posting___;
+
+
+PROCEDURE Validate_Voucher_Rows___ (
+   rec_ IN Voucher_Posting_Rec )
+IS
+   voucher_entry_rec_                  Voucher_Entry_Rec;
+   voucher_entry_key_                  Voucher_Entry_Key;
+   voucher_row_rec_                    Voucher_Row_Tab%ROWTYPE;
+   voucher_rec_                    Voucher_Tab%ROWTYPE;
+BEGIN  
+   
+   voucher_entry_key_.objkey := rec_.parent_objkey;
+   
+   voucher_entry_rec_ := Get_Record___(voucher_entry_key_);
+   
+   voucher_rec_ := Convert_Voucher_Rec___(voucher_entry_rec_);
+   voucher_row_rec_ := Convert_Voucher_Row_Rec___(rec_);
+   
+   Voucher_Row_API.Validate_Manual_Voucher_Rows__(voucher_row_rec_, voucher_rec_);  
+   
+END Validate_Voucher_Rows___;
+
+FUNCTION Convert_Voucher_Row_Rec___ (
+      rec_  IN Voucher_Posting_Rec ) RETURN Voucher_Row_Tab%ROWTYPE
+   IS
+      entity_   Voucher_Row_Tab%ROWTYPE;
+   BEGIN
+      entity_.company                        := rec_.company;
+      entity_.voucher_type                   := rec_.voucher_type;
+      entity_.accounting_year                := rec_.accounting_year;
+      entity_.voucher_no                     := rec_.voucher_no;
+      entity_.row_no                         := rec_.row_no;
+      entity_.currency_type                  := rec_.currency_type;
+      entity_.voucher_date                   := rec_.voucher_date;
+      entity_.account                        := rec_.account;      
+      entity_.code_b                         := rec_.code_b;    
+      entity_.code_c                         := rec_.code_c;     
+      entity_.code_d                         := rec_.code_d;     
+      entity_.code_e                         := rec_.code_e;      
+      entity_.code_f                         := rec_.code_f;  
+      entity_.code_g                         := rec_.code_g;     
+      entity_.code_h                         := rec_.code_h;    
+      entity_.code_i                         := rec_.code_i;    
+      entity_.code_j                         := rec_.code_j;     
+      entity_.project_id                     := rec_.project_id;
+      entity_.object_id                      := rec_.object_id;
+      entity_.internal_seq_number            := rec_.internal_seq_number;
+      entity_.currency_debet_amount          := rec_.currency_debet_amount;
+      entity_.currency_credit_amount         := rec_.currency_credit_amount;   
+      entity_.debet_amount                   := rec_.debet_amount;
+      entity_.credit_amount                  := rec_.credit_amount;   
+      
+      entity_.currency_code                  := rec_.currency_code;
+      entity_.quantity                       := rec_.quantity;
+      entity_.process_code                   := rec_.process_code;
+      entity_.optional_code                  := rec_.optional_code;     
+      entity_.project_activity_id            := rec_.project_activity_id;
+      entity_.text                           := rec_.text;
+      entity_.party_type_id                  := rec_.party_type_id;
+      entity_.reference_serie                := rec_.reference_serie;
+      entity_.reference_number               := rec_.reference_number;
+      entity_.trans_code                     := rec_.trans_code;
+      entity_.update_error                   := rec_.update_error;
+      entity_.transfer_id                    := rec_.transfer_id;
+      entity_.corrected                      := rec_.corrected;
+      entity_.currency_rate                  := rec_.currency_rate;    
+     
+      entity_.third_currency_debit_amount    := rec_.third_currency_debit_amount;
+      entity_.third_currency_credit_amount   := rec_.third_currency_credit_amount;     
+      entity_.accounting_period              := rec_.accounting_period;
+      entity_.multi_company_id               := rec_.multi_company_id;
+      entity_.conversion_factor              := rec_.conversion_factor;
+      entity_.auto_tax_vou_entry             := CASE rec_.auto_tax_vou_entry WHEN TRUE THEN 'TRUE' WHEN FALSE THEN 'FALSE' ELSE NULL END;
+      entity_.reference_row_no               := rec_.reference_row_no;
+      entity_.tax_direction                  := rec_.tax_direction;
+      
+      entity_.item_id                        := rec_.item_id;
+      entity_.tax_amount                     := rec_.tax_amount;
+      entity_.currency_tax_amount            := rec_.currency_tax_amount;
+      entity_.tax_base_amount                := rec_.tax_base_amount;
+      entity_.currency_tax_base_amount       := rec_.currency_tax_base_amount;
+      entity_.year_period_key                := rec_.year_period_key;
+      entity_.posting_combination_id         := rec_.posting_combination_id;   
+      entity_.reference_version              := rec_.reference_version;
+      entity_.party_type                     := rec_.party_type;
+      entity_.tax_item_id                    := rec_.tax_item_id;
+      entity_.mpccom_accounting_id           := rec_.mpccom_accounting_id;
+      entity_.inv_acc_row_id                 := rec_.inv_acc_row_id;
+      entity_.row_group_id                   := rec_.row_group_id;
+      entity_.allocation_id                  := rec_.allocation_id;     
+      entity_.parent_allocation_id           := rec_.parent_allocation_id;
+      entity_.activate_code                  := rec_.activate_code;
+      entity_.parallel_currency_rate         := rec_.parallel_currency_rate;
+      entity_.parallel_conversion_factor     := rec_.parallel_conversion_factor;
+      entity_.parallel_curr_tax_amount       := rec_.parallel_curr_tax_amount;      
+      entity_.parallel_curr_tax_base_amount  := rec_.parallel_curr_tax_base_amount;
+      entity_.parallel_curr_rate_type        := rec_.parallel_curr_rate_type;
+      entity_.deliv_type_id                  := rec_.deliv_type_id;
+      entity_.vou_text_udpdated              := rec_.vou_text_udpdated;
+      entity_.currency_rate_type             := rec_.currency_rate_type;
+      entity_.multi_company_voucher_type     := rec_.multi_company_voucher_type;
+      entity_.multi_company_acc_year         := rec_.multi_company_acc_year;
+      entity_.multi_company_voucher_no       := rec_.multi_company_voucher_no;
+      entity_.multi_company_row_no           := rec_.multi_company_row_no;
+      entity_.tax_clearance_connection       := rec_.tax_clearance_connection;      
+      entity_.matching_info                  := rec_.matching_info;
+      RETURN entity_;
+
+END Convert_Voucher_Row_Rec___;
+
+FUNCTION Convert_Voucher_Rec___ (
+      rec_  IN Voucher_Entry_Rec ) RETURN Voucher_Tab%ROWTYPE
+IS
+   entity_   Voucher_Tab%ROWTYPE;
+BEGIN      
+   entity_.company                        := rec_.company;
+   entity_.accounting_year                := rec_.accounting_year;
+   entity_.voucher_type                   := rec_.voucher_type;
+   entity_.voucher_no                     := rec_.voucher_no;
+   entity_.voucher_date                   := rec_.voucher_date;
+   entity_.user_group                     := rec_.user_group;
+   entity_.accounting_period              := rec_.accounting_period;
+   entity_.date_reg                       := rec_.date_reg;
+   entity_.userid                         := rec_.userid;
+   entity_.accounting_text_id             := rec_.accounting_text_id;
+   entity_.voucher_text                   := rec_.voucher_text;
+   entity_.update_error                   := rec_.update_error;
+   entity_.internal_seq_number            := rec_.internal_seq_number;
+   entity_.transfer_id                    := rec_.transfer_id;
+   entity_.interim_voucher                := rec_.interim_voucher;
+   entity_.rowstate                       := rec_.voucher_status;   
+   entity_.voucher_type_reference         := rec_.voucher_type_reference;
+   entity_.accounting_year_reference      := rec_.accounting_year_reference;
+   entity_.voucher_no_reference           := rec_.voucher_no_reference;    
+
+   entity_.voucher_updated                := rec_.voucher_updated;
+   entity_.voucher_text2                  := rec_.voucher_text2;
+   entity_.entered_by_user_group          := rec_.entered_by_user_group;
+   entity_.approval_date                  := rec_.approval_date;
+   entity_.approved_by_userid             := rec_.approved_by_userid;
+   entity_.approved_by_user_group         := rec_.approved_by_user_group;
+   entity_.second_approval_date           := rec_.second_approval_date;
+   entity_.second_approver_id             := rec_.second_approver_id;
+   entity_.second_approver_user_group     := rec_.second_approver_user_group;
+   entity_.multi_company_id               := rec_.multi_company_id;
+   entity_.function_group                 := rec_.function_group;
+   entity_.amount_method                  := rec_.amount_method;
+   entity_.revenue_cost_clear_voucher     := rec_.revenue_cost_clear_voucher;
+   entity_.simulation_voucher             := rec_.simulation_voucher;
+   entity_.use_correction_rows            := CASE rec_.use_correction_rows WHEN TRUE THEN 'TRUE' WHEN FALSE THEN 'FALSE' ELSE NULL END;
+
+   entity_.current_row_number             := rec_.current_row_number;
+   entity_.vou_text_udpdated              := rec_.vou_text_udpdated;
+   entity_.proj_conn_created              := rec_.proj_conn_created;
+   entity_.correction                     := rec_.correction;
+   entity_.mc_current_row_no              := rec_.mc_current_row_no;
+   entity_.manual_balance                 := CASE rec_.manual_balance WHEN TRUE THEN 'TRUE' WHEN FALSE THEN 'FALSE' ELSE NULL END;
+
+   entity_.two_approver_required          := CASE rec_.two_approver_required WHEN TRUE THEN 'TRUE' WHEN FALSE THEN 'FALSE' ELSE NULL END;
+   entity_.sequential_approval            := CASE rec_.sequential_approval WHEN TRUE THEN 'TRUE' WHEN FALSE THEN 'FALSE' ELSE NULL END;
+   entity_.ignore_approve_workflow        := entity_.ignore_approve_workflow; 
+   RETURN entity_;
+END Convert_Voucher_Rec___;

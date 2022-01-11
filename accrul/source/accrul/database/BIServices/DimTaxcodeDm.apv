@@ -1,0 +1,113 @@
+--------------------------------------------------------------------
+--
+--  Dimension:  Taxcode
+--  Component:  ACCRUL
+--  LU:         DimStatutoryFee
+--
+--  File     :  DimTaxcodeDm.apv
+--  Purpose  :  Create DATA MART dimension view DIM_TAXCODE_DM
+--  Note     :
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  NOTE! Do not edit!! This file is completely generated and will be
+--        overwritten next time the corresponding model is saved.
+-----------------------------------------------------------------------------
+
+PROMPT ********* Component ACCRUL, definition begins ***********
+
+DEFINE DIM        = DIM_TAXCODE
+DEFINE VIEW       = DIM_TAXCODE_DM
+DEFINE MV         = TAXCODE_MV
+DEFINE MODULE     = ACCRUL
+DEFINE LU         = DimStatutoryFee
+
+PROMPT Create dimension view &VIEW
+CREATE OR REPLACE VIEW &VIEW AS
+SELECT a.id                                                                        id,
+       a.company                                                                   company,
+       a.code                                                                      code,
+       SUBSTR(NVL( (SELECT description
+      FROM TAXCODE_TRANSLATION_MV b
+      WHERE b.company         = a.company
+      AND   b.translation_key = a.code
+      AND   b.lu              = 'StatutoryFee'
+      AND   b.language_code   =
+      (SELECT language
+      FROM fnd_session)), a.description),1,100)                                    description,
+       a.fee_rate                                                                  fee_rate,
+       a.valid_from                                                                valid_from,
+       a.valid_until                                                               valid_until,
+       a.fee_type                                                                  fee_type,
+       SUBSTR(Fee_Type_API.Decode(a.fee_type),1,100)                               fee_type_desc,
+       a.vat_received                                                              vat_received,
+       SUBSTR(Vat_Method_API.Decode(a.vat_received),1,100)                         vat_received_desc,
+       a.vat_disbursed                                                             vat_disbursed,
+       SUBSTR(Vat_Method_API.Decode(a.vat_disbursed),1,100)                        vat_disbursed_desc,
+       a.deductible                                                                deductible,
+       a.amount_not_taxable                                                        amount_not_taxable,
+       a.min_withheld_amount                                                       min_withheld_amount,
+       a.tax_amount_at_inv_print                                                   tax_amount_at_inv_print,
+       SUBSTR(Tax_Amount_At_Inv_Print_API.Decode(a.tax_amount_at_inv_print),1,100) tax_amount_at_inv_print_desc,
+       a.tax_amt_limit                                                             tax_amt_limit,
+       a.minimum_base_amount                                                       minimum_base_amount,
+       a.diot_tax_classification                                                   diot_tax_classification,
+       SUBSTR(Diot_Tax_Classification_API.Decode(a.diot_tax_classification),1,100) diot_tax_classification_desc
+FROM &MV a
+WITH READ ONLY;
+
+COMMENT ON TABLE &VIEW
+   IS 'LU=&LU^PROMPT=Tax Code^MODULE=&MODULE^';
+
+COMMENT ON COLUMN &VIEW..COMPANY
+   IS 'FLAGS=PMI--^DATATYPE=STRING(20)/UPPERCASE^PROMPT=COMPANY^';
+COMMENT ON COLUMN &VIEW..CODE
+   IS 'FLAGS=KMI-L^DATATYPE=STRING(20)/UPPERCASE^PROMPT=Tax Code^';
+COMMENT ON COLUMN &VIEW..DESCRIPTION
+   IS 'FLAGS=AMIUL^DATATYPE=STRING(100)^PROMPT=Description^';
+   COMMENT ON COLUMN &VIEW..FEE_RATE
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=Tax (%)^';
+COMMENT ON COLUMN &VIEW..VALID_FROM
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Valid From^';
+COMMENT ON COLUMN &VIEW..VALID_UNTIL
+   IS 'FLAGS=AMIUL^DATATYPE=DATE^PROMPT=Valid Until^';
+COMMENT ON COLUMN &VIEW..FEE_TYPE
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Type^';
+COMMENT ON COLUMN &VIEW..FEE_TYPE_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Type Description^';
+COMMENT ON COLUMN &VIEW..VAT_RECEIVED
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Method Tax Received^';
+COMMENT ON COLUMN &VIEW..VAT_RECEIVED_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Method Tax Received Description^';
+COMMENT ON COLUMN &VIEW..VAT_DISBURSED
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Method Tax Disbursed^';
+COMMENT ON COLUMN &VIEW..VAT_DISBURSED_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Method Tax Disbursed Description^';
+COMMENT ON COLUMN &VIEW..DEDUCTIBLE
+   IS 'FLAGS=AMIUL^DATATYPE=NUMBER^PROMPT=Deductible (%)^';
+COMMENT ON COLUMN &VIEW..AMOUNT_NOT_TAXABLE
+   IS 'FLAGS=A-IUL^DATATYPE=NUMBER^PROMPT=Not Taxable Amount^';
+COMMENT ON COLUMN &VIEW..MIN_WITHHELD_AMOUNT
+   IS 'FLAGS=A-IUL^DATATYPE=NUMBER^PROMPT=Minimun Withheld Amount^';
+COMMENT ON COLUMN &VIEW..TAX_AMOUNT_AT_INV_PRINT
+IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Amount Method at Invoice Printout^';
+COMMENT ON COLUMN &VIEW..TAX_AMOUNT_AT_INV_PRINT_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=Tax Amount Method at Invoice Printout Description^';
+COMMENT ON COLUMN &VIEW..TAX_AMT_LIMIT
+   IS 'FLAGS=A-IUL^DATATYPE=NUMBER^PROMPT=Tax Amount Limit in Account Currency^';
+COMMENT ON COLUMN &VIEW..MINIMUM_BASE_AMOUNT
+   IS 'FLAGS=A-IUL^DATATYPE=NUMBER^PROMPT=Minimum Base Amount^';
+COMMENT ON COLUMN &VIEW..DIOT_TAX_CLASSIFICATION
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=DIOT Tax Classification^';
+COMMENT ON COLUMN &VIEW..DIOT_TAX_CLASSIFICATION_DESC
+   IS 'FLAGS=AMIUL^DATATYPE=ENUMERATION^PROMPT=DIOT Tax Classification Description^';
+
+PROMPT ********* Component ACCRUL, definition ends ***********
+
+-------------------------------------------------------------------
+UNDEFINE DIM
+UNDEFINE VIEW
+UNDEFINE MV
+UNDEFINE MODULE
+UNDEFINE LU
+-------------------------------------------------------------------

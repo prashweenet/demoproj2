@@ -1,0 +1,24 @@
+fragment CompanyFinanceMainSelector;
+component ACCRUL;
+layer Core;
+description "Selector Used for Change Company Option in Assistants";
+
+----------------------------- CLIENT FRAGMENTS ------------------------------
+selector CompanyFinanceMainRefSelector for CompanyFinanceMain {
+   orderby = Company;
+   static Company;
+   static Description;
+}
+
+--------------------------- PROJECTION FRAGMENTS ----------------------------
+query CompanyFinanceMain {
+   from = "company_finance";
+   lu = CompanyFinance;
+   keys = Company;
+
+   attribute Company Text {
+      format = uppercase;
+   }
+   attribute Description Text;
+   attribute CurrencyCode Text;
+}

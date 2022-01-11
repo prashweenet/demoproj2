@@ -1,0 +1,693 @@
+-----------------------------------------------------------------------------
+--
+--  Logical unit: VoucherHandling
+--  Component:    ACCRUL
+--
+--  IFS Developer Studio Template Version 3.0
+--
+--  Date    Sign    History
+--  ------  ------  ---------------------------------------------------------
+-----------------------------------------------------------------------------
+
+layer Core;
+
+@ApproveGlobalVariable
+voucher_entry_key_      Voucher_Entry_Key;
+@ApproveGlobalVariable
+voucher_posting_key_    Voucher_Posting_Key;
+@ApproveGlobalVariable
+optional_balance_row_   NUMBER := NULL;
+@ApproveGlobalVariable
+voucher_row_removed_ BOOLEAN := FALSE;
+
+PROCEDURE Validate_Voucher_Posting___ (
+   init_ IN BOOLEAN ) 
+IS
+   empty_voucher_posting_key_       Voucher_Posting_Key;
+   voucher_row_rec_                 Voucher_Row_Tab%ROWTYPE;
+   voucher_rec_                     Voucher_API.Public_Rec;
+   company_rec_                     Company_Finance_API.Public_Rec;
+   is_multi_company_                BOOLEAN;
+   tax_percentage_                  NUMBER;
+   dummy_                           NUMBER;
+   total_amount_                    NUMBER := 0;
+   total_currency_amount_           NUMBER := 0;
+   total_parallel_currency_amount_  NUMBER := 0;
+   
+   CURSOR get_sum_amounts (company_ IN VARCHAR2, accounting_year_ IN NUMBER, voucher_type_ IN VARCHAR2, voucher_no_ IN NUMBER ) IS
+   SELECT currency_code,
+          company,
+          account,
+          optional_code,
+          (nvl(debet_amount,0) - nvl(credit_amount,0)) sum_amount,
+          (nvl(tax_amount,0)) sum_tax_amount,
+          (nvl(currency_debet_amount,0) - nvl(currency_credit_amount,0)) sum_currency_amount,
+          (nvl(currency_tax_amount,0) ) sum_currency_tax_amount,
+          (nvl(third_currency_debit_amount,0) - nvl(third_currency_credit_amount,0)) sum_third_currency_amount,
+          (nvl(parallel_curr_tax_amount,0)) sum_third_currency_tax_amount     
+   FROM Voucher_Row_Tab
+   WHERE company = company_
+   AND   accounting_year = accounting_year_
+   AND   voucher_type = voucher_type_
+   AND   voucher_no = voucher_no_;
+      
+   result_                          VARCHAR2(5);
+BEGIN
+   IF (init_) THEN
+      voucher_posting_key_    := empty_voucher_posting_key_;
+      optional_balance_row_   := NULL;
+      voucher_row_removed_    := FALSE;
+   ELSE
+      voucher_rec_         := Voucher_API.Get(voucher_posting_key_.company, voucher_posting_key_.accounting_year, voucher_posting_key_.voucher_type, voucher_posting_key_.voucher_no);
+      -- Update Optional Auto Balnace selected row
+      IF (optional_balance_row_ IS NOT NULL AND 
+         Voucher_Type_Detail_API.Get_Automatic_Vou_Balance( voucher_posting_key_.company,
+                                                            voucher_posting_key_.voucher_type,
+                                                            voucher_rec_.function_group)= 'Y' ) THEN
+         
+         company_rec_         := Company_Finance_API.Get(voucher_posting_key_.company);
+              
+         FOR rec_ IN get_sum_amounts(voucher_posting_key_.company, voucher_posting_key_.accounting_year, voucher_posting_key_.voucher_type, voucher_posting_key_.voucher_no) LOOP      
+            IF (company_rec_.currency_code != rec_.currency_code) THEN             
+               voucher_row_rec_ := Voucher_Row_API.Get_Row(voucher_posting_key_.company, voucher_posting_key_.voucher_type, voucher_posting_key_.accounting_year, voucher_posting_key_.voucher_no, optional_balance_row_);
+               voucher_row_rec_.quantity := NULL;           
+               Voucher_Row_API.Modify_Row__(voucher_row_rec_);
+               RETURN;
+               
+            END IF;
+            IF (NVL(Account_API.Get_Stat_Account_Db(rec_.company, rec_.account),'N') = 'N') THEN         
+               total_amount_ := total_amount_ + rec_.sum_amount;             
+               total_currency_amount_ := total_currency_amount_ + rec_.sum_currency_amount;             
+               total_parallel_currency_amount_ := total_parallel_currency_amount_ + rec_.sum_third_currency_amount;
+            END IF;
+         END LOOP;
+         IF ((total_amount_) != 0 AND optional_balance_row_ IS NOT NULL ) THEN      
+               voucher_row_rec_ := Voucher_Row_API.Get_Row(voucher_posting_key_.company, voucher_posting_key_.voucher_type, voucher_posting_key_.accounting_year, voucher_posting_key_.voucher_no, optional_balance_row_);
+            
+               tax_percentage_ := Statutory_Fee_API.Get_Tax_Percentage(voucher_row_rec_.company, voucher_row_rec_.optional_code);
+              
+               -- voucher_row_rec_.amount 
+               total_amount_ := -1 * total_amount_ ;
+               --voucher_row_rec_.currency_amount 
+               total_currency_amount_ := -1 * total_currency_amount_;
+               -- voucher_row_rec_.third_currency_amount 
+               total_parallel_currency_amount_ := -1 * total_parallel_currency_amount_;
+
+               voucher_row_rec_.tax_base_amount := total_amount_;
+               voucher_row_rec_.currency_tax_base_amount := total_currency_amount_;
+               voucher_row_rec_.parallel_curr_tax_base_amount := total_parallel_currency_amount_;
+         
+               IF (voucher_row_rec_.optional_code IS NOT NULL ) THEN
+                  Tax_Handling_Accrul_Util_API.Calculate_Tax_Amounts(voucher_row_rec_.currency_tax_amount ,
+                                                                     dummy_,
+                                                                     dummy_,
+                                                                     voucher_row_rec_.company,
+                                                                     voucher_row_rec_.Currency_Code,
+                                                                     voucher_row_rec_.optional_code,
+                                                                     tax_percentage_,                                                                                              
+                                                                     'FALSE',                                                                                            
+                                                                     total_amount_,
+                                                                     'GROSS',
+                                                                     Currency_Code_API.Get_Currency_Rounding(voucher_row_rec_.company, voucher_row_rec_.currency_code),
+                                                                     Tax_Handling_Util_API.Get_Tax_Rounding_Method_Db(voucher_row_rec_.company, NULL ,NULL , NULL ),
+                                                                     voucher_rec_.voucher_date );
+
+
+                  voucher_row_rec_.parallel_curr_tax_amount := Execute_Parallel_Currency_Calculation___ ( voucher_row_rec_.company,
+                                                                        company_rec_.parallel_acc_currency,              
+                                                                        voucher_row_rec_.tax_amount,
+                                                                        voucher_row_rec_.currency_tax_amount,
+                                                                        company_rec_.parallel_base,
+                                                                        voucher_row_rec_.parallel_currency_rate,  
+                                                                        Currency_Rate_API.Is_Parallel_Curr_Rate_Inverted(voucher_row_rec_.company, voucher_row_rec_.currency_code),
+                                                                        voucher_row_rec_.parallel_conversion_factor );
+
+
+                  voucher_row_rec_.tax_amount := voucher_row_rec_.currency_tax_amount;
+                  IF (voucher_rec_.amount_method = 'NET') THEN
+                     
+                     total_currency_amount_ := total_currency_amount_ - voucher_row_rec_.currency_tax_amount;
+                     total_amount_ := total_amount_ - voucher_row_rec_.tax_amount;
+                     total_parallel_currency_amount_ := total_parallel_currency_amount_ - voucher_row_rec_.parallel_curr_tax_amount;
+                  END IF;
+               END IF;               
+                
+               IF (total_currency_amount_ > 0 ) THEN
+                  voucher_row_rec_.debet_amount                   := total_amount_;
+                  voucher_row_rec_.currency_debet_amount          := total_currency_amount_;
+                  voucher_row_rec_.third_currency_debit_amount    := total_parallel_currency_amount_;
+                  voucher_row_rec_.credit_amount                  := NULL;
+                  voucher_row_rec_.currency_credit_amount         := NULL;
+                  voucher_row_rec_.third_currency_credit_amount   := NULL;
+               ELSE
+                  voucher_row_rec_.credit_amount                  := -1 * total_amount_;
+                  voucher_row_rec_.currency_credit_amount         := -1 * total_currency_amount_;
+                  voucher_row_rec_.third_currency_credit_amount   := -1 * total_parallel_currency_amount_;
+                  voucher_row_rec_.debet_amount                   := NULL;
+                  voucher_row_rec_.currency_debet_amount          := NULL;
+                  voucher_row_rec_.third_currency_debit_amount    := NULL;  
+               END IF;
+               voucher_row_rec_.quantity := NULL;
+               Voucher_Row_API.Modify_Row__(voucher_row_rec_);         
+            ELSE
+               voucher_row_rec_           := Voucher_Row_API.Get_Row(voucher_posting_key_.company, voucher_posting_key_.voucher_type, voucher_posting_key_.accounting_year, voucher_posting_key_.voucher_no, optional_balance_row_);
+               voucher_row_rec_.quantity  := NULL;
+               Voucher_Row_API.Modify_Row__(voucher_row_rec_);          
+         END IF;                        
+      END IF;
+       
+      is_multi_company_ := FALSE;
+      -- If row are deleted update the row_nos of the voucher row
+      -- DataSourceSaveCheckOk
+      IF (voucher_row_removed_) THEN         
+         Voucher_Row_API.Update_Row_No(voucher_posting_key_.company,
+                                       voucher_posting_key_.voucher_type,
+                                       voucher_posting_key_.voucher_no,
+                                       voucher_posting_key_.accounting_year);
+      END IF;
+      
+      -- auto balance  - already done
+      -- Double entry validation for  
+      Voucher_API.Voucher_Save_Ok__(result_, voucher_posting_key_.company, voucher_posting_key_.voucher_type, voucher_posting_key_.accounting_year, voucher_posting_key_.voucher_no);   
+      
+      
+      -- multi company due to/from vouchers
+      -- Check Row Group Id validations    
+      Voucher_API.Check_Double_Entry__( voucher_posting_key_.company, voucher_posting_key_.accounting_year, voucher_posting_key_.Voucher_type, voucher_posting_key_.voucher_no, Voucher_Status_API.Decode(voucher_rec_.rowstate));
+      -- Check validation for stae events -- THPELK:TODO do we need???
+--      IF (voucher_rec_.rowstate = Voucher_API.DB_CONFIRMED) THEN 
+--         -- THPELK: TO DO check reference mandatory is also gets fired from below
+--         Voucher_API.Ready_To_Update__(info_, objid_, objversion_, attr_, action_);
+--      ELSIF (voucher_rec_.rowstate = Voucher_API.DB_AWAITING_APPROVAL) THEN
+--         Voucher_API.Ready_Approve__(info_, objid_, objversion_, attr_, action_);
+--      ELSIF (voucher_rec_.rowstate = Voucher_API.DB_WAITING) THEN
+--         Voucher_API.Delay_Update__(info_, objid_, objversion_, attr_, action_);
+--      ELSIF (voucher_rec_.rowstate = Voucher_API.DB_CANCELLED)THEN
+--         Error_SYS.Record_General(lu_name_, 'CANCELVOUNOTALLOWED: Status :P1 is not allowed for new voucher entry.', Voucher_API.Finite_State_Decode__(voucher_rec_.rowstate));
+--      END IF;
+     
+   END IF;
+END Validate_Voucher_Posting___;
+
+PROCEDURE Validate_Sequence_Number___ (
+   init_ IN BOOLEAN )
+IS
+BEGIN
+   IF (init_) THEN
+      company_          := NULL;
+      accounting_year_  := NULL;
+      voucher_type_     := NULL;
+      voucher_no_       := NULL;
+   ELSE      
+      Voucher_Candidate_Approver_API.Validate_Sequence__(company_, accounting_year_,voucher_type_,voucher_no_);
+   END IF;
+END Validate_Sequence_Number___;
+
+@Override
+PROCEDURE CRUD_Default___ (
+   key_  IN  Voucher_Posting_Key,
+   attr_ IN OUT VARCHAR2,
+   info_ OUT VARCHAR2 )
+IS
+   company_          Voucher_Row_Tab.company%TYPE;
+   accounting_year_  Voucher_Row_Tab.accounting_year%TYPE;
+   voucher_type_     Voucher_Row_Tab.voucher_type%TYPE;
+   voucher_no_       Voucher_Row_Tab.voucher_no%TYPE;
+   correction_flag_  VARCHAR2(1);
+BEGIN
+   company_          := Client_SYS.Get_Item_Value('COMPANY', attr_);
+   accounting_year_  := Client_SYS.Get_Item_Value('ACCOUNTING_YEAR', attr_);
+   voucher_type_     := Client_SYS.Get_Item_Value('VOUCHER_TYPE', attr_);
+   voucher_no_       := Client_SYS.Get_Item_Value('VOUCHER_NO', attr_);
+   
+   
+   Client_SYS.Add_To_Attr('VOUCHER_DATE', Voucher_API.Get_Voucher_Date(company_, accounting_year_, voucher_type_, voucher_no_), attr_);   
+   Client_SYS.Add_To_Attr('MANUAL_VOUCHER', 'TRUE', attr_);
+   
+   --Add pre-processing code here
+   super(key_, attr_, info_);
+   --Add post-processing code here
+   IF (NVL(Voucher_API.Get_Use_Correction_Rows(company_, accounting_year_, voucher_type_, voucher_no_), 'FALSE') = 'TRUE') THEN
+      correction_flag_ := 'Y';
+   ELSE
+      correction_flag_ := 'N';
+   END IF;
+   --Client_SYS.Add_To_Attr('CORRECTION', 'TRUE', attr_);
+   Client_SYS.Add_To_Attr('TEXT', Voucher_API.Get_Voucher_Text2(company_, accounting_year_, voucher_type_, voucher_no_), attr_);
+   Client_SYS.Add_To_Attr('ACCOUNTING_PERIOD', Voucher_API.Get_Accounting_Period(company_, voucher_type_, accounting_year_, voucher_no_), attr_);
+   Client_SYS.Add_To_Attr('BASE_CURRENCY_CODE', Client_SYS.Get_Item_Value('CURRENCY_CODE', attr_), attr_);
+   
+END CRUD_Default___;
+
+@Override
+PROCEDURE CRUD_Update___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Voucher_Entry_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+   user_group_          VARCHAR2(20);
+   voucher_date_        DATE;
+   voucher_public_rec_  Voucher_API.Public_Rec;
+   accounting_year_     NUMBER;
+   accounting_period_   NUMBER;
+BEGIN
+   voucher_public_rec_ := Voucher_API.Get(key_.company, key_.accounting_year, key_.voucher_type, key_.voucher_no);
+      
+   IF (voucher_public_rec_.rowstate = Voucher_API.DB_ERROR) THEN
+      Error_SYS.Record_General(lu_name_, 'VOUCHERERRORSTATE: Status :P1 is not allowed for new voucher entry.', Voucher_Status_API.Decode(voucher_public_rec_.rowstate));      
+   END IF;
+   user_group_ := Client_SYS.Get_Item_Value('USER_GROUP', attr_);
+   IF user_group_ IS NOT NULL THEN
+      IF (Voucher_Row_API.Is_All_Rows_Auto_Tax_Vou_Entry(key_.company, key_.voucher_type, key_.accounting_year, key_.voucher_no)) THEN
+         Error_SYS.Record_General(lu_name_, 'CANNOTMODIFYUSERGROUP: Cannot modify User Group.');
+      END IF;
+   ELSE
+      user_group_ := User_Group_Member_Finance_API.get_user_group_of_user_(key_.company,voucher_public_rec_.user_group,voucher_public_rec_.userid);
+      Client_SYS.Add_To_Attr('USER_GROUP', user_group_, attr_);
+   END IF;
+   voucher_date_ := Client_SYS.Get_Item_Value_To_Date('VOUCHER_DATE', attr_,'Voucher');
+   IF voucher_date_ IS NOT NULL THEN
+      Accounting_Period_API.Get_YearPer_For_YearEnd_User( accounting_year_, accounting_period_, key_.Company, user_group_, voucher_date_);
+      IF (accounting_year_ = 0 OR accounting_period_ = 0) THEN
+         Accounting_Period_API.Get_Accounting_Year( accounting_year_, accounting_period_, key_.Company, voucher_date_, user_group_); 
+      END IF;
+      Client_SYS.Add_To_Attr('ACCOUNTING_YEAR', accounting_year_, attr_);
+      Client_SYS.Add_To_Attr('ACCOUNTING_PERIOD', accounting_period_, attr_);
+   END IF;
+   -- Updating voucher date is not DONE
+   -- THPELK: TODO
+   super(etag_, key_, attr_, info_, action_);
+   Update_Accounting_Period___(key_);
+END CRUD_Update___;
+
+@Override
+PROCEDURE CRUD_Update___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Voucher_Posting_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   --Add pre-processing code here
+   super(etag_, key_, attr_, info_, action_);
+   voucher_posting_key_ := key_;   
+   --Add post-processing code here
+END CRUD_Update___;
+
+@Override
+PROCEDURE CRUD_Create___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Voucher_Posting_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+   debet_amount_                 NUMBER;
+   credit_amount_                NUMBER;
+   currency_debet_amount_        NUMBER;
+   currency_credit_amount_       NUMBER;
+   third_currency_debit_amount_  NUMBER;
+   third_currency_credit_amount_ NUMBER;
+   quantity_                     NUMBER;
+BEGIN
+   --Add pre-processing code here
+   debet_amount_                 := NVL(Client_SYS.Get_Item_Value_To_Number('DEBET_AMOUNT', attr_, lu_name_),0);
+   credit_amount_                := NVL(Client_SYS.Get_Item_Value_To_Number('CREDIT_AMOUNT', attr_, lu_name_),0);
+   currency_debet_amount_        := NVL(Client_SYS.Get_Item_Value_To_Number('CURRENCY_DEBET_AMOUNT', attr_, lu_name_),0);
+   currency_credit_amount_       := NVL(Client_SYS.Get_Item_Value_To_Number('CURRENCY_CREDIT_AMOUNT', attr_, lu_name_),0);
+   third_currency_debit_amount_  := NVL(Client_SYS.Get_Item_Value_To_Number('THIRD_CURRENCY_DEBIT_AMOUNT', attr_, lu_name_),0);
+   third_currency_credit_amount_ := NVL(Client_SYS.Get_Item_Value_To_Number('THIRD_CURRENCY_CREDIT_AMOUNT', attr_, lu_name_),0);
+   quantity_                     := NVL(Client_SYS.Get_Item_Value_To_Number('QUANTITY', attr_, lu_name_),0);
+   Client_SYS.Add_To_Attr('TRANS_CODE', 'MANUAL', attr_);
+   IF (Company_Finance_API.Get_Parallel_Base_Db(key_.company) IN ('TRANSACTION_CURRENCY','ACCOUNTING_CURRENCY')) THEN
+      IF (debet_amount_ = 0 AND credit_amount_ = 0 AND 
+         third_currency_debit_amount_ = 0 AND third_currency_credit_amount_ = 0 AND
+         currency_debet_amount_ = 0 AND currency_credit_amount_ = 0 AND quantity_ = 0 AND optional_balance_row_ IS NULL ) THEN
+            Client_SYS.Set_Item_Value('QUANTITY', 1, attr_);
+            optional_balance_row_  := 0;
+         END IF;
+      ELSE  
+         IF (debet_amount_ = 0 AND credit_amount_ = 0 AND currency_debet_amount_ = 0 AND currency_credit_amount_ = 0 AND quantity_ = 0 AND optional_balance_row_ IS NULL ) THEN
+            Client_SYS.Set_Item_Value('QUANTITY', 1 , attr_);
+            optional_balance_row_  := 0;
+         END IF;
+      END IF;
+      
+   super(etag_, key_, attr_, info_, action_);
+   voucher_posting_key_ := key_;
+   IF (optional_balance_row_ IS NOT NULL ) THEN
+      optional_balance_row_ := voucher_posting_key_.row_no;
+      
+   END IF;
+   --Add post-processing code here
+END CRUD_Create___;
+
+@Override
+PROCEDURE CRUD_Create___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Voucher_Candidate_Approver_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   --Add pre-processing code here
+   super(etag_, key_, attr_, info_, action_);
+   company_          := key_.company;
+   accounting_year_  := key_.accounting_year;
+   voucher_type_     := key_.voucher_type;
+   voucher_no_       := key_.voucher_no;
+END CRUD_Create___;
+
+@Override
+PROCEDURE CRUD_Update___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN OUT Voucher_Candidate_Approver_Key,
+   attr_   IN OUT VARCHAR2,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   --Add pre-processing code here
+   super(etag_, key_, attr_, info_, action_);
+   company_          := key_.company;
+   accounting_year_  := key_.accounting_year;
+   voucher_type_     := key_.voucher_type;
+   voucher_no_       := key_.voucher_no;
+END CRUD_Update___;
+
+@Override
+PROCEDURE CRUD_Delete___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Voucher_Candidate_Approver_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   --Add pre-processing code here
+   super(etag_, key_, info_, action_);
+   IF (Voucher_API.Get_Sequential_Approval_Db(key_.company, key_.accounting_year, key_.voucher_type, key_.voucher_no)='TRUE') THEN
+      Voucher_Candidate_Approver_API.Reorder_Sequence_Number__(key_.company, key_.accounting_year, key_.voucher_type, key_.voucher_no, 'TRUE');
+   END IF;
+   company_          := key_.company;
+   accounting_year_  := key_.accounting_year;
+   voucher_type_     := key_.voucher_type;
+   voucher_no_       := key_.voucher_no;
+END CRUD_Delete___;
+
+@Override
+PROCEDURE CRUD_Delete___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Voucher_Posting_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   --Add pre-processing code here
+   super(etag_, key_, info_, action_);
+   IF (action_ = 'DO') THEN
+      voucher_row_removed_ := TRUE;
+      voucher_posting_key_ := key_;
+   END IF;
+   --Add post-processing code here
+END CRUD_Delete___;
+
+
+PROCEDURE Update_Accounting_Period___(
+   key_ IN OUT Voucher_Entry_Key)
+IS 
+   voucher_rec_  Voucher_API.Public_Rec;
+BEGIN
+   voucher_rec_ := Voucher_API.Get(key_.company, key_.accounting_year, key_.voucher_type, key_.voucher_no);
+   Voucher_Row_API.Update_Vou_Row_Acc_Period__(key_.company, key_.accounting_year, key_.voucher_no, key_.voucher_type, voucher_rec_.accounting_period);
+   
+END Update_Accounting_Period___;
+
+@Override
+PROCEDURE Cancel___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Voucher_Entry_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   RETURN;
+   super(etag_, key_, info_, action_);
+END Cancel___;
+
+@Override
+PROCEDURE Update_Error___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Voucher_Entry_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   RETURN;
+   super(etag_, key_, info_, action_);
+END Update_Error___;
+
+@Override
+PROCEDURE Cancel_Approve___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Voucher_Entry_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   RETURN;
+   super(etag_, key_, info_, action_);
+END Cancel_Approve___;
+
+@Override
+PROCEDURE Ready_Waiting___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Voucher_Entry_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   RETURN;
+   super(etag_, key_, info_, action_);
+END Ready_Waiting___;
+
+
+@Override
+PROCEDURE Ready_Approve___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Voucher_Entry_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   Finalize_Multi_Company_Voucher___(key_, Voucher_API.DB_CONFIRMED);
+   --Add pre-processing code here
+   super(etag_, key_, info_, action_);
+   --Add post-processing code here
+END Ready_Approve___;
+
+
+@Override
+PROCEDURE Ready_To_Update___ (
+   etag_   IN OUT VARCHAR2,
+   key_    IN  Voucher_Entry_Key,
+   info_   OUT VARCHAR2,
+   action_ IN  VARCHAR2 )
+IS
+BEGIN
+   Finalize_Multi_Company_Voucher___(key_, Voucher_API.DB_CONFIRMED);
+   --Add pre-processing code here
+   super(etag_, key_, info_, action_);
+   --Add post-processing code here
+END Ready_To_Update___;
+
+
+FUNCTION Approve_Voucher___(
+   company_                 IN VARCHAR2,
+   accounting_year_         IN NUMBER,
+   voucher_type_            IN VARCHAR2,
+   voucher_no_              IN NUMBER,
+   voucher_approver_row_id_ IN NUMBER,
+   user_group_              IN VARCHAR2) RETURN VARCHAR2
+IS
+BEGIN
+   Voucher_Candidate_Approver_API.Approve__(company_,
+                                            accounting_year_,
+                                            voucher_type_,
+                                            voucher_no_,
+                                            voucher_approver_row_id_,
+                                            user_group_);
+   RETURN Voucher_API.Get_State(company_, accounting_year_, voucher_type_, voucher_no_);                                         
+END Approve_Voucher___; 
+
+PROCEDURE Remove_Approve___(
+   company_                 IN VARCHAR2,
+   accounting_year_         IN NUMBER,
+   voucher_type_            IN VARCHAR2,
+   voucher_no_              IN NUMBER,
+   voucher_approver_row_id_ IN NUMBER )
+IS
+BEGIN
+   Voucher_Candidate_Approver_API.Remove_Approve__(company_,
+                                                   accounting_year_,
+                                                   voucher_type_,
+                                                   voucher_no_,
+                                                   voucher_approver_row_id_);
+END Remove_Approve___;
+
+FUNCTION Check_Copy_Voucher___ (
+   company_         IN VARCHAR2,
+   voucher_type_    IN VARCHAR2,
+   accounting_year_ IN NUMBER,
+   voucher_no_      IN NUMBER) RETURN VARCHAR2
+IS
+   is_external_            BOOLEAN := FALSE;      
+   is_trans_code_exists_   BOOLEAN := FALSE;
+   
+   CURSOR check_voucher IS
+      SELECT *
+      FROM   voucher_row 
+      WHERE  company         = company_ 
+      AND    accounting_year = accounting_year_ 
+      AND    voucher_no      = voucher_no_
+      AND    voucher_type    = voucher_type_;
+   
+   CURSOR get_voucher IS
+      SELECT * 
+      FROM   voucher
+      WHERE  company         = company_ 
+      AND    accounting_year = accounting_year_ 
+      AND    voucher_no      = voucher_no_
+      AND    voucher_type    = voucher_type_;
+   
+   rec_voucher_           get_voucher%ROWTYPE;
+   voucher_group_         VARCHAR2(20);
+   auth_level_            VARCHAR2(20);
+   cancellation_voucher_  VARCHAR2(20);
+BEGIN
+   voucher_group_ := Voucher_Type_API.Get_Voucher_Group(company_, voucher_type_);
+   IF (voucher_group_ NOT IN ('M', 'K', 'Q')) THEN
+      Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERVOUTYPE: Copy voucher only allowed for voucher types M, K and Q.');
+   END IF;
+   
+   OPEN get_voucher;
+   FETCH get_voucher INTO rec_voucher_;   
+   IF (get_voucher%FOUND) THEN
+      IF (rec_voucher_.voucher_status_db = 'Cancelled') THEN
+         Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERVOUSTATUS: Copy voucher not allowed for voucher status :P1.', rec_voucher_.voucher_status);
+      END IF;
+      
+      IF (rec_voucher_.interim_voucher = 'Y' AND voucher_group_ != 'M') THEN
+         Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERNOTALLOWED: Copy voucher not allowed');
+      END IF;
+      
+      auth_level_ := Voucher_Type_User_Group_API.Get_Authorize_Level_Db(rec_voucher_.company, rec_voucher_.accounting_year, rec_voucher_.user_group, rec_voucher_.voucher_type);
+      IF (auth_level_ = 'ApproveOnly') THEN
+         Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERNOTALLOWEDAUTH: Copy voucher not allowed for Approve only users.');
+      END IF;
+      cancellation_voucher_ := Voucher_API.Is_Cancellation_Voucher__(rec_voucher_.company, rec_voucher_.voucher_type, rec_voucher_.accounting_year, rec_voucher_.voucher_no );
+      
+      IF (cancellation_voucher_ = 'TRUE') THEN
+         Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERNOTALLOWEDCANCEL: Copy voucher not allowed for cancellation vouchers.');
+      END IF;
+      
+      IF (voucher_group_ != 'M') THEN
+         IF (Voucher_Util_Pub_API.Non_Manual_Vou_Row_Exist( rec_voucher_.company, 
+                                                            rec_voucher_.accounting_year,
+                                                            rec_voucher_.voucher_type,
+                                                            rec_voucher_.voucher_no) = 'TRUE') THEN 
+            Error_SYS.Appl_General(lu_name_, 'COPYVOUCHERNONONMANVOUROW: Copy voucher not allowed because non manual voucher row exist.');
+         END IF;                                                                                 
+      END IF; 
+   END IF;
+   
+	FOR rec_voucher IN check_voucher LOOP
+      IF (rec_voucher.trans_code = 'EXTERNAL') THEN
+         is_external_ := TRUE;
+      END IF;
+      IF (rec_voucher.trans_code != 'EXTERNAL' AND rec_voucher.optional_code IS NOT NULL ) THEN
+         is_trans_code_exists_ := TRUE;
+      END IF;
+      IF is_external_ AND is_trans_code_exists_ THEN
+         Error_SYS.Appl_General(lu_name_, 'EXTERNALTRANSMESSAGE: This External Voucher contains tax transactions and can not be copied.');
+      END IF;   
+      IF (rec_voucher.period_allocation = 'Y') THEN
+         RETURN 'PERIOD_ALLOCATION';           
+      END IF; 
+   END LOOP;
+   RETURN 'TRUE';
+END Check_Copy_Voucher___;
+
+FUNCTION Is_Allow_Interim_Voucher___(
+   company_           IN VARCHAR2,
+   voucher_type_      IN VARCHAR2,
+   voucher_no_        IN NUMBER,
+   accounting_year_   IN NUMBER,
+   accounting_period_ IN NUMBER,
+   user_group_        IN VARCHAR2 )  RETURN VARCHAR2
+IS
+   accounting_period_temp_ NUMBER;
+   accounting_year_temp_   NUMBER;
+   voucher_date_           DATE;
+   acc_year_period_        NUMBER;
+   acc_period_temp_        NUMBER;
+   
+   CURSOR get_int_vou_rows IS
+      SELECT period_allocation, trans_code,correction
+      FROM voucher_row
+      WHERE company        = company_
+      AND voucher_type     = voucher_type_
+      AND voucher_no       = voucher_no_
+      AND accounting_year  = accounting_year_;
+BEGIN
+	acc_period_temp_ := accounting_period_ +1;
+   Accounting_Period_API.Get_Firstdate_Nextopenperiod(accounting_period_temp_,accounting_year_temp_,voucher_date_,company_,accounting_year_,user_group_,acc_period_temp_); 
+   acc_year_period_ := (accounting_year_temp_*100)+accounting_period_temp_;
+   IF (acc_year_period_ = 0 AND voucher_date_ IS NULL)THEN
+      Error_SYS.Record_General(lu_name_, 'NOOPENPERIOD: There are no open periods exist in Accounting Periods.');
+   END IF;
+   
+   FOR rec_ IN get_int_vou_rows LOOP
+      IF (rec_.period_allocation = 'Y') THEN
+         Error_SYS.Appl_General(lu_name_, 'PERIODALLOROWERROR: Interim voucher cannot be proceed. Voucher contains one or more rows with period allocation.');
+      ELSIF(rec_.trans_code != 'MANUAL') THEN
+         Error_SYS.Appl_General(lu_name_, 'NOTMANUALERROR: Interim voucher cannot be proceed. Voucher contains automatically created rows.');
+      ELSIF (rec_.correction = 'Y')THEN
+         Error_SYS.Appl_General(lu_name_, 'CORRECTIONROWERROR: Interim voucher cannot be proceed. Voucher contains correction rows.');
+      END IF;      
+   END LOOP;   
+   RETURN 'TRUE';
+END Is_Allow_Interim_Voucher___;
+
+
+PROCEDURE Finalize_Multi_Company_Voucher___ (
+   key_              IN  Voucher_Entry_Key,
+   voucher_status_   IN Voucher_Tab.rowstate%TYPE)
+IS
+   result_ VARCHAR2(5);
+   rec_    Voucher_API.Public_Rec;
+BEGIN
+   rec_ := Voucher_API.Get(key_.company, key_.accounting_year, key_.voucher_type, key_.voucher_no);
+   -- Create Due To/From   
+   IF ( Voucher_API.Is_Multi_Company_Vou_Finalized(key_.company, key_.accounting_year, key_.voucher_type, key_.voucher_no) = 'FALSE' AND Voucher_API.Get_Manual_Balance_Db(key_.company, key_.accounting_year, key_.voucher_type, key_.voucher_no) = 'FALSE') THEN      
+       Voucher_API.Create_Automatic_Due_To_From(key_.company, key_.accounting_year, key_.voucher_type, key_.voucher_no);      
+   END IF;
+   -- Check Doubel Entry
+   Voucher_API.Check_Double_Entry__( key_.company , key_.accounting_year , key_.Voucher_type , key_.voucher_no , rec_.rowstate );
+--  IF (key_.Voucher_No = 0) THEN
+--      Voucher_API.Finalize_Manual_Voucher__( final_voucher_no_, key_.Company, key_.Voucher_type, key_.transfer_id, 'TRUE'/*MultiCompany*/);
+--      IF (in_voucher_entry_rec_.voucher_status = Voucher_API.DB_CONFIRMED) THEN
+--         is_negative_ := Voucher_API.Check_Negative_Amount( in_voucher_entry_rec_.Company, in_voucher_entry_rec_.Voucher_type, in_voucher_entry_rec_.accounting_year, final_voucher_no_);
+--      END IF;
+--   END IF;
+   IF (rec_.function_group IN ('M', 'K', 'Q') /*AND rec_.multi_company_id IS NOT NULL*/ ) THEN
+      -- Only call in multi company mode 
+      IF (Voucher_API.Is_Multi_Company_Vou_Finalized(key_.company, key_.accounting_year, key_.voucher_type, key_.voucher_no) = 'TRUE' OR 
+          Voucher_API.Is_Multi_Company_Vou_Finalized(key_.company, key_.accounting_year, key_.voucher_type, key_.voucher_no) = 'FALSE' AND voucher_status_ IN (Voucher_API.DB_AWAITING_APPROVAL, Voucher_API.DB_CONFIRMED)) THEN
+            Voucher_API.Multi_Company_Voucher_Save_Ok(result_, key_.Company,key_.Voucher_type,key_.voucher_no,key_.accounting_year);
+      END IF;
+   END IF;
+END Finalize_Multi_Company_Voucher___;
